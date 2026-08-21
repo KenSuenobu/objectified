@@ -40,7 +40,8 @@ and reports every derivation as a loss rather than presenting it as declared:
   round-trips through the gateway and back to ``/users/{userId}``;
 * hosts come from the canonical servers, and a service with no recorded backend
   gets a placeholder upstream (a gateway config with no upstream is not a valid
-  config, and a silent omission would be worse than a reported placeholder).
+  config, and a silent omission would be worse than a reported placeholder) — for
+  the flavors that need one; see :class:`FlavorRules`.
 
 Two rules are worth stating because they are easy to get wrong:
 
@@ -61,8 +62,8 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass, replace
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
+from dataclasses import dataclass, field, replace
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 from urllib.parse import urlsplit
 
 from .canonical_model import CanonicalApi, Operation, ParameterLocation, Service
@@ -83,16 +84,20 @@ from .gateway_config_model import (
 __all__ = [
     "ANY_METHOD",
     "BACKEND_EXTRA",
+    "GATEWAY_FLAVOR_RULES",
     "GATEWAY_REPORT_EXTRA",
     "OPERATION_ROUTE_EXTRAS",
     "PLACEHOLDER_UPSTREAM",
     "SERVICE_NAMING_STRATEGIES",
     "UNATTACHED_SERVICE_NAME",
+    "FlavorRules",
     "auth_hints_from_extras",
     "escape_path_literal",
+    "flavor_rules",
     "gateway_sourced",
     "narrow_service_scoped_auth",
     "plan_gateway_config",
+    "preserve_name",
     "safe_name",
     "server_host_schemes",
     "slug_name",
@@ -207,6 +212,73 @@ def slug_name(value: str, *, fallback: str = "route") -> str:
         A non-empty lower-case name made only of ``[0-9a-z._~-]``.
     """
     return safe_name((value or "").lower(), fallback=fallback)
+
+
+def preserve_name(value: str, *, fallback: str = "route") -> str:
+    """Keep a source name exactly as the canonical model spells it.
+
+    The :attr:`FlavorRules.entity_name` policy for a flavor whose *renderer* owns
+    name legality — Gateway API, where a canonical service name carries the
+    ``namespace/resource`` structure the emitter has to split before it can
+    sanitize either half, and where Kong's character set is the wrong rule anyway
+    (a Kubernetes object name is an RFC 1123 name, not ``[0-9A-Za-z._~-]``).
+
+    Args:
+        value: The source name.
+        fallback: Name to return when ``value`` is blank.
+
+    Returns:
+        ``value`` trimmed, or ``fallback`` when nothing is left.
+    """
+    return (value or "").strip() or fallback
+
+
+@dataclass(frozen=True)
+class FlavorRules:
+    """What one gateway flavor needs from the shared projection.
+
+    The projection is flavor-neutral in *shape* but not in every rule: a Kong
+    entity name and a Kubernetes object name obey different grammars, and a Kong
+    service must name an upstream while a Gateway API rule names its backends on
+    the rule itself. Rather than grow a parameter per difference on
+    :func:`plan_gateway_config`, each flavor declares them once here.
+
+    Attributes:
+        entity_name: How a route/service name is made legal for the flavor.
+            Applied by the projection so the document it returns already carries
+            names the renderer can use; a renderer whose grammar the projection
+            cannot express uses :func:`preserve_name` and sanitizes itself.
+        require_upstream: Whether a service with no recorded upstream needs a
+            placeholder one (Kong: a service without an upstream is not loadable;
+            Gateway API: a rule's ``backendRefs`` carry the destination, so an
+            invented service upstream would be noise).
+    """
+
+    entity_name: Callable[..., str] = field(default=safe_name)
+    require_upstream: bool = True
+
+
+#: Projection rules per document flavor. Every flavor the gateway *parsers*
+#: produce (:mod:`app.kong_parser`, :mod:`app.gateway_api_parser`) has an entry, and
+#: an unknown flavor gets the conservative default — legal-everywhere names and a
+#: placeholder upstream — rather than silently skipping a rule.
+GATEWAY_FLAVOR_RULES: Dict[str, FlavorRules] = {
+    "kong": FlavorRules(),
+    "gateway-api": FlavorRules(entity_name=preserve_name, require_upstream=False),
+}
+
+
+def flavor_rules(flavor: str) -> FlavorRules:
+    """Return the projection rules for ``flavor``.
+
+    Args:
+        flavor: The document flavor (``kong`` / ``gateway-api``).
+
+    Returns:
+        The flavor's :class:`FlavorRules`, or the conservative default for a
+        flavor with no entry.
+    """
+    return GATEWAY_FLAVOR_RULES.get(flavor, FlavorRules())
 
 
 def template_path_pattern(template: str) -> GatewayPathPattern:
@@ -605,8 +677,22 @@ def _service_definition(
     name: str,
     api: CanonicalApi,
     losses: LossTracker,
+    require_upstream: bool = True,
 ) -> GatewayServiceDef:
-    """Build the upstream definition for one canonical service."""
+    """Build the upstream definition for one canonical service.
+
+    Args:
+        service: The canonical service.
+        name: The gateway entity name assigned to it.
+        api: The owning model (its first server is the fallback upstream).
+        losses: Tracker the placeholder upstream is reported on.
+        require_upstream: Whether the flavor needs an upstream address at all
+            (see :attr:`FlavorRules.require_upstream`).
+
+    Returns:
+        The service definition, with an upstream only where one is recorded or
+        the flavor requires a placeholder.
+    """
     backend = service.extras.get(BACKEND_EXTRA)
     fields: Dict[str, Any] = dict(backend) if isinstance(backend, Mapping) else {}
     url = fields.get("url") if isinstance(fields.get("url"), str) else None
@@ -615,7 +701,7 @@ def _service_definition(
     port = fields.get("port") if isinstance(fields.get("port"), int) else None
     path = fields.get("path") if isinstance(fields.get("path"), str) else None
 
-    if url is None and host is None:
+    if url is None and host is None and require_upstream:
         url = api.servers[0].url if api.servers else PLACEHOLDER_UPSTREAM
         losses.record(
             LossKind.INFERRED,
@@ -642,12 +728,22 @@ def _service_names(
     *,
     strategy: str,
     losses: LossTracker,
+    entity_name: Callable[..., str] = safe_name,
 ) -> Dict[str, str]:
     """Assign a gateway service name to every canonical service key.
 
     Applies the requested :data:`SERVICE_NAMING_STRATEGIES` strategy and
     de-duplicates the result (a strategy can collapse two canonical names onto
     one), appending ``-2``, ``-3``, … and reporting each collision.
+
+    Args:
+        api: The canonical model.
+        strategy: One of :data:`SERVICE_NAMING_STRATEGIES`.
+        losses: Tracker sanitizations and collisions are reported on.
+        entity_name: The flavor's name policy (see :class:`FlavorRules`).
+
+    Returns:
+        ``service key → gateway service name`` for every canonical service.
     """
     assigned: Dict[str, str] = {}
     taken: Dict[str, int] = {}
@@ -668,7 +764,7 @@ def _service_names(
         elif strategy == "slug":
             candidate = slug_name(service.name, fallback="service")
         else:
-            candidate = safe_name(service.name, fallback="service")
+            candidate = entity_name(service.name, fallback="service")
             if candidate != service.name:
                 losses.record(
                     LossKind.INFERRED,
@@ -828,7 +924,9 @@ def plan_gateway_config(
 
     Args:
         api: The canonical model to project.
-        flavor: The document flavor to stamp (``kong`` / ``gateway-api``).
+        flavor: The document flavor to stamp (``kong`` / ``gateway-api``). It also
+            selects the :class:`FlavorRules` the projection applies — how names are
+            made legal, and whether a service needs a placeholder upstream.
         losses: Tracker the projection reports fidelity losses on.
         service_naming: One of :data:`SERVICE_NAMING_STRATEGIES`.
 
@@ -845,13 +943,17 @@ def plan_gateway_config(
             f"{', '.join(SERVICE_NAMING_STRATEGIES)}"
         )
 
+    rules = flavor_rules(flavor)
+
     _record_schema_losses(api, losses)
     _record_report_losses(api, losses)
 
     host_schemes = server_host_schemes(api)
     default_hosts = tuple(host_schemes)
     as_matches = gateway_sourced(api)
-    names_by_key = _service_names(api, strategy=service_naming, losses=losses)
+    names_by_key = _service_names(
+        api, strategy=service_naming, losses=losses, entity_name=rules.entity_name
+    )
 
     services: List[GatewayServiceDef] = []
     routes: List[GatewayRoute] = []
@@ -861,7 +963,13 @@ def plan_gateway_config(
         unattached = service_name == UNATTACHED_SERVICE_NAME
         if not unattached:
             services.append(
-                _service_definition(service, name=service_name, api=api, losses=losses)
+                _service_definition(
+                    service,
+                    name=service_name,
+                    api=api,
+                    losses=losses,
+                    require_upstream=rules.require_upstream,
+                )
             )
 
         # Group the service's operations back into routes: same declared route
@@ -942,7 +1050,7 @@ def plan_gateway_config(
                 )
             routes.append(
                 GatewayRoute(
-                    name=safe_name(emitted_name, fallback="route"),
+                    name=rules.entity_name(emitted_name, fallback="route"),
                     service_name=None if unattached else service_name,
                     hosts=signature.hosts,
                     matches=tuple(grouped[bucket]),

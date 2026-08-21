@@ -31,6 +31,9 @@ from .gateway_config_model import (
 )
 
 __all__ = [
+    "PATH_KIND_TYPES",
+    "PATH_TYPE_KINDS",
+    "ROUTE_EXTRA_KEYS",
     "is_gateway_api_httproute",
     "is_gateway_api_httproute_document",
     "parse_gateway_api",
@@ -40,12 +43,28 @@ __all__ = [
 #: apiVersion group prefix that marks a Gateway API resource.
 _GATEWAY_API_GROUP = "gateway.networking.k8s.io"
 
-#: Gateway API ``path.type`` → flavor-neutral pattern kind.
-_PATH_TYPE_KINDS = {
+#: Gateway API ``path.type`` → flavor-neutral pattern kind. Public because
+#: :mod:`app.gateway_api_emitter` spells the same mapping in reverse; a private copy
+#: on the emit side is how the two halves of a round trip drift apart.
+PATH_TYPE_KINDS: Dict[str, str] = {
     "Exact": "exact",
     "PathPrefix": "prefix",
     "RegularExpression": "regex",
 }
+
+#: Flavor-neutral pattern kind → Gateway API ``path.type`` — the *derived* reverse
+#: of :data:`PATH_TYPE_KINDS`, so the emitter cannot disagree with the parser about
+#: what an ``exact`` pattern is called. ``test_path_type_table_symmetry`` asserts the
+#: round trip in both directions.
+PATH_KIND_TYPES: Dict[str, str] = {
+    kind: path_type for path_type, kind in PATH_TYPE_KINDS.items()
+}
+
+#: ``GatewayRoute.extras`` keys this parser writes, and therefore the only ones the
+#: emitter can write back (a key readable on the way in but not writable on the way
+#: out would vanish silently — ``test_every_readable_route_attribute_is_also_writable``
+#: is the guard).
+ROUTE_EXTRA_KEYS: Tuple[str, ...] = ("parent_refs", "namespace")
 
 
 def is_gateway_api_httproute_document(document: Any) -> bool:
@@ -114,7 +133,7 @@ def _parse_match(entry: Dict[str, Any]) -> GatewayMatch:
     path = entry.get("path")
     pattern = None
     if isinstance(path, dict):
-        kind = _PATH_TYPE_KINDS.get(str(path.get("type") or "PathPrefix"), "prefix")
+        kind = PATH_TYPE_KINDS.get(str(path.get("type") or "PathPrefix"), "prefix")
         pattern = build_path_pattern(str(path.get("value") or "/"), kind)
     else:
         # The Gateway API default match is PathPrefix "/".

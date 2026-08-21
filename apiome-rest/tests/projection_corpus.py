@@ -138,6 +138,7 @@ CORPUS_COVERAGE: Dict[str, Union[str, Waiver]] = {
     "fhir": GENERIC,
     "fix": GENERIC,
     "flatbuffers": GENERIC,
+    "gateway-api": GENERIC,
     "hl7v2": GENERIC,
     "iso20022": GENERIC,
     "iso8583": GENERIC,

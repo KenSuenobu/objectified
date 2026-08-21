@@ -260,12 +260,13 @@ def test_an_import_only_format_says_so(rows: List[FormatRow]) -> None:
     assert mcp.direction == "Import only"
 
 
-def test_a_round_tripping_gateway_format_says_so(rows: List[FormatRow]) -> None:
-    """`kong` gained its emitter in FMT-2.2, so the page must stop calling it read-only."""
-    kong = next(r for r in rows if r.key == "kong")
-    assert kong.can_import is True
-    assert kong.can_export is True
-    assert kong.direction == "Import + export"
+@pytest.mark.parametrize("key", ["kong", "gateway-api"])
+def test_a_round_tripping_gateway_format_says_so(key: str, rows: List[FormatRow]) -> None:
+    """The gateway formats gained emitters in FMT-2.2 / FMT-2.3: not read-only any more."""
+    row = next(r for r in rows if r.key == key)
+    assert row.can_import is True
+    assert row.can_export is True
+    assert row.direction == "Import + export"
 
 
 def test_protobuf_emitter_is_joined_onto_its_grpc_import_adapter(rows: List[FormatRow]) -> None:

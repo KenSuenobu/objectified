@@ -787,9 +787,16 @@
       "golden_directories": [
         "gateway-api"
       ],
-      "emit_key": null,
+      "emit_key": "gateway-api",
       "roundtrip_row": true,
-      "roundtrip_cells": [],
+      "roundtrip_cells": [
+        {
+          "source_format": "gateway-api",
+          "emit_key": "gateway-api",
+          "status": "xfail",
+          "has_reason": true
+        }
+      ],
       "capability_provenance": "derived",
       "requirements": {
         "valid-examples": "satisfied",
