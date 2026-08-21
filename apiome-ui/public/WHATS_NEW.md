@@ -11,6 +11,7 @@ We continue to improve the platform based on your feedback with improvements and
   - Adds formats:
     - MCP
     - Kong
+    - Arazzo 1.1
 
 ## Bug Fixes
 
