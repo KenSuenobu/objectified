@@ -1,0 +1,1256 @@
+{
+  "adapter": "llm-tools",
+  "canonical": {
+    "channels": [],
+    "description": "Imported LLM tool / function-calling schema bundle",
+    "extras": {
+      "dialects": [
+        "anthropic"
+      ],
+      "mixed_dialect_policy": "normalize_per_tool",
+      "tool_count": 6
+    },
+    "format": "llm-tools",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "08-emitted-anthropic-strict",
+      "namespace": null
+    },
+    "paradigm": "agent",
+    "protocol": "llm-tools",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "LLM tool / function-calling bundle",
+        "extras": {},
+        "key": "08-emitted-anthropic-strict",
+        "name": "08-emitted-anthropic-strict",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Create item",
+            "extras": {
+              "dialect": "anthropic",
+              "input_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "X-Tenant-ID": {
+                    "description": "Tenant identifier",
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "createdAt": {
+                    "format": "date-time",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "id": {
+                    "description": "Unique identifier",
+                    "format": "uuid",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "name": {
+                    "description": "Item name",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "Numeric value",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "X-Tenant-ID",
+                  "createdAt",
+                  "id",
+                  "name",
+                  "value"
+                ],
+                "type": "object"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "08-emitted-anthropic-strict.createItem",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "llm_tools_dialect": "anthropic",
+                  "llm_tools_parameters": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "X-Tenant-ID": {
+                        "description": "Tenant identifier",
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "format": "date-time",
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "id": {
+                        "description": "Unique identifier",
+                        "format": "uuid",
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "name": {
+                        "description": "Item name",
+                        "type": "string"
+                      },
+                      "value": {
+                        "description": "Numeric value",
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "X-Tenant-ID",
+                      "createdAt",
+                      "id",
+                      "name",
+                      "value"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "headers": [],
+                "key": "08-emitted-anthropic-strict.createItem#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "createItemParams",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "createItem",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Create session (cookie param example)",
+            "extras": {
+              "dialect": "anthropic",
+              "input_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "X-Client-Version": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "password": {
+                    "format": "password",
+                    "type": "string"
+                  },
+                  "redirect_uri": {
+                    "format": "uri",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "username": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "redirect_uri",
+                  "X-Client-Version",
+                  "username",
+                  "password"
+                ],
+                "type": "object"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "08-emitted-anthropic-strict.createSession",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "llm_tools_dialect": "anthropic",
+                  "llm_tools_parameters": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "X-Client-Version": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "password": {
+                        "format": "password",
+                        "type": "string"
+                      },
+                      "redirect_uri": {
+                        "format": "uri",
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "username": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "redirect_uri",
+                      "X-Client-Version",
+                      "username",
+                      "password"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "headers": [],
+                "key": "08-emitted-anthropic-strict.createSession#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "createSessionParams",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "createSession",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Delete item",
+            "extras": {
+              "dialect": "anthropic",
+              "input_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "itemId": {
+                    "format": "uuid",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "itemId"
+                ],
+                "type": "object"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "08-emitted-anthropic-strict.deleteItem",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "llm_tools_dialect": "anthropic",
+                  "llm_tools_parameters": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "itemId": {
+                        "format": "uuid",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "itemId"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "headers": [],
+                "key": "08-emitted-anthropic-strict.deleteItem#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "deleteItemParams",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "deleteItem",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Get item by ID",
+            "extras": {
+              "dialect": "anthropic",
+              "input_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "fields": {
+                    "description": "Sparse fields",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
+                  "itemId": {
+                    "format": "uuid",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "itemId",
+                  "fields"
+                ],
+                "type": "object"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "08-emitted-anthropic-strict.getItem",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "llm_tools_dialect": "anthropic",
+                  "llm_tools_parameters": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "fields": {
+                        "description": "Sparse fields",
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": [
+                          "array",
+                          "null"
+                        ]
+                      },
+                      "itemId": {
+                        "format": "uuid",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "itemId",
+                      "fields"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "headers": [],
+                "key": "08-emitted-anthropic-strict.getItem#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "getItemParams",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "getItem",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "List items",
+            "extras": {
+              "dialect": "anthropic",
+              "input_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "X-Tenant-ID": {
+                    "description": "Tenant identifier",
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "page": {
+                    "minimum": 1.0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "per_page": {
+                    "maximum": 100.0,
+                    "minimum": 1.0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "q": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "sort": {
+                    "enum": [
+                      "name",
+                      "createdAt",
+                      "-name",
+                      "-createdAt"
+                    ],
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "page",
+                  "per_page",
+                  "q",
+                  "sort",
+                  "X-Tenant-ID"
+                ],
+                "type": "object"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "08-emitted-anthropic-strict.listItems",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "llm_tools_dialect": "anthropic",
+                  "llm_tools_parameters": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "X-Tenant-ID": {
+                        "description": "Tenant identifier",
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "page": {
+                        "minimum": 1.0,
+                        "type": [
+                          "integer",
+                          "null"
+                        ]
+                      },
+                      "per_page": {
+                        "maximum": 100.0,
+                        "minimum": 1.0,
+                        "type": [
+                          "integer",
+                          "null"
+                        ]
+                      },
+                      "q": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "sort": {
+                        "enum": [
+                          "name",
+                          "createdAt",
+                          "-name",
+                          "-createdAt"
+                        ],
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "page",
+                      "per_page",
+                      "q",
+                      "sort",
+                      "X-Tenant-ID"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "headers": [],
+                "key": "08-emitted-anthropic-strict.listItems#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "listItemsParams",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "listItems",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Search with multiple param locations",
+            "extras": {
+              "dialect": "anthropic",
+              "input_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "X-Request-ID": {
+                    "format": "uuid",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "q": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "q",
+                  "X-Request-ID"
+                ],
+                "type": "object"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "08-emitted-anthropic-strict.search",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "llm_tools_dialect": "anthropic",
+                  "llm_tools_parameters": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "X-Request-ID": {
+                        "format": "uuid",
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "q": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "q",
+                      "X-Request-ID"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "headers": [],
+                "key": "08-emitted-anthropic-strict.search#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "searchParams",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "search",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "08-emitted-anthropic-strict",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Tenant identifier",
+            "extras": {},
+            "field_number": null,
+            "key": "createItemParams.X-Tenant-ID",
+            "name": "X-Tenant-ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "createItemParams.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Unique identifier",
+            "extras": {},
+            "field_number": null,
+            "key": "createItemParams.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Item name",
+            "extras": {},
+            "field_number": null,
+            "key": "createItemParams.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Numeric value",
+            "extras": {},
+            "field_number": null,
+            "key": "createItemParams.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "number",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "createItemParams",
+        "key_type": null,
+        "kind": "record",
+        "name": "createItemParams",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "createSessionParams.X-Client-Version",
+            "name": "X-Client-Version",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "password",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "createSessionParams.password",
+            "name": "password",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uri",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "createSessionParams.redirect_uri",
+            "name": "redirect_uri",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "createSessionParams.username",
+            "name": "username",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "createSessionParams",
+        "key_type": null,
+        "kind": "record",
+        "name": "createSessionParams",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "deleteItemParams.itemId",
+            "name": "itemId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "deleteItemParams",
+        "key_type": null,
+        "kind": "record",
+        "name": "deleteItemParams",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Sparse fields",
+            "extras": {},
+            "field_number": null,
+            "key": "getItemParams.fields",
+            "name": "fields",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "getItemParams.itemId",
+            "name": "itemId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "getItemParams",
+        "key_type": null,
+        "kind": "record",
+        "name": "getItemParams",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Tenant identifier",
+            "extras": {},
+            "field_number": null,
+            "key": "listItemsParams.X-Tenant-ID",
+            "name": "X-Tenant-ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 1.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "listItemsParams.page",
+            "name": "page",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": 100.0,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 1.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "listItemsParams.per_page",
+            "name": "per_page",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "listItemsParams.q",
+            "name": "q",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "name",
+                "createdAt",
+                "-name",
+                "-createdAt"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "listItemsParams.sort",
+            "name": "sort",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "listItemsParams",
+        "key_type": null,
+        "kind": "record",
+        "name": "listItemsParams",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "searchParams.X-Request-ID",
+            "name": "X-Request-ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "searchParams.q",
+            "name": "q",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "searchParams",
+        "key_type": null,
+        "kind": "record",
+        "name": "searchParams",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "llm-tools/08-emitted-anthropic-strict.json",
+  "counts": {
+    "channels": 0,
+    "operations": 6,
+    "servers": 0,
+    "services": 1,
+    "types": 6
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "llm-tools"
+  },
+  "fingerprint": "sha256:ae68873677a4050fb8b8bcd35463d15120ff47e9131b30833c90ea6c97c8c846",
+  "lint": {
+    "findings": 41,
+    "grade": "F",
+    "report_fingerprint": "6ca86603f0aa5ac86a1a01949536ae5b6d42874d27223f0929ce635a503ae45e",
+    "score": 38,
+    "severity_counts": {
+      "error": 0,
+      "info": 22,
+      "warning": 19
+    }
+  },
+  "snapshot_version": 1
+}

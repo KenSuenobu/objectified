@@ -666,6 +666,7 @@ def load_builtin_emitters() -> None:
     from . import kong_emitter as _kong_emitter  # noqa: F401
     from . import gateway_api_emitter as _gateway_api_emitter  # noqa: F401
     from . import http_file_emitter as _http_file_emitter  # noqa: F401
+    from . import llm_tools_emitter as _llm_tools_emitter  # noqa: F401
 
 
 def get_emitter(format_key: str) -> Optional[type[Emitter]]:

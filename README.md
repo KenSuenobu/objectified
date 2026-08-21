@@ -10,8 +10,8 @@ other description format in its own shape rather than forcing it into OpenAPI's.
 canonical paradigms — REST, RPC, event-driven, graph, data schema and agent:
 
 - Imports 43<!--format-count:importable--> formats.
-- Exports 39<!--format-count:exportable--> formats.
-- Round-trips 39<!--format-count:round_trip--> of them — import *and* export.
+- Exports 40<!--format-count:exportable--> formats.
+- Round-trips 40<!--format-count:round_trip--> of them — import *and* export.
 - Introspects a live endpoint, rather than reading a file, for
   4<!--format-count:live_discovery--> of them.
 

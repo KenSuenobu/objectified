@@ -6,7 +6,7 @@ Sample source documents for exercising the catalog **Import** flow (the ImportDi
 
 > **Adding an example?** Read the [corpus contributor guide](../../docs/CORPUS_CONTRIBUTOR_GUIDE.md) first — it covers the ladder, every manifest field, the licensing rules for documents derived from third-party specs, the anonymization rule for captured payloads, and the review checklist. `python3 scripts/check_corpus_provenance.py` enforces the provenance rules in CI.
 
-The corpus holds **1413 files** across **103 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
+The corpus holds **1415 files** across **103 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
 
 ## How the corpus is used
 
@@ -151,7 +151,7 @@ The corpus holds **1413 files** across **103 format directories**. Every file ha
 
 | Directory | Format | Paradigm | Marker / shape | Files |
 | --- | --- | --- | --- | --- |
-| `llm-tools/` | LLM Tools | agent | OpenAI / Anthropic / bare tool-array shape | 11 |
+| `llm-tools/` | LLM Tools | agent | OpenAI / Anthropic / bare tool-array shape | 13 |
 | `mcp/` | MCP server manifest | agent | `mcpVersion` + `tools[].inputSchema` | 12 |
 
 ## File index
@@ -1313,6 +1313,8 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `04-enums-and-required.json` | stress | `llm-tools` ≥ 0.95 | valid | `enums`, `required`, `oneOf-const`, `lint-triggers` |
 | `05-assistant-tool-bundle.json` | real-world | `llm-tools` ≥ 0.95 | valid | `real-world`, `openai`, `anthropic`, `multi-tool` |
 | `06-tools-wrapper-object.json` ⚠ | composition | `llm-tools` ≥ 0.95 | valid | `tools-wrapper`, `mixed-dialect` |
+| `07-emitted-openai-tools.json` ⚠ | real-world | `llm-tools` ≥ 0.95 | valid | `emitted`, `openai`, `multi-tool`, `merged-parameters`, `function-calling` |
+| `08-emitted-anthropic-strict.json` ⚠ | stress | `llm-tools` ≥ 0.95 | valid | `emitted`, `anthropic`, `strict-schema`, `multi-tool`, `nullable-optional` |
 | `negative/01-syntactic-unclosed-array.json` | — | `llm-tools` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-array` |
 | `negative/02-semantic-missing-name.json` | — | `llm-tools` (no guarantee) | invalid | `negative`, `semantic`, `missing-name` |
 | `negative/03-truncated-mid-doc.json` | — | `llm-tools` (no guarantee) | invalid | `negative`, `truncated`, `mid-doc-cut` |
@@ -1320,6 +1322,10 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/05-encoding-utf16.json` | — | `llm-tools` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
 
 > ⚠ **`06-tools-wrapper-object.json`** — Object wrapper with a tools array; multi-file ladder rung is waived because tool bundles do not resolve cross-file references.
+
+> ⚠ **`07-emitted-openai-tools.json`** — Round-trip fixture for the tool-array emitter: each REST operation becomes one tool whose parameters merge the path, query, header and body arguments.
+
+> ⚠ **`08-emitted-anthropic-strict.json`** — The same API as 07 in the strict structured-output subset: every object is closed and every property is required, with the optional ones widened to accept null.
 
 ### `lwm2m/` — LwM2M / IPSO objects (pending #5472)
 
@@ -2586,7 +2592,7 @@ Every entry declares where its bytes came from (`origin`), under what license, a
 
 | Origin | Files | Licenses |
 | --- | --- | --- |
-| `hand-authored` | 1413 | `Apache-2.0` |
+| `hand-authored` | 1415 | `Apache-2.0` |
 
 ## Trying an import
 

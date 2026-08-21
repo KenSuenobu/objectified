@@ -1,0 +1,1160 @@
+{
+  "adapter": "llm-tools",
+  "canonical": {
+    "channels": [],
+    "description": "Imported LLM tool / function-calling schema bundle",
+    "extras": {
+      "dialects": [
+        "openai"
+      ],
+      "mixed_dialect_policy": "normalize_per_tool",
+      "tool_count": 6
+    },
+    "format": "llm-tools",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "07-emitted-openai-tools",
+      "namespace": null
+    },
+    "paradigm": "agent",
+    "protocol": "llm-tools",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "LLM tool / function-calling bundle",
+        "extras": {},
+        "key": "07-emitted-openai-tools",
+        "name": "07-emitted-openai-tools",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Create item",
+            "extras": {
+              "dialect": "openai",
+              "input_schema": {
+                "properties": {
+                  "X-Tenant-ID": {
+                    "description": "Tenant identifier",
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "createdAt": {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  "id": {
+                    "description": "Unique identifier",
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "Item name",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "Numeric value",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "X-Tenant-ID",
+                  "name"
+                ],
+                "type": "object"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "07-emitted-openai-tools.createItem",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "llm_tools_dialect": "openai",
+                  "llm_tools_parameters": {
+                    "properties": {
+                      "X-Tenant-ID": {
+                        "description": "Tenant identifier",
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "id": {
+                        "description": "Unique identifier",
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "name": {
+                        "description": "Item name",
+                        "type": "string"
+                      },
+                      "value": {
+                        "description": "Numeric value",
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "X-Tenant-ID",
+                      "name"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "headers": [],
+                "key": "07-emitted-openai-tools.createItem#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "createItemParams",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "createItem",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Create session (cookie param example)",
+            "extras": {
+              "dialect": "openai",
+              "input_schema": {
+                "properties": {
+                  "X-Client-Version": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "format": "password",
+                    "type": "string"
+                  },
+                  "redirect_uri": {
+                    "format": "uri",
+                    "type": "string"
+                  },
+                  "username": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "username",
+                  "password"
+                ],
+                "type": "object"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "07-emitted-openai-tools.createSession",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "llm_tools_dialect": "openai",
+                  "llm_tools_parameters": {
+                    "properties": {
+                      "X-Client-Version": {
+                        "type": "string"
+                      },
+                      "password": {
+                        "format": "password",
+                        "type": "string"
+                      },
+                      "redirect_uri": {
+                        "format": "uri",
+                        "type": "string"
+                      },
+                      "username": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "username",
+                      "password"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "headers": [],
+                "key": "07-emitted-openai-tools.createSession#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "createSessionParams",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "createSession",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Delete item",
+            "extras": {
+              "dialect": "openai",
+              "input_schema": {
+                "properties": {
+                  "itemId": {
+                    "format": "uuid",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "itemId"
+                ],
+                "type": "object"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "07-emitted-openai-tools.deleteItem",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "llm_tools_dialect": "openai",
+                  "llm_tools_parameters": {
+                    "properties": {
+                      "itemId": {
+                        "format": "uuid",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "itemId"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "headers": [],
+                "key": "07-emitted-openai-tools.deleteItem#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "deleteItemParams",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "deleteItem",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Get item by ID",
+            "extras": {
+              "dialect": "openai",
+              "input_schema": {
+                "properties": {
+                  "fields": {
+                    "description": "Sparse fields",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "itemId": {
+                    "format": "uuid",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "itemId"
+                ],
+                "type": "object"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "07-emitted-openai-tools.getItem",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "llm_tools_dialect": "openai",
+                  "llm_tools_parameters": {
+                    "properties": {
+                      "fields": {
+                        "description": "Sparse fields",
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      "itemId": {
+                        "format": "uuid",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "itemId"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "headers": [],
+                "key": "07-emitted-openai-tools.getItem#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "getItemParams",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "getItem",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "List items",
+            "extras": {
+              "dialect": "openai",
+              "input_schema": {
+                "properties": {
+                  "X-Tenant-ID": {
+                    "description": "Tenant identifier",
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "page": {
+                    "default": 1,
+                    "minimum": 1.0,
+                    "type": "integer"
+                  },
+                  "per_page": {
+                    "default": 20,
+                    "maximum": 100.0,
+                    "minimum": 1.0,
+                    "type": "integer"
+                  },
+                  "q": {
+                    "type": "string"
+                  },
+                  "sort": {
+                    "enum": [
+                      "name",
+                      "createdAt",
+                      "-name",
+                      "-createdAt"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "X-Tenant-ID"
+                ],
+                "type": "object"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "07-emitted-openai-tools.listItems",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "llm_tools_dialect": "openai",
+                  "llm_tools_parameters": {
+                    "properties": {
+                      "X-Tenant-ID": {
+                        "description": "Tenant identifier",
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "page": {
+                        "default": 1,
+                        "minimum": 1.0,
+                        "type": "integer"
+                      },
+                      "per_page": {
+                        "default": 20,
+                        "maximum": 100.0,
+                        "minimum": 1.0,
+                        "type": "integer"
+                      },
+                      "q": {
+                        "type": "string"
+                      },
+                      "sort": {
+                        "enum": [
+                          "name",
+                          "createdAt",
+                          "-name",
+                          "-createdAt"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "X-Tenant-ID"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "headers": [],
+                "key": "07-emitted-openai-tools.listItems#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "listItemsParams",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "listItems",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Search with multiple param locations",
+            "extras": {
+              "dialect": "openai",
+              "input_schema": {
+                "properties": {
+                  "X-Request-ID": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "q": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "q"
+                ],
+                "type": "object"
+              }
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "07-emitted-openai-tools.search",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "llm_tools_dialect": "openai",
+                  "llm_tools_parameters": {
+                    "properties": {
+                      "X-Request-ID": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "q": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "q"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "headers": [],
+                "key": "07-emitted-openai-tools.search#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "searchParams",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "search",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "07-emitted-openai-tools",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Tenant identifier",
+            "extras": {},
+            "field_number": null,
+            "key": "createItemParams.X-Tenant-ID",
+            "name": "X-Tenant-ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "createItemParams.createdAt",
+            "name": "createdAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Unique identifier",
+            "extras": {},
+            "field_number": null,
+            "key": "createItemParams.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Item name",
+            "extras": {},
+            "field_number": null,
+            "key": "createItemParams.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Numeric value",
+            "extras": {},
+            "field_number": null,
+            "key": "createItemParams.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "number",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "createItemParams",
+        "key_type": null,
+        "kind": "record",
+        "name": "createItemParams",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "createSessionParams.X-Client-Version",
+            "name": "X-Client-Version",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "password",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "createSessionParams.password",
+            "name": "password",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uri",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "createSessionParams.redirect_uri",
+            "name": "redirect_uri",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "createSessionParams.username",
+            "name": "username",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "createSessionParams",
+        "key_type": null,
+        "kind": "record",
+        "name": "createSessionParams",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "deleteItemParams.itemId",
+            "name": "itemId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "deleteItemParams",
+        "key_type": null,
+        "kind": "record",
+        "name": "deleteItemParams",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Sparse fields",
+            "extras": {},
+            "field_number": null,
+            "key": "getItemParams.fields",
+            "name": "fields",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "getItemParams.itemId",
+            "name": "itemId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "getItemParams",
+        "key_type": null,
+        "kind": "record",
+        "name": "getItemParams",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Tenant identifier",
+            "extras": {},
+            "field_number": null,
+            "key": "listItemsParams.X-Tenant-ID",
+            "name": "X-Tenant-ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 1.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": 1,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "listItemsParams.page",
+            "name": "page",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": 100.0,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 1.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": 20,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "listItemsParams.per_page",
+            "name": "per_page",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "listItemsParams.q",
+            "name": "q",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "name",
+                "createdAt",
+                "-name",
+                "-createdAt"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "listItemsParams.sort",
+            "name": "sort",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "listItemsParams",
+        "key_type": null,
+        "kind": "record",
+        "name": "listItemsParams",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "searchParams.X-Request-ID",
+            "name": "X-Request-ID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "searchParams.q",
+            "name": "q",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "searchParams",
+        "key_type": null,
+        "kind": "record",
+        "name": "searchParams",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "llm-tools/07-emitted-openai-tools.json",
+  "counts": {
+    "channels": 0,
+    "operations": 6,
+    "servers": 0,
+    "services": 1,
+    "types": 6
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "llm-tools"
+  },
+  "fingerprint": "sha256:0298a55cc81b1c75ee3a8bec9ae374f0c81fe82ec405a878298d403bf057e434",
+  "lint": {
+    "findings": 41,
+    "grade": "F",
+    "report_fingerprint": "530aee09f50f5dba2631e9216a2529c5ce3b14ab7e95d321f30d7a3a1f1af3ed",
+    "score": 38,
+    "severity_counts": {
+      "error": 0,
+      "info": 22,
+      "warning": 19
+    }
+  },
+  "snapshot_version": 1
+}

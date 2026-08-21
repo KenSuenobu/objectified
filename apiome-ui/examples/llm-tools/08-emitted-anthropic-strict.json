@@ -1,0 +1,210 @@
+[
+  {
+    "name": "deleteItem",
+    "description": "Delete item",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "itemId"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "getItem",
+    "description": "Get item by ID",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "fields": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Sparse fields"
+        }
+      },
+      "required": [
+        "itemId",
+        "fields"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "search",
+    "description": "Search with multiple param locations",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "q": {
+          "type": "string"
+        },
+        "X-Request-ID": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "q",
+        "X-Request-ID"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "createItem",
+    "description": "Create item",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "X-Tenant-ID": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Tenant identifier"
+        },
+        "createdAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid",
+          "description": "Unique identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Item name"
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Numeric value"
+        }
+      },
+      "required": [
+        "X-Tenant-ID",
+        "createdAt",
+        "id",
+        "name",
+        "value"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "createSession",
+    "description": "Create session (cookie param example)",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "redirect_uri": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "X-Client-Version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string",
+          "format": "password"
+        }
+      },
+      "required": [
+        "redirect_uri",
+        "X-Client-Version",
+        "username",
+        "password"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "listItems",
+    "description": "List items",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1.0
+        },
+        "per_page": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1.0,
+          "maximum": 100.0
+        },
+        "q": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sort": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "name",
+            "createdAt",
+            "-name",
+            "-createdAt"
+          ]
+        },
+        "X-Tenant-ID": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Tenant identifier"
+        }
+      },
+      "required": [
+        "page",
+        "per_page",
+        "q",
+        "sort",
+        "X-Tenant-ID"
+      ],
+      "additionalProperties": false
+    }
+  }
+]
