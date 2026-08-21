@@ -37,6 +37,7 @@ import {
   exportTargetCards,
   filterSameFormatTargets,
   optionFieldsFromSchema,
+  resolveExportDialect,
   type ExportFidelityTier,
   type ExportTargetCard,
 } from './exportTargetCatalog';
@@ -188,6 +189,12 @@ export function ExportDialog({
   // snapshot (EFP-2.3): an option change refreshes the report and the graph together.
   const changedOpts = useMemo(
     () => (selected ? changedOptions(optionValues, selected.entry.default_options) : null),
+    [selected, optionValues],
+  );
+  // FMT-3.2: which version of its format the selected target will emit, when it offers more
+  // than one. The dialog mounts the same grid as the Studio, so the badge lands in both.
+  const dialect = useMemo(
+    () => resolveExportDialect(selected?.entry, optionValues),
     [selected, optionValues],
   );
 
@@ -435,6 +442,7 @@ export function ExportDialog({
               preflight={preflight}
               order={targetOrder}
               onOrderChange={setTargetOrder}
+              dialect={dialect}
               heading={
                 <div className="text-center">
                   <div className="text-sm font-semibold text-fg">

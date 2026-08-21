@@ -28,6 +28,12 @@ It composes three pieces that already exist rather than reimplementing any of th
   against the source, yielding the *empirical* loss list that corroborates the
   *predicted* one (the MFX-2.6 round-trip measurement).
 
+Every piece is version-agnostic, so the FMT-3.2 **2.6 downgrade target** round-trips
+through the same three steps unchanged: the parser validates 2.x and 3.x alike, and the
+normalizer reads both. That is what lets the "2.6 → canonical → 2.6 preserves channels,
+operations, messages and bindings" criterion be *measured* rather than asserted — a 2.x
+source emitted back to 2.6 is expected to re-import to an empty diff.
+
 The core statement is the **same-format round-trip is lossless**: a native event source
 emitted to AsyncAPI 3.1 and re-imported produces an *empty* entity diff (the fixed-point
 property MFX-11.1 already proves for ``normalize ∘ emit``, here proven end to end through
@@ -105,8 +111,9 @@ class RoundTripReport(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     asyncapi_version: str = Field(
-        description="The declared ``asyncapi`` version of the emitted document "
-        "(``3.1.0`` for this emitter's target).",
+        description="The declared ``asyncapi`` version of the emitted document — "
+        "``3.1.0`` for the emitter's native target, or ``2.6.0`` when the "
+        "``asyncapi_version`` option asked for the 2.x downgrade (FMT-3.2).",
     )
     validation_errors: List[Dict[str, str]] = Field(
         default_factory=list,

@@ -89,6 +89,7 @@ import {
   exportTargetCards,
   filterSameFormatTargets,
   optionFieldsFromSchema,
+  resolveExportDialect,
   tierLabel,
   tierTone,
   validateExportOptions,
@@ -273,6 +274,13 @@ export function ExportStudio({
   const validation = useMemo(
     () => validateExportOptions(optionFields, optionValues),
     [optionFields, optionValues],
+  );
+  // FMT-3.2: the version a multi-version target will actually emit (AsyncAPI 3.1 vs its 2.6
+  // downgrade). The card's tier badge is computed for the source before any option is picked,
+  // so this is what makes the choice visible where the target is chosen and reviewed.
+  const dialect = useMemo(
+    () => resolveExportDialect(selected?.entry, optionValues),
+    [selected, optionValues],
   );
   // Only the non-default overrides are sent (to verify and to generate), so the two dry-run and
   // real emits share one configuration — a verify verdict always describes what Generate produces.
@@ -1106,6 +1114,7 @@ export function ExportStudio({
                 preflight={preflight}
                 order={targetOrder}
                 onOrderChange={setTargetOrder}
+                dialect={dialect}
                 // HIVE-8.3: the Studio groups all 36 registry targets under the four family
                 // headings; the ExportDialog, which mounts the same grid, does not.
                 groupByFamily
@@ -1127,6 +1136,15 @@ export function ExportStudio({
               <div className="xstd-caps">
                 <SlidersHorizontal aria-hidden />
                 {selected ? `${selected.entry.descriptor.label} options` : 'Target options'}
+                {dialect && (
+                  <Badge
+                    variant={dialect.tone}
+                    data-testid="export-studio-options-dialect"
+                    title={dialect.detail}
+                  >
+                    {dialect.label}
+                  </Badge>
+                )}
               </div>
               <div className="xstd-rule" />
               {optionFields.length === 0 ? (

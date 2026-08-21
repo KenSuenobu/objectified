@@ -13,6 +13,10 @@ the source. The acceptance criteria proven here:
 * **Empirical loss corroborates the predicted loss; divergences are flagged** (MFX-2.6)
   — a cross-paradigm REST source with predicted losses round-trips to a non-empty diff
   (they agree), and a mismatch flips :attr:`RoundTripReport.diverges`.
+* **A 2.6 emission round-trips through the same path** (FMT-3.2) — the downgrade target
+  is measured, not asserted: a 2.x source emitted back to AsyncAPI 2.6 re-imports to an
+  empty diff, which is the "round-trip 2.6 → canonical → 2.6 preserves channels,
+  operations, messages and bindings" criterion.
 
 Because the authoritative ``@asyncapi/parser`` is a Node subprocess, the orchestration is
 tested two ways: with a fake toolchain runner replaying the parser's JSON contract (always
@@ -27,7 +31,7 @@ from typing import Any, List, Optional, Sequence
 
 import pytest
 
-from app.asyncapi_emitter import AsyncApiEmitter
+from app.asyncapi_emitter import AsyncApiEmitOptions, AsyncApiEmitter
 from app.asyncapi_normalizer import AsyncApiNormalizer
 from app.asyncapi_parser import (
     ASYNCAPI_PARSER_TOOL_KEY,
@@ -115,6 +119,48 @@ def _event_doc() -> dict:
 def _event_model() -> CanonicalApi:
     """The canonical model the native-event fixture normalizes to."""
     return AsyncApiNormalizer().normalize(_event_doc(), include_raw=False)
+
+
+def _event_doc_2() -> dict:
+    """A native-event AsyncAPI **2.6** document, messages inline (FMT-3.2).
+
+    The 2.x shape the downgrade target emits back: channels keyed by address, each
+    carrying its own ``publish``/``subscribe`` operation, its message, and its bindings.
+    """
+    return {
+        "asyncapi": "2.6.0",
+        "info": {"title": "User Events", "version": "1.2.0"},
+        "servers": {
+            "prod": {"url": "mqtt://broker.example.com", "protocol": "mqtt"}
+        },
+        "channels": {
+            "user/signedup": {
+                "description": "Signup stream.",
+                "bindings": {"mqtt": {"qos": 1}},
+                "publish": {
+                    "operationId": "onUserSignedUp",
+                    "message": {
+                        "name": "UserSignedUp",
+                        "contentType": "application/json",
+                        "payload": {
+                            "type": "object",
+                            "properties": {"id": {"type": "string"}},
+                        },
+                    },
+                },
+            }
+        },
+    }
+
+
+def _event_model_2() -> CanonicalApi:
+    """The canonical model the AsyncAPI 2.6 fixture normalizes to."""
+    return AsyncApiNormalizer().normalize(_event_doc_2(), include_raw=False)
+
+
+def _opts_2() -> AsyncApiEmitOptions:
+    """Emit options selecting the FMT-3.2 AsyncAPI 2.6 downgrade target."""
+    return AsyncApiEmitOptions(asyncapi_version="2.6")
 
 
 def _rest_model() -> CanonicalApi:
@@ -416,6 +462,33 @@ def test_missing_parser_tool_raises_infrastructure_error() -> None:
         _run(api, runner=runner)
 
 
+def test_asyncapi_2_target_round_trips_lossless() -> None:
+    # FMT-3.2: a 2.x source emitted back to 2.6 re-imports entity-for-entity.
+    api = _event_model_2()
+    emitted = AsyncApiEmitter().emit(api, opts=_opts_2())
+    runner = _FakeRunner(payload=_wrapper_payload(emitted.document, version="2.6.0"))
+
+    report = _run(api, emit_result=emitted, runner=runner)
+
+    assert report.asyncapi_version == "2.6.0"
+    assert report.status is RoundTripStatus.LOSSLESS
+    assert report.predicted_losses == []
+    assert report.diverges is False
+
+
+def test_asyncapi_2_target_is_selected_through_the_emit_options() -> None:
+    # The round trip emits internally when handed no result, so the option has to
+    # reach the emitter through ``opts``.
+    api = _event_model_2()
+    document = AsyncApiEmitter().emit(api, opts=_opts_2()).document
+    runner = _FakeRunner(payload=_wrapper_payload(document, version="2.6.0"))
+
+    report = _run(api, opts=_opts_2(), runner=runner)
+
+    assert report.asyncapi_version == "2.6.0"
+    assert report.valid is True
+
+
 def test_report_is_deterministic() -> None:
     """Two round trips of the same input produce equal reports (pure + deterministic)."""
     api = _rest_model()
@@ -562,6 +635,25 @@ class TestAsyncApiParserRoundTrip:
         assert report.status is RoundTripStatus.LOSSY
         assert report.predicted_losses
         assert report.diverges is False
+
+    def test_asyncapi_2_source_round_trips_lossless(self) -> None:
+        # FMT-3.2 end to end: emitted 2.6, validated by the authoritative parser, and
+        # re-imported to an empty diff.
+        api = _event_model_2()
+        report = asyncio.run(round_trip_asyncapi(api, opts=_opts_2()))
+        assert report.validation_errors == []
+        assert report.asyncapi_version == "2.6.0"
+        assert report.status is RoundTripStatus.LOSSLESS
+        assert report.diverges is False
+
+    def test_asyncapi_2_rest_source_validates_and_is_lossy(self) -> None:
+        report = asyncio.run(round_trip_asyncapi(_rest_model(), opts=_opts_2()))
+        assert report.valid is True
+        assert report.status is RoundTripStatus.LOSSY
+        assert any(
+            loss.subject == "asyncapi2-operation-reply"
+            for loss in report.predicted_losses
+        )
 
     def test_reparse_matches_a_direct_parse(self) -> None:
         # The document the round trip re-parses is exactly the serialized emission.
