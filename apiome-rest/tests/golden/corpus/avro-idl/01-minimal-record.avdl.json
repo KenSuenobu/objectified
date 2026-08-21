@@ -1,0 +1,103 @@
+{
+  "adapter": "avro",
+  "canonical": {
+    "channels": [],
+    "description": "A single record, no protocol — the schema-only form of Avro IDL.",
+    "extras": {
+      "avro_root": "com.example.ping.Beacon",
+      "avro_syntax": "avdl"
+    },
+    "format": "avro",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Beacon",
+      "namespace": "com.example.ping"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Beacon",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.ping.Beacon.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.ping.Beacon.seenAt",
+            "name": "seenAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.ping.Beacon",
+        "key_type": null,
+        "kind": "record",
+        "name": "Beacon",
+        "namespace": "com.example.ping",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "avro-idl/01-minimal-record.avdl",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "avro-idl"
+  },
+  "fingerprint": "sha256:0deea3887abc5434f0caac7f75698518e86934ab3d78b7a4cb4d5d2e206939b4",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "961aa32c26c8f2def59b5a27a298ade8f5b5446be124eb152d0d90119ae1e09f",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 2,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

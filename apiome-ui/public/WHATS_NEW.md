@@ -14,6 +14,8 @@ We continue to improve the platform based on your feedback with improvements and
     - Arazzo 1.1 import and export
     - AsyncAPI 2.x export
     - OData v2/v3 import and export
+    - WSDL 2.0 import and export
+    - Avro IDL (`.avdl`) import and export
   - Added pills to supported format list to show the source and type that the API format provides
 
 ## Bug Fixes

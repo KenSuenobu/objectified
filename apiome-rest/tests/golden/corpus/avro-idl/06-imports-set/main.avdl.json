@@ -1,0 +1,579 @@
+{
+  "adapter": "avro",
+  "canonical": {
+    "channels": [],
+    "description": "Root of the set: imports another IDL file and a generated .avsc schema, then uses\ntypes from both. The adapter must resolve both import kinds across the fileset.",
+    "extras": {
+      "avro_protocol": "com.example.shipping.ShippingService",
+      "avro_root": "com.example.shipping.ShipmentRequest",
+      "avro_syntax": "avdl"
+    },
+    "format": "avro",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "ShippingService",
+      "namespace": "com.example.shipping"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Root of the set: imports another IDL file and a generated .avsc schema, then uses\ntypes from both. The adapter must resolve both import kinds across the fileset.",
+        "extras": {},
+        "key": "com.example.shipping.ShippingService",
+        "name": "ShippingService",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "com.example.shipping.ShippingService.ship",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "avro_parameters": [
+                    {
+                      "name": "request",
+                      "type": "ShipmentRequest"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "com.example.shipping.ShippingService.ship#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.shipping.ShipmentRequest",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.shipping.ShippingService.ship#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.shipping.ShipmentResponse",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "ship",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "ShippingService",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "com.example.common.Address.city",
+            "name": "city",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "com.example.common.Address.countryCode",
+            "name": "countryCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.common.Address.line1",
+            "name": "line1",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 2,
+            "key": "com.example.common.Address.line2",
+            "name": "line2",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "com.example.common.Address.postalCode",
+            "name": "postalCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.common.Address",
+        "key_type": null,
+        "kind": "record",
+        "name": "Address",
+        "namespace": "com.example.common",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "decimal",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "avro_type": "bytes",
+              "logicalType": "decimal",
+              "precision": 12,
+              "scale": 2
+            },
+            "field_number": 1,
+            "key": "com.example.common.Money.amount",
+            "name": "amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.common.Money.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.common.Money",
+        "key_type": null,
+        "kind": "record",
+        "name": "Money",
+        "namespace": "com.example.common",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.common.Weight.unit",
+            "name": "unit",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.common.Weight.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.common.Weight",
+        "key_type": null,
+        "kind": "record",
+        "name": "Weight",
+        "namespace": "com.example.common",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Imported through `import schema` — the generated artifact beside the IDL source.",
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": false,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 4,
+            "key": "com.example.shipping.Parcel.fragile",
+            "name": "fragile",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "com.example.shipping.Parcel.heightCm",
+            "name": "heightCm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.shipping.Parcel.lengthCm",
+            "name": "lengthCm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.shipping.Parcel.widthCm",
+            "name": "widthCm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.shipping.Parcel",
+        "key_type": null,
+        "kind": "record",
+        "name": "Parcel",
+        "namespace": "com.example.shipping",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.shipping.ShipmentRequest.destination",
+            "name": "destination",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.common.Address",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "com.example.shipping.ShipmentRequest.parcel",
+            "name": "parcel",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.shipping.Parcel",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.shipping.ShipmentRequest.shipmentId",
+            "name": "shipmentId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "com.example.shipping.ShipmentRequest.weight",
+            "name": "weight",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.common.Weight",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.shipping.ShipmentRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "ShipmentRequest",
+        "namespace": "com.example.shipping",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "com.example.shipping.ShipmentResponse.price",
+            "name": "price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.common.Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.shipping.ShipmentResponse.shipmentId",
+            "name": "shipmentId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.shipping.ShipmentResponse.trackingNumber",
+            "name": "trackingNumber",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.shipping.ShipmentResponse",
+        "key_type": null,
+        "kind": "record",
+        "name": "ShipmentResponse",
+        "namespace": "com.example.shipping",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "avro-idl/06-imports-set/main.avdl",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 6
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "avro-idl"
+  },
+  "fingerprint": "sha256:3629a10840845158e8dd2ffb745b3ec50f19b6245b9581f78ec339898de8fd72",
+  "lint": {
+    "findings": 28,
+    "grade": "F",
+    "report_fingerprint": "2a92ee17bfa9fcb1ec08f783ffeb570f2a276e8458cfda64f61a15b4a1e7e3fe",
+    "score": 54,
+    "severity_counts": {
+      "error": 0,
+      "info": 22,
+      "warning": 6
+    }
+  },
+  "snapshot_version": 1
+}

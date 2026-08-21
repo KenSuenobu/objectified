@@ -54,7 +54,7 @@ thread and the toolchain-backed ones are awaited.
 from __future__ import annotations
 
 import asyncio
-from typing import Awaitable, Callable, Dict, List, Optional
+from typing import Awaitable, Callable, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -362,57 +362,76 @@ async def _validate_asyncapi(
     return _rejected(target, findings)
 
 
-def _avro_fullname(content: object) -> Optional[str]:
-    """Return the fully-qualified name of an emitted Avro schema (``namespace.name``)."""
-    if not isinstance(content, dict):
-        return None
-    name = content.get("name")
-    if not name:
-        return None
-    namespace = content.get("namespace")
-    return f"{namespace}.{name}" if namespace else str(name)
+def _avro_schemas_from_idl(emitted: EmittedFile) -> List[object]:
+    """Read an emitted ``.avdl`` back and return the Avro schemas it declares.
+
+    An IDL document is text, so ``fastavro`` cannot see it directly. Re-reading it with
+    the adapter's own IDL parser (FMT-3.5) is a stronger check than a syntax pass anyway:
+    the emitted source must parse, and every type it declares must then satisfy
+    ``fastavro`` exactly as an emitted ``.avsc`` does.
+
+    Args:
+        emitted: The emitted IDL file.
+
+    Returns:
+        One Avro schema dict per named type the document declares.
+
+    Raises:
+        ValueError: When the emitted IDL cannot be parsed.
+    """
+    from .avro_idl_parser import AvroIdlParseError, parse_avro_idl
+
+    text = emitted.content if isinstance(emitted.content, str) else str(emitted.content)
+    try:
+        document = parse_avro_idl(text, source_label=emitted.path)
+    except AvroIdlParseError as exc:
+        raise ValueError(f"Invalid Avro IDL: {exc}") from exc
+    return [named.schema for named in document.types]
+
+
+def _avro_validation_units(emit_result: EmitResult) -> List[Tuple[str, object]]:
+    """Return ``(path, schema)`` pairs to validate, from either Avro output syntax.
+
+    Args:
+        emit_result: The emit result, whose files are ``.avsc`` documents or a single
+            ``.avdl`` document.
+
+    Returns:
+        The units to hand ``fastavro``; an unparseable IDL file yields no units and is
+        reported by the caller through the error it raises.
+    """
+    units: List[Tuple[str, object]] = []
+    for emitted in emit_result.files:
+        if emitted.path.lower().endswith(".avdl"):
+            for index, schema in enumerate(_avro_schemas_from_idl(emitted)):
+                units.append((f"{emitted.path}#{index}", schema))
+            continue
+        units.append((emitted.path, emitted.content))
+    return units
 
 
 async def _validate_avro(
     target: str, emit_result: EmitResult, api: CanonicalApi
 ) -> EmittedArtifactValidation:
-    """Re-validate every emitted ``.avsc`` with ``fastavro`` (shared named-schema registry).
+    """Re-validate every emitted Avro schema with ``fastavro`` (shared named registry).
 
-    Each named type is emitted to its own ``.avsc`` and may reference another by name, so a
-    file cannot always be validated in isolation. This resolves the cross-file references the
-    way the emitter's own ``render()`` does — validating with a shared registry and registering
-    each schema once it parses — but **order-independently**: it iterates to a fixed point, so a
-    valid bundle passes regardless of the emitted files' order, while a genuinely broken schema
-    (or a dangling reference an emitter should never produce) never resolves and is reported.
-    Pure Python (``fastavro``), so it always runs.
+    Cross-file references are resolved by the emitter's own
+    :func:`app.avro_emitter.validate_avro_bundle`, so the delivery gate and the emit path
+    agree by construction on what a valid Avro bundle is. Pure Python (``fastavro``), so
+    it always runs.
+
+    An ``output_syntax="avdl"`` export (FMT-3.5) emits one IDL document instead; it is
+    read back with the IDL parser first, and the types it declares go through the same
+    bundle validation.
     """
-    from .avro_emitter import validate_avro_schema
+    from .avro_emitter import validate_avro_bundle
 
     def _run() -> List[str]:
-        named_schemas: Dict[str, object] = {}
-        pending = list(emit_result.files)
-        while True:
-            unresolved: List[EmittedFile] = []
-            errors: List[str] = []
-            progressed = False
-            for emitted in pending:
-                try:
-                    validate_avro_schema(emitted.content, named_schemas=named_schemas)
-                except (ValueError, TypeError) as exc:
-                    unresolved.append(emitted)
-                    errors.append(f"{emitted.path}: {exc}")
-                    continue
-                fullname = _avro_fullname(emitted.content)
-                if fullname is not None:
-                    named_schemas[fullname] = emitted.content
-                progressed = True
-            if not unresolved:
-                return []
-            if not progressed:
-                # A full pass registered nothing new: the remainder are genuine failures
-                # (invalid schema or an unresolvable reference), not an ordering artifact.
-                return errors
-            pending = unresolved
+        try:
+            units = _avro_validation_units(emit_result)
+        except ValueError as exc:
+            return [str(exc)]
+        return validate_avro_bundle(units)
 
     errors = await asyncio.to_thread(_run)
     return _passed(target) if not errors else _rejected(target, _findings_from_avro_errors(errors))

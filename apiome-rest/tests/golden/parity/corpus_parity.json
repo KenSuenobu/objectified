@@ -210,37 +210,45 @@
       "label": "Avro",
       "paradigm": "data_schema",
       "corpus_formats": [
-        "avro"
+        "avro",
+        "avro-idl"
       ],
       "corpus_directories": [
-        "avro"
+        "avro",
+        "avro-idl"
       ],
       "fixtures": {
-        "valid": 6,
-        "negative": 5,
+        "valid": 14,
+        "negative": 11,
         "adversarial": 0,
         "scale": 0,
-        "total": 11
+        "total": 25
       },
       "rungs": [
         "composition",
         "minimal",
+        "multi-file",
         "real-world",
         "stress",
         "typical"
       ],
-      "rung_waivers": [
-        "multi-file"
-      ],
-      "goldens": 6,
+      "rung_waivers": [],
+      "goldens": 12,
       "golden_directories": [
-        "avro"
+        "avro",
+        "avro-idl"
       ],
       "emit_key": "avro",
       "roundtrip_row": true,
       "roundtrip_cells": [
         {
           "source_format": "avro",
+          "emit_key": "avro",
+          "status": "xfail",
+          "has_reason": true
+        },
+        {
+          "source_format": "avro-idl",
           "emit_key": "avro",
           "status": "xfail",
           "has_reason": true
@@ -2207,7 +2215,6 @@
   "pending_corpus_directories": [
     "apigee",
     "arrow",
-    "avro-idl",
     "aws-apigateway",
     "azure-apim",
     "cddl",

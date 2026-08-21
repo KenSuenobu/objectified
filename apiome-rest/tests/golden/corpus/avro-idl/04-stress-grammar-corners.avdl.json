@@ -1,0 +1,839 @@
+{
+  "adapter": "avro",
+  "canonical": {
+    "channels": [],
+    "description": "Grammar corners: every annotation, logical type, and declaration form the IDL admits.",
+    "extras": {
+      "avro_protocol": "com.example.stress.StressProtocol",
+      "avro_protocol_properties": {
+        "version": "3"
+      },
+      "avro_root": "com.example.stress.Digest",
+      "avro_syntax": "avdl"
+    },
+    "format": "avro",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "StressProtocol",
+      "namespace": "com.example.stress"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Grammar corners: every annotation, logical type, and declaration form the IDL admits.",
+        "extras": {},
+        "key": "com.example.stress.StressProtocol",
+        "name": "StressProtocol",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "One-way message.",
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "com.example.stress.StressProtocol.emit",
+            "kind": "one_way",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "avro_parameters": [
+                    {
+                      "name": "temporal",
+                      "type": "Temporal"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "com.example.stress.StressProtocol.emit#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.stress.Temporal",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "emit",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Message that throws two errors.",
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "com.example.stress.StressProtocol.mutate",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.stress.StressProtocol.mutate#error.StressError",
+                "name": "StressError",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.stress.StressError",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "avro_parameters": [
+                    {
+                      "name": "corners",
+                      "type": "Corners"
+                    },
+                    {
+                      "default": false,
+                      "has_default": true,
+                      "name": "dryRun",
+                      "type": "boolean"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "com.example.stress.StressProtocol.mutate#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.stress.StressProtocol.mutate#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.stress.Corners",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "mutate",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Message with no arguments.",
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "com.example.stress.StressProtocol.snapshot",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.stress.StressProtocol.snapshot#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.stress.Corners",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "snapshot",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Message returning void, not oneway.",
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "com.example.stress.StressProtocol.touch",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "avro_parameters": [
+                    {
+                      "name": "corners",
+                      "type": "Corners"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "com.example.stress.StressProtocol.touch#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.stress.Corners",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "touch",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "StressProtocol",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": [],
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 5,
+            "key": "com.example.stress.Corners.arrayOfMaps",
+            "name": "arrayOfMaps",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "com.example.stress.Map_string",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "com.example.stress.Corners.deeplyNested",
+            "name": "deeplyNested",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.stress.Map_{'type': 'array', 'items': ['null', 'double']}",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "avro_order": "ignore"
+            },
+            "field_number": 2,
+            "key": "com.example.stress.Corners.opaque",
+            "name": "opaque",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "avro_properties": {
+                "extra": {
+                  "owner": "platform",
+                  "pii": false
+                }
+              }
+            },
+            "field_number": 8,
+            "key": "com.example.stress.Corners.payload",
+            "name": "payload",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 3,
+            "key": "com.example.stress.Corners.polymorphic",
+            "name": "polymorphic",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.stress.Union_null_integer_string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Doc comment on a field.",
+            "extras": {
+              "avro_order": "ascending"
+            },
+            "field_number": 1,
+            "key": "com.example.stress.Corners.primary",
+            "name": "primary",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "NORMAL",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 6,
+            "key": "com.example.stress.Corners.priority",
+            "name": "priority",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.stress.Priority",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 7,
+            "key": "com.example.stress.Corners.record",
+            "name": "record",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.stress.Corners",
+        "key_type": null,
+        "kind": "record",
+        "name": "Corners",
+        "namespace": "com.example.stress",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A fixed-size type.",
+        "enum_values": [],
+        "extras": {
+          "avro_aliases": [
+            "Sha256"
+          ],
+          "avro_kind": "fixed",
+          "avro_size": 32,
+          "avro_type": "fixed"
+        },
+        "fields": [],
+        "key": "com.example.stress.Digest",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "Digest",
+        "namespace": "com.example.stress",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "map"
+        },
+        "fields": [],
+        "key": "com.example.stress.Map_string",
+        "key_type": null,
+        "kind": "map",
+        "name": "Map_string",
+        "namespace": "com.example.stress",
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": false
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "map"
+        },
+        "fields": [],
+        "key": "com.example.stress.Map_{'type': 'array', 'items': ['null', 'double']}",
+        "key_type": null,
+        "kind": "map",
+        "name": "Map_{'type': 'array', 'items': ['null', 'double']}",
+        "namespace": "com.example.stress",
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": {
+            "extras": {},
+            "item": null,
+            "name": "double",
+            "nullable": true
+          },
+          "name": null,
+          "nullable": false
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.stress.Priority.LOW",
+            "name": "LOW",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.stress.Priority.NORMAL",
+            "name": "NORMAL",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.stress.Priority.HIGH",
+            "name": "HIGH",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.stress.Priority.URGENT",
+            "name": "URGENT",
+            "value": 3
+          }
+        ],
+        "extras": {
+          "avro_enum_default": "NORMAL",
+          "avro_kind": "enum"
+        },
+        "fields": [],
+        "key": "com.example.stress.Priority",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Priority",
+        "namespace": "com.example.stress",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "error"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 2,
+            "key": "com.example.stress.StressError.context",
+            "name": "context",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.stress.Corners",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.stress.StressError.reason",
+            "name": "reason",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.stress.StressError",
+        "key_type": null,
+        "kind": "record",
+        "name": "StressError",
+        "namespace": "com.example.stress",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Logical types spelled both ways.",
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "decimal",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "avro_type": "bytes",
+              "logicalType": "decimal",
+              "precision": 12,
+              "scale": 4
+            },
+            "field_number": 5,
+            "key": "com.example.stress.Temporal.amount",
+            "name": "amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "avro_type": "long",
+              "logicalType": "timestamp-micros"
+            },
+            "field_number": 3,
+            "key": "com.example.stress.Temporal.capturedAt",
+            "name": "capturedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "avro_type": "string",
+              "logicalType": "uuid"
+            },
+            "field_number": 4,
+            "key": "com.example.stress.Temporal.correlationId",
+            "name": "correlationId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "avro_type": "int",
+              "logicalType": "date"
+            },
+            "field_number": 1,
+            "key": "com.example.stress.Temporal.day",
+            "name": "day",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "avro_type": "int",
+              "logicalType": "time-millis"
+            },
+            "field_number": 2,
+            "key": "com.example.stress.Temporal.timeOfDay",
+            "name": "timeOfDay",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "avro_type": "Digest",
+              "logicalType": "duration"
+            },
+            "field_number": 6,
+            "key": "com.example.stress.Temporal.window",
+            "name": "window",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.stress.Digest",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.stress.Temporal",
+        "key_type": null,
+        "kind": "record",
+        "name": "Temporal",
+        "namespace": "com.example.stress",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "union"
+        },
+        "fields": [],
+        "key": "com.example.stress.Union_null_integer_string",
+        "key_type": null,
+        "kind": "union",
+        "name": "Union_null_integer_string",
+        "namespace": "com.example.stress",
+        "union_members": [
+          "null",
+          "integer",
+          "string"
+        ],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "avro-idl/04-stress-grammar-corners.avdl",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 0,
+    "services": 1,
+    "types": 8
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "avro-idl"
+  },
+  "fingerprint": "sha256:fc71f4825ff8d86d3df3eb8b857a76a5fa3f2a4c0c222817e18c6bbaab7eb436",
+  "lint": {
+    "findings": 27,
+    "grade": "F",
+    "report_fingerprint": "f204a3858a7fee8a7890b3fb0c4590514ca37f6775e87ba9b85aec95690786ee",
+    "score": 59,
+    "severity_counts": {
+      "error": 0,
+      "info": 21,
+      "warning": 6
+    }
+  },
+  "snapshot_version": 1
+}

@@ -92,7 +92,7 @@ The corpus holds **1418 files** across **103 format directories**. Every file ha
 | `arrow/` | Apache Arrow / Flight schema (pending #5438) | data_schema | `schema.fields[].type.name` in the Arrow JSON integration form | 14 |
 | `asn1/` | ASN.1 | data_schema | `DEFINITIONS ::= BEGIN … END` | 12 |
 | `avro/` | Avro schema | data_schema | `type: record` + `fields` | 11 |
-| `avro-idl/` | Avro IDL (pending #5430) | data_schema | `protocol … {` or `namespace …;` + `record` declarations in `.avdl` | 14 |
+| `avro-idl/` | Avro IDL | data_schema / rpc | `protocol … {` or `namespace …;` + `record` declarations in `.avdl` | 14 |
 | `capnproto/` | Cap'n Proto | data_schema | `@0x…` file id + `struct` | 11 |
 | `cddl/` | CDDL (RFC 8610) (pending #5437) | data_schema | `name = { … }` rules with `tstr`/`bstr`/`uint` prelude types | 14 |
 | `cics-bms/` | CICS BMS maps (pending #5484) | data_schema | `DFHMSD`/`DFHMDI`/`DFHMDF` macro source with column-72 continuations | 14 |
@@ -342,24 +342,24 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/04-wrong-format-json-schema.json` | — | `avro` (no guarantee) | invalid | `negative`, `wrong-format`, `json-schema` |
 | `negative/05-encoding-utf16.avsc` | — | `avro` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
 
-### `avro-idl/` — Avro IDL (pending #5430)
+### `avro-idl/` — Avro IDL
 
 | File | Rung | Expected detection | Class | Features |
 | --- | --- | --- | --- | --- |
-| `01-minimal-record.avdl` | minimal | `avro-idl` ≥ 0.9 | valid | `schema-only`, `record`, `pending-adapter` |
-| `02-typical-orders-protocol.avdl` ⚠ | typical | `avro-idl` ≥ 0.9 | valid | `protocol`, `messages`, `oneway`, `throws`, `enum`, `union`, `pending-adapter` |
-| `03-composition-named-type-reuse.avdl` | composition | `avro-idl` ≥ 0.9 | valid | `named-type-reuse`, `self-reference`, `map`, `array`, `schema-only`, `pending-adapter` |
-| `04-stress-grammar-corners.avdl` | stress | `avro-idl` ≥ 0.9 | valid | `fixed`, `decimal`, `logicalType`, `order`, `aliases`, `escaped-name`, `nested-union`, `pending-adapter` |
-| `05-real-world-payments-protocol.avdl` | real-world | `avro-idl` ≥ 0.9 | valid | `protocol`, `messages`, `decimal`, `errors`, `oneway`, `pending-adapter` |
-| `06-imports-set/common.avdl` | multi-file (member) | `avro-idl` (no guarantee) | valid | `multi-file`, `import-idl`, `schema-only`, `pending-adapter` |
-| `06-imports-set/main.avdl` | multi-file (root) | `avro-idl` ≥ 0.9 | valid | `multi-file`, `import-idl`, `import-schema`, `protocol`, `pending-adapter` |
-| `06-imports-set/parcel.avsc` ⚠ | multi-file (member) | `avro` (no guarantee) | valid | `multi-file`, `import-schema`, `record`, `pending-adapter` |
-| `negative/01-syntactic-missing-semicolon.avdl` | — | `avro-idl` (no guarantee) | invalid | `negative`, `syntactic`, `missing-semicolon`, `pending-adapter` |
-| `negative/02-semantic-duplicate-union-branch.avdl` | — | `avro-idl` (no guarantee) | invalid | `negative`, `semantic`, `duplicate-union-branch`, `pending-adapter` |
-| `negative/03-truncated-mid-record.avdl` | — | `avro-idl` (no guarantee) | invalid | `negative`, `truncated`, `mid-record`, `pending-adapter` |
-| `negative/04-wrong-format-protobuf.proto` | — | `avro-idl` (no guarantee) | invalid | `negative`, `wrong-format`, `protobuf`, `pending-adapter` |
-| `negative/05-encoding-utf16.avdl` | — | `avro-idl` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
-| `negative/06-unresolvable-import.avdl` | — | `avro-idl` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-import`, `pending-adapter` |
+| `01-minimal-record.avdl` | minimal | `avro-idl` ≥ 0.9 | valid | `schema-only`, `record` |
+| `02-typical-orders-protocol.avdl` ⚠ | typical | `avro-idl` ≥ 0.9 | valid | `protocol`, `messages`, `oneway`, `throws`, `enum`, `union` |
+| `03-composition-named-type-reuse.avdl` | composition | `avro-idl` ≥ 0.9 | valid | `named-type-reuse`, `self-reference`, `map`, `array`, `schema-only` |
+| `04-stress-grammar-corners.avdl` | stress | `avro-idl` ≥ 0.9 | valid | `fixed`, `decimal`, `logicalType`, `order`, `aliases`, `escaped-name`, `nested-union` |
+| `05-real-world-payments-protocol.avdl` | real-world | `avro-idl` ≥ 0.9 | valid | `protocol`, `messages`, `decimal`, `errors`, `oneway` |
+| `06-imports-set/common.avdl` | multi-file (member) | `avro-idl` (no guarantee) | valid | `multi-file`, `import-idl`, `schema-only` |
+| `06-imports-set/main.avdl` | multi-file (root) | `avro-idl` ≥ 0.9 | valid | `multi-file`, `import-idl`, `import-schema`, `protocol` |
+| `06-imports-set/parcel.avsc` ⚠ | multi-file (member) | `avro` (no guarantee) | valid | `multi-file`, `import-schema`, `record` |
+| `negative/01-syntactic-missing-semicolon.avdl` | — | `avro-idl` (no guarantee) | invalid | `negative`, `syntactic`, `missing-semicolon` |
+| `negative/02-semantic-duplicate-union-branch.avdl` | — | `avro-idl` (no guarantee) | invalid | `negative`, `semantic`, `duplicate-union-branch` |
+| `negative/03-truncated-mid-record.avdl` | — | `avro-idl` (no guarantee) | invalid | `negative`, `truncated`, `mid-record` |
+| `negative/04-wrong-format-protobuf.proto` | — | `avro-idl` (no guarantee) | invalid | `negative`, `wrong-format`, `protobuf` |
+| `negative/05-encoding-utf16.avdl` | — | `avro-idl` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+| `negative/06-unresolvable-import.avdl` | — | `avro-idl` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-import` |
 
 > ⚠ **`02-typical-orders-protocol.avdl`** — Protocol form: messages must normalize to rpc-paradigm operations, unlike the schema-only files.
 
@@ -2567,7 +2567,6 @@ Rungs that do not apply to an adapter's format, with the manifest-recorded justi
 | --- | --- | --- |
 | `apiblueprint` | multi-file | The API Blueprint adapter's parse_fileset only parses the root document and never resolves references across fileset members, so a multi-file set would exercise nothing beyond a single file. |
 | `asn1` | multi-file | Asn1ImportSource.parse_fileset only parses the root member (and the parser rejects more than one module per document), so cross-member resolution genuinely does not exist. |
-| `avro` | multi-file | AvroImportSource.parse_fileset only parses the root member and never resolves references into other fileset members, so a multi-file set would demonstrate nothing. |
 | `capnproto` | multi-file | CapnpImportSource.parse_fileset only parses the fileset root and never resolves imported members, so a multi-file set demonstrates nothing beyond a single file. |
 | `cloudevents` | multi-file | CloudEventsImportSource.parse_fileset parses only the root member and resolves nothing across files, so a genuine multi-file set is not importable. |
 | `cobolcopybook` | multi-file | COBOL COPY statements are not resolved and the cobolcopybook adapter's parse_fileset parses only the root member, so a multi-file set demonstrates nothing. |

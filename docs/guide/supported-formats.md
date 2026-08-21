@@ -88,7 +88,7 @@ The **Direction** column below says whether a format can be imported, exported, 
 | Format | Key | Direction | Publishable | Input kinds | Live discovery | Format keys | File extensions | Analysis | Runtime |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ASN.1 | `asn1` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `asn1`, `asn` | `.asn1`, `.asn`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
-| Avro | `avro` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `avro`, `avsc` | `.avsc`, `.avro`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
+| Avro | `avro` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `avro`, `avsc`, `avro-idl` | `.avsc`, `.avro`, `.avdl`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 | COBOL Copybook | `cobolcopybook` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `cobolcopybook`, `copybook`, `cobol`, `cobol-copybook` | `.cpy`, `.cbl`, `.copybook`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | [Format-native (reviewed)](#format-cobolcopybook) | Ready |
 | EDI X12 | `edix12` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `edix12`, `x12`, `edi` | `.edi`, `.x12`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | [Format-native (reviewed)](#format-edix12) | Ready |
 | FIX | `fix` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `fix`, `fixprotocol` | `.fix`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
