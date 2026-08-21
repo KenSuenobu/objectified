@@ -173,6 +173,8 @@ const CATALOG_PRELUDES = [
   '.cat-fmt-chip--dim',
   '.cat-fmt-chip--dim .cat-fmt-chip__tile',
   '.cat-fmt-chip--unavailable',
+  '.cat-fmt-chip--unavailable .cat-fmt-chip__name, .cat-fmt-chip--unavailable .fmt-trait--origin',
+  '.cat-fmt-chip--unavailable .fmt-trait--origin',
   '.cat-fmt-chip__tile',
   '.cat-fmt-chip__tile > svg',
   '.cat-fmt-chip__text',
@@ -800,6 +802,24 @@ describe('the format chip’s trait pills (CATP-1.1)', () => {
     // because `justify-self: end` is not restated and therefore not lost.
     expect(narrow().body.replace(/\s+/g, ' ')).toContain('"name" "desc" "traits"');
   });
+
+  it.each(APPEARANCES)(
+    'inks the amber chip’s name and outlined pill for that ground in the %s appearance',
+    (_id, block) => {
+      // `--fg` on a `-soft` fill is the pairing the token layer forbids: only the light and dark
+      // palettes recalibrate a `-soft` against it, and axe measured the name at 1.08:1 on the
+      // amber in five of the nine appearances before this rule existed.
+      expect(
+        declaration(
+          '.cat-fmt-chip--unavailable .cat-fmt-chip__name, .cat-fmt-chip--unavailable .fmt-trait--origin',
+          'color'
+        )
+      ).toBe('var(--warn-fg)');
+      const ink = paint('--warn-fg', block, PAPER);
+      const ground = paint('--warn-soft', block, paint('--bg-surface', block, PAPER));
+      expect(contrastRatio(ink, ground)).toBeGreaterThanOrEqual(WCAG_AA_NORMAL_TEXT_MIN);
+    }
+  );
 
   it('leaves the identity hue to the format, and takes the neutral pair instead', () => {
     // The chip's tile already carries the format's fixed hue. Two more saturated pills beside

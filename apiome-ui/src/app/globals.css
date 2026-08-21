@@ -20334,6 +20334,24 @@ a.cat-fmt-chip:hover {
   box-shadow: inset 0 0 0 1px var(--warn);
 }
 
+/* …and everything printed on that ground takes the ink calibrated *for* it.
+   The rule above gave the reason line `--warn-fg`, but the name above it kept
+   `--fg` and the trait pill beside it `--fg-muted` — and `--fg` on a `-soft`
+   fill is the pairing the token layer forbids, because only the light and dark
+   palettes recalibrate a `-soft` against it. Measured with axe on the
+   gallery's own fixture, the name was **1.08:1–1.68:1** on the amber in five
+   of the nine appearances: High contrast, Blueprint, Solarized, Nord and
+   Darcula. The filled pill is exempt — it brings its own `--bg-inset` ground
+   and clears AA on all nine. */
+.cat-fmt-chip--unavailable .cat-fmt-chip__name,
+.cat-fmt-chip--unavailable .fmt-trait--origin {
+  color: var(--warn-fg);
+}
+
+.cat-fmt-chip--unavailable .fmt-trait--origin {
+  box-shadow: inset 0 0 0 1px var(--warn);
+}
+
 .cat-fmt-chip__tile {
   display: inline-flex;
   align-items: center;

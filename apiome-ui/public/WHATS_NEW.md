@@ -13,6 +13,7 @@ We continue to improve the platform based on your feedback with improvements and
     - Kong import and export
     - Arazzo 1.1 import and export
     - AsyncAPI 2.x export
+  - Added pills to supported format list to show the source and type that the API format provides
 
 ## Bug Fixes
 
