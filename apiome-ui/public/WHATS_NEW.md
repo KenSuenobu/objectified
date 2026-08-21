@@ -6,7 +6,7 @@ We continue to improve the platform based on your feedback with improvements and
 
 ## Features/Improvements
 
-- Import:
+- API Formats:
   - Hardening import functionality
   - Adds formats:
     - MCP import and export
