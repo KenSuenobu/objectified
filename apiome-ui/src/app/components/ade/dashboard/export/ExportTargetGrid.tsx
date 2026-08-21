@@ -5,6 +5,7 @@ import { Badge } from '../../../ui/Badge';
 import {
   tierTone,
   tierLabel,
+  type ExportDialect,
   type ExportTargetCard,
 } from './exportTargetCatalog';
 import {
@@ -59,6 +60,14 @@ export interface ExportTargetGridProps {
    * family is untouched either way.
    */
   groupByFamily?: boolean;
+  /**
+   * The version the selected target will emit (FMT-3.2, #5427), from
+   * `resolveExportDialect`. Rendered as a second fidelity badge on the selected card and in
+   * the headline, so a target offering more than one version of its format — AsyncAPI 3.1 vs
+   * its 2.6 downgrade — says which one the export is actually going to produce. Omitted for a
+   * target with a single version, and by callers that render no options form.
+   */
+  dialect?: ExportDialect | null;
 }
 
 /**
@@ -71,6 +80,11 @@ export interface ExportTargetGridProps {
  * unselectable. Picking a target renders the fidelity headline (tier + preserved-%) below the
  * grid. This is one component, not a fork: the dialog and the Studio's Target step both mount it,
  * so a change to the card layout or badges lands in both surfaces at once.
+ *
+ * A target that emits more than one version of its format (AsyncAPI 3.1 vs its 2.6 downgrade,
+ * FMT-3.2) carries a second badge on the selected card and in the headline naming the version
+ * the export will produce and whether it is the native one — the tier badge alone is computed
+ * before any option is chosen and so cannot say it.
  *
  * With an IXH-2.4 pre-flight ranking (`readiness`) the grid additionally sorts by expected
  * outcome — ready, then check-first, then policy-blocked, then unavailable — badges each card with
@@ -89,6 +103,7 @@ export function ExportTargetGrid({
   order,
   onOrderChange,
   groupByFamily = false,
+  dialect = null,
 }: ExportTargetGridProps) {
   // Memoized so an omitted `readiness` prop does not hand the ordering a fresh `{}` every render.
   const ranking = useMemo(() => readiness ?? {}, [readiness]);
@@ -193,6 +208,16 @@ export function ExportTargetGrid({
                       {card.entry.descriptor.paradigm}
                       {card.entry.descriptor.multi_file ? ' · multi-file' : ''}
                     </div>
+                    {isSelected && dialect && (
+                      <Badge
+                        variant={dialect.tone}
+                        data-testid={`export-target-dialect-${card.key}`}
+                        className="vdlg-export__target-dialect"
+                        title={dialect.detail}
+                      >
+                        {dialect.label}
+                      </Badge>
+                    )}
                     {target && (
                       <div
                         data-testid={`export-target-rationale-${card.key}`}
@@ -224,6 +249,15 @@ export function ExportTargetGrid({
               </Badge>
             )}
             <Badge variant={tierTone(fidelity.tier)}>{tierLabel(fidelity.tier)}</Badge>
+            {dialect && (
+              <Badge
+                variant={dialect.tone}
+                data-testid="export-fidelity-headline-dialect"
+                title={dialect.detail}
+              >
+                {dialect.label}
+              </Badge>
+            )}
             <span className="vdlg-quiet">{fidelity.preserved_percent}% preserved</span>
           </div>
         </div>

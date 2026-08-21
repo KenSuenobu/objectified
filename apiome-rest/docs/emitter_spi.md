@@ -2,7 +2,8 @@
 
 > **Status:** SPI + reference implementations — `src/app/emitter.py`,
 > `src/app/openapi_emitter.py`, `src/app/asyncapi_emitter.py`,
-> `src/app/proto_emitter.py`, `src/app/sample_emitter.py`, `src/app/openapi_validator.py`
+> `src/app/proto_emitter.py`, `src/app/sample_emitter.py`, `src/app/openapi_validator.py`,
+> `src/app/asyncapi_downgrade.py`
 > **Issues:** [#4002](https://github.com/apiome/apiome/issues/4002) (MFI-22.1),
 > [#3834](https://github.com/apiome/apiome/issues/3834) (MFX-1.1),
 > [#3835](https://github.com/apiome/apiome/issues/3835) (MFX-1.2) ·
@@ -291,8 +292,40 @@ source is **reframed**: each request/response operation becomes an `action: send
 whose `reply` block carries the response message, and the HTTP method/path/status
 AsyncAPI cannot represent are recorded as `EmitResult.losses` (`INFERRED` reframe +
 synthesized channel, `NA` HTTP binding + response status). Its `CapabilityProfile` is
-honest about this — `events=True`, `operations=False`. Options: `include_channels`
-(disable for a schemas-only export) and `include_components`.
+honest about this — `events=True`, `operations=False`. Options: `asyncapi_version`
+(below), `include_channels` (disable for a schemas-only export) and `include_components`.
+
+#### `asyncapi_version` — the AsyncAPI 2.6 downgrade target (FMT-3.2)
+
+`AsyncApiNormalizer` reads AsyncAPI 2.x *and* 3.x, so without a 2.x output a customer
+could bring a 2.6 document in and never get one back. `asyncapi_version` closes that:
+`3.1` (default) is the native, lossless target and `2.6` projects the emission onto the
+AsyncAPI 2.x object model through `app.asyncapi_downgrade.downgrade_to_asyncapi_2` —
+the AsyncAPI analogue of `openapi_version`'s 3.0/2.0 downgrades.
+
+2.x is a different object model, not an older dialect, so the projection *moves*
+constructs rather than rewriting them in place:
+
+| AsyncAPI 3.1 | AsyncAPI 2.6 |
+|--------------|--------------|
+| `channels[name]` + `address` | `channels[address]` (the name is spent) |
+| `operations[name]` (+ channel `$ref`) | the channel's own `publish` / `subscribe` member, with `operationId: name` |
+| `action: send` / `receive` | `publish` / `subscribe` (the client's perspective, not the application's) |
+| `channels[name].messages` + operation `$ref`s | the operation's `message` (or `message.oneOf`) |
+| server `host` + `pathname` | one `url`, with `protocol` restored as its scheme |
+| parameter `enum` / `default` / `examples` | the parameter's `schema` (taken from the *model*, which a 3.x Parameter Object could not carry) |
+
+Everything 2.6 cannot express is recorded on `EmitResult.losses` with a named subject:
+`asyncapi2-operation-reply` (2.x has no request/reply pattern), `asyncapi2-duplicate-action`
+(a 2.x channel has one `publish` and one `subscribe` slot), `asyncapi2-channel-collision`
+(two 3.x channels sharing one address), `asyncapi2-channel-name` (a channel named apart
+from its address), `asyncapi2-orphan-message`, and `asyncapi2-{server,channel,operation}-field`
+for each 3.x-only key the closed 2.6 object model has no slot for.
+
+A 2.x source is a **fixed point** of the 2.6 target — `normalize(emit-2.6(normalize(doc)))
+== normalize(doc)` — so channels, operations, messages and bindings all survive the round
+trip. `round_trip_asyncapi` measures it end to end through the bundled `@asyncapi/parser`,
+which validates 2.x and 3.x alike.
 
 `AsyncApiEmitter.fidelity_rule_pack()` returns **`AsyncApiFidelityRulePack`** (MFX-11.2),
 the predictive counterpart the fidelity engine consults so an export's losses can be

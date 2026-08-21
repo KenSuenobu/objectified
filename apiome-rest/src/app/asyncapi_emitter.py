@@ -51,18 +51,29 @@ so :func:`app.emitter.get_emitter` resolves it. The acceptance-criterion validat
 ("emits valid AsyncAPI 3 from an event source") is confirmed by feeding the emitted
 document back through :func:`app.asyncapi_parser.parse_asyncapi` (the bundled
 ``@asyncapi/parser`` toolchain), which the round-trip ticket (MFX-11.4) automates.
+
+The ``asyncapi_version`` emit option (FMT-3.2) additionally lets a caller target
+**AsyncAPI 2.6** through :mod:`app.asyncapi_downgrade`. The normalizer reads 2.x and
+3.x, so without it a customer could bring a 2.6 document in and never get one back —
+the asymmetry the OpenAPI emitter avoids by offering 3.1/3.0/2.0. 2.x is a different
+object model rather than an older dialect (channels-with-operations instead of a
+separate ``operations`` map, messages carried on the operation, one ``url`` instead of
+a ``host``/``pathname`` split), and every 3.x-only construct it cannot express is
+recorded on the result's :attr:`~app.emitter.EmitResult.losses` with a named reason.
 """
 
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 from pydantic import Field
 
+from .asyncapi_downgrade import ASYNCAPI_26_VERSION, downgrade_to_asyncapi_2
 from .canonical_model import (
     ApiParadigm,
     CanonicalApi,
+    CanonicalField,
     Channel,
     Message,
     MessageRole,
@@ -120,6 +131,16 @@ _UNSAFE_NAME_RE = re.compile(r"[^\w.\-]")
 class AsyncApiEmitOptions(EmitOptions):
     """Per-target options for :class:`AsyncApiEmitter` (MFX-1.4)."""
 
+    asyncapi_version: Literal["3.1", "2.6"] = Field(
+        default="3.1",
+        description=(
+            "AsyncAPI version to emit. ``3.1`` (default) is the native, lossless "
+            "target; ``2.6`` is a downgrade for consumers still on AsyncAPI 2.x, "
+            "projected onto the 2.x object model (channels carrying their own "
+            "publish/subscribe operations) with every 3.x-only construct recorded as "
+            "a fidelity loss (FMT-3.2)."
+        ),
+    )
     include_channels: bool = Field(
         default=True,
         description="Emit ``channels`` and ``operations``. Disable for a "
@@ -251,7 +272,7 @@ class AsyncApiEmitter(Emitter, register=True):
     multi_file = False
     options_model = AsyncApiEmitOptions
 
-    #: The AsyncAPI version string this emitter targets.
+    #: The AsyncAPI version string this emitter targets natively.
     ASYNCAPI_VERSION = "3.1.0"
     #: Primary output filename within a bundle.
     OUTPUT_PATH = "asyncapi.json"
@@ -300,7 +321,13 @@ class AsyncApiEmitter(Emitter, register=True):
         *,
         opts: Optional[Union[AsyncApiEmitOptions, EmitOptions]] = None,
     ) -> EmitResult:
-        """Emit ``api`` as an AsyncAPI 3.1 document with per-construct provenance.
+        """Emit ``api`` as an AsyncAPI document with per-construct provenance.
+
+        The default target is the native AsyncAPI 3.1. When ``opts.asyncapi_version``
+        is ``"2.6"``, the 3.1 document is projected onto the AsyncAPI 2.x object model
+        via :mod:`app.asyncapi_downgrade`, and every 3.x-only construct 2.6 cannot
+        express is recorded as a :class:`~app.emitter.Loss` on the result — the FMT-3.2
+        "3.x-only constructs are reported as losses with named reasons" behaviour.
 
         Args:
             api: The canonical model to convert.
@@ -308,10 +335,11 @@ class AsyncApiEmitter(Emitter, register=True):
 
         Returns:
             An :class:`~app.emitter.EmitResult` whose primary file is a schema-valid
-            AsyncAPI 3.1 document, whose ``provenance`` records where each value came
-            from, and whose ``losses`` enumerate the HTTP semantics a reframed
-            non-event source could not carry. The output is deterministic for a given
-            ``api``.
+            document in the requested AsyncAPI version, whose ``provenance`` records
+            where each value came from, and whose ``losses`` enumerate the HTTP
+            semantics a reframed non-event source could not carry plus anything the
+            requested version could not represent. The output is deterministic for a
+            given ``api``.
         """
         options = (
             opts
@@ -322,8 +350,9 @@ class AsyncApiEmitter(Emitter, register=True):
         losses = LossTracker()
         schema = SchemaEmitter(ref_prefix=self.REF_PREFIX)
 
+        # The version string is recorded in ``_apply_version`` so its provenance note
+        # names the version actually emitted.
         document: Dict[str, Any] = {"asyncapi": self.ASYNCAPI_VERSION}
-        tracker.record("/asyncapi", Provenance.DEFAULT, "emitter target AsyncAPI version")
 
         document["info"] = self._info(api, tracker)
 
@@ -343,6 +372,10 @@ class AsyncApiEmitter(Emitter, register=True):
             if components:
                 document["components"] = components
 
+        document = self._apply_version(
+            document, api, schema, options.asyncapi_version, tracker, losses
+        )
+
         return EmitResult.from_document(
             document,
             path=self.OUTPUT_PATH,
@@ -350,6 +383,103 @@ class AsyncApiEmitter(Emitter, register=True):
             provenance=tracker.records(),
             losses=losses.records(),
         )
+
+    # --- version targeting --------------------------------------------------
+
+    def _apply_version(
+        self,
+        document: Dict[str, Any],
+        api: CanonicalApi,
+        schema: SchemaEmitter,
+        version: str,
+        tracker: ProvenanceTracker,
+        losses: LossTracker,
+    ) -> Dict[str, Any]:
+        """Project the 3.1 ``document`` onto ``version`` and record its provenance.
+
+        The native ``3.1`` target passes the document through unchanged. ``2.6`` runs
+        the :func:`app.asyncapi_downgrade.downgrade_to_asyncapi_2` projection, which
+        records every 3.x-only construct it cannot carry on ``losses`` — the
+        acceptance-criterion "3.x-only constructs are reported as losses with named
+        reasons".
+
+        Args:
+            document: The emitted AsyncAPI 3.1 document.
+            api: The source model, for the channel-parameter schemas a 3.x Parameter
+                Object cannot carry (see :meth:`_parameter_schemas`).
+            schema: The shared schema emitter those parameter schemas are rendered with.
+            version: The requested ``asyncapi_version`` option value.
+            tracker: Provenance tracker, for the ``/asyncapi`` version note.
+            losses: Loss tracker the downgrade records onto.
+
+        Returns:
+            The document in the requested AsyncAPI version.
+        """
+        if version == "2.6":
+            document = downgrade_to_asyncapi_2(
+                document,
+                losses,
+                parameter_schemas=self._parameter_schemas(api, schema),
+                named_channel_addresses=frozenset(
+                    channel.address for channel in api.channels if channel.name
+                ),
+            )
+            tracker.record(
+                "/asyncapi",
+                Provenance.DEFAULT,
+                f"downgraded from AsyncAPI {self.ASYNCAPI_VERSION} to AsyncAPI "
+                f"{ASYNCAPI_26_VERSION}",
+            )
+            return document
+        tracker.record(
+            "/asyncapi", Provenance.DEFAULT, "emitter target AsyncAPI version"
+        )
+        return document
+
+    @classmethod
+    def _parameter_schemas(
+        cls, api: CanonicalApi, schema: SchemaEmitter
+    ) -> Dict[str, Dict[str, Any]]:
+        """Render each channel parameter's canonical schema, keyed by channel address.
+
+        An AsyncAPI 2.x Parameter Object describes its value with a full ``schema``;
+        the 3.x one is string-valued and carries only ``enum``/``default``. The 3.1
+        document therefore cannot be the source for a 2.6 parameter's schema — the
+        model is. This renders one JSON Schema per declared channel parameter so the
+        2.6 projection can restore it, which is what makes a 2.6 → canonical → 2.6
+        round trip preserve a channel parameter's type and constraints.
+
+        Args:
+            api: The source canonical model.
+            schema: The shared :class:`~app.emitter.SchemaEmitter`.
+
+        Returns:
+            ``{channel address: {parameter name: JSON Schema}}``; channels with no
+            parameters are omitted.
+        """
+        result: Dict[str, Dict[str, Any]] = {}
+        for channel in api.channels:
+            if not channel.parameters:
+                continue
+            result[channel.address] = {
+                param.name: cls._parameter_schema(param, schema)
+                for param in channel.parameters
+            }
+        return result
+
+    @staticmethod
+    def _parameter_schema(
+        param: CanonicalField, schema: SchemaEmitter
+    ) -> Dict[str, Any]:
+        """Render one channel parameter's JSON Schema for a 2.x Parameter Object.
+
+        The field's own schema, minus its ``description``: a 2.x Parameter Object
+        carries the description in its own field, so repeating it inside the schema
+        would say the same thing twice.
+        """
+        rendered = schema.field_schema(param)
+        rendered.pop("description", None)
+        return rendered
 
     # --- info ---------------------------------------------------------------
 

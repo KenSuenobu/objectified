@@ -441,6 +441,78 @@ export function optionFieldsFromSchema(
   return fields;
 }
 
+// ===========================================================================
+// Dialect selection (FMT-3.2 — a version option is a fidelity choice)
+// ===========================================================================
+
+/** The `_version` suffix that marks an enum option as a target's dialect selector. */
+const DIALECT_OPTION_SUFFIX = '_version';
+
+/** The version a target emits, and what choosing it costs (FMT-3.2). */
+export interface ExportDialect {
+  /** The option key that selects the version, e.g. `"asyncapi_version"`. */
+  optionKey: string;
+  /** The currently chosen version, e.g. `"2.6"`. */
+  value: string;
+  /** The target's own (native, lossless) version, e.g. `"3.1"`. */
+  nativeValue: string;
+  /** Whether the chosen version is the target's native one. */
+  native: boolean;
+  /** The badge text, e.g. `"2.6 · downgrade"`. */
+  label: string;
+  /** The badge tone — the same fidelity table a tier badge reads. */
+  tone: StatusTone;
+  /** The sentence behind the badge, used as its tooltip. */
+  detail: string;
+}
+
+/**
+ * Resolve the version a target will emit, as a fidelity badge (FMT-3.2, #5427).
+ *
+ * Some emitters offer more than one version of their format — AsyncAPI's native 3.1 plus a
+ * 2.6 downgrade, OpenAPI's 3.1 plus 3.0 and Swagger 2.0 — and picking the older one is a
+ * *fidelity* decision, not a formatting one: the emitter records everything the older version
+ * cannot express as a declared loss. The target card's tier badge is computed for the source
+ * before any option is chosen, so on its own it cannot say that. This does.
+ *
+ * The dialect option is found from the target's own schema (an `enum` option whose key ends in
+ * `_version`) rather than a per-target table, so a target that gains a version option is
+ * covered the day it ships. A target with no such option has no dialect to show.
+ *
+ * @param entry The target entry, for its options schema and validated defaults.
+ * @param values The options form's current values, keyed by option key.
+ * @returns The chosen dialect, or `null` when the target emits exactly one version.
+ */
+export function resolveExportDialect(
+  entry: ExportTargetEntry | null | undefined,
+  values: Record<string, unknown> | null | undefined,
+): ExportDialect | null {
+  if (!entry) return null;
+  const field = optionFieldsFromSchema(entry.options_schema, entry.default_options).find(
+    (candidate) => candidate.kind === 'enum' && candidate.key.endsWith(DIALECT_OPTION_SUFFIX),
+  );
+  if (!field) return null;
+
+  const nativeValue =
+    typeof field.defaultValue === 'string' ? field.defaultValue : field.enumValues[0] ?? '';
+  const chosen = values?.[field.key];
+  const value = typeof chosen === 'string' && field.enumValues.includes(chosen) ? chosen : nativeValue;
+  if (!value) return null;
+
+  const native = value === nativeValue;
+  return {
+    optionKey: field.key,
+    value,
+    nativeValue,
+    native,
+    label: `${value} · ${native ? 'native' : 'downgrade'}`,
+    tone: tierTone(native ? 'lossless' : 'lossy'),
+    detail: native
+      ? `Version ${value} is this target's native output — nothing is downgraded.`
+      : `Version ${value} is a downgrade from ${nativeValue}; constructs it cannot express are reported as losses.`,
+  };
+}
+
 /** The outcome of validating the export options form against the emitter's schema. */
 export interface OptionValidationResult {
   /** Whether every rendered field holds a value the schema accepts. */

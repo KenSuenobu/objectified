@@ -9,6 +9,10 @@
  *     hidden, and cannot be selected.
  *  4. An unavailable target stays disabled, as before.
  *  5. Without a ranking the grid behaves exactly as it did before the pre-flight existed.
+ *
+ * It also covers the FMT-3.2 (#5427) emitted-version badge: a target that offers more than one
+ * version of its format shows which one the export will produce, on the selected card and in
+ * the fidelity headline.
  */
 
 import React from 'react';
@@ -17,7 +21,10 @@ import '@testing-library/jest-dom';
 import { jest } from '@jest/globals';
 
 import { ExportTargetGrid } from '../src/app/components/ade/dashboard/export/ExportTargetGrid';
-import { exportTargetCards } from '../src/app/components/ade/dashboard/export/exportTargetCatalog';
+import {
+  exportTargetCards,
+  resolveExportDialect,
+} from '../src/app/components/ade/dashboard/export/exportTargetCatalog';
 import type { ExportTargetsResponse } from '../src/app/components/ade/dashboard/export/exportTargetCatalog';
 import type {
   ExportPreflightReport,
@@ -320,5 +327,76 @@ describe('ExportTargetGrid without a pre-flight ranking', () => {
     );
     fireEvent.click(screen.getByTestId('export-target-avro'));
     expect(onSelect).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('ExportTargetGrid emitted-version badge (FMT-3.2)', () => {
+  /** The OpenAPI entry, given the AsyncAPI-style version option FMT-3.2 introduced. */
+  function versionedTargets(): ExportTargetsResponse {
+    return {
+      ...TARGETS,
+      targets: TARGETS.targets.map((entry) =>
+        entry.descriptor.key === 'openapi'
+          ? {
+              ...entry,
+              options_schema: {
+                properties: {
+                  openapi_version: {
+                    type: 'string',
+                    enum: ['3.1', '3.0', '2.0'],
+                    default: '3.1',
+                  },
+                },
+              },
+              default_options: { openapi_version: '3.1' },
+            }
+          : entry,
+      ),
+    };
+  }
+
+  function renderVersioned(values: Record<string, unknown>, selectedKey: string | null = 'openapi') {
+    const cards = exportTargetCards(versionedTargets());
+    const entry = cards.find((card) => card.key === 'openapi')!.entry;
+    return render(
+      <ExportTargetGrid
+        cards={cards}
+        selectedKey={selectedKey}
+        onSelect={jest.fn()}
+        dialect={resolveExportDialect(entry, values)}
+      />,
+    );
+  }
+
+  it('names the chosen downgrade on the selected card', () => {
+    renderVersioned({ openapi_version: '2.0' });
+    expect(screen.getByTestId('export-target-dialect-openapi')).toHaveTextContent(
+      '2.0 · downgrade',
+    );
+  });
+
+  it('names the native version when nothing was overridden', () => {
+    renderVersioned({});
+    expect(screen.getByTestId('export-target-dialect-openapi')).toHaveTextContent('3.1 · native');
+  });
+
+  it('repeats the badge in the fidelity headline', () => {
+    renderVersioned({ openapi_version: '3.0' });
+    expect(screen.getByTestId('export-fidelity-headline-dialect')).toHaveTextContent(
+      '3.0 · downgrade',
+    );
+  });
+
+  it('badges only the selected card', () => {
+    renderVersioned({ openapi_version: '2.0' });
+    expect(screen.queryByTestId('export-target-dialect-avro')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('export-target-dialect-protobuf')).not.toBeInTheDocument();
+  });
+
+  it('renders no badge for a target with a single version', () => {
+    const cards = exportTargetCards(TARGETS);
+    render(<ExportTargetGrid cards={cards} selectedKey="avro" onSelect={jest.fn()} />);
+    expect(screen.queryByTestId('export-target-dialect-avro')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('export-fidelity-headline-dialect')).not.toBeInTheDocument();
   });
 });

@@ -1,4 +1,4 @@
-"""End-to-end tests for the AsyncAPI 3.1 emitter — MFX-11.1 (#3874).
+"""End-to-end tests for the AsyncAPI emitter — MFX-11.1 (#3874), FMT-3.2 (#5427).
 
 Exercises the acceptance criteria: a canonical **event** source emits a schema-valid
 AsyncAPI 3.1 document (validated, when the bundled ``@asyncapi/parser`` toolchain is
@@ -9,6 +9,13 @@ semantics AsyncAPI cannot carry are enumerated as :class:`~app.emitter.Loss`\\es
 Emission is deterministic and every major construct carries a provenance tag. The
 event case is additionally checked to be a *fixed point* of ``normalize ∘ emit`` — the
 tightest statement that the emitter is the inverse of the reference normalizer.
+
+FMT-3.2 adds the ``asyncapi_version`` option and its **2.6** downgrade target, so the
+importer's 2.x support finally has a matching export. Its acceptance criteria are
+proven here (with the projection's own unit tests in ``test_asyncapi_downgrade.py``):
+a 2.6 document is emitted and validates with the bundled parser, a 2.6 source is a
+fixed point of ``normalize ∘ emit-2.6`` — channels, operations, messages and bindings
+all survive — and every 3.x-only construct the target cannot carry is a named loss.
 """
 
 import asyncio
@@ -36,6 +43,7 @@ from app.canonical_model import (
     TypeKind,
     TypeRef,
 )
+from app.diff import diff
 from app.emitter import LossKind, Provenance
 from app.toolchain_packaging import probe_tool
 
@@ -95,6 +103,68 @@ def _user_events_asyncapi() -> dict:
                 "messages": [
                     {"$ref": "#/channels/userSignedUp/messages/UserSignedUp"}
                 ],
+            }
+        },
+    }
+
+
+def _streetlights_asyncapi_2() -> dict:
+    """A representative AsyncAPI 2.6 document — the shape the 2.6 target emits back.
+
+    Written with its messages inline (no ``$ref``\\s) so the normalizer can consume it
+    directly, exactly as the ``@asyncapi/parser`` would hand it over dereferenced. It
+    carries what the FMT-3.2 acceptance criterion names — channels, both operation
+    slots, messages and bindings — plus a channel parameter whose ``schema`` a 3.x
+    Parameter Object could not have held.
+    """
+    return {
+        "asyncapi": "2.6.0",
+        "id": "urn:com:example:streetlights",
+        "defaultContentType": "application/json",
+        "info": {
+            "title": "Streetlights API",
+            "version": "1.0.0",
+            "description": "Street lighting telemetry.",
+        },
+        "servers": {
+            "production": {
+                "url": "mqtt://broker.example.com",
+                "protocol": "mqtt",
+                "protocolVersion": "5.0",
+            }
+        },
+        "channels": {
+            "light/{streetId}/measured": {
+                "description": "Readings from one street's lights.",
+                "parameters": {
+                    "streetId": {
+                        "description": "Street identifier.",
+                        "schema": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+                    }
+                },
+                "bindings": {"mqtt": {"qos": 1}},
+                "publish": {
+                    "operationId": "onLightMeasured",
+                    "message": {
+                        "name": "LightMeasured",
+                        "contentType": "application/json",
+                        "payload": {
+                            "type": "object",
+                            "properties": {"lumens": {"type": "integer"}},
+                        },
+                    },
+                },
+                "subscribe": {
+                    "operationId": "publishLightCommand",
+                    "bindings": {"mqtt": {"qos": 2}},
+                    "message": {
+                        "name": "LightCommand",
+                        "payload": {
+                            "type": "object",
+                            "properties": {"on": {"type": "boolean"}},
+                        },
+                    },
+                },
             }
         },
     }
@@ -463,6 +533,127 @@ def test_include_components_false_omits_schemas() -> None:
 
 
 # ---------------------------------------------------------------------------
+# FMT-3.2: the asyncapi_version option and its 2.6 downgrade target
+# ---------------------------------------------------------------------------
+
+
+def _emit_2(model: CanonicalApi):
+    """Emit ``model`` against the 2.6 downgrade target."""
+    return _emit(model, opts=AsyncApiEmitOptions(asyncapi_version="2.6"))
+
+
+def test_asyncapi_version_defaults_to_the_native_target() -> None:
+    assert AsyncApiEmitOptions().asyncapi_version == "3.1"
+    model = AsyncApiNormalizer().normalize(_user_events_asyncapi(), include_raw=False)
+    assert _emit(model).document["asyncapi"] == "3.1.0"
+
+
+def test_asyncapi_2_target_emits_a_2_6_document() -> None:
+    model = AsyncApiNormalizer().normalize(
+        _streetlights_asyncapi_2(), include_raw=False
+    )
+    doc = _emit_2(model).document
+
+    assert doc["asyncapi"] == "2.6.0"
+    # The 2.x object model: no top-level ``operations``, channels keyed by address.
+    assert "operations" not in doc
+    assert list(doc["channels"]) == ["light/{streetId}/measured"]
+    assert doc["servers"]["production"]["url"] == "mqtt://broker.example.com"
+
+
+def test_asyncapi_2_round_trip_preserves_channels_operations_messages_bindings() -> None:
+    source = _streetlights_asyncapi_2()
+    model = AsyncApiNormalizer().normalize(source, include_raw=False)
+    channel = _emit_2(model).document["channels"]["light/{streetId}/measured"]
+    source_channel = source["channels"]["light/{streetId}/measured"]
+
+    assert channel["description"] == source_channel["description"]
+    assert channel["bindings"] == source_channel["bindings"]
+    assert channel["parameters"]["streetId"]["schema"] == (
+        source_channel["parameters"]["streetId"]["schema"]
+    )
+    for action in ("publish", "subscribe"):
+        emitted, original = channel[action], source_channel[action]
+        assert emitted["operationId"] == original["operationId"]
+        assert emitted["message"]["name"] == original["message"]["name"]
+        assert emitted["message"]["payload"] == original["message"]["payload"]
+        assert emitted.get("bindings") == original.get("bindings")
+
+
+def test_asyncapi_2_conversion_is_a_fixed_point() -> None:
+    # The tightest statement of "2.6 → canonical → 2.6 preserves the model": the
+    # re-normalized emission is entity-for-entity the model it came from.
+    model = AsyncApiNormalizer().normalize(
+        _streetlights_asyncapi_2(), include_raw=False
+    )
+    reimported = AsyncApiNormalizer().normalize(
+        _emit_2(model).document, include_raw=False
+    )
+
+    assert diff(model, reimported).is_empty()
+
+
+def test_asyncapi_2_target_reports_no_loss_for_a_2_x_source() -> None:
+    model = AsyncApiNormalizer().normalize(
+        _streetlights_asyncapi_2(), include_raw=False
+    )
+    assert _emit_2(model).losses == []
+
+
+def test_asyncapi_2_target_names_the_three_x_only_constructs_it_drops() -> None:
+    # A 3.x source: its channel is named apart from its address, which 2.x — keying a
+    # channel by its address — cannot keep.
+    model = AsyncApiNormalizer().normalize(_user_events_asyncapi(), include_raw=False)
+    losses = _emit_2(model).losses
+
+    assert [loss.subject for loss in losses] == ["asyncapi2-channel-name"]
+    assert losses[0].kind is LossKind.NA
+    assert "userSignedUp" in losses[0].detail
+
+
+def test_asyncapi_2_target_reports_the_reframed_reply_it_cannot_carry() -> None:
+    # A REST source is reframed as a send + reply; 2.x has no request/reply pattern.
+    subjects = {loss.subject for loss in _emit_2(_rest_model()).losses}
+
+    assert "asyncapi2-operation-reply" in subjects
+    # The 3.1 reframing losses still ride along — the downgrade adds to them.
+    assert "request-reply-reframe" in subjects
+
+
+def test_asyncapi_2_version_string_carries_downgrade_provenance() -> None:
+    model = AsyncApiNormalizer().normalize(
+        _streetlights_asyncapi_2(), include_raw=False
+    )
+    record = next(
+        r for r in _emit_2(model).provenance if r.pointer == "/asyncapi"
+    )
+
+    assert record.provenance is Provenance.DEFAULT
+    assert record.detail == "downgraded from AsyncAPI 3.1.0 to AsyncAPI 2.6.0"
+
+
+def test_asyncapi_2_components_only_export_declares_an_empty_channels_map() -> None:
+    # ``channels`` is required in 2.x but optional in 3.x.
+    doc = _emit(
+        _data_schema_model(),
+        opts=AsyncApiEmitOptions(asyncapi_version="2.6", include_channels=False),
+    ).document
+
+    assert doc["channels"] == {}
+    assert "User" in doc["components"]["schemas"]
+
+
+def test_asyncapi_2_emission_is_deterministic() -> None:
+    model = AsyncApiNormalizer().normalize(
+        _streetlights_asyncapi_2(), include_raw=False
+    )
+    first, second = _emit_2(model), _emit_2(model)
+
+    assert first.document == second.document
+    assert first.losses == second.losses
+
+
+# ---------------------------------------------------------------------------
 # Registry / descriptor / capability profile
 # ---------------------------------------------------------------------------
 
@@ -520,4 +711,26 @@ class TestAsyncApiParserValidation:
 
         doc = _emit(_rest_model()).document
         result = asyncio.run(parse_asyncapi(json.dumps(doc)))
+        assert result.ok, [d.message for d in result.errors]
+
+    def test_asyncapi_2_output_validates(self) -> None:
+        # FMT-3.2's first acceptance criterion: the downgrade target emits a document
+        # the bundled AsyncAPI parser accepts as legal 2.6.
+        import json
+
+        model = AsyncApiNormalizer().normalize(
+            _streetlights_asyncapi_2(), include_raw=False
+        )
+        result = asyncio.run(parse_asyncapi(json.dumps(_emit_2(model).document)))
+        assert result.ok, [d.message for d in result.errors]
+        assert result.asyncapi_version == "2.6.0"
+
+    def test_asyncapi_2_output_from_a_rest_source_validates(self) -> None:
+        # The cross-paradigm case: a reframed REST model still emits legal 2.6, with
+        # the reply it cannot carry recorded rather than emitted.
+        import json
+
+        result = asyncio.run(
+            parse_asyncapi(json.dumps(_emit_2(_rest_model()).document))
+        )
         assert result.ok, [d.message for d in result.errors]

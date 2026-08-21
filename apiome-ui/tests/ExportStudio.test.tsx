@@ -1536,3 +1536,78 @@ describe('ExportStudio — deep links & resumable state (MFX-41.4)', () => {
     expect(error).toHaveTextContent(/not available in your workspace/i);
   });
 });
+
+describe('ExportStudio — emitted-version badge (FMT-3.2)', () => {
+  /**
+   * The registry with the AsyncAPI target as FMT-3.2 reports it: an `asyncapi_version` enum
+   * option offering the native 3.1 and the 2.6 downgrade.
+   */
+  const ASYNCAPI_ENTRY: ExportTargetsResponse['targets'][number] = {
+    descriptor: {
+      key: 'asyncapi',
+      format: 'asyncapi-3',
+      label: 'AsyncAPI 3.1',
+      description: 'Export as an AsyncAPI 3.1 JSON document.',
+      icon: 'radio-tower',
+      paradigm: 'event',
+      multi_file: false,
+      needs_toolchain: false,
+      available: true,
+      unavailable_reason: null,
+    },
+    capability_profile: { events: true },
+    options_schema: {
+      type: 'object',
+      properties: {
+        asyncapi_version: {
+          type: 'string',
+          enum: ['3.1', '2.6'],
+          default: '3.1',
+          title: 'AsyncAPI version',
+          description: 'AsyncAPI version to emit.',
+        },
+      },
+    },
+    default_options: { asyncapi_version: '3.1' },
+    fidelity: { tier: 'lossless', preserved_percent: 100, total: 58, preserved: 58, dropped: 0, approximated: 0, synthesized: 0 },
+  };
+
+  /** `mockFetch`, with the AsyncAPI target added to the registry response. */
+  function mockFetchWithAsyncApi(): jest.Mock {
+    const base = mockFetch();
+    const registry = { ...TARGETS, targets: [...TARGETS.targets, ASYNCAPI_ENTRY] };
+    return jest.fn((input: unknown, init?: { method?: string; body?: string }) => {
+      if (String(input).includes('/api/export/targets')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ success: true, ...registry }) });
+      }
+      return base(input, init);
+    });
+  }
+
+  it('badges the selected card with the native version before anything is chosen', async () => {
+    await renderStudio(mockFetchWithAsyncApi(), { initialTarget: 'asyncapi' });
+    fireEvent.click(screen.getByRole('button', { name: /choose target/i }));
+    expect(screen.getByTestId('export-target-dialect-asyncapi')).toHaveTextContent('3.1 · native');
+    expect(screen.getByTestId('export-fidelity-headline-dialect')).toHaveTextContent('3.1 · native');
+  });
+
+  it('follows the chosen version onto the Options step and back to the card', async () => {
+    await renderStudio(mockFetchWithAsyncApi(), { initialTarget: 'asyncapi' });
+    fireEvent.click(screen.getByRole('button', { name: /choose target/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^continue$/i })); // → options
+
+    expect(screen.getByTestId('export-studio-options-dialect')).toHaveTextContent('3.1 · native');
+    fireEvent.click(screen.getByRole('radio', { name: '2.6' }));
+    expect(screen.getByTestId('export-studio-options-dialect')).toHaveTextContent('2.6 · downgrade');
+
+    fireEvent.click(screen.getByRole('button', { name: /^back$/i }));
+    expect(screen.getByTestId('export-target-dialect-asyncapi')).toHaveTextContent('2.6 · downgrade');
+  });
+
+  it('shows no version badge for a target that emits a single version', async () => {
+    await renderStudio(mockFetchWithAsyncApi(), { initialTarget: 'openapi' });
+    fireEvent.click(screen.getByRole('button', { name: /choose target/i }));
+    expect(screen.queryByTestId('export-target-dialect-openapi')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('export-fidelity-headline-dialect')).not.toBeInTheDocument();
+  });
+});

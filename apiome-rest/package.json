@@ -1,6 +1,6 @@
 {
   "name": "apiome-rest",
-  "version": "1.137.0",
+  "version": "1.138.0",
   "private": true,
   "description": "Trigger file for Apiome REST Docker publish workflow; app is Python (pyproject.toml).",
   "scripts": {

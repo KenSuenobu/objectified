@@ -16370,6 +16370,13 @@ button.auth-divider:disabled {
   color: var(--fg);
 }
 
+/* The emitted-version badge on the selected card (FMT-3.2). It sits in the card's flow
+   rather than in a corner: both corners are already taken (tier, readiness band), and the
+   version belongs next to the format name it qualifies. */
+.vdlg-export__target-dialect {
+  margin-block-start: var(--space-1);
+}
+
 .vdlg-export__headline {
   display: flex;
   flex-wrap: wrap;
