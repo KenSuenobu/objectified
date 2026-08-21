@@ -18,6 +18,18 @@ Fetch this catalog programmatically with `GET /v1/lint/rules` (see
 
 ## Pack: `arazzo`
 
+<a id="arazzo-async-source-before-1-1"></a>
+### `arazzo.async-source-before-1-1`
+
+- **Category:** version
+- **Default severity:** error
+- **Rationale:** An AsyncAPI sourceDescription requires Arazzo 1.1 or newer.
+- **Reference:** https://github.com/apiome/apiome/blob/main/docs/guide/lint-rules.md#arazzo-async-source-before-1-1
+- **Remediation:** Declare `arazzo: 1.1.0` at the top of the document, or change the source description's `type` to one Arazzo 1.0 defines (`openapi` or `arazzo`).
+- **False-positive guidance:** Only false if a runner is known to accept the 1.1 source types under a 1.0 marker; the published 1.0 schema does not, so prefer declaring 1.1.
+- **Fixture:** `catalog/arazzo-async-source-before-1-1`
+- **Scan modes:** `lint`
+
 <a id="arazzo-dangling-operation-id"></a>
 ### `arazzo.dangling-operation-id`
 

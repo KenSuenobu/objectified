@@ -1,0 +1,238 @@
+{
+  "adapter": "arazzo",
+  "canonical": {
+    "channels": [],
+    "description": "Every criterion type and reference form Arazzo 1.1 admits, in one document.",
+    "extras": {
+      "arazzo": "1.1.0",
+      "sourceDescriptions": [
+        {
+          "name": "catalogue",
+          "type": "openapi",
+          "url": "./catalogue.openapi.yaml"
+        },
+        {
+          "name": "legacy",
+          "type": "openapi",
+          "url": "https://legacy.example.com/service.wsdl"
+        }
+      ],
+      "sourceTypes": {
+        "catalogue": "openapi",
+        "legacy": "openapi"
+      }
+    },
+    "format": "arazzo",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Criteria vocabulary stress",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Exercises simple, regex, jsonpath and xpath criteria.",
+        "extras": {
+          "inputs": {
+            "properties": {
+              "term": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "term"
+            ],
+            "type": "object"
+          },
+          "outputs": {
+            "firstId": "$steps.searchByOperationId.outputs.firstId"
+          },
+          "stepOrder": [
+            "searchByOperationId",
+            "fetchByOperationPath",
+            "legacyXmlProbe"
+          ],
+          "summary": "Exercises simple, regex, jsonpath and xpath criteria.",
+          "workflowId": "probeEverything",
+          "workflowIndex": 0
+        },
+        "key": "probeEverything",
+        "name": "probeEverything",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "onFailure": [
+                {
+                  "criteria": [
+                    {
+                      "condition": "$statusCode == 404"
+                    }
+                  ],
+                  "name": "giveUp",
+                  "type": "end"
+                }
+              ],
+              "operationPath": "{$sourceDescriptions.catalogue.url}#/paths/~1products~1{productId}/get",
+              "parameters": [
+                {
+                  "in": "path",
+                  "name": "productId",
+                  "value": "$steps.searchByOperationId.outputs.firstId"
+                }
+              ],
+              "sourceDescription": "catalogue",
+              "sourceType": "openapi",
+              "stepId": "fetchByOperationPath",
+              "stepIndex": 1,
+              "successCriteria": [
+                {
+                  "condition": "$statusCode == 200"
+                },
+                {
+                  "condition": "$.availability != 'discontinued'",
+                  "context": "$response.body",
+                  "type": {
+                    "type": "jsonpath",
+                    "version": "draft-goessner-dispatch-jsonpath-00"
+                  }
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "probeEverything#fetchByOperationPath",
+            "kind": "one_way",
+            "messages": [],
+            "name": "fetchByOperationPath",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "probeEverything"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "operationRef": "#/sourceDescriptions/1",
+              "sourceDescription": "legacy",
+              "sourceType": "openapi",
+              "stepId": "legacyXmlProbe",
+              "stepIndex": 2,
+              "successCriteria": [
+                {
+                  "condition": "/soap:Envelope/soap:Body/*[local-name()='ProductResponse']",
+                  "context": "$response.body",
+                  "type": {
+                    "type": "xpath",
+                    "version": "xpath-30"
+                  }
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "probeEverything#legacyXmlProbe",
+            "kind": "one_way",
+            "messages": [],
+            "name": "legacyXmlProbe",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "probeEverything"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "operationId": "$sourceDescriptions.catalogue.searchProducts",
+              "outputs": {
+                "firstId": "$response.body#/items/0/id"
+              },
+              "parameters": [
+                {
+                  "in": "query",
+                  "name": "q",
+                  "value": "$inputs.term"
+                },
+                {
+                  "in": "header",
+                  "name": "Accept",
+                  "value": "application/json"
+                }
+              ],
+              "sourceDescription": "catalogue",
+              "sourceType": "openapi",
+              "stepId": "searchByOperationId",
+              "stepIndex": 0,
+              "successCriteria": [
+                {
+                  "condition": "$statusCode == 200"
+                },
+                {
+                  "condition": "^application/json",
+                  "context": "$response.header.Content-Type",
+                  "type": "regex"
+                },
+                {
+                  "condition": "$[?count(@.items) > 0]",
+                  "context": "$response.body",
+                  "type": "jsonpath"
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "probeEverything#searchByOperationId",
+            "kind": "one_way",
+            "messages": [],
+            "name": "searchByOperationId",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "probeEverything"
+            ]
+          }
+        ]
+      }
+    ],
+    "title": "Criteria vocabulary stress",
+    "types": [],
+    "version": "0.4.0"
+  },
+  "corpus_path": "arazzo-1.1/04-stress-criteria-vocabulary.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "arazzo"
+  },
+  "fingerprint": "sha256:ff664b3fb340fd876cfc27ebe27045028a61dbc8c85a1b048d099b0b4e84733d",
+  "lint": {
+    "findings": 3,
+    "grade": "B",
+    "report_fingerprint": "4e43ebe06468252a6c34f654a9a5960482c90d87596dc9a01e148f55c4705897",
+    "score": 88,
+    "severity_counts": {
+      "error": 0,
+      "info": 0,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

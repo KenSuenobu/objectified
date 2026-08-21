@@ -1,0 +1,104 @@
+{
+  "adapter": "arazzo",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "arazzo": "1.1.0",
+      "sourceDescriptions": [
+        {
+          "name": "pingApi",
+          "type": "openapi",
+          "url": "https://api.example.com/openapi.yaml"
+        }
+      ],
+      "sourceTypes": {
+        "pingApi": "openapi"
+      }
+    },
+    "format": "arazzo",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Minimal ping workflow",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Call the health endpoint once.",
+        "extras": {
+          "stepOrder": [
+            "callPing"
+          ],
+          "summary": "Call the health endpoint once.",
+          "workflowId": "ping",
+          "workflowIndex": 0
+        },
+        "key": "ping",
+        "name": "ping",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "operationId": "$sourceDescriptions.pingApi.getPing",
+              "sourceDescription": "pingApi",
+              "sourceType": "openapi",
+              "stepId": "callPing",
+              "stepIndex": 0,
+              "successCriteria": [
+                {
+                  "condition": "$statusCode == 200"
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "ping#callPing",
+            "kind": "one_way",
+            "messages": [],
+            "name": "callPing",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "ping"
+            ]
+          }
+        ]
+      }
+    ],
+    "title": "Minimal ping workflow",
+    "types": [],
+    "version": "1.0.0"
+  },
+  "corpus_path": "arazzo-1.1/01-minimal-single-step.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "arazzo"
+  },
+  "fingerprint": "sha256:8ef40a14fd9c4a853dec79dd9a042ddf6531f24a9060e92c352a395966d8b12b",
+  "lint": {
+    "findings": 2,
+    "grade": "A",
+    "report_fingerprint": "941ffc59abae5b2cc8f2dd1dcfa24ee90cac721ea8452355bfe47d64ce54175b",
+    "score": 95,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

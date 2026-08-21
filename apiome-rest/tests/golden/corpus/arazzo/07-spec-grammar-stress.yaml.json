@@ -5,6 +5,15 @@
     "description": "Two dependent workflows that together exercise operationRef pointers, typed success criteria, reusable components, flow actions, and vendor extensions.\n",
     "extras": {
       "arazzo": "1.0.1",
+      "components": {
+        "parameters": {
+          "pageSize": {
+            "in": "query",
+            "name": "pageSize",
+            "value": 100
+          }
+        }
+      },
       "sourceDescriptions": [
         {
           "name": "inventoryApi",
@@ -16,7 +25,11 @@
           "type": "openapi",
           "url": "https://example.com/openapi/reporting.json"
         }
-      ]
+      ],
+      "sourceTypes": {
+        "inventoryApi": "openapi",
+        "reportingApi": "openapi"
+      }
     },
     "format": "arazzo",
     "identity": {
@@ -140,6 +153,8 @@
                   "value": "$inputs.warehouseId"
                 }
               ],
+              "sourceDescription": "inventoryApi",
+              "sourceType": "openapi",
               "stepId": "fetch-items",
               "stepIndex": 0,
               "successCriteria": [
@@ -231,7 +246,7 @@
     "confidence": 0.99,
     "format": "arazzo"
   },
-  "fingerprint": "sha256:81b9ce0bd8feaadfc57a361e916ff3d1c857b688589c927304346f149c2f76a2",
+  "fingerprint": "sha256:338017e58a4f5d8ebcf6b441462c57d88e7bb4f08357ee5c1db6c73ab242adca",
   "lint": {
     "findings": 0,
     "grade": "A",

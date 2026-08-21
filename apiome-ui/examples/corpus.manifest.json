@@ -21,7 +21,7 @@
       "marker": "top-level `arazzo:` version"
     },
     "arazzo-1.1": {
-      "label": "Arazzo 1.1 workflows (pending #5426)",
+      "label": "Arazzo 1.1 workflows",
       "category": "rest-http",
       "paradigm": "rest",
       "marker": "top-level `arazzo: 1.1.x`"
@@ -1206,18 +1206,17 @@
     {
       "path": "arazzo-1.1/01-minimal-single-step.yaml",
       "format": "arazzo",
-      "adapter_key": null,
+      "adapter_key": "arazzo",
       "validity_class": "valid",
       "expected_detection": {
-        "format": "arazzo-1.1",
+        "format": "arazzo",
         "min_confidence": 0.95
       },
       "features": [
         "workflows",
         "steps",
         "successCriteria",
-        "sourceDescriptions",
-        "pending-adapter"
+        "sourceDescriptions"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -1228,10 +1227,10 @@
     {
       "path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "format": "arazzo",
-      "adapter_key": null,
+      "adapter_key": "arazzo",
       "validity_class": "valid",
       "expected_detection": {
-        "format": "arazzo-1.1",
+        "format": "arazzo",
         "min_confidence": 0.95
       },
       "features": [
@@ -1239,8 +1238,7 @@
         "inputs",
         "outputs",
         "requestBody",
-        "step-outputs",
-        "pending-adapter"
+        "step-outputs"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -1251,10 +1249,10 @@
     {
       "path": "arazzo-1.1/03-composition-reusable-components.yaml",
       "format": "arazzo",
-      "adapter_key": null,
+      "adapter_key": "arazzo",
       "validity_class": "valid",
       "expected_detection": {
-        "format": "arazzo-1.1",
+        "format": "arazzo",
         "min_confidence": 0.95
       },
       "features": [
@@ -1262,8 +1260,7 @@
         "ref-reuse",
         "dependsOn",
         "failureActions",
-        "successActions",
-        "pending-adapter"
+        "successActions"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -1274,10 +1271,10 @@
     {
       "path": "arazzo-1.1/04-stress-criteria-vocabulary.yaml",
       "format": "arazzo",
-      "adapter_key": null,
+      "adapter_key": "arazzo",
       "validity_class": "valid",
       "expected_detection": {
-        "format": "arazzo-1.1",
+        "format": "arazzo",
         "min_confidence": 0.95
       },
       "features": [
@@ -1286,8 +1283,7 @@
         "jsonpath",
         "xpath",
         "operationPath",
-        "operationRef",
-        "pending-adapter"
+        "operationRef"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -1298,18 +1294,17 @@
     {
       "path": "arazzo-1.1/05-real-world-order-to-cash.yaml",
       "format": "arazzo",
-      "adapter_key": null,
+      "adapter_key": "arazzo",
       "validity_class": "valid",
       "expected_detection": {
-        "format": "arazzo-1.1",
+        "format": "arazzo",
         "min_confidence": 0.95
       },
       "features": [
         "asyncapi-source",
         "mixed-sync-async",
         "message-payload-criteria",
-        "retry",
-        "pending-adapter"
+        "retry"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -1320,7 +1315,7 @@
     {
       "path": "arazzo-1.1/06-sourced-set/inventory.openapi.yaml",
       "format": "arazzo",
-      "adapter_key": null,
+      "adapter_key": "arazzo",
       "validity_class": "valid",
       "expected_detection": {
         "format": "openapi-3.1",
@@ -1328,8 +1323,7 @@
       },
       "features": [
         "multi-file",
-        "openapi-source",
-        "pending-adapter"
+        "openapi-source"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -1342,17 +1336,16 @@
     {
       "path": "arazzo-1.1/06-sourced-set/workflow.arazzo.yaml",
       "format": "arazzo",
-      "adapter_key": null,
+      "adapter_key": "arazzo",
       "validity_class": "valid",
       "expected_detection": {
-        "format": "arazzo-1.1",
+        "format": "arazzo",
         "min_confidence": 0.95
       },
       "features": [
         "multi-file",
         "relative-source-url",
-        "workflows",
-        "pending-adapter"
+        "workflows"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -1364,7 +1357,7 @@
     {
       "path": "arazzo-1.1/07-version-1.0-baseline.yaml",
       "format": "arazzo",
-      "adapter_key": null,
+      "adapter_key": "arazzo",
       "validity_class": "valid",
       "expected_detection": {
         "format": "arazzo",
@@ -1373,8 +1366,7 @@
       "features": [
         "version-1.0",
         "no-upgrade",
-        "workflows",
-        "pending-adapter"
+        "workflows"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -1386,17 +1378,16 @@
     {
       "path": "arazzo-1.1/negative/01-syntactic-unclosed-flow-sequence.yaml",
       "format": "arazzo",
-      "adapter_key": null,
+      "adapter_key": "arazzo",
       "validity_class": "invalid",
       "expected_detection": {
-        "format": "arazzo-1.1",
+        "format": "arazzo",
         "min_confidence": 0.0
       },
       "features": [
         "negative",
         "syntactic",
-        "unclosed-flow-sequence",
-        "pending-adapter"
+        "unclosed-flow-sequence"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -1408,17 +1399,16 @@
     {
       "path": "arazzo-1.1/negative/02-semantic-step-without-operation.yaml",
       "format": "arazzo",
-      "adapter_key": null,
+      "adapter_key": "arazzo",
       "validity_class": "invalid",
       "expected_detection": {
-        "format": "arazzo-1.1",
+        "format": "arazzo",
         "min_confidence": 0.0
       },
       "features": [
         "negative",
         "semantic",
-        "step-without-operation",
-        "pending-adapter"
+        "step-without-operation"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -1430,17 +1420,16 @@
     {
       "path": "arazzo-1.1/negative/03-truncated-mid-workflow.yaml",
       "format": "arazzo",
-      "adapter_key": null,
+      "adapter_key": "arazzo",
       "validity_class": "invalid",
       "expected_detection": {
-        "format": "arazzo-1.1",
+        "format": "arazzo",
         "min_confidence": 0.0
       },
       "features": [
         "negative",
         "truncated",
-        "mid-quoted-scalar",
-        "pending-adapter"
+        "mid-quoted-scalar"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -1452,17 +1441,16 @@
     {
       "path": "arazzo-1.1/negative/04-wrong-format-asyncapi.yaml",
       "format": "arazzo",
-      "adapter_key": null,
+      "adapter_key": "arazzo",
       "validity_class": "invalid",
       "expected_detection": {
-        "format": "arazzo-1.1",
+        "format": "arazzo",
         "min_confidence": 0.0
       },
       "features": [
         "negative",
         "wrong-format",
-        "asyncapi",
-        "pending-adapter"
+        "asyncapi"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -1475,17 +1463,16 @@
     {
       "path": "arazzo-1.1/negative/05-encoding-utf16.yaml",
       "format": "arazzo",
-      "adapter_key": null,
+      "adapter_key": "arazzo",
       "validity_class": "invalid",
       "expected_detection": {
-        "format": "arazzo-1.1",
+        "format": "arazzo",
         "min_confidence": 0.0
       },
       "features": [
         "negative",
         "encoding",
-        "utf-16",
-        "pending-adapter"
+        "utf-16"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -1497,17 +1484,16 @@
     {
       "path": "arazzo-1.1/negative/06-version-out-of-range-2.0.yaml",
       "format": "arazzo",
-      "adapter_key": null,
+      "adapter_key": "arazzo",
       "validity_class": "invalid",
       "expected_detection": {
-        "format": "arazzo-1.1",
+        "format": "arazzo",
         "min_confidence": 0.0
       },
       "features": [
         "negative",
         "version-out-of-range",
-        "arazzo-2.0",
-        "pending-adapter"
+        "arazzo-2.0"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -1651,7 +1637,8 @@
       "license": "Apache-2.0",
       "provenance": "Copy of arazzo/simple-workflow.yaml cut at byte 567 of 1264 (45%), inside a double-quoted scalar so the YAML cannot parse.",
       "failure_class": "truncated",
-      "expected_error_code": "INPUT_MALFORMED"
+      "expected_error_code": "INPUT_TRUNCATED",
+      "notes": "The document ends inside a quoted scalar; FMT-3.1 (#5426) taught the adapter to report that as truncation rather than as a generic malformed document."
     },
     {
       "path": "arazzo/negative/04-wrong-format-openapi.yaml",
@@ -1672,8 +1659,8 @@
       "license": "Apache-2.0",
       "provenance": "Small valid OpenAPI 3.0 document offered to the Arazzo adapter, authored for the negative corpus.",
       "failure_class": "wrong-format",
-      "expected_error_code": "INPUT_SEMANTIC_INVALID",
-      "notes": "The YAML parses cleanly, so the failure surfaces at normalize (`no arazzo version marker`) as INPUT_SEMANTIC_INVALID rather than FORMAT_MISMATCH; the arazzo sniffer correctly reports no match (detect_matched false)."
+      "expected_error_code": "FORMAT_MISMATCH",
+      "notes": "An OpenAPI document routed to the Arazzo importer; FMT-3.1 (#5426) reports the missing `arazzo` marker as a format mismatch rather than a semantic error."
     },
     {
       "path": "arazzo/negative/05-encoding-utf16.yaml",
@@ -32157,9 +32144,6 @@
   "rung_waivers": {
     "apiblueprint": {
       "multi-file": "The API Blueprint adapter's parse_fileset only parses the root document and never resolves references across fileset members, so a multi-file set would exercise nothing beyond a single file."
-    },
-    "arazzo": {
-      "multi-file": "The arazzo adapter has no parse_fileset, so a multi-file set cannot be imported together."
     },
     "asn1": {
       "multi-file": "Asn1ImportSource.parse_fileset only parses the root member (and the parser rejects more than one module per document), so cross-member resolution genuinely does not exist."

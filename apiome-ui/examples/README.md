@@ -23,7 +23,7 @@ The corpus holds **1418 files** across **103 format directories**. Every file ha
 | `api-blueprint/` | API Blueprint | rest | `FORMAT: 1A` metadata line | 11 |
 | `apigee/` | Apigee proxy bundle (pending #5457) | rest | zip with `apiproxy/` members and an `APIProxy` manifest, or a `ProxyEndpoint`/`TargetEndpoint` root | 15 |
 | `arazzo/` | Arazzo workflows | rest | top-level `arazzo:` version | 11 |
-| `arazzo-1.1/` | Arazzo 1.1 workflows (pending #5426) | rest | top-level `arazzo: 1.1.x` | 14 |
+| `arazzo-1.1/` | Arazzo 1.1 workflows | rest | top-level `arazzo: 1.1.x` | 14 |
 | `aws-apigateway/` | AWS API Gateway (pending #5455) | rest | OpenAPI document carrying `x-amazon-apigateway-*` extensions | 13 |
 | `azure-apim/` | Azure API Management (pending #5456) | rest | `<policies>` sections, or `Microsoft.ApiManagement/service/apis` ARM resources | 14 |
 | `consul/` | Consul service definitions (pending #5459) | rest | `service`/`services` definitions, or `Kind: service-router`/`ingress-gateway` | 15 |
@@ -215,7 +215,7 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `edge-cases.yaml` | stress | `arazzo` ≥ 0.95 | valid | `edge-cases`, `workflows`, `steps`, `success-criteria`, `source-descriptions`, `outputs`, `parameters` |
 | `mixed-scenarios.yaml` | composition | `arazzo` ≥ 0.95 | valid | `mixed-scenarios`, `workflows`, `steps`, `success-criteria`, `source-descriptions`, `outputs`, `parameters` |
 | `negative/02-semantic-root-not-a-mapping.yaml` ⚠ | — | `arazzo` (no guarantee) | invalid | `negative`, `semantic`, `root-not-a-mapping` |
-| `negative/03-truncated-mid-string.yaml` | — | `arazzo` (no guarantee) | invalid | `negative`, `truncated`, `mid-quoted-scalar` |
+| `negative/03-truncated-mid-string.yaml` ⚠ | — | `arazzo` (no guarantee) | invalid | `negative`, `truncated`, `mid-quoted-scalar` |
 | `negative/04-wrong-format-openapi.yaml` ⚠ | — | `arazzo` (no guarantee) | invalid | `negative`, `wrong-format`, `openapi` |
 | `negative/05-encoding-utf16.yaml` | — | `arazzo` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
 | `negative/property-conflicts.yaml` ⚠ | — | `arazzo` (no guarantee) | invalid | `property-conflicts`, `workflows`, `steps`, `success-criteria`, `source-descriptions`, `outputs`, `parameters` |
@@ -224,28 +224,30 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`negative/02-semantic-root-not-a-mapping.yaml`** — The shared ingestion loader rejects top-level YAML sequences at the parse phase, so the code is INPUT_MALFORMED rather than a normalize-phase INPUT_SEMANTIC_INVALID.
 
-> ⚠ **`negative/04-wrong-format-openapi.yaml`** — The YAML parses cleanly, so the failure surfaces at normalize (`no arazzo version marker`) as INPUT_SEMANTIC_INVALID rather than FORMAT_MISMATCH; the arazzo sniffer correctly reports no match (detect_matched false).
+> ⚠ **`negative/03-truncated-mid-string.yaml`** — The document ends inside a quoted scalar; FMT-3.1 (#5426) taught the adapter to report that as truncation rather than as a generic malformed document.
+
+> ⚠ **`negative/04-wrong-format-openapi.yaml`** — An OpenAPI document routed to the Arazzo importer; FMT-3.1 (#5426) reports the missing `arazzo` marker as a format mismatch rather than a semantic error.
 
 > ⚠ **`negative/property-conflicts.yaml`** — The line-scrambled YAML fails to parse, so the arazzo sniffer cannot claim it; the greedy graphql sniffer claims the text at 0.9 confidence, so the pipeline classifies FORMAT_MISMATCH instead of INPUT_MALFORMED.
 
-### `arazzo-1.1/` — Arazzo 1.1 workflows (pending #5426)
+### `arazzo-1.1/` — Arazzo 1.1 workflows
 
 | File | Rung | Expected detection | Class | Features |
 | --- | --- | --- | --- | --- |
-| `01-minimal-single-step.yaml` | minimal | `arazzo-1.1` ≥ 0.95 | valid | `workflows`, `steps`, `successCriteria`, `sourceDescriptions`, `pending-adapter` |
-| `02-typical-checkout-flow.yaml` | typical | `arazzo-1.1` ≥ 0.95 | valid | `workflows`, `inputs`, `outputs`, `requestBody`, `step-outputs`, `pending-adapter` |
-| `03-composition-reusable-components.yaml` | composition | `arazzo-1.1` ≥ 0.95 | valid | `components`, `ref-reuse`, `dependsOn`, `failureActions`, `successActions`, `pending-adapter` |
-| `04-stress-criteria-vocabulary.yaml` | stress | `arazzo-1.1` ≥ 0.95 | valid | `successCriteria`, `regex`, `jsonpath`, `xpath`, `operationPath`, `operationRef`, `pending-adapter` |
-| `05-real-world-order-to-cash.yaml` | real-world | `arazzo-1.1` ≥ 0.95 | valid | `asyncapi-source`, `mixed-sync-async`, `message-payload-criteria`, `retry`, `pending-adapter` |
-| `06-sourced-set/inventory.openapi.yaml` ⚠ | multi-file (member) | `openapi-3.1` (no guarantee) | valid | `multi-file`, `openapi-source`, `pending-adapter` |
-| `06-sourced-set/workflow.arazzo.yaml` | multi-file (root) | `arazzo-1.1` ≥ 0.95 | valid | `multi-file`, `relative-source-url`, `workflows`, `pending-adapter` |
-| `07-version-1.0-baseline.yaml` ⚠ | typical | `arazzo` ≥ 0.95 | valid | `version-1.0`, `no-upgrade`, `workflows`, `pending-adapter` |
-| `negative/01-syntactic-unclosed-flow-sequence.yaml` | — | `arazzo-1.1` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-flow-sequence`, `pending-adapter` |
-| `negative/02-semantic-step-without-operation.yaml` | — | `arazzo-1.1` (no guarantee) | invalid | `negative`, `semantic`, `step-without-operation`, `pending-adapter` |
-| `negative/03-truncated-mid-workflow.yaml` | — | `arazzo-1.1` (no guarantee) | invalid | `negative`, `truncated`, `mid-quoted-scalar`, `pending-adapter` |
-| `negative/04-wrong-format-asyncapi.yaml` ⚠ | — | `arazzo-1.1` (no guarantee) | invalid | `negative`, `wrong-format`, `asyncapi`, `pending-adapter` |
-| `negative/05-encoding-utf16.yaml` | — | `arazzo-1.1` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
-| `negative/06-version-out-of-range-2.0.yaml` | — | `arazzo-1.1` (no guarantee) | invalid | `negative`, `version-out-of-range`, `arazzo-2.0`, `pending-adapter` |
+| `01-minimal-single-step.yaml` | minimal | `arazzo` ≥ 0.95 | valid | `workflows`, `steps`, `successCriteria`, `sourceDescriptions` |
+| `02-typical-checkout-flow.yaml` | typical | `arazzo` ≥ 0.95 | valid | `workflows`, `inputs`, `outputs`, `requestBody`, `step-outputs` |
+| `03-composition-reusable-components.yaml` | composition | `arazzo` ≥ 0.95 | valid | `components`, `ref-reuse`, `dependsOn`, `failureActions`, `successActions` |
+| `04-stress-criteria-vocabulary.yaml` | stress | `arazzo` ≥ 0.95 | valid | `successCriteria`, `regex`, `jsonpath`, `xpath`, `operationPath`, `operationRef` |
+| `05-real-world-order-to-cash.yaml` | real-world | `arazzo` ≥ 0.95 | valid | `asyncapi-source`, `mixed-sync-async`, `message-payload-criteria`, `retry` |
+| `06-sourced-set/inventory.openapi.yaml` ⚠ | multi-file (member) | `openapi-3.1` (no guarantee) | valid | `multi-file`, `openapi-source` |
+| `06-sourced-set/workflow.arazzo.yaml` | multi-file (root) | `arazzo` ≥ 0.95 | valid | `multi-file`, `relative-source-url`, `workflows` |
+| `07-version-1.0-baseline.yaml` ⚠ | typical | `arazzo` ≥ 0.95 | valid | `version-1.0`, `no-upgrade`, `workflows` |
+| `negative/01-syntactic-unclosed-flow-sequence.yaml` | — | `arazzo` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-flow-sequence` |
+| `negative/02-semantic-step-without-operation.yaml` | — | `arazzo` (no guarantee) | invalid | `negative`, `semantic`, `step-without-operation` |
+| `negative/03-truncated-mid-workflow.yaml` | — | `arazzo` (no guarantee) | invalid | `negative`, `truncated`, `mid-quoted-scalar` |
+| `negative/04-wrong-format-asyncapi.yaml` ⚠ | — | `arazzo` (no guarantee) | invalid | `negative`, `wrong-format`, `asyncapi` |
+| `negative/05-encoding-utf16.yaml` | — | `arazzo` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+| `negative/06-version-out-of-range-2.0.yaml` | — | `arazzo` (no guarantee) | invalid | `negative`, `version-out-of-range`, `arazzo-2.0` |
 
 > ⚠ **`06-sourced-set/inventory.openapi.yaml`** — Fileset member: the OpenAPI document the workflow's sourceDescriptions resolve to; detected as OpenAPI on its own.
 
@@ -2560,7 +2562,6 @@ Rungs that do not apply to an adapter's format, with the manifest-recorded justi
 | Adapter | Rung | Justification |
 | --- | --- | --- |
 | `apiblueprint` | multi-file | The API Blueprint adapter's parse_fileset only parses the root document and never resolves references across fileset members, so a multi-file set would exercise nothing beyond a single file. |
-| `arazzo` | multi-file | The arazzo adapter has no parse_fileset, so a multi-file set cannot be imported together. |
 | `asn1` | multi-file | Asn1ImportSource.parse_fileset only parses the root member (and the parser rejects more than one module per document), so cross-member resolution genuinely does not exist. |
 | `avro` | multi-file | AvroImportSource.parse_fileset only parses the root member and never resolves references into other fileset members, so a multi-file set would demonstrate nothing. |
 | `capnproto` | multi-file | CapnpImportSource.parse_fileset only parses the fileset root and never resolves imported members, so a multi-file set demonstrates nothing beyond a single file. |

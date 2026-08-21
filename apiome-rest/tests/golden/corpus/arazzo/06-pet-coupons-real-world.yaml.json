@@ -11,7 +11,10 @@
           "type": "openapi",
           "url": "https://example.com/openapi/petstore.json"
         }
-      ]
+      ],
+      "sourceTypes": {
+        "petStoreApi": "openapi"
+      }
     },
     "format": "arazzo",
     "identity": {
@@ -191,7 +194,7 @@
     "confidence": 0.99,
     "format": "arazzo"
   },
-  "fingerprint": "sha256:082a1ed76e1540ecf4113a831e57b287f1122809ab1ede39046091b262faad37",
+  "fingerprint": "sha256:d7f3ff6526ccbbe3c658bee12932cdc3d11eeb0f0c889e56286a15709f95b5c4",
   "lint": {
     "findings": 0,
     "grade": "A",

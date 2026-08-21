@@ -1,0 +1,223 @@
+{
+  "adapter": "arazzo",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "arazzo": "1.1.0",
+      "infoSummary": "Create a cart, add an item, and pay for it.",
+      "sourceDescriptions": [
+        {
+          "name": "storefront",
+          "type": "openapi",
+          "url": "https://api.example.com/storefront/openapi.yaml"
+        }
+      ],
+      "sourceTypes": {
+        "storefront": "openapi"
+      }
+    },
+    "format": "arazzo",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Storefront checkout",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Cart to paid order.",
+        "extras": {
+          "inputs": {
+            "properties": {
+              "paymentToken": {
+                "type": "string"
+              },
+              "quantity": {
+                "minimum": 1,
+                "type": "integer"
+              },
+              "sku": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sku",
+              "quantity",
+              "paymentToken"
+            ],
+            "type": "object"
+          },
+          "outputs": {
+            "orderId": "$steps.pay.outputs.orderId"
+          },
+          "stepOrder": [
+            "createCart",
+            "addItem",
+            "pay"
+          ],
+          "summary": "Cart to paid order.",
+          "workflowId": "checkout",
+          "workflowIndex": 0
+        },
+        "key": "checkout",
+        "name": "checkout",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "operationId": "$sourceDescriptions.storefront.addCartItem",
+              "outputs": {
+                "total": "$response.body#/total"
+              },
+              "parameters": [
+                {
+                  "in": "path",
+                  "name": "cartId",
+                  "value": "$steps.createCart.outputs.cartId"
+                }
+              ],
+              "requestBody": {
+                "contentType": "application/json",
+                "payload": {
+                  "quantity": "$inputs.quantity",
+                  "sku": "$inputs.sku"
+                }
+              },
+              "sourceDescription": "storefront",
+              "sourceType": "openapi",
+              "stepId": "addItem",
+              "stepIndex": 1,
+              "successCriteria": [
+                {
+                  "condition": "$statusCode == 200"
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "checkout#addItem",
+            "kind": "one_way",
+            "messages": [],
+            "name": "addItem",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "checkout"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Open an empty cart.",
+            "extras": {
+              "operationId": "$sourceDescriptions.storefront.createCart",
+              "outputs": {
+                "cartId": "$response.body#/id"
+              },
+              "sourceDescription": "storefront",
+              "sourceType": "openapi",
+              "stepId": "createCart",
+              "stepIndex": 0,
+              "successCriteria": [
+                {
+                  "condition": "$statusCode == 201"
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "checkout#createCart",
+            "kind": "one_way",
+            "messages": [],
+            "name": "createCart",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "checkout"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "operationId": "$sourceDescriptions.storefront.payCart",
+              "outputs": {
+                "orderId": "$response.body#/orderId"
+              },
+              "parameters": [
+                {
+                  "in": "path",
+                  "name": "cartId",
+                  "value": "$steps.createCart.outputs.cartId"
+                }
+              ],
+              "requestBody": {
+                "contentType": "application/json",
+                "payload": {
+                  "amount": "$steps.addItem.outputs.total",
+                  "token": "$inputs.paymentToken"
+                }
+              },
+              "sourceDescription": "storefront",
+              "sourceType": "openapi",
+              "stepId": "pay",
+              "stepIndex": 2,
+              "successCriteria": [
+                {
+                  "condition": "$statusCode == 201"
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "checkout#pay",
+            "kind": "one_way",
+            "messages": [],
+            "name": "pay",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "checkout"
+            ]
+          }
+        ]
+      }
+    ],
+    "title": "Storefront checkout",
+    "types": [],
+    "version": "2.1.0"
+  },
+  "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "arazzo"
+  },
+  "fingerprint": "sha256:047821382891ace965a7b50dcbc327cbbdf4b898ce5c0b8424ef431adc974452",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "7e3543d8c6649d3c178b674ea9ed6a3c68770201b6ade22a3a67c6161546d814",
+    "score": 91,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

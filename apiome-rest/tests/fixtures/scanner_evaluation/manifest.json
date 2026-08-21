@@ -19,6 +19,13 @@
   ],
   "fixtures": [
     {
+      "id": "catalog/arazzo-async-source-before-1-1",
+      "kind": "catalog_arazzo",
+      "expected_blocking_rule_ids": [
+        "arazzo.async-source-before-1-1"
+      ]
+    },
+    {
       "id": "catalog/arazzo-dangling-operation-id",
       "kind": "catalog_arazzo",
       "expected_blocking_rule_ids": [

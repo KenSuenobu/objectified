@@ -1,0 +1,236 @@
+{
+  "adapter": "arazzo",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "arazzo": "1.1.0",
+      "components": {
+        "failureActions": {
+          "retryOnRateLimit": {
+            "criteria": [
+              {
+                "condition": "$statusCode == 429"
+              }
+            ],
+            "name": "retryOnRateLimit",
+            "retryAfter": 2,
+            "retryLimit": 5,
+            "type": "retry"
+          }
+        },
+        "inputs": {
+          "customerRef": {
+            "properties": {
+              "customerId": {
+                "pattern": "^CUS-[0-9]{6}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "customerId"
+            ],
+            "type": "object"
+          }
+        },
+        "parameters": {
+          "tenantHeader": {
+            "in": "header",
+            "name": "X-Tenant",
+            "value": "acme"
+          }
+        },
+        "successActions": {
+          "finish": {
+            "name": "finish",
+            "type": "end"
+          }
+        }
+      },
+      "sourceDescriptions": [
+        {
+          "name": "billing",
+          "type": "openapi",
+          "url": "https://api.example.com/billing/openapi.yaml"
+        }
+      ],
+      "sourceTypes": {
+        "billing": "openapi"
+      }
+    },
+    "format": "arazzo",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Subscription lifecycle",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Cancel a subscription created by the workflow above.",
+        "extras": {
+          "dependsOn": [
+            "createSubscription"
+          ],
+          "inputs": {
+            "$ref": "#/components/inputs/customerRef"
+          },
+          "stepOrder": [
+            "cancel"
+          ],
+          "summary": "Cancel a subscription created by the workflow above.",
+          "workflowId": "cancelSubscription",
+          "workflowIndex": 1
+        },
+        "key": "cancelSubscription",
+        "name": "cancelSubscription",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "operationId": "$sourceDescriptions.billing.cancelSubscription",
+              "parameters": [
+                {
+                  "$ref": "#/components/parameters/tenantHeader"
+                },
+                {
+                  "in": "path",
+                  "name": "subscriptionId",
+                  "value": "$workflows.createSubscription.outputs.subscriptionId"
+                }
+              ],
+              "sourceDescription": "billing",
+              "sourceType": "openapi",
+              "stepId": "cancel",
+              "stepIndex": 0,
+              "successCriteria": [
+                {
+                  "condition": "$statusCode == 204"
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "cancelSubscription#cancel",
+            "kind": "one_way",
+            "messages": [],
+            "name": "cancel",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "cancelSubscription"
+            ]
+          }
+        ]
+      },
+      {
+        "description": "Create a subscription, retrying on a rate limit.",
+        "extras": {
+          "inputs": {
+            "$ref": "#/components/inputs/customerRef"
+          },
+          "outputs": {
+            "subscriptionId": "$steps.create.outputs.subscriptionId"
+          },
+          "stepOrder": [
+            "create"
+          ],
+          "summary": "Create a subscription, retrying on a rate limit.",
+          "workflowId": "createSubscription",
+          "workflowIndex": 0
+        },
+        "key": "createSubscription",
+        "name": "createSubscription",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "onFailure": [
+                {
+                  "$ref": "#/components/failureActions/retryOnRateLimit"
+                }
+              ],
+              "onSuccess": [
+                {
+                  "$ref": "#/components/successActions/finish"
+                }
+              ],
+              "operationId": "$sourceDescriptions.billing.createSubscription",
+              "outputs": {
+                "subscriptionId": "$response.body#/id"
+              },
+              "parameters": [
+                {
+                  "$ref": "#/components/parameters/tenantHeader"
+                }
+              ],
+              "requestBody": {
+                "contentType": "application/json",
+                "payload": {
+                  "customerId": "$inputs.customerId",
+                  "plan": "standard"
+                }
+              },
+              "sourceDescription": "billing",
+              "sourceType": "openapi",
+              "stepId": "create",
+              "stepIndex": 0,
+              "successCriteria": [
+                {
+                  "condition": "$statusCode == 201"
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "createSubscription#create",
+            "kind": "one_way",
+            "messages": [],
+            "name": "create",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "createSubscription"
+            ]
+          }
+        ]
+      }
+    ],
+    "title": "Subscription lifecycle",
+    "types": [],
+    "version": "1.3.0"
+  },
+  "corpus_path": "arazzo-1.1/03-composition-reusable-components.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 0,
+    "services": 2,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "arazzo"
+  },
+  "fingerprint": "sha256:2c029793bbe6cd02df65f61a9fde2c6748684b525a501c56709d70052b60d577",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "4b789d188df21bfb44c74d2b153b626b986f993dd053a142bfcdf3b836b47f6a",
+    "score": 91,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

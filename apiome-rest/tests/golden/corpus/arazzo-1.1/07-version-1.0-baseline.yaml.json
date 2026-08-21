@@ -1,0 +1,168 @@
+{
+  "adapter": "arazzo",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "arazzo": "1.0.1",
+      "sourceDescriptions": [
+        {
+          "name": "identity",
+          "type": "openapi",
+          "url": "https://api.example.com/identity/openapi.yaml"
+        }
+      ],
+      "sourceTypes": {
+        "identity": "openapi"
+      }
+    },
+    "format": "arazzo",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Login and read profile",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "A plain 1.0 document — the emitter must not silently upgrade it to 1.1.",
+        "extras": {
+          "inputs": {
+            "properties": {
+              "password": {
+                "type": "string"
+              },
+              "username": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "username",
+              "password"
+            ],
+            "type": "object"
+          },
+          "outputs": {
+            "token": "$steps.login.outputs.token"
+          },
+          "stepOrder": [
+            "login",
+            "profile"
+          ],
+          "summary": "A plain 1.0 document — the emitter must not silently upgrade it to 1.1.",
+          "workflowId": "loginAndReadProfile",
+          "workflowIndex": 0
+        },
+        "key": "loginAndReadProfile",
+        "name": "loginAndReadProfile",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "operationId": "$sourceDescriptions.identity.login",
+              "outputs": {
+                "token": "$response.body#/accessToken"
+              },
+              "requestBody": {
+                "contentType": "application/json",
+                "payload": {
+                  "password": "$inputs.password",
+                  "username": "$inputs.username"
+                }
+              },
+              "sourceDescription": "identity",
+              "sourceType": "openapi",
+              "stepId": "login",
+              "stepIndex": 0,
+              "successCriteria": [
+                {
+                  "condition": "$statusCode == 200"
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "loginAndReadProfile#login",
+            "kind": "one_way",
+            "messages": [],
+            "name": "login",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "loginAndReadProfile"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "operationId": "$sourceDescriptions.identity.getProfile",
+              "parameters": [
+                {
+                  "in": "header",
+                  "name": "Authorization",
+                  "value": "Bearer $steps.login.outputs.token"
+                }
+              ],
+              "sourceDescription": "identity",
+              "sourceType": "openapi",
+              "stepId": "profile",
+              "stepIndex": 1,
+              "successCriteria": [
+                {
+                  "condition": "$statusCode == 200"
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "loginAndReadProfile#profile",
+            "kind": "one_way",
+            "messages": [],
+            "name": "profile",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "loginAndReadProfile"
+            ]
+          }
+        ]
+      }
+    ],
+    "title": "Login and read profile",
+    "types": [],
+    "version": "1.0.0"
+  },
+  "corpus_path": "arazzo-1.1/07-version-1.0-baseline.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "arazzo"
+  },
+  "fingerprint": "sha256:e2e8802bc84d3abda93ac63ae0707321811805d594fc2e7eed661d1ab351d7ff",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "d6506b53c34110bf10a2052175e626ebf3192b2925e96e6c7ad0b8346416c5b2",
+    "score": 91,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

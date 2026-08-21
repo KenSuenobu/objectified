@@ -16,7 +16,11 @@
           "type": "openapi",
           "url": "https://example.com/openapi/email.json"
         }
-      ]
+      ],
+      "sourceTypes": {
+        "EmailAPI": "openapi",
+        "UserAPI": "openapi"
+      }
     },
     "format": "arazzo",
     "identity": {
@@ -69,6 +73,8 @@
                 },
                 "source": "UserAPI"
               },
+              "sourceDescription": "UserAPI",
+              "sourceType": "openapi",
               "stepId": "RegisterUser",
               "stepIndex": 0
             },
@@ -106,6 +112,8 @@
                 },
                 "source": "EmailAPI"
               },
+              "sourceDescription": "EmailAPI",
+              "sourceType": "openapi",
               "stepId": "SendWelcome",
               "stepIndex": 1
             },
@@ -140,7 +148,7 @@
     "confidence": 0.99,
     "format": "arazzo"
   },
-  "fingerprint": "sha256:7ad11f9d55e549c2bc0e215ec57f09fbfb535039ddfdd2b130669241363b4e8d",
+  "fingerprint": "sha256:464cc4728e73b18d32ea95083ad0c5d3410d331b762b063ad0d18bad827a6602",
   "lint": {
     "findings": 2,
     "grade": "A",

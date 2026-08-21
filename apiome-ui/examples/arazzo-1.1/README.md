@@ -5,9 +5,10 @@ revision that lets one workflow span synchronous (OpenAPI) and asynchronous (Asy
 shipped `arazzo/` corpus covers 1.0 only; these entries are the 1.1 half, plus a 1.0 baseline that
 must still round-trip **as 1.0** (the emitter may not silently upgrade).
 
-They sit in their own directory rather than in `arazzo/` because no adapter reads 1.1 yet: entries
-carry `adapter_key: null` and the `pending-adapter` tag, so the live corpus suites do not run them
-against the 1.0-only adapter.
+They sit in their own directory rather than in `arazzo/` because they were authored ahead of the
+adapter. As of #5426 the `arazzo` adapter reads both minor versions, so every entry here is live:
+each carries `adapter_key: arazzo` and runs in the corpus import, negative, golden and parity
+suites alongside the 1.0 set.
 
 **Detection marker.** Top-level `arazzo: 1.1.x`.
 
@@ -23,5 +24,7 @@ against the 1.0-only adapter.
 | `negative/` | — | Broken flow sequence, a step that names no operation, truncation, an AsyncAPI document, UTF-16, and an out-of-range `arazzo: 2.0.0`. |
 
 **Grounding note.** The async steps use the 1.1 `sourceDescriptions[].type: asyncapi` form with
-`$message.payload` criteria contexts. Re-ground `04` and `05` against the published 1.1 JSON Schema
-when the adapter lands, and record any deviation in the manifest `notes` rather than editing silently.
+`$message.payload` criteria contexts. Both are what the adapter keys off: a step whose source is
+declared `asyncapi`, or whose criteria read `$message.*`, is normalized as an asynchronous step
+(`extras.asyncStep`). Record any deviation from the published 1.1 JSON Schema in the manifest
+`notes` rather than editing a fixture silently.
