@@ -51,9 +51,9 @@
       "marker": "`type: record` + `fields`"
     },
     "avro-idl": {
-      "label": "Avro IDL (pending #5430)",
+      "label": "Avro IDL",
       "category": "data-schema",
-      "paradigm": "data_schema",
+      "paradigm": "data_schema / rpc",
       "marker": "`protocol \u2026 {` or `namespace \u2026;` + `record` declarations in `.avdl`"
     },
     "aws-apigateway": {
@@ -2639,7 +2639,7 @@
     {
       "path": "avro-idl/01-minimal-record.avdl",
       "format": "avro-idl",
-      "adapter_key": null,
+      "adapter_key": "avro",
       "validity_class": "valid",
       "expected_detection": {
         "format": "avro-idl",
@@ -2647,8 +2647,7 @@
       },
       "features": [
         "schema-only",
-        "record",
-        "pending-adapter"
+        "record"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -2659,7 +2658,7 @@
     {
       "path": "avro-idl/02-typical-orders-protocol.avdl",
       "format": "avro-idl",
-      "adapter_key": null,
+      "adapter_key": "avro",
       "validity_class": "valid",
       "expected_detection": {
         "format": "avro-idl",
@@ -2671,8 +2670,7 @@
         "oneway",
         "throws",
         "enum",
-        "union",
-        "pending-adapter"
+        "union"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -2684,7 +2682,7 @@
     {
       "path": "avro-idl/03-composition-named-type-reuse.avdl",
       "format": "avro-idl",
-      "adapter_key": null,
+      "adapter_key": "avro",
       "validity_class": "valid",
       "expected_detection": {
         "format": "avro-idl",
@@ -2695,8 +2693,7 @@
         "self-reference",
         "map",
         "array",
-        "schema-only",
-        "pending-adapter"
+        "schema-only"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -2707,7 +2704,7 @@
     {
       "path": "avro-idl/04-stress-grammar-corners.avdl",
       "format": "avro-idl",
-      "adapter_key": null,
+      "adapter_key": "avro",
       "validity_class": "valid",
       "expected_detection": {
         "format": "avro-idl",
@@ -2720,8 +2717,7 @@
         "order",
         "aliases",
         "escaped-name",
-        "nested-union",
-        "pending-adapter"
+        "nested-union"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -2732,7 +2728,7 @@
     {
       "path": "avro-idl/05-real-world-payments-protocol.avdl",
       "format": "avro-idl",
-      "adapter_key": null,
+      "adapter_key": "avro",
       "validity_class": "valid",
       "expected_detection": {
         "format": "avro-idl",
@@ -2743,8 +2739,7 @@
         "messages",
         "decimal",
         "errors",
-        "oneway",
-        "pending-adapter"
+        "oneway"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -2755,7 +2750,7 @@
     {
       "path": "avro-idl/06-imports-set/common.avdl",
       "format": "avro-idl",
-      "adapter_key": null,
+      "adapter_key": "avro",
       "validity_class": "valid",
       "expected_detection": {
         "format": "avro-idl",
@@ -2764,8 +2759,7 @@
       "features": [
         "multi-file",
         "import-idl",
-        "schema-only",
-        "pending-adapter"
+        "schema-only"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -2777,7 +2771,7 @@
     {
       "path": "avro-idl/06-imports-set/main.avdl",
       "format": "avro-idl",
-      "adapter_key": null,
+      "adapter_key": "avro",
       "validity_class": "valid",
       "expected_detection": {
         "format": "avro-idl",
@@ -2787,8 +2781,7 @@
         "multi-file",
         "import-idl",
         "import-schema",
-        "protocol",
-        "pending-adapter"
+        "protocol"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -2800,7 +2793,7 @@
     {
       "path": "avro-idl/06-imports-set/parcel.avsc",
       "format": "avro-idl",
-      "adapter_key": null,
+      "adapter_key": "avro",
       "validity_class": "valid",
       "expected_detection": {
         "format": "avro",
@@ -2809,8 +2802,7 @@
       "features": [
         "multi-file",
         "import-schema",
-        "record",
-        "pending-adapter"
+        "record"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -2823,7 +2815,7 @@
     {
       "path": "avro-idl/negative/01-syntactic-missing-semicolon.avdl",
       "format": "avro-idl",
-      "adapter_key": null,
+      "adapter_key": "avro",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "avro-idl",
@@ -2832,8 +2824,7 @@
       "features": [
         "negative",
         "syntactic",
-        "missing-semicolon",
-        "pending-adapter"
+        "missing-semicolon"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -2845,7 +2836,7 @@
     {
       "path": "avro-idl/negative/02-semantic-duplicate-union-branch.avdl",
       "format": "avro-idl",
-      "adapter_key": null,
+      "adapter_key": "avro",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "avro-idl",
@@ -2854,8 +2845,7 @@
       "features": [
         "negative",
         "semantic",
-        "duplicate-union-branch",
-        "pending-adapter"
+        "duplicate-union-branch"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -2867,7 +2857,7 @@
     {
       "path": "avro-idl/negative/03-truncated-mid-record.avdl",
       "format": "avro-idl",
-      "adapter_key": null,
+      "adapter_key": "avro",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "avro-idl",
@@ -2876,8 +2866,7 @@
       "features": [
         "negative",
         "truncated",
-        "mid-record",
-        "pending-adapter"
+        "mid-record"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -2889,7 +2878,7 @@
     {
       "path": "avro-idl/negative/04-wrong-format-protobuf.proto",
       "format": "avro-idl",
-      "adapter_key": null,
+      "adapter_key": "avro",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "avro-idl",
@@ -2898,8 +2887,7 @@
       "features": [
         "negative",
         "wrong-format",
-        "protobuf",
-        "pending-adapter"
+        "protobuf"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -2911,7 +2899,7 @@
     {
       "path": "avro-idl/negative/05-encoding-utf16.avdl",
       "format": "avro-idl",
-      "adapter_key": null,
+      "adapter_key": "avro",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "avro-idl",
@@ -2920,8 +2908,7 @@
       "features": [
         "negative",
         "encoding",
-        "utf-16",
-        "pending-adapter"
+        "utf-16"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -2933,7 +2920,7 @@
     {
       "path": "avro-idl/negative/06-unresolvable-import.avdl",
       "format": "avro-idl",
-      "adapter_key": null,
+      "adapter_key": "avro",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "avro-idl",
@@ -2942,8 +2929,7 @@
       "features": [
         "negative",
         "unresolvable-ref",
-        "missing-import",
-        "pending-adapter"
+        "missing-import"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -32122,9 +32108,6 @@
     },
     "asn1": {
       "multi-file": "Asn1ImportSource.parse_fileset only parses the root member (and the parser rejects more than one module per document), so cross-member resolution genuinely does not exist."
-    },
-    "avro": {
-      "multi-file": "AvroImportSource.parse_fileset only parses the root member and never resolves references into other fileset members, so a multi-file set would demonstrate nothing."
     },
     "capnproto": {
       "multi-file": "CapnpImportSource.parse_fileset only parses the fileset root and never resolves imported members, so a multi-file set demonstrates nothing beyond a single file."

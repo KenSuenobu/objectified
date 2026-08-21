@@ -115,7 +115,10 @@ def normalize_format_key(format_key: Optional[str]) -> str:
         return "apiblueprint"
     if key in ("tsp", "cadl"):
         return "typespec"
-    if key in ("avsc",):
+    if key in ("avsc", "avdl", "avro-idl"):
+        # FMT-3.5 gave the Avro adapter a surface-scoped detection key (``avro-idl``).
+        # Lint capability is stated per *format*, not per surface, so it folds onto the
+        # family key rather than adding a row nothing declares rules for.
         return "avro"
     if key in ("edmx",) or key.startswith("odata-"):
         # FMT-3.4 gave the OData adapter version-scoped detection keys (``odata-v2`` /

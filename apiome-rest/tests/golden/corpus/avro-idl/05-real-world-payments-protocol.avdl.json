@@ -1,0 +1,1381 @@
+{
+  "adapter": "avro",
+  "canonical": {
+    "channels": [],
+    "description": "Payment authorization service in the shape a payments platform publishes:\na schema-heavy protocol with money as decimal, enumerated result codes,\nan error hierarchy, and both request/response and one-way messages.",
+    "extras": {
+      "avro_protocol": "com.example.payments.v3.PaymentService",
+      "avro_root": "com.example.payments.v3.Currency",
+      "avro_syntax": "avdl"
+    },
+    "format": "avro",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "PaymentService",
+      "namespace": "com.example.payments.v3"
+    },
+    "paradigm": "rpc",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Payment authorization service in the shape a payments platform publishes:\na schema-heavy protocol with money as decimal, enumerated result codes,\nan error hierarchy, and both request/response and one-way messages.",
+        "extras": {},
+        "key": "com.example.payments.v3.PaymentService",
+        "name": "PaymentService",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Authorize a card payment.",
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "com.example.payments.v3.PaymentService.authorize",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.payments.v3.PaymentService.authorize#error.PaymentRejected",
+                "name": "PaymentRejected",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.payments.v3.PaymentRejected",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.payments.v3.PaymentService.authorize#error.SystemUnavailable",
+                "name": "SystemUnavailable",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.payments.v3.SystemUnavailable",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "avro_parameters": [
+                    {
+                      "name": "request",
+                      "type": "AuthorizationRequest"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "com.example.payments.v3.PaymentService.authorize#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.payments.v3.AuthorizationRequest",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.payments.v3.PaymentService.authorize#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.payments.v3.AuthorizationResponse",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "authorize",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Capture a previously approved authorization.",
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "com.example.payments.v3.PaymentService.capture",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.payments.v3.PaymentService.capture#error.PaymentRejected",
+                "name": "PaymentRejected",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.payments.v3.PaymentRejected",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "avro_parameters": [
+                    {
+                      "name": "request",
+                      "type": "CaptureRequest"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "com.example.payments.v3.PaymentService.capture#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.payments.v3.CaptureRequest",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.payments.v3.PaymentService.capture#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.payments.v3.AuthorizationResponse",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "capture",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Settlement notices are pushed, not requested.",
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "com.example.payments.v3.PaymentService.settled",
+            "kind": "one_way",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "avro_parameters": [
+                    {
+                      "name": "notice",
+                      "type": "SettlementNotice"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "com.example.payments.v3.PaymentService.settled#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.payments.v3.SettlementNotice",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "settled",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Void an authorization that has not settled.",
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "com.example.payments.v3.PaymentService.voidAuthorization",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "com.example.payments.v3.PaymentService.voidAuthorization#error.PaymentRejected",
+                "name": "PaymentRejected",
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "com.example.payments.v3.PaymentRejected",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "avro_parameters": [
+                    {
+                      "name": "authorizationId",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "headers": [],
+                "key": "com.example.payments.v3.PaymentService.voidAuthorization#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "voidAuthorization",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "PaymentService",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.v3.AuthResult.APPROVED",
+            "name": "APPROVED",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.v3.AuthResult.DECLINED",
+            "name": "DECLINED",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.v3.AuthResult.REFERRAL",
+            "name": "REFERRAL",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.v3.AuthResult.EXPIRED_CARD",
+            "name": "EXPIRED_CARD",
+            "value": 3
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.v3.AuthResult.INSUFFICIENT_FUNDS",
+            "name": "INSUFFICIENT_FUNDS",
+            "value": 4
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.v3.AuthResult.DO_NOT_HONOR",
+            "name": "DO_NOT_HONOR",
+            "value": 5
+          }
+        ],
+        "extras": {
+          "avro_kind": "enum"
+        },
+        "fields": [],
+        "key": "com.example.payments.v3.AuthResult",
+        "key_type": null,
+        "kind": "enum",
+        "name": "AuthResult",
+        "namespace": "com.example.payments.v3",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "com.example.payments.v3.AuthorizationRequest.amount",
+            "name": "amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.payments.v3.Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "AUTOMATIC",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 5,
+            "key": "com.example.payments.v3.AuthorizationRequest.captureMode",
+            "name": "captureMode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.payments.v3.CaptureMode",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "com.example.payments.v3.AuthorizationRequest.card",
+            "name": "card",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.payments.v3.CardReference",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.payments.v3.AuthorizationRequest.merchantId",
+            "name": "merchantId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "avro_type": "string",
+              "logicalType": "uuid"
+            },
+            "field_number": 1,
+            "key": "com.example.payments.v3.AuthorizationRequest.requestId",
+            "name": "requestId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "avro_type": "long",
+              "logicalType": "timestamp-millis"
+            },
+            "field_number": 7,
+            "key": "com.example.payments.v3.AuthorizationRequest.requestedAt",
+            "name": "requestedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 6,
+            "key": "com.example.payments.v3.AuthorizationRequest.risk",
+            "name": "risk",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.payments.v3.RiskSignals",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "com.example.payments.v3.AuthorizationRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "AuthorizationRequest",
+        "namespace": "com.example.payments.v3",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.payments.v3.AuthorizationResponse.authorizationId",
+            "name": "authorizationId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 5,
+            "key": "com.example.payments.v3.AuthorizationResponse.authorizedAmount",
+            "name": "authorizedAmount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.payments.v3.Money",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "avro_type": "long",
+              "logicalType": "timestamp-millis"
+            },
+            "field_number": 6,
+            "key": "com.example.payments.v3.AuthorizationResponse.decidedAt",
+            "name": "decidedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 4,
+            "key": "com.example.payments.v3.AuthorizationResponse.networkCode",
+            "name": "networkCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "avro_type": "string",
+              "logicalType": "uuid"
+            },
+            "field_number": 1,
+            "key": "com.example.payments.v3.AuthorizationResponse.requestId",
+            "name": "requestId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "com.example.payments.v3.AuthorizationResponse.result",
+            "name": "result",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.payments.v3.AuthResult",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.payments.v3.AuthorizationResponse",
+        "key_type": null,
+        "kind": "record",
+        "name": "AuthorizationResponse",
+        "namespace": "com.example.payments.v3",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.v3.CaptureMode.AUTOMATIC",
+            "name": "AUTOMATIC",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.v3.CaptureMode.MANUAL",
+            "name": "MANUAL",
+            "value": 1
+          }
+        ],
+        "extras": {
+          "avro_kind": "enum"
+        },
+        "fields": [],
+        "key": "com.example.payments.v3.CaptureMode",
+        "key_type": null,
+        "kind": "enum",
+        "name": "CaptureMode",
+        "namespace": "com.example.payments.v3",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.payments.v3.CaptureRequest.amount",
+            "name": "amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.payments.v3.Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.payments.v3.CaptureRequest.authorizationId",
+            "name": "authorizationId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": true,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 3,
+            "key": "com.example.payments.v3.CaptureRequest.finalCapture",
+            "name": "finalCapture",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.payments.v3.CaptureRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "CaptureRequest",
+        "namespace": "com.example.payments.v3",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 4,
+            "key": "com.example.payments.v3.CardReference.cardholderNameHint",
+            "name": "cardholderNameHint",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.payments.v3.CardReference.expiryMonth",
+            "name": "expiryMonth",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "com.example.payments.v3.CardReference.expiryYear",
+            "name": "expiryYear",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Network token, never a PAN.",
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.payments.v3.CardReference.networkToken",
+            "name": "networkToken",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.payments.v3.CardReference",
+        "key_type": null,
+        "kind": "record",
+        "name": "CardReference",
+        "namespace": "com.example.payments.v3",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.v3.Currency.USD",
+            "name": "USD",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.v3.Currency.EUR",
+            "name": "EUR",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.v3.Currency.GBP",
+            "name": "GBP",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.v3.Currency.JPY",
+            "name": "JPY",
+            "value": 3
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.v3.Currency.CHF",
+            "name": "CHF",
+            "value": 4
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.v3.Currency.CAD",
+            "name": "CAD",
+            "value": 5
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.payments.v3.Currency.AUD",
+            "name": "AUD",
+            "value": 6
+          }
+        ],
+        "extras": {
+          "avro_kind": "enum"
+        },
+        "fields": [],
+        "key": "com.example.payments.v3.Currency",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Currency",
+        "namespace": "com.example.payments.v3",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "map"
+        },
+        "fields": [],
+        "key": "com.example.payments.v3.Map_string",
+        "key_type": null,
+        "kind": "map",
+        "name": "Map_string",
+        "namespace": "com.example.payments.v3",
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": false
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "decimal",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "avro_type": "bytes",
+              "logicalType": "decimal",
+              "precision": 18,
+              "scale": 3
+            },
+            "field_number": 1,
+            "key": "com.example.payments.v3.Money.amount",
+            "name": "amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.payments.v3.Money.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.payments.v3.Currency",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.payments.v3.Money",
+        "key_type": null,
+        "kind": "record",
+        "name": "Money",
+        "namespace": "com.example.payments.v3",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "error"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.payments.v3.PaymentRejected.authorizationId",
+            "name": "authorizationId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "com.example.payments.v3.PaymentRejected.reason",
+            "name": "reason",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.payments.v3.PaymentRejected.result",
+            "name": "result",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.payments.v3.AuthResult",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.payments.v3.PaymentRejected",
+        "key_type": null,
+        "kind": "record",
+        "name": "PaymentRejected",
+        "namespace": "com.example.payments.v3",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 1,
+            "key": "com.example.payments.v3.RiskSignals.deviceFingerprint",
+            "name": "deviceFingerprint",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 2,
+            "key": "com.example.payments.v3.RiskSignals.ipCountry",
+            "name": "ipCountry",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": {},
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 4,
+            "key": "com.example.payments.v3.RiskSignals.merchantSignals",
+            "name": "merchantSignals",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.payments.v3.Map_string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 3,
+            "key": "com.example.payments.v3.RiskSignals.velocityLastHour",
+            "name": "velocityLastHour",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "com.example.payments.v3.RiskSignals",
+        "key_type": null,
+        "kind": "record",
+        "name": "RiskSignals",
+        "namespace": "com.example.payments.v3",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.payments.v3.SettlementNotice.authorizationId",
+            "name": "authorizationId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.payments.v3.SettlementNotice.settledAmount",
+            "name": "settledAmount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.payments.v3.Money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "avro_type": "int",
+              "logicalType": "date"
+            },
+            "field_number": 3,
+            "key": "com.example.payments.v3.SettlementNotice.settlementDate",
+            "name": "settlementDate",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.payments.v3.SettlementNotice",
+        "key_type": null,
+        "kind": "record",
+        "name": "SettlementNotice",
+        "namespace": "com.example.payments.v3",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "error"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.payments.v3.SystemUnavailable.component",
+            "name": "component",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 2,
+            "key": "com.example.payments.v3.SystemUnavailable.retryAfterSeconds",
+            "name": "retryAfterSeconds",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "com.example.payments.v3.SystemUnavailable",
+        "key_type": null,
+        "kind": "record",
+        "name": "SystemUnavailable",
+        "namespace": "com.example.payments.v3",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "avro-idl/05-real-world-payments-protocol.avdl",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 0,
+    "services": 1,
+    "types": 13
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "avro-idl"
+  },
+  "fingerprint": "sha256:368d04eae327db51da76dc955b3e3c97bc003340d4bbb317d8bfa79146218ac4",
+  "lint": {
+    "findings": 56,
+    "grade": "F",
+    "report_fingerprint": "7c54cba61e2ff04fdb4b8f7a17a88e23b86f884f5ea4703a816cab11bbe58b97",
+    "score": 50,
+    "severity_counts": {
+      "error": 0,
+      "info": 43,
+      "warning": 13
+    }
+  },
+  "snapshot_version": 1
+}

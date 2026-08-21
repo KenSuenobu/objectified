@@ -1,0 +1,476 @@
+{
+  "adapter": "avro",
+  "canonical": {
+    "channels": [],
+    "description": "Composition: named types declared once and referenced from several records,\nincluding a self-referential type and a record reused inside a map and an array.",
+    "extras": {
+      "avro_root": "com.example.crm.Channel",
+      "avro_syntax": "avdl"
+    },
+    "format": "avro",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Channel",
+      "namespace": "com.example.crm"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Channel",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "com.example.crm.Address.city",
+            "name": "city",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "com.example.crm.Address.countryCode",
+            "name": "countryCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.crm.Address.line1",
+            "name": "line1",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 2,
+            "key": "com.example.crm.Address.line2",
+            "name": "line2",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 4,
+            "key": "com.example.crm.Address.postalCode",
+            "name": "postalCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.crm.Address",
+        "key_type": null,
+        "kind": "record",
+        "name": "Address",
+        "namespace": "com.example.crm",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.crm.Channel.EMAIL",
+            "name": "EMAIL",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.crm.Channel.SMS",
+            "name": "SMS",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.crm.Channel.POST",
+            "name": "POST",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "com.example.crm.Channel.PHONE",
+            "name": "PHONE",
+            "value": 3
+          }
+        ],
+        "extras": {
+          "avro_kind": "enum"
+        },
+        "fields": [],
+        "key": "com.example.crm.Channel",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Channel",
+        "namespace": "com.example.crm",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.crm.ContactPoint.channel",
+            "name": "channel",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.crm.Channel",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.crm.ContactPoint.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": false,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 3,
+            "key": "com.example.crm.ContactPoint.verified",
+            "name": "verified",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.crm.ContactPoint",
+        "key_type": null,
+        "kind": "record",
+        "name": "ContactPoint",
+        "namespace": "com.example.crm",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "map"
+        },
+        "fields": [],
+        "key": "com.example.crm.Map_ContactPoint",
+        "key_type": null,
+        "kind": "map",
+        "name": "Map_ContactPoint",
+        "namespace": "com.example.crm",
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "com.example.crm.ContactPoint",
+          "nullable": false
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": [],
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 2,
+            "key": "com.example.crm.Node.children",
+            "name": "children",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "com.example.crm.Node",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.crm.Node.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.crm.Node",
+        "key_type": null,
+        "kind": "record",
+        "name": "Node",
+        "namespace": "com.example.crm",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "avro_kind": "record"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 5,
+            "key": "com.example.crm.Party.contactsByLabel",
+            "name": "contactsByLabel",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.crm.Map_ContactPoint",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 2,
+            "key": "com.example.crm.Party.displayName",
+            "name": "displayName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 6,
+            "key": "com.example.crm.Party.orgTree",
+            "name": "orgTree",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.crm.Node",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": [],
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "has_default": true
+            },
+            "field_number": 4,
+            "key": "com.example.crm.Party.otherAddresses",
+            "name": "otherAddresses",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "com.example.crm.Address",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 1,
+            "key": "com.example.crm.Party.partyId",
+            "name": "partyId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": 3,
+            "key": "com.example.crm.Party.primaryAddress",
+            "name": "primaryAddress",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.crm.Address",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.crm.Party",
+        "key_type": null,
+        "kind": "record",
+        "name": "Party",
+        "namespace": "com.example.crm",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "avro-idl/03-composition-named-type-reuse.avdl",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 6
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "avro-idl"
+  },
+  "fingerprint": "sha256:7b1b036418871cfda19a67bcef225fc384443e33025f3d183665d42fd4559a74",
+  "lint": {
+    "findings": 22,
+    "grade": "D",
+    "report_fingerprint": "80e01f20ad5abb12c08389af74701ea4211ccbdc07df1872ac8a2e76ac6889ca",
+    "score": 64,
+    "severity_counts": {
+      "error": 0,
+      "info": 16,
+      "warning": 6
+    }
+  },
+  "snapshot_version": 1
+}

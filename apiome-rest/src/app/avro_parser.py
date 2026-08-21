@@ -7,9 +7,12 @@ Syntax errors surface as :class:`AvroParseError`.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Mapping, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Mapping, Optional, Tuple
 
 from .import_ingestion import IngestionError, parse_document
+
+if TYPE_CHECKING:  # pragma: no cover - import cycle broken for runtime
+    from .avro_idl_parser import AvroProtocol
 
 __all__ = [
     "AvroParseError",
@@ -40,9 +43,29 @@ class AvroNamedSchema:
 
 @dataclass(frozen=True)
 class AvroDocument:
+    """One parsed Avro document, from either of Avro's two surfaces.
+
+    ``root``/``types``/``raw`` are what the ``.avsc`` path has always produced. The
+    remaining fields are contributed by the Avro IDL reader (FMT-3.5,
+    :mod:`app.avro_idl_parser`) and keep their ``.avsc`` defaults otherwise, so a
+    JSON-schema import is bit-for-bit the document it always was.
+
+    Attributes:
+        root: The document's root named type.
+        types: Every named type the document declares, sorted by qualified name.
+        raw: The source text.
+        protocol: The IDL protocol layer (name, namespace, RPC messages) when the
+            source declared one; ``None`` for ``.avsc`` and schema-only IDL.
+        doc: A file-level doc comment, which only IDL can carry.
+        syntax: Which surface produced this document — ``avsc`` or ``avdl``.
+    """
+
     root: AvroNamedSchema
     types: Tuple[AvroNamedSchema, ...]
     raw: str
+    protocol: Optional["AvroProtocol"] = None
+    doc: Optional[str] = None
+    syntax: str = "avsc"
 
 
 def _qualified_name(name: str, namespace: Optional[str]) -> str:

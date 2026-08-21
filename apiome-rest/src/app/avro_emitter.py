@@ -24,11 +24,12 @@ from __future__ import annotations
 
 import re
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, Self, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Self, Sequence, Tuple, Union
 
 from fastavro import parse_schema
 from pydantic import Field, model_validator
 
+from .avro_idl_emitter import IDL_MEDIA_TYPE, render_avro_idl
 from .canonical_model import (
     ApiParadigm,
     CanonicalApi,
@@ -60,6 +61,7 @@ __all__ = [
     "AvroFidelityRulePack",
     "AvroSubjectNamingStrategy",
     "resolve_avro_subject",
+    "validate_avro_bundle",
     "validate_avro_schema",
 ]
 
@@ -271,8 +273,15 @@ class AvroFidelityRulePack(CapabilityRulePack):
 
 
 class AvroEmitOptions(EmitOptions):
-    """Per-target options for :class:`AvroEmitter` (MFX-1.4 / MFX-19.3)."""
+    """Per-target options for :class:`AvroEmitter` (MFX-1.4 / MFX-19.3 / FMT-3.5)."""
 
+    output_syntax: Literal["avsc", "avdl"] = Field(
+        default="avsc",
+        description="Which of Avro's two surfaces to write. ``avsc`` (the default) emits "
+        "one JSON schema file per named type — the generated artifact. ``avdl`` emits a "
+        "single Avro IDL document, the authored source, which additionally carries doc "
+        "comments, protocol grouping, and RPC message declarations.",
+    )
     namespace: Optional[str] = Field(
         default=None,
         description="Override the emitted namespace. Defaults to the model's identity "
@@ -323,6 +332,7 @@ class AvroEmitter(Emitter, register=True):
     options_model = AvroEmitOptions
 
     OUTPUT_MEDIA_TYPE = "application/vnd.apache.avro+json"
+    OUTPUT_MEDIA_TYPE_IDL = IDL_MEDIA_TYPE
 
     @classmethod
     def capability_profile(cls) -> CapabilityProfile:
@@ -347,17 +357,37 @@ class AvroEmitter(Emitter, register=True):
         *,
         opts: Optional[Union[AvroEmitOptions, EmitOptions]] = None,
     ) -> EmitResult:
-        """Emit ``api`` as validated ``.avsc`` schemas with per-construct provenance."""
+        """Emit ``api`` as Avro, in whichever surface ``opts.output_syntax`` selects.
+
+        Args:
+            api: The canonical model to emit.
+            opts: Per-target options; ``output_syntax`` picks ``.avsc`` (default) or
+                ``.avdl``.
+
+        Returns:
+            The emitted bundle: one validated ``.avsc`` per named type, or one ``.avdl``
+            document carrying the whole protocol.
+        """
         options = (
             opts
             if isinstance(opts, AvroEmitOptions)
             else AvroEmitOptions.model_validate(opts.model_dump() if opts else {})
         )
         writer = _AvroWriter(api, options)
-        files = writer.render()
+        if options.output_syntax == "avdl":
+            files = render_avro_idl(
+                api,
+                writer,
+                default_namespace=writer.default_namespace,
+                tracker=writer.tracker,
+            )
+            media_type = self.OUTPUT_MEDIA_TYPE_IDL
+        else:
+            files = writer.render()
+            media_type = self.OUTPUT_MEDIA_TYPE
         return EmitResult(
             files=files,
-            media_type=self.OUTPUT_MEDIA_TYPE,
+            media_type=media_type,
             provenance=writer.tracker.records(),
             losses=writer.losses.records(),
         )
@@ -371,9 +401,12 @@ class _AvroWriter:
         self._options = options
         self.tracker = ProvenanceTracker()
         self.losses = LossTracker()
-        self._default_namespace = (
+        #: Namespace the document is written under. Public because the IDL writer
+        #: (FMT-3.5) renders the same model and must agree on it exactly.
+        self.default_namespace = (
             (options.namespace or api.identity.namespace or "").strip() or None
         )
+        self._default_namespace = self.default_namespace
         self._types_by_key: Dict[str, Type] = {t.key: t for t in api.types}
         self._emittable = [
             t
@@ -391,14 +424,14 @@ class _AvroWriter:
             schemas_by_key[type_.key] = schema
             self.tracker.record(f"/schemas/{type_.key}", Provenance.SOURCE)
 
-        named_schemas: Dict[str, Any] = {}
-        for type_ in ordered:
-            schema = schemas_by_key[type_.key]
-            validate_avro_schema(_as_dict_schema(schema), named_schemas=named_schemas)
-            if type_.kind in (TypeKind.RECORD, TypeKind.ENUM, TypeKind.SCALAR):
-                qualified = _qualified_name(type_, self._default_namespace)
-                if qualified:
-                    named_schemas[qualified] = _as_dict_schema(schema)
+        errors = validate_avro_bundle(
+            [
+                (_schema_path(type_, self._default_namespace), schemas_by_key[type_.key])
+                for type_ in ordered
+            ]
+        )
+        if errors:
+            raise ValueError(errors[0])
 
         return [
             EmittedFile(
@@ -437,6 +470,7 @@ class _AvroWriter:
             schema["namespace"] = namespace
         if type_.description:
             schema["doc"] = type_.description
+        _attach_decoration(schema, type_.extras)
         return schema
 
     def _emit_field(
@@ -475,6 +509,7 @@ class _AvroWriter:
             )
         if field.description:
             entry["doc"] = field.description
+        _attach_decoration(entry, field.extras)
         return entry
 
     def _emit_enum(self, type_: Type) -> Dict[str, Any]:
@@ -489,6 +524,10 @@ class _AvroWriter:
             schema["namespace"] = namespace
         if type_.description:
             schema["doc"] = type_.description
+        default_symbol = type_.extras.get("avro_enum_default")
+        if isinstance(default_symbol, str) and default_symbol:
+            schema["default"] = _sanitize_symbol(default_symbol)
+        _attach_decoration(schema, type_.extras)
         return schema
 
     def _emit_union_type(self, type_: Type) -> List[Any]:
@@ -526,8 +565,9 @@ class _AvroWriter:
                 schema["namespace"] = namespace
             if type_.description:
                 schema["doc"] = type_.description
+            _attach_decoration(schema, type_.extras)
             return schema
-        logical = _logical_from_constraints(type_.constraints) or _logical_from_extras(type_.extras)
+        logical = _logical_from_extras(type_.extras) or _logical_from_constraints(type_.constraints)
         if logical is not None:
             base, logical_type = logical
             schema = {"type": base, "logicalType": logical_type}
@@ -556,6 +596,10 @@ class _AvroWriter:
 
         inner = self._resolve_leaf_ref(ref, namespace=namespace, field=field)
         if ref.nullable and inner != "null":
+            # Avro unions do not nest: a nullable reference to a UNION type contributes
+            # its branches, it does not wrap them in a second union.
+            if isinstance(inner, list):
+                return inner if "null" in inner else ["null", *inner]
             union: List[Any] = ["null", inner]
             return union
         return inner
@@ -575,7 +619,9 @@ class _AvroWriter:
         if primitive is not None:
             constraints = field.constraints if field is not None else None
             extras = field.extras if field is not None else {}
-            logical = _logical_from_constraints(constraints) or _logical_from_extras(extras)
+            # Format-specific extras first: a source that recorded ``timestamp-micros``
+            # knows more than the canonical ``date-time`` format it also projects onto.
+            logical = _logical_from_extras(extras) or _logical_from_constraints(constraints)
             if logical is not None:
                 base, logical_type = logical
                 schema: Dict[str, Any] = {"type": base, "logicalType": logical_type}
@@ -645,6 +691,58 @@ def validate_avro_schema(
         return parse_schema(schema, named_schemas=registry)  # type: ignore[return-value]
     except Exception as exc:  # fastavro raises several exception types
         raise ValueError(f"Invalid Avro schema: {exc}") from exc
+
+
+def validate_avro_bundle(units: Sequence[Tuple[str, Any]]) -> List[str]:
+    """Validate a bundle of Avro schemas that may reference one another, in any order.
+
+    A named type is emitted as its own schema and may reference another by name, so no
+    single file can always be validated in isolation. Validation therefore iterates to a
+    fixed point: every pass validates what it can and registers what parsed, and a pass
+    that registers nothing new has found genuine failures rather than an ordering
+    artifact. That makes the result independent of the order the units arrive in — which
+    matters because ``Order`` sorts before the ``OrderLine`` it references.
+
+    Args:
+        units: ``(label, schema)`` pairs; the label appears in the reported errors.
+
+    Returns:
+        One message per unresolvable unit, empty when the whole bundle is valid.
+    """
+    named_schemas: Dict[str, Any] = {}
+    pending = list(units)
+    while True:
+        unresolved: List[Tuple[str, Any]] = []
+        errors: List[str] = []
+        progressed = False
+        for label, schema in pending:
+            fragment = _as_dict_schema(schema)
+            try:
+                validate_avro_schema(fragment, named_schemas=named_schemas)
+            except (ValueError, TypeError) as exc:
+                unresolved.append((label, schema))
+                errors.append(f"{label}: {exc}")
+                continue
+            fullname = _schema_fullname(fragment)
+            if fullname is not None:
+                named_schemas[fullname] = fragment
+            progressed = True
+        if not unresolved:
+            return []
+        if not progressed:
+            return errors
+        pending = unresolved
+
+
+def _schema_fullname(schema: Any) -> Optional[str]:
+    """Return an Avro schema's fully-qualified name (``namespace.name``), if it has one."""
+    if not isinstance(schema, dict):
+        return None
+    name = schema.get("name")
+    if not name:
+        return None
+    namespace = schema.get("namespace")
+    return f"{namespace}.{name}" if namespace else str(name)
 
 
 def resolve_avro_subject(
@@ -820,6 +918,32 @@ def _attach_decimal_props(
         schema["precision"] = precision
     if isinstance(scale, int):
         schema["scale"] = scale
+
+
+def _attach_decoration(schema: Dict[str, Any], extras: Dict[str, Any]) -> None:
+    """Write back the Avro decoration a source carried in canonical ``extras``.
+
+    ``aliases``, a field's sort ``order``, and user-defined properties (what an Avro IDL
+    ``@annotation`` compiles to) are recorded by the normalizer under ``avro_aliases`` /
+    ``avro_order`` / ``avro_properties``. A normalizer's extras bag and its format's
+    emitter are a contract pair, so what the reader records the writer emits — otherwise
+    the round-trip reports an unexplained change.
+
+    Args:
+        schema: The Avro schema or field dict being built; mutated in place.
+        extras: The canonical construct's ``extras``.
+    """
+    aliases = extras.get("avro_aliases")
+    if isinstance(aliases, list) and aliases:
+        schema["aliases"] = [_sanitize_name(str(alias)) for alias in aliases]
+    order = extras.get("avro_order")
+    if isinstance(order, str) and order in ("ascending", "descending", "ignore"):
+        schema["order"] = order
+    properties = extras.get("avro_properties")
+    if isinstance(properties, dict):
+        for key, value in properties.items():
+            if key not in schema:
+                schema[key] = value
 
 
 def _fixed_size(type_: Type) -> Optional[int]:
