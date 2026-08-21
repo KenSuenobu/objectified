@@ -52,7 +52,7 @@ The **Direction** column below says whether a format can be imported, exported, 
 | RAML | `raml` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `raml` | `.raml`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 | TypeSpec | `typespec` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `typespec`, `tsp`, `cadl` | `.tsp`, `.cadl`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 | WADL | `wadl` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `wadl`, `restdescription` | `.wadl`, `.xml`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
-| WSDL | `wsdl` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `wsdl`, `soap` | `.wsdl`, `.xml`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
+| WSDL | `wsdl` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `wsdl`, `wsdl-2.0`, `soap` | `.wsdl`, `.xml`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 | z/OS Connect | `zosconnect` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `zosconnect`, `zos`, `zos-connect` | `.zosconnect.json`, `.json`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 
 ## RPC

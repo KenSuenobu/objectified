@@ -1,0 +1,927 @@
+{
+  "adapter": "wsdl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "wsdl_target_namespace": "http://example.com/shipping/tracking/v2",
+      "wsdl_version": "2.0"
+    },
+    "format": "wsdl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "TrackingService",
+      "namespace": "http://example.com/shipping/tracking/v2"
+    },
+    "paradigm": "rest",
+    "protocol": "soap",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "TrackingService/Production",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com/shipping/tracking/v2",
+        "variables": []
+      },
+      {
+        "description": "TrackingService/Sandbox",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://sandbox.example.com/shipping/tracking/v2",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "http://example.com/shipping/tracking/v2.TrackingInterface",
+        "name": "TrackingInterface",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "http://example.com/shipping/tracking/v2.TrackingInterface.notifyStatus",
+            "kind": "one_way",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "http://example.com/shipping/tracking/v2.TrackingInterface.notifyStatus#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/shipping/tracking/v2.statusNotification",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "notifyStatus",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "http://example.com/shipping/tracking/v2.TrackingInterface.rate",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "http://example.com/shipping/tracking/v2.TrackingInterface.rate#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/shipping/tracking/v2.rateRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "http://example.com/shipping/tracking/v2.TrackingInterface.rate#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/shipping/tracking/v2.rateResponse",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "rate",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "http://example.com/shipping/tracking/v2.TrackingInterface.track",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "http://example.com/shipping/tracking/v2.TrackingInterface.track#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/shipping/tracking/v2.trackRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "http://example.com/shipping/tracking/v2.TrackingInterface.track#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/shipping/tracking/v2.trackResponse",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "track",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 3,
+            "key": "http://example.com/shipping/tracking/v2.Address.city",
+            "name": "city",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 6,
+            "key": "http://example.com/shipping/tracking/v2.Address.countryCode",
+            "name": "countryCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/shipping/tracking/v2.Address.line1",
+            "name": "line1",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 2,
+            "key": "http://example.com/shipping/tracking/v2.Address.line2",
+            "name": "line2",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 5,
+            "key": "http://example.com/shipping/tracking/v2.Address.postalCode",
+            "name": "postalCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 4,
+            "key": "http://example.com/shipping/tracking/v2.Address.region",
+            "name": "region",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/shipping/tracking/v2.Address",
+        "key_type": null,
+        "kind": "record",
+        "name": "Address",
+        "namespace": "http://example.com/shipping/tracking/v2",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "Address"
+            },
+            "field_number": 2,
+            "key": "http://example.com/shipping/tracking/v2.rateRequest.destination",
+            "name": "destination",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/shipping/tracking/v2.Address",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "Address"
+            },
+            "field_number": 1,
+            "key": "http://example.com/shipping/tracking/v2.rateRequest.origin",
+            "name": "origin",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/shipping/tracking/v2.Address",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 4,
+            "key": "http://example.com/shipping/tracking/v2.rateRequest.serviceLevel",
+            "name": "serviceLevel",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "decimal"
+            },
+            "field_number": 3,
+            "key": "http://example.com/shipping/tracking/v2.rateRequest.weightKg",
+            "name": "weightKg",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/shipping/tracking/v2.rateRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "rateRequest",
+        "namespace": "http://example.com/shipping/tracking/v2",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "rateResponseQuote"
+            },
+            "field_number": 1,
+            "key": "http://example.com/shipping/tracking/v2.rateResponse.quote",
+            "name": "quote",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/shipping/tracking/v2.rateResponseQuote",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/shipping/tracking/v2.rateResponse",
+        "key_type": null,
+        "kind": "record",
+        "name": "rateResponse",
+        "namespace": "http://example.com/shipping/tracking/v2",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "decimal"
+            },
+            "field_number": 2,
+            "key": "http://example.com/shipping/tracking/v2.rateResponseQuote.amount",
+            "name": "amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 3,
+            "key": "http://example.com/shipping/tracking/v2.rateResponseQuote.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/shipping/tracking/v2.rateResponseQuote.serviceLevel",
+            "name": "serviceLevel",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "int"
+            },
+            "field_number": 4,
+            "key": "http://example.com/shipping/tracking/v2.rateResponseQuote.transitDays",
+            "name": "transitDays",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/shipping/tracking/v2.rateResponseQuote",
+        "key_type": null,
+        "kind": "record",
+        "name": "rateResponseQuote",
+        "namespace": "http://example.com/shipping/tracking/v2",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "dateTime"
+            },
+            "field_number": 3,
+            "key": "http://example.com/shipping/tracking/v2.statusNotification.occurredAt",
+            "name": "occurredAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "ShipmentStatus"
+            },
+            "field_number": 2,
+            "key": "http://example.com/shipping/tracking/v2.statusNotification.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ShipmentStatus",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "TrackingNumber"
+            },
+            "field_number": 1,
+            "key": "http://example.com/shipping/tracking/v2.statusNotification.trackingNumber",
+            "name": "trackingNumber",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "TrackingNumber",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/shipping/tracking/v2.statusNotification",
+        "key_type": null,
+        "kind": "record",
+        "name": "statusNotification",
+        "namespace": "http://example.com/shipping/tracking/v2",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "boolean"
+            },
+            "field_number": 2,
+            "key": "http://example.com/shipping/tracking/v2.trackRequest.includeHistory",
+            "name": "includeHistory",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "TrackingNumber"
+            },
+            "field_number": 1,
+            "key": "http://example.com/shipping/tracking/v2.trackRequest.trackingNumber",
+            "name": "trackingNumber",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "TrackingNumber",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/shipping/tracking/v2.trackRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "trackRequest",
+        "namespace": "http://example.com/shipping/tracking/v2",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "Address"
+            },
+            "field_number": 4,
+            "key": "http://example.com/shipping/tracking/v2.trackResponse.destination",
+            "name": "destination",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/shipping/tracking/v2.Address",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "date"
+            },
+            "field_number": 3,
+            "key": "http://example.com/shipping/tracking/v2.trackResponse.estimatedDelivery",
+            "name": "estimatedDelivery",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "trackResponseEvent"
+            },
+            "field_number": 5,
+            "key": "http://example.com/shipping/tracking/v2.trackResponse.event",
+            "name": "event",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/shipping/tracking/v2.trackResponseEvent",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "ShipmentStatus"
+            },
+            "field_number": 2,
+            "key": "http://example.com/shipping/tracking/v2.trackResponse.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ShipmentStatus",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "TrackingNumber"
+            },
+            "field_number": 1,
+            "key": "http://example.com/shipping/tracking/v2.trackResponse.trackingNumber",
+            "name": "trackingNumber",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "TrackingNumber",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/shipping/tracking/v2.trackResponse",
+        "key_type": null,
+        "kind": "record",
+        "name": "trackResponse",
+        "namespace": "http://example.com/shipping/tracking/v2",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 3,
+            "key": "http://example.com/shipping/tracking/v2.trackResponseEvent.location",
+            "name": "location",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "dateTime"
+            },
+            "field_number": 1,
+            "key": "http://example.com/shipping/tracking/v2.trackResponseEvent.occurredAt",
+            "name": "occurredAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "ShipmentStatus"
+            },
+            "field_number": 2,
+            "key": "http://example.com/shipping/tracking/v2.trackResponseEvent.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ShipmentStatus",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/shipping/tracking/v2.trackResponseEvent",
+        "key_type": null,
+        "kind": "record",
+        "name": "trackResponseEvent",
+        "namespace": "http://example.com/shipping/tracking/v2",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/shipping/tracking/v2.trackingFault.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 2,
+            "key": "http://example.com/shipping/tracking/v2.trackingFault.reason",
+            "name": "reason",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/shipping/tracking/v2.trackingFault",
+        "key_type": null,
+        "kind": "record",
+        "name": "trackingFault",
+        "namespace": "http://example.com/shipping/tracking/v2",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "wsdl2/05-real-world-shipment-tracking.wsdl",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 2,
+    "services": 1,
+    "types": 9
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "wsdl-2.0"
+  },
+  "fingerprint": "sha256:21631353a72f853be874401f2cbcd130ef01e9cd7c543c20ea012a1db0624a2d",
+  "lint": {
+    "findings": 48,
+    "grade": "F",
+    "report_fingerprint": "974d42bd3062c15476b7513cab552d7d356bb2491d57fd628874505833b3c0b2",
+    "score": 42,
+    "severity_counts": {
+      "error": 0,
+      "info": 36,
+      "warning": 12
+    }
+  },
+  "snapshot_version": 1
+}

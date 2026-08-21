@@ -1,0 +1,250 @@
+{
+  "adapter": "wsdl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "wsdl_target_namespace": "http://example.com/billing",
+      "wsdl_version": "2.0"
+    },
+    "format": "wsdl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "BillingService",
+      "namespace": "http://example.com/billing"
+    },
+    "paradigm": "rest",
+    "protocol": "soap",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "BillingService/Main",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com/billing",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "http://example.com/billing.BillingInterface",
+        "name": "BillingInterface",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "http://example.com/billing.BillingInterface.getInvoice",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "http://example.com/billing.BillingInterface.getInvoice#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/billing.getInvoice",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "http://example.com/billing.BillingInterface.getInvoice#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "http://example.com/billing.invoice",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "getInvoice",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/billing.getInvoice.invoiceId",
+            "name": "invoiceId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/billing.getInvoice",
+        "key_type": null,
+        "kind": "record",
+        "name": "getInvoice",
+        "namespace": "http://example.com/billing",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "wsdl_kind": "complexType"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 3,
+            "key": "http://example.com/billing.invoice.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "string"
+            },
+            "field_number": 1,
+            "key": "http://example.com/billing.invoice.invoiceId",
+            "name": "invoiceId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "date"
+            },
+            "field_number": 2,
+            "key": "http://example.com/billing.invoice.issuedOn",
+            "name": "issuedOn",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "xsd_type": "decimal"
+            },
+            "field_number": 4,
+            "key": "http://example.com/billing.invoice.total",
+            "name": "total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/billing.invoice",
+        "key_type": null,
+        "kind": "record",
+        "name": "invoice",
+        "namespace": "http://example.com/billing",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "wsdl2/06-imported-set/service.wsdl",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 1,
+    "services": 1,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.97,
+    "format": "wsdl-2.0"
+  },
+  "fingerprint": "sha256:f30bf14dd510292e38697b0218a64cfd88aaf44f0970fcc1e883ad8e0df6197c",
+  "lint": {
+    "findings": 11,
+    "grade": "B",
+    "report_fingerprint": "65e661788a264bb291d246221775e9457de80385fb9ed12d04215dd520e52cb4",
+    "score": 80,
+    "severity_counts": {
+      "error": 0,
+      "info": 8,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}
