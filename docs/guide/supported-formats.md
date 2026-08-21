@@ -46,7 +46,7 @@ The **Direction** column below says whether a format can be imported, exported, 
 | Google API Discovery | `discovery` | Import only | Catalog | `file`, `url`, `paste`, `discovery`, `fileset` | Yes | `discovery` | `.discovery.json`, `.discovery`, `.json`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 | HTTP Request File | `http-file` | Import + export | Catalog | `file`, `paste`, `fileset` | — | `http-file`, `http`, `rest` | `.http`, `.rest`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 | Kong Declarative Config | `kong` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `kong`, `kong-declarative` | `.yaml`, `.yml`, `.json`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
-| OData | `odata` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `odata`, `edmx` | `.edmx`, `.xml`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
+| OData | `odata` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `odata`, `odata-v2`, `odata-v3`, `edmx` | `.edmx`, `.xml`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 | OpenAPI / Swagger | `openapi` | Import + export | Project | `file`, `url`, `paste`, `fileset` | — | `openapi-3.0`, `openapi-3.1`, `openapi-3.2`, `swagger-2.0` | `.yaml`, `.yml`, `.json`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 | Postman | `postman` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `postman`, `postmancollection` | `.postman_collection.json`, `.postman.json`, `.json`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 | RAML | `raml` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `raml` | `.raml`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |

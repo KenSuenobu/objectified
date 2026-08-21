@@ -1,0 +1,1576 @@
+{
+  "adapter": "odata",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "odata_csdl_version": "2.0",
+      "odata_data_service_version": "2.0",
+      "odata_edm_namespace": "http://schemas.microsoft.com/ado/2008/09/edm",
+      "odata_edmx_namespace": "http://schemas.microsoft.com/ado/2007/06/edmx",
+      "odata_edmx_version": "1.0",
+      "odata_entity_sets": [
+        {
+          "annotations": {
+            "sap:addressable": "true",
+            "sap:content-version": "1",
+            "sap:creatable": "true",
+            "sap:deletable": "false",
+            "sap:pageable": "true",
+            "sap:updatable": "true"
+          },
+          "entity_type": "ZBP_SRV.BusinessPartner",
+          "name": "BusinessPartnerSet"
+        },
+        {
+          "annotations": {
+            "sap:content-version": "1",
+            "sap:creatable": "true",
+            "sap:deletable": "false",
+            "sap:updatable": "false"
+          },
+          "entity_type": "ZBP_SRV.SalesOrder",
+          "name": "SalesOrderSet"
+        },
+        {
+          "annotations": {
+            "sap:content-version": "1",
+            "sap:creatable": "false",
+            "sap:deletable": "false",
+            "sap:updatable": "false"
+          },
+          "entity_type": "ZBP_SRV.SalesOrderLineItem",
+          "name": "SalesOrderLineItemSet"
+        }
+      ],
+      "odata_schemas": [
+        {
+          "annotations": {
+            "sap:schema-version": "1",
+            "xml:lang": "en"
+          },
+          "associations": [
+            {
+              "annotations": {
+                "sap:content-version": "1"
+              },
+              "ends": [
+                {
+                  "multiplicity": "1",
+                  "role": "FromRole_Assoc_BusinessPartner_SalesOrders",
+                  "type": "ZBP_SRV.BusinessPartner"
+                },
+                {
+                  "multiplicity": "*",
+                  "role": "ToRole_Assoc_BusinessPartner_SalesOrders",
+                  "type": "ZBP_SRV.SalesOrder"
+                }
+              ],
+              "name": "Assoc_BusinessPartner_SalesOrders",
+              "namespace": "ZBP_SRV",
+              "referential_constraints": [
+                {
+                  "dependent_properties": [
+                    "BusinessPartnerID"
+                  ],
+                  "dependent_role": "ToRole_Assoc_BusinessPartner_SalesOrders",
+                  "principal_properties": [
+                    "BusinessPartnerID"
+                  ],
+                  "principal_role": "FromRole_Assoc_BusinessPartner_SalesOrders"
+                }
+              ]
+            },
+            {
+              "annotations": {
+                "sap:content-version": "1"
+              },
+              "ends": [
+                {
+                  "multiplicity": "1",
+                  "role": "FromRole_Assoc_SalesOrder_LineItems",
+                  "type": "ZBP_SRV.SalesOrder"
+                },
+                {
+                  "multiplicity": "*",
+                  "role": "ToRole_Assoc_SalesOrder_LineItems",
+                  "type": "ZBP_SRV.SalesOrderLineItem"
+                }
+              ],
+              "name": "Assoc_SalesOrder_LineItems",
+              "namespace": "ZBP_SRV",
+              "referential_constraints": []
+            }
+          ],
+          "complex_types": [
+            {
+              "annotations": {
+                "sap:label": "Address"
+              },
+              "name": "CT_Address",
+              "properties": [
+                {
+                  "annotations": {
+                    "MaxLength": "40",
+                    "sap:label": "City"
+                  },
+                  "name": "City",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "10",
+                    "sap:label": "Postal Code"
+                  },
+                  "name": "PostalCode",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "60",
+                    "sap:label": "Street"
+                  },
+                  "name": "Street",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "3",
+                    "sap:label": "Country",
+                    "sap:semantics": "country"
+                  },
+                  "name": "Country",
+                  "nullable": null,
+                  "type": "Edm.String"
+                }
+              ]
+            }
+          ],
+          "entity_container": {
+            "annotations": {
+              "m:IsDefaultEntityContainer": "true",
+              "sap:supported-formats": "atom json xlsx"
+            },
+            "association_sets": [
+              {
+                "annotations": {
+                  "sap:content-version": "1",
+                  "sap:creatable": "false",
+                  "sap:deletable": "false",
+                  "sap:updatable": "false"
+                },
+                "association": "ZBP_SRV.Assoc_BusinessPartner_SalesOrders",
+                "ends": [
+                  {
+                    "entity_set": "BusinessPartnerSet",
+                    "role": "FromRole_Assoc_BusinessPartner_SalesOrders"
+                  },
+                  {
+                    "entity_set": "SalesOrderSet",
+                    "role": "ToRole_Assoc_BusinessPartner_SalesOrders"
+                  }
+                ],
+                "name": "Assoc_BusinessPartner_SalesOrdersSet"
+              },
+              {
+                "annotations": {
+                  "sap:content-version": "1"
+                },
+                "association": "ZBP_SRV.Assoc_SalesOrder_LineItems",
+                "ends": [
+                  {
+                    "entity_set": "SalesOrderSet",
+                    "role": "FromRole_Assoc_SalesOrder_LineItems"
+                  },
+                  {
+                    "entity_set": "SalesOrderLineItemSet",
+                    "role": "ToRole_Assoc_SalesOrder_LineItems"
+                  }
+                ],
+                "name": "Assoc_SalesOrder_LineItemsSet"
+              }
+            ],
+            "entity_sets": [
+              {
+                "annotations": {
+                  "sap:addressable": "true",
+                  "sap:content-version": "1",
+                  "sap:creatable": "true",
+                  "sap:deletable": "false",
+                  "sap:pageable": "true",
+                  "sap:updatable": "true"
+                },
+                "entity_type": "ZBP_SRV.BusinessPartner",
+                "name": "BusinessPartnerSet"
+              },
+              {
+                "annotations": {
+                  "sap:content-version": "1",
+                  "sap:creatable": "true",
+                  "sap:deletable": "false",
+                  "sap:updatable": "false"
+                },
+                "entity_type": "ZBP_SRV.SalesOrder",
+                "name": "SalesOrderSet"
+              },
+              {
+                "annotations": {
+                  "sap:content-version": "1",
+                  "sap:creatable": "false",
+                  "sap:deletable": "false",
+                  "sap:updatable": "false"
+                },
+                "entity_type": "ZBP_SRV.SalesOrderLineItem",
+                "name": "SalesOrderLineItemSet"
+              }
+            ],
+            "function_imports": [
+              {
+                "annotations": {
+                  "m:HttpMethod": "POST",
+                  "sap:action-for": "ZBP_SRV.SalesOrder"
+                },
+                "entity_set": "SalesOrderSet",
+                "name": "ConfirmSalesOrder",
+                "parameters": [
+                  {
+                    "mode": "In",
+                    "name": "SalesOrderID",
+                    "nullable": null,
+                    "type": "Edm.String"
+                  }
+                ],
+                "return_type": "ZBP_SRV.SalesOrder"
+              }
+            ],
+            "name": "ZBP_SRV_Entities"
+          },
+          "entity_types": [
+            {
+              "annotations": {
+                "sap:content-version": "1",
+                "sap:label": "Business Partner"
+              },
+              "key_properties": [
+                "BusinessPartnerID"
+              ],
+              "name": "BusinessPartner",
+              "navigation_properties": [
+                {
+                  "from_role": "FromRole_Assoc_BusinessPartner_SalesOrders",
+                  "multiplicity": "*",
+                  "name": "ToSalesOrders",
+                  "partner": null,
+                  "relationship": "ZBP_SRV.Assoc_BusinessPartner_SalesOrders",
+                  "to_role": "ToRole_Assoc_BusinessPartner_SalesOrders",
+                  "type": "Collection(ZBP_SRV.SalesOrder)"
+                }
+              ],
+              "properties": [
+                {
+                  "annotations": {
+                    "MaxLength": "10",
+                    "sap:creatable": "false",
+                    "sap:label": "Business Partner ID",
+                    "sap:updatable": "false"
+                  },
+                  "name": "BusinessPartnerID",
+                  "nullable": false,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "80",
+                    "sap:filterable": "true",
+                    "sap:label": "Company Name"
+                  },
+                  "name": "CompanyName",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "10",
+                    "sap:label": "Legal Form",
+                    "sap:updatable": "false"
+                  },
+                  "name": "LegalForm",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "5",
+                    "sap:label": "Currency",
+                    "sap:semantics": "currency-code"
+                  },
+                  "name": "CurrencyCode",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "Precision": "7",
+                    "sap:creatable": "false",
+                    "sap:label": "Created At",
+                    "sap:updatable": "false"
+                  },
+                  "name": "CreatedAt",
+                  "nullable": null,
+                  "type": "Edm.DateTime"
+                },
+                {
+                  "name": "Address",
+                  "nullable": false,
+                  "type": "ZBP_SRV.CT_Address"
+                }
+              ]
+            },
+            {
+              "annotations": {
+                "sap:content-version": "1",
+                "sap:label": "Sales Order"
+              },
+              "key_properties": [
+                "SalesOrderID"
+              ],
+              "name": "SalesOrder",
+              "navigation_properties": [
+                {
+                  "from_role": "FromRole_Assoc_SalesOrder_LineItems",
+                  "multiplicity": "*",
+                  "name": "ToLineItems",
+                  "partner": null,
+                  "relationship": "ZBP_SRV.Assoc_SalesOrder_LineItems",
+                  "to_role": "ToRole_Assoc_SalesOrder_LineItems",
+                  "type": "Collection(ZBP_SRV.SalesOrderLineItem)"
+                }
+              ],
+              "properties": [
+                {
+                  "annotations": {
+                    "MaxLength": "10",
+                    "sap:creatable": "false",
+                    "sap:label": "Sales Order ID"
+                  },
+                  "name": "SalesOrderID",
+                  "nullable": false,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "10",
+                    "sap:label": "Business Partner ID"
+                  },
+                  "name": "BusinessPartnerID",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "Precision": "16",
+                    "Scale": "3",
+                    "sap:label": "Gross Amount",
+                    "sap:unit": "CurrencyCode"
+                  },
+                  "name": "GrossAmount",
+                  "nullable": null,
+                  "type": "Edm.Decimal"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "5",
+                    "sap:label": "Currency",
+                    "sap:semantics": "currency-code"
+                  },
+                  "name": "CurrencyCode",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "1",
+                    "sap:label": "Status",
+                    "sap:updatable": "false"
+                  },
+                  "name": "LifecycleStatus",
+                  "nullable": null,
+                  "type": "Edm.String"
+                }
+              ]
+            },
+            {
+              "annotations": {
+                "sap:content-version": "1",
+                "sap:label": "Line Item"
+              },
+              "key_properties": [
+                "SalesOrderID",
+                "ItemPosition"
+              ],
+              "name": "SalesOrderLineItem",
+              "navigation_properties": [],
+              "properties": [
+                {
+                  "annotations": {
+                    "MaxLength": "10"
+                  },
+                  "name": "SalesOrderID",
+                  "nullable": false,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "10"
+                  },
+                  "name": "ItemPosition",
+                  "nullable": false,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "10",
+                    "sap:label": "Product"
+                  },
+                  "name": "ProductID",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "Precision": "13",
+                    "Scale": "3",
+                    "sap:label": "Quantity",
+                    "sap:unit": "QuantityUnit"
+                  },
+                  "name": "Quantity",
+                  "nullable": null,
+                  "type": "Edm.Decimal"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "3",
+                    "sap:semantics": "unit-of-measure"
+                  },
+                  "name": "QuantityUnit",
+                  "nullable": null,
+                  "type": "Edm.String"
+                }
+              ]
+            }
+          ],
+          "enum_types": [],
+          "namespace": "ZBP_SRV"
+        }
+      ],
+      "odata_version": "2.0"
+    },
+    "format": "odata",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "ZBP_SRV",
+      "namespace": "ZBP_SRV"
+    },
+    "paradigm": "rest",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "ZBP_SRV.BusinessPartnerSet",
+        "name": "BusinessPartnerSet",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "BusinessPartnerSet",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/BusinessPartnerSet",
+            "key": "GET /BusinessPartnerSet",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /BusinessPartnerSet#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ZBP_SRV.BusinessPartner",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listBusinessPartnerSet",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /BusinessPartnerSet#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "BusinessPartnerSet",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/BusinessPartnerSet({key})",
+            "key": "GET /BusinessPartnerSet({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /BusinessPartnerSet({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ZBP_SRV.BusinessPartner",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getBusinessPartnerSet",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "BusinessPartnerSet",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/BusinessPartnerSet",
+            "key": "POST /BusinessPartnerSet",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /BusinessPartnerSet#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ZBP_SRV.BusinessPartner",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /BusinessPartnerSet#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ZBP_SRV.BusinessPartner",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createBusinessPartnerSet",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "ZBP_SRV.SalesOrderLineItemSet",
+        "name": "SalesOrderLineItemSet",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "SalesOrderLineItemSet",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/SalesOrderLineItemSet",
+            "key": "GET /SalesOrderLineItemSet",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /SalesOrderLineItemSet#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ZBP_SRV.SalesOrderLineItem",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listSalesOrderLineItemSet",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /SalesOrderLineItemSet#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "SalesOrderLineItemSet",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/SalesOrderLineItemSet({key})",
+            "key": "GET /SalesOrderLineItemSet({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /SalesOrderLineItemSet({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ZBP_SRV.SalesOrderLineItem",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getSalesOrderLineItemSet",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "SalesOrderLineItemSet",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/SalesOrderLineItemSet",
+            "key": "POST /SalesOrderLineItemSet",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /SalesOrderLineItemSet#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ZBP_SRV.SalesOrderLineItem",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /SalesOrderLineItemSet#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ZBP_SRV.SalesOrderLineItem",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createSalesOrderLineItemSet",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "ZBP_SRV.SalesOrderSet",
+        "name": "SalesOrderSet",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "SalesOrderSet",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/SalesOrderSet",
+            "key": "GET /SalesOrderSet",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /SalesOrderSet#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ZBP_SRV.SalesOrder",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listSalesOrderSet",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /SalesOrderSet#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "SalesOrderSet",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/SalesOrderSet({key})",
+            "key": "GET /SalesOrderSet({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /SalesOrderSet({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ZBP_SRV.SalesOrder",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getSalesOrderSet",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "SalesOrderSet",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/SalesOrderSet",
+            "key": "POST /SalesOrderSet",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /SalesOrderSet#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ZBP_SRV.SalesOrder",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /SalesOrderSet#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ZBP_SRV.SalesOrder",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createSalesOrderSet",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_annotations": {
+            "sap:content-version": "1",
+            "sap:label": "Business Partner"
+          },
+          "odata_key_properties": [
+            "BusinessPartnerID"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": [
+            {
+              "from_role": "FromRole_Assoc_BusinessPartner_SalesOrders",
+              "multiplicity": "*",
+              "name": "ToSalesOrders",
+              "partner": null,
+              "relationship": "ZBP_SRV.Assoc_BusinessPartner_SalesOrders",
+              "to_role": "ToRole_Assoc_BusinessPartner_SalesOrders",
+              "type": "Collection(ZBP_SRV.SalesOrder)"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "ZBP_SRV.CT_Address"
+            },
+            "field_number": 6,
+            "key": "ZBP_SRV.BusinessPartner.Address",
+            "name": "Address",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "ZBP_SRV.CT_Address",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "10",
+                "sap:creatable": "false",
+                "sap:label": "Business Partner ID",
+                "sap:updatable": "false"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "ZBP_SRV.BusinessPartner.BusinessPartnerID",
+            "name": "BusinessPartnerID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "80",
+                "sap:filterable": "true",
+                "sap:label": "Company Name"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 2,
+            "key": "ZBP_SRV.BusinessPartner.CompanyName",
+            "name": "CompanyName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "Precision": "7",
+                "sap:creatable": "false",
+                "sap:label": "Created At",
+                "sap:updatable": "false"
+              },
+              "odata_type": "Edm.DateTime"
+            },
+            "field_number": 5,
+            "key": "ZBP_SRV.BusinessPartner.CreatedAt",
+            "name": "CreatedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "5",
+                "sap:label": "Currency",
+                "sap:semantics": "currency-code"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 4,
+            "key": "ZBP_SRV.BusinessPartner.CurrencyCode",
+            "name": "CurrencyCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "10",
+                "sap:label": "Legal Form",
+                "sap:updatable": "false"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 3,
+            "key": "ZBP_SRV.BusinessPartner.LegalForm",
+            "name": "LegalForm",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "ZBP_SRV.BusinessPartner",
+        "key_type": null,
+        "kind": "record",
+        "name": "BusinessPartner",
+        "namespace": "ZBP_SRV",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_annotations": {
+            "sap:label": "Address"
+          },
+          "odata_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "40",
+                "sap:label": "City"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "ZBP_SRV.CT_Address.City",
+            "name": "City",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "3",
+                "sap:label": "Country",
+                "sap:semantics": "country"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 4,
+            "key": "ZBP_SRV.CT_Address.Country",
+            "name": "Country",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "10",
+                "sap:label": "Postal Code"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 2,
+            "key": "ZBP_SRV.CT_Address.PostalCode",
+            "name": "PostalCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "60",
+                "sap:label": "Street"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 3,
+            "key": "ZBP_SRV.CT_Address.Street",
+            "name": "Street",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "ZBP_SRV.CT_Address",
+        "key_type": null,
+        "kind": "record",
+        "name": "CT_Address",
+        "namespace": "ZBP_SRV",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_annotations": {
+            "sap:content-version": "1",
+            "sap:label": "Sales Order"
+          },
+          "odata_key_properties": [
+            "SalesOrderID"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": [
+            {
+              "from_role": "FromRole_Assoc_SalesOrder_LineItems",
+              "multiplicity": "*",
+              "name": "ToLineItems",
+              "partner": null,
+              "relationship": "ZBP_SRV.Assoc_SalesOrder_LineItems",
+              "to_role": "ToRole_Assoc_SalesOrder_LineItems",
+              "type": "Collection(ZBP_SRV.SalesOrderLineItem)"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "10",
+                "sap:label": "Business Partner ID"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 2,
+            "key": "ZBP_SRV.SalesOrder.BusinessPartnerID",
+            "name": "BusinessPartnerID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "5",
+                "sap:label": "Currency",
+                "sap:semantics": "currency-code"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 4,
+            "key": "ZBP_SRV.SalesOrder.CurrencyCode",
+            "name": "CurrencyCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "Precision": "16",
+                "Scale": "3",
+                "sap:label": "Gross Amount",
+                "sap:unit": "CurrencyCode"
+              },
+              "odata_type": "Edm.Decimal"
+            },
+            "field_number": 3,
+            "key": "ZBP_SRV.SalesOrder.GrossAmount",
+            "name": "GrossAmount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "1",
+                "sap:label": "Status",
+                "sap:updatable": "false"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 5,
+            "key": "ZBP_SRV.SalesOrder.LifecycleStatus",
+            "name": "LifecycleStatus",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "10",
+                "sap:creatable": "false",
+                "sap:label": "Sales Order ID"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "ZBP_SRV.SalesOrder.SalesOrderID",
+            "name": "SalesOrderID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ZBP_SRV.SalesOrder",
+        "key_type": null,
+        "kind": "record",
+        "name": "SalesOrder",
+        "namespace": "ZBP_SRV",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_annotations": {
+            "sap:content-version": "1",
+            "sap:label": "Line Item"
+          },
+          "odata_key_properties": [
+            "SalesOrderID",
+            "ItemPosition"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": []
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "10"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 2,
+            "key": "ZBP_SRV.SalesOrderLineItem.ItemPosition",
+            "name": "ItemPosition",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "10",
+                "sap:label": "Product"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 3,
+            "key": "ZBP_SRV.SalesOrderLineItem.ProductID",
+            "name": "ProductID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "Precision": "13",
+                "Scale": "3",
+                "sap:label": "Quantity",
+                "sap:unit": "QuantityUnit"
+              },
+              "odata_type": "Edm.Decimal"
+            },
+            "field_number": 4,
+            "key": "ZBP_SRV.SalesOrderLineItem.Quantity",
+            "name": "Quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "3",
+                "sap:semantics": "unit-of-measure"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 5,
+            "key": "ZBP_SRV.SalesOrderLineItem.QuantityUnit",
+            "name": "QuantityUnit",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "10"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "ZBP_SRV.SalesOrderLineItem.SalesOrderID",
+            "name": "SalesOrderID",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ZBP_SRV.SalesOrderLineItem",
+        "key_type": null,
+        "kind": "record",
+        "name": "SalesOrderLineItem",
+        "namespace": "ZBP_SRV",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "2.0"
+  },
+  "corpus_path": "odata-v2/05-real-world-sap-gateway-service.xml",
+  "counts": {
+    "channels": 0,
+    "operations": 9,
+    "servers": 0,
+    "services": 3,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "odata-v2"
+  },
+  "fingerprint": "sha256:afa8f3d7de499e807cb575b9aef4307d94d444caa4cee54b19a48c9680d0665f",
+  "lint": {
+    "findings": 46,
+    "grade": "F",
+    "report_fingerprint": "ccf8406d81c924af17037394f10a824f849f7c0d43b2d3f6cfacab4e53b9c9b7",
+    "score": 31,
+    "severity_counts": {
+      "error": 0,
+      "info": 33,
+      "warning": 13
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,519 @@
+{
+  "adapter": "odata",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "odata_csdl_version": "3.0",
+      "odata_data_service_version": "3.0",
+      "odata_edm_namespace": "http://schemas.microsoft.com/ado/2009/11/edm",
+      "odata_edmx_namespace": "http://schemas.microsoft.com/ado/2009/11/edmx",
+      "odata_edmx_version": "3.0",
+      "odata_entity_sets": [
+        {
+          "entity_type": "Invoicing.Invoice",
+          "name": "Invoices"
+        }
+      ],
+      "odata_references": [
+        {
+          "namespaces": [
+            "Shared.Types"
+          ],
+          "resolved": true,
+          "uri": "shared-types.xml"
+        }
+      ],
+      "odata_schemas": [
+        {
+          "complex_types": [],
+          "entity_container": {
+            "annotations": {
+              "m:IsDefaultEntityContainer": "true"
+            },
+            "entity_sets": [
+              {
+                "entity_type": "Invoicing.Invoice",
+                "name": "Invoices"
+              }
+            ],
+            "name": "InvoicingContainer"
+          },
+          "entity_types": [
+            {
+              "key_properties": [
+                "InvoiceId"
+              ],
+              "name": "Invoice",
+              "navigation_properties": [],
+              "properties": [
+                {
+                  "annotations": {
+                    "MaxLength": "12"
+                  },
+                  "name": "InvoiceId",
+                  "nullable": false,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "BillTo",
+                  "nullable": null,
+                  "type": "Shared.Address"
+                },
+                {
+                  "annotations": {
+                    "Precision": "13",
+                    "Scale": "2"
+                  },
+                  "name": "Amount",
+                  "nullable": null,
+                  "type": "Edm.Decimal"
+                }
+              ]
+            }
+          ],
+          "enum_types": [],
+          "namespace": "Invoicing"
+        },
+        {
+          "complex_types": [
+            {
+              "name": "Address",
+              "properties": [
+                {
+                  "annotations": {
+                    "MaxLength": "60"
+                  },
+                  "name": "Street",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "40"
+                  },
+                  "name": "City",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "10"
+                  },
+                  "name": "PostalCode",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "2"
+                  },
+                  "name": "Country",
+                  "nullable": null,
+                  "type": "Edm.String"
+                }
+              ]
+            }
+          ],
+          "entity_container": null,
+          "entity_types": [],
+          "enum_types": [],
+          "namespace": "Shared.Types"
+        }
+      ],
+      "odata_version": "3.0"
+    },
+    "format": "odata",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Invoicing",
+      "namespace": "Invoicing"
+    },
+    "paradigm": "rest",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Invoicing.Invoices",
+        "name": "Invoices",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Invoices",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/Invoices",
+            "key": "GET /Invoices",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Invoices#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Invoicing.Invoice",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listInvoices",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /Invoices#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Invoices",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/Invoices({key})",
+            "key": "GET /Invoices({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Invoices({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Invoicing.Invoice",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getInvoice",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Invoices",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/Invoices",
+            "key": "POST /Invoices",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Invoices#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Invoicing.Invoice",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Invoices#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Invoicing.Invoice",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createInvoice",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "40"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 2,
+            "key": "Invoicing.Address.City",
+            "name": "City",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "2"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 4,
+            "key": "Invoicing.Address.Country",
+            "name": "Country",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "10"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 3,
+            "key": "Invoicing.Address.PostalCode",
+            "name": "PostalCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "60"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Invoicing.Address.Street",
+            "name": "Street",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Invoicing.Address",
+        "key_type": null,
+        "kind": "record",
+        "name": "Address",
+        "namespace": "Invoicing",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_key_properties": [
+            "InvoiceId"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": []
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "Precision": "13",
+                "Scale": "2"
+              },
+              "odata_type": "Edm.Decimal"
+            },
+            "field_number": 3,
+            "key": "Invoicing.Invoice.Amount",
+            "name": "Amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Shared.Address"
+            },
+            "field_number": 2,
+            "key": "Invoicing.Invoice.BillTo",
+            "name": "BillTo",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Invoicing.Address",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "12"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Invoicing.Invoice.InvoiceId",
+            "name": "InvoiceId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Invoicing.Invoice",
+        "key_type": null,
+        "kind": "record",
+        "name": "Invoice",
+        "namespace": "Invoicing",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "3.0"
+  },
+  "corpus_path": "odata-v2/07-referenced-set/service.xml",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "odata-v3"
+  },
+  "fingerprint": "sha256:74a9805aa94b5207ce9ae9967043bd3158c9b1bb9a7fbc19d3e3a12a3dd5217f",
+  "lint": {
+    "findings": 17,
+    "grade": "D",
+    "report_fingerprint": "1d28e1f2f4a6fde0024d1981016abd922780d22711b3f6b1699ee0f3eccecd0f",
+    "score": 68,
+    "severity_counts": {
+      "error": 0,
+      "info": 12,
+      "warning": 5
+    }
+  },
+  "snapshot_version": 1
+}

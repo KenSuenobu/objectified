@@ -1,0 +1,1040 @@
+{
+  "adapter": "odata",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "odata_csdl_version": "3.0",
+      "odata_data_service_version": "3.0",
+      "odata_edm_namespace": "http://schemas.microsoft.com/ado/2009/11/edm",
+      "odata_edmx_namespace": "http://schemas.microsoft.com/ado/2009/11/edmx",
+      "odata_edmx_version": "3.0",
+      "odata_entity_sets": [
+        {
+          "entity_type": "Fleet.Vehicle",
+          "name": "Vehicles"
+        },
+        {
+          "entity_type": "Fleet.Contract",
+          "name": "Contracts"
+        }
+      ],
+      "odata_schemas": [
+        {
+          "associations": [
+            {
+              "ends": [
+                {
+                  "multiplicity": "*",
+                  "role": "Vehicle",
+                  "type": "Fleet.Vehicle"
+                },
+                {
+                  "multiplicity": "0..1",
+                  "role": "Contract",
+                  "type": "Fleet.Contract"
+                }
+              ],
+              "name": "VehicleContract",
+              "namespace": "Fleet",
+              "referential_constraints": []
+            }
+          ],
+          "complex_types": [
+            {
+              "name": "Address",
+              "properties": [
+                {
+                  "annotations": {
+                    "MaxLength": "60"
+                  },
+                  "name": "Street",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "40"
+                  },
+                  "name": "City",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "10"
+                  },
+                  "name": "PostalCode",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "2"
+                  },
+                  "name": "Country",
+                  "nullable": null,
+                  "type": "Edm.String"
+                }
+              ]
+            }
+          ],
+          "entity_container": {
+            "annotations": {
+              "m:IsDefaultEntityContainer": "true"
+            },
+            "association_sets": [
+              {
+                "association": "Fleet.VehicleContract",
+                "ends": [
+                  {
+                    "entity_set": "Vehicles",
+                    "role": "Vehicle"
+                  },
+                  {
+                    "entity_set": "Contracts",
+                    "role": "Contract"
+                  }
+                ],
+                "name": "VehicleContractSet"
+              }
+            ],
+            "entity_sets": [
+              {
+                "entity_type": "Fleet.Vehicle",
+                "name": "Vehicles"
+              },
+              {
+                "entity_type": "Fleet.Contract",
+                "name": "Contracts"
+              }
+            ],
+            "name": "FleetContainer"
+          },
+          "entity_types": [
+            {
+              "annotations": {
+                "Abstract": "true"
+              },
+              "key_properties": [
+                "Vin"
+              ],
+              "name": "Vehicle",
+              "navigation_properties": [
+                {
+                  "from_role": "Vehicle",
+                  "multiplicity": "0..1",
+                  "name": "Contract",
+                  "partner": null,
+                  "relationship": "Fleet.VehicleContract",
+                  "to_role": "Contract",
+                  "type": "Fleet.Contract"
+                }
+              ],
+              "properties": [
+                {
+                  "annotations": {
+                    "MaxLength": "17"
+                  },
+                  "name": "Vin",
+                  "nullable": false,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "Registered",
+                  "nullable": null,
+                  "type": "Edm.DateTime"
+                },
+                {
+                  "name": "HomeDepot",
+                  "nullable": null,
+                  "type": "Fleet.Address"
+                }
+              ]
+            },
+            {
+              "annotations": {
+                "BaseType": "Fleet.Vehicle"
+              },
+              "key_properties": [],
+              "name": "Truck",
+              "navigation_properties": [],
+              "properties": [
+                {
+                  "name": "PayloadKg",
+                  "nullable": null,
+                  "type": "Edm.Int32"
+                },
+                {
+                  "name": "AxleCount",
+                  "nullable": null,
+                  "type": "Edm.Byte"
+                }
+              ]
+            },
+            {
+              "annotations": {
+                "BaseType": "Fleet.Vehicle"
+              },
+              "key_properties": [],
+              "name": "Van",
+              "navigation_properties": [],
+              "properties": [
+                {
+                  "annotations": {
+                    "Precision": "6",
+                    "Scale": "2"
+                  },
+                  "name": "LoadVolumeM3",
+                  "nullable": null,
+                  "type": "Edm.Decimal"
+                }
+              ]
+            },
+            {
+              "key_properties": [
+                "ContractId"
+              ],
+              "name": "Contract",
+              "navigation_properties": [],
+              "properties": [
+                {
+                  "annotations": {
+                    "MaxLength": "12"
+                  },
+                  "name": "ContractId",
+                  "nullable": false,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "Level",
+                  "nullable": null,
+                  "type": "Fleet.ServiceLevel"
+                },
+                {
+                  "name": "StartsOn",
+                  "nullable": null,
+                  "type": "Edm.DateTime"
+                }
+              ]
+            }
+          ],
+          "enum_types": [
+            {
+              "members": [
+                {
+                  "name": "Basic",
+                  "value": 0
+                },
+                {
+                  "name": "Standard",
+                  "value": 1
+                },
+                {
+                  "name": "Premium",
+                  "value": 2
+                }
+              ],
+              "name": "ServiceLevel"
+            }
+          ],
+          "namespace": "Fleet"
+        }
+      ],
+      "odata_version": "3.0"
+    },
+    "format": "odata",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Fleet",
+      "namespace": "Fleet"
+    },
+    "paradigm": "rest",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Fleet.Contracts",
+        "name": "Contracts",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Contracts",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/Contracts",
+            "key": "GET /Contracts",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Contracts#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Fleet.Contract",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listContracts",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /Contracts#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Contracts",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/Contracts({key})",
+            "key": "GET /Contracts({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Contracts({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Fleet.Contract",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getContract",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Contracts",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/Contracts",
+            "key": "POST /Contracts",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Contracts#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Fleet.Contract",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Contracts#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Fleet.Contract",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createContract",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "Fleet.Vehicles",
+        "name": "Vehicles",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Vehicles",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/Vehicles",
+            "key": "GET /Vehicles",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Vehicles#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Fleet.Vehicle",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listVehicles",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /Vehicles#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Vehicles",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/Vehicles({key})",
+            "key": "GET /Vehicles({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Vehicles({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Fleet.Vehicle",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getVehicle",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Vehicles",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/Vehicles",
+            "key": "POST /Vehicles",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Vehicles#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Fleet.Vehicle",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Vehicles#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Fleet.Vehicle",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createVehicle",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_kind": "complex"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "40"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 2,
+            "key": "Fleet.Address.City",
+            "name": "City",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "2"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 4,
+            "key": "Fleet.Address.Country",
+            "name": "Country",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "10"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 3,
+            "key": "Fleet.Address.PostalCode",
+            "name": "PostalCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "60"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Fleet.Address.Street",
+            "name": "Street",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Fleet.Address",
+        "key_type": null,
+        "kind": "record",
+        "name": "Address",
+        "namespace": "Fleet",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_key_properties": [
+            "ContractId"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": []
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "12"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Fleet.Contract.ContractId",
+            "name": "ContractId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Fleet.ServiceLevel"
+            },
+            "field_number": 2,
+            "key": "Fleet.Contract.Level",
+            "name": "Level",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Fleet.ServiceLevel",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.DateTime"
+            },
+            "field_number": 3,
+            "key": "Fleet.Contract.StartsOn",
+            "name": "StartsOn",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Fleet.Contract",
+        "key_type": null,
+        "kind": "record",
+        "name": "Contract",
+        "namespace": "Fleet",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Fleet.ServiceLevel.Basic",
+            "name": "Basic",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Fleet.ServiceLevel.Standard",
+            "name": "Standard",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "Fleet.ServiceLevel.Premium",
+            "name": "Premium",
+            "value": 2
+          }
+        ],
+        "extras": {
+          "odata_kind": "enum"
+        },
+        "fields": [],
+        "key": "Fleet.ServiceLevel",
+        "key_type": null,
+        "kind": "enum",
+        "name": "ServiceLevel",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_annotations": {
+            "BaseType": "Fleet.Vehicle"
+          },
+          "odata_key_properties": [],
+          "odata_kind": "entity",
+          "odata_navigation_properties": []
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Byte"
+            },
+            "field_number": 2,
+            "key": "Fleet.Truck.AxleCount",
+            "name": "AxleCount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint8",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Int32"
+            },
+            "field_number": 1,
+            "key": "Fleet.Truck.PayloadKg",
+            "name": "PayloadKg",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Fleet.Truck",
+        "key_type": null,
+        "kind": "record",
+        "name": "Truck",
+        "namespace": "Fleet",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_annotations": {
+            "BaseType": "Fleet.Vehicle"
+          },
+          "odata_key_properties": [],
+          "odata_kind": "entity",
+          "odata_navigation_properties": []
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "Precision": "6",
+                "Scale": "2"
+              },
+              "odata_type": "Edm.Decimal"
+            },
+            "field_number": 1,
+            "key": "Fleet.Van.LoadVolumeM3",
+            "name": "LoadVolumeM3",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Fleet.Van",
+        "key_type": null,
+        "kind": "record",
+        "name": "Van",
+        "namespace": "Fleet",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_annotations": {
+            "Abstract": "true"
+          },
+          "odata_key_properties": [
+            "Vin"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": [
+            {
+              "from_role": "Vehicle",
+              "multiplicity": "0..1",
+              "name": "Contract",
+              "partner": null,
+              "relationship": "Fleet.VehicleContract",
+              "to_role": "Contract",
+              "type": "Fleet.Contract"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Fleet.Address"
+            },
+            "field_number": 3,
+            "key": "Fleet.Vehicle.HomeDepot",
+            "name": "HomeDepot",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "Fleet.Address",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.DateTime"
+            },
+            "field_number": 2,
+            "key": "Fleet.Vehicle.Registered",
+            "name": "Registered",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "17"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Fleet.Vehicle.Vin",
+            "name": "Vin",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Fleet.Vehicle",
+        "key_type": null,
+        "kind": "record",
+        "name": "Vehicle",
+        "namespace": "Fleet",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "3.0"
+  },
+  "corpus_path": "odata-v2/03-composition-v3-inheritance.xml",
+  "counts": {
+    "channels": 0,
+    "operations": 6,
+    "servers": 0,
+    "services": 2,
+    "types": 6
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "odata-v3"
+  },
+  "fingerprint": "sha256:7b126586ad13f0073d56e85bfb0f611f7cdb3268904cc2f5d7fcf938a4f94fe4",
+  "lint": {
+    "findings": 34,
+    "grade": "F",
+    "report_fingerprint": "eb982a40fae1fc757ca6f8c73514b1b5c78c4e1c492c00f7560e051dc5422bc8",
+    "score": 38,
+    "severity_counts": {
+      "error": 0,
+      "info": 22,
+      "warning": 12
+    }
+  },
+  "snapshot_version": 1
+}

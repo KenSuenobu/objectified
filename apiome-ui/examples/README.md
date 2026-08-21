@@ -37,7 +37,7 @@ The corpus holds **1418 files** across **103 format directories**. Every file ha
 | `kong/` | Kong Declarative Config | rest | `_format_version` + `services:`/`routes:` declarative sections | 12 |
 | `nginx/` | nginx configuration (pending #5459) | rest | `server { listen … location … }` / `upstream … { server … }` blocks | 15 |
 | `odata/` | OData v4 (EDMX) | rest | `<edmx:Edmx>` root | 12 |
-| `odata-v2/` | OData v2 / v3 (CSDL) (pending #5429) | rest | `<edmx:Edmx>` with the 2007/06 or 2009/11 EDM namespaces | 14 |
+| `odata-v2/` | OData v2 / v3 (CSDL) | rest | `<edmx:Edmx>` with the 2007/06 or 2009/11 EDM namespaces | 14 |
 | `openapi/` | OpenAPI 3.x | rest | top-level `openapi:` version | 44 |
 | `postman/` | Postman v2.1 | rest | collection `info.schema` URL | 11 |
 | `postman-v2/` | Postman Collection v2.0 (pending #5431) | rest | `info.schema` ending `/collection/v2.0.0/collection.json` | 13 |
@@ -1508,26 +1508,28 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/04-wrong-format-wsdl.wsdl` | — | `odata` (no guarantee) | invalid | `negative`, `wrong-format`, `wsdl-definitions` |
 | `negative/05-encoding-utf16.edmx` | — | `odata` (no guarantee) | invalid | `negative`, `encoding`, `utf16-bytes` |
 
-### `odata-v2/` — OData v2 / v3 (CSDL) (pending #5429)
+### `odata-v2/` — OData v2 / v3 (CSDL)
 
 | File | Rung | Expected detection | Class | Features |
 | --- | --- | --- | --- | --- |
-| `01-minimal-v2-single-entity.xml` | minimal | `odata-v2` ≥ 0.9 | valid | `EntityType`, `EntitySet`, `v2`, `pending-adapter` |
-| `02-typical-v2-orders.xml` | typical | `odata-v2` ≥ 0.9 | valid | `Association`, `AssociationSet`, `ReferentialConstraint`, `compound-key`, `FunctionImport`, `v2`, `pending-adapter` |
-| `03-composition-v3-inheritance.xml` | composition | `odata-v3` ≥ 0.9 | valid | `BaseType`, `abstract-entity`, `ComplexType`, `EnumType`, `v3`, `pending-adapter` |
-| `04-stress-v2-customizable-feeds.xml` | stress | `odata-v2` ≥ 0.9 | valid | `FC-TargetPath`, `customizable-feeds`, `HasStream`, `Edm.Time`, `many-to-many`, `v2`, `pending-adapter` |
-| `05-real-world-sap-gateway-service.xml` | real-world | `odata-v2` ≥ 0.9 | valid | `sap-annotations`, `sap-semantics`, `ReferentialConstraint`, `FunctionImport`, `v2`, `pending-adapter` |
-| `06-typical-v3-catalog.xml` | typical | `odata-v3` ≥ 0.9 | valid | `v3`, `IsSideEffecting`, `Association`, `pending-adapter` |
-| `07-referenced-set/service.xml` | multi-file (root) | `odata-v3` ≥ 0.9 | valid | `multi-file`, `edmx-Reference`, `v3`, `pending-adapter` |
-| `07-referenced-set/shared-types.xml` ⚠ | multi-file (member) | `odata-v3` (no guarantee) | valid | `multi-file`, `ComplexType`, `v3`, `pending-adapter` |
-| `negative/01-syntactic-unclosed-entitytype.xml` | — | `odata-v2` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `pending-adapter` |
-| `negative/02-semantic-no-entity-container.xml` | — | `odata-v2` (no guarantee) | invalid | `negative`, `semantic`, `no-entity-container`, `pending-adapter` |
-| `negative/03-truncated-mid-property.xml` | — | `odata-v2` (no guarantee) | invalid | `negative`, `truncated`, `mid-attribute`, `pending-adapter` |
-| `negative/04-wrong-format-wsdl.wsdl` | — | `odata-v2` (no guarantee) | invalid | `negative`, `wrong-format`, `wsdl`, `pending-adapter` |
-| `negative/05-encoding-utf16.xml` | — | `odata-v2` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
-| `negative/06-unresolvable-association-ref.xml` | — | `odata-v2` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-association`, `pending-adapter` |
+| `01-minimal-v2-single-entity.xml` | minimal | `odata-v2` ≥ 0.9 | valid | `EntityType`, `EntitySet`, `v2` |
+| `02-typical-v2-orders.xml` | typical | `odata-v2` ≥ 0.9 | valid | `Association`, `AssociationSet`, `ReferentialConstraint`, `compound-key`, `FunctionImport`, `v2` |
+| `03-composition-v3-inheritance.xml` | composition | `odata-v3` ≥ 0.9 | valid | `BaseType`, `abstract-entity`, `ComplexType`, `EnumType`, `v3` |
+| `04-stress-v2-customizable-feeds.xml` | stress | `odata-v2` ≥ 0.9 | valid | `FC-TargetPath`, `customizable-feeds`, `HasStream`, `Edm.Time`, `many-to-many`, `v2` |
+| `05-real-world-sap-gateway-service.xml` | real-world | `odata-v2` ≥ 0.9 | valid | `sap-annotations`, `sap-semantics`, `ReferentialConstraint`, `FunctionImport`, `v2` |
+| `06-typical-v3-catalog.xml` | typical | `odata-v3` ≥ 0.9 | valid | `v3`, `IsSideEffecting`, `Association` |
+| `07-referenced-set/service.xml` | multi-file (root) | `odata-v3` ≥ 0.9 | valid | `multi-file`, `edmx-Reference`, `v3` |
+| `07-referenced-set/shared-types.xml` ⚠ | multi-file (member) | `odata-v3` (no guarantee) | valid | `multi-file`, `ComplexType`, `v3` |
+| `negative/01-syntactic-unclosed-entitytype.xml` | — | `odata-v2` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element` |
+| `negative/02-semantic-no-entity-container.xml` | — | `odata-v2` (no guarantee) | invalid | `negative`, `semantic`, `no-entity-container` |
+| `negative/03-truncated-mid-property.xml` ⚠ | — | `odata-v2` (no guarantee) | invalid | `negative`, `truncated`, `mid-attribute` |
+| `negative/04-wrong-format-wsdl.wsdl` | — | `odata-v2` (no guarantee) | invalid | `negative`, `wrong-format`, `wsdl` |
+| `negative/05-encoding-utf16.xml` | — | `odata-v2` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+| `negative/06-unresolvable-association-ref.xml` | — | `odata-v2` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-association` |
 
 > ⚠ **`07-referenced-set/shared-types.xml`** — Fileset member: the shared ComplexType namespace the root includes by edmx:Reference.
+
+> ⚠ **`negative/03-truncated-mid-property.xml`** — Truncation reaches the secure XML parser as a not-well-formed document, so the grounded code is INPUT_MALFORMED rather than INPUT_TRUNCATED - the same reading every XML adapter's truncated fixture gets. The intent stays in failure_class.
 
 ### `odcs/` — Open Data Contract Standard v3.1 (pending #5439)
 
@@ -2582,7 +2584,6 @@ Rungs that do not apply to an adapter's format, with the manifest-recorded justi
 | `jtd` | multi-file | The jtd adapter has no parse_fileset; JTD (RFC 8927) documents carry their definitions inline and import as single self-contained files. |
 | `k8s-crd` | multi-file | K8sCrdImportSource.parse_fileset only parses the root member and CRD structural schemas do not resolve cross-file references; multi-document YAML streams (k8s-crd/06-multi-crd-stream.yaml) cover multi-entity intake instead. |
 | `llm-tools` | multi-file | LlmToolsImportSource.parse_fileset only parses the root member and tool bundles do not resolve cross-file references, so a multi-file set demonstrates nothing beyond a single document. |
-| `odata` | multi-file | The odata adapter's parse_fileset only parses the root member and does not resolve edmx:Reference includes across other members, so a multi-file set exercises nothing. |
 | `oncrpc` | multi-file | The ONC RPC adapter's parse_fileset only parses the root document and does not resolve references across fileset members, so a multi-file set would exercise nothing. |
 | `openrpc` | multi-file | The openrpc adapter's parse_fileset only parses the root member and does not resolve external $ref targets in other members, so a multi-file set exercises nothing. |
 | `postman` | multi-file | The Postman adapter's parse_fileset only parses the root collection and never resolves references across fileset members, so a multi-file set would exercise nothing beyond a single file. |

@@ -117,7 +117,10 @@ def normalize_format_key(format_key: Optional[str]) -> str:
         return "typespec"
     if key in ("avsc",):
         return "avro"
-    if key in ("edmx",):
+    if key in ("edmx",) or key.startswith("odata-"):
+        # FMT-3.4 gave the OData adapter version-scoped detection keys (``odata-v2`` /
+        # ``odata-v3``). Lint capability is stated per *format*, not per version, so they
+        # fold onto the family key rather than adding rows nothing declares rules for.
         return "odata"
     if key in ("soap",):
         return "wsdl"
