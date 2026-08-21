@@ -6,6 +6,14 @@ Python 3.12+, typer, httpx, pydantic-settings, py-yaml12, jsonschema, openapi-sp
 
 This file applies **only** to the `apiome-cli` package. It complements the repository root `AGENTS.md`. **Keep it current** when commands, layout, configuration, HTTP client behaviour, or REST contract alignment changes.
 
+## Resources
+
+- https://clig.dev: Command Line Interface Guidelines.
+- https://devcenter.heroku.com/articles/cli-style-guide: Heroku CLI Style Guide.
+- https://bettercli.org: BetterCLI guidelines.
+
+> !IMPORTANT! Follow these guidelines and resources when making changes or adding new features to the CLI.
+
 ## Role
 
 `apiome-cli` is a **client** for [apiome-rest](../apiome-rest). It does not implement business logic or database access. All persistence and import orchestration live in the REST service; the CLI validates inputs locally, calls HTTP endpoints, formats output, and maps errors to process exit codes.
@@ -247,7 +255,6 @@ Tests must pass with **no warnings, no errors, and no skips** before merge.
 ## Review checklist
 
 - [ ] Behaviour matches `apiome-rest/openapi.yaml` (no ad-hoc API shapes)
-- [ ] [clig.dev](https://clig.dev/) exit codes, stdout/stderr split, and help text respected
 - [ ] New env vars in `.env.example`; config precedence documented in `README.md`
 - [ ] `AGENTS.md` and `README.md` updated if commands, layout, or conventions changed
 - [ ] Unit and/or integration tests added; `yarn cli:test` and `yarn cli:lint` pass
