@@ -52,7 +52,7 @@ Every shipped, non-preview import adapter must carry four artifacts: corpus exam
 | `typespec` | TypeSpec | rest | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `typespec` |
 | `wadl` | WADL | rest | 6 | 5 | 1 | 0 | 12 | 5/6 (+1 waived) | 6 | `wadl` |
 | `wit` | WIT (WebAssembly) | rpc | 11 | 5 | 0 | 0 | 16 | 6/6 | 9 | `wit` |
-| `wsdl` | WSDL | rest | 6 | 5 | 2 | 0 | 13 | 5/6 (+1 waived) | 6 | `wsdl` |
+| `wsdl` | WSDL | rest | 13 | 11 | 2 | 0 | 26 | 6/6 | 12 | `wsdl` |
 | `xmlrpc` | XML-RPC | rpc | 6 | 5 | 2 | 0 | 13 | 5/6 (+1 waived) | 6 | `xmlrpc` |
 | `xsd` | XSD | data_schema | 6 | 5 | 2 | 0 | 13 | 5/6 (+1 waived) | 6 | `xsd` |
 | `zosconnect` | z/OS Connect | rest | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `zosconnect` |
@@ -125,4 +125,4 @@ None.
 
 Fixtures staged ahead of the adapter that will claim them (`adapter_key: null`). They are not gated until an adapter registers, at which point every requirement above applies.
 
-`apigee`, `arrow`, `avro-idl`, `aws-apigateway`, `azure-apim`, `cddl`, `cics-bms`, `consul`, `cue`, `dbt`, `dhall`, `dicom`, `dtd`, `edifact`, `envoy-xds`, `fix-orchestra`, `haproxy`, `hl7v3`, `hoppscotch`, `idoc`, `ims`, `istio`, `jsonld`, `kafka-connect`, `lwm2m`, `matter`, `nacha`, `natural-ddm`, `ncpdp`, `nginx`, `odcs`, `opcua-nodeset`, `owl`, `pkl`, `pli`, `postman-v2`, `protobuf-editions`, `pydantic`, `relaxng`, `ros2`, `schematron`, `sepa`, `shacl`, `soapui`, `sparkplug`, `sql-ddl`, `swagger-1.2`, `swift-mt`, `thunder-client`, `tradacoms`, `traefik`, `trpc`, `tyk`, `typescript-types`, `vsam-idcams`, `wsdl2`, `zod`
+`apigee`, `arrow`, `avro-idl`, `aws-apigateway`, `azure-apim`, `cddl`, `cics-bms`, `consul`, `cue`, `dbt`, `dhall`, `dicom`, `dtd`, `edifact`, `envoy-xds`, `fix-orchestra`, `haproxy`, `hl7v3`, `hoppscotch`, `idoc`, `ims`, `istio`, `jsonld`, `kafka-connect`, `lwm2m`, `matter`, `nacha`, `natural-ddm`, `ncpdp`, `nginx`, `odcs`, `opcua-nodeset`, `owl`, `pkl`, `pli`, `postman-v2`, `protobuf-editions`, `pydantic`, `relaxng`, `ros2`, `schematron`, `sepa`, `shacl`, `soapui`, `sparkplug`, `sql-ddl`, `swagger-1.2`, `swift-mt`, `thunder-client`, `tradacoms`, `traefik`, `trpc`, `tyk`, `typescript-types`, `vsam-idcams`, `zod`

@@ -1,10 +1,25 @@
-"""WSDL → canonical model normalizer — MFI-15.2.
+"""WSDL → canonical model normalizer — MFI-15.2, WSDL 2.0 taught by FMT-3.3 (#5428).
 
 Maps a parsed :class:`~app.wsdl_parser.WsdlDocument` into a
 :class:`~app.canonical_model.CanonicalApi` of paradigm
 :attr:`~app.canonical_model.ApiParadigm.REST`. XSD complex types become
 :class:`~app.canonical_model.Type` records; portType operations become
 :class:`~app.canonical_model.Service` / :class:`~app.canonical_model.Operation` pairs.
+
+The parser hands both WSDL grammars over in the same AST, so this module is version-blind
+in all but two places, and both are additive:
+
+* an operation's payload is reached through a named ``message`` (1.1) or straight from the
+  payload element (2.0) — :func:`_operation_payload` takes whichever the document used and
+  produces the same :class:`~app.canonical_model.TypeRef`;
+* an operation's kind comes from its message exchange pattern when the document states one.
+  WSDL 1.1 has no MEP vocabulary at all, so a 1.1 operation keeps the
+  ``REQUEST_RESPONSE`` this normalizer has always produced and its canonical shape is
+  untouched.
+
+Faults are deliberately *not* projected: the canonical model has no fault construct, and
+the 1.1 path has never carried ``wsdl:fault``, so mapping 2.0's ``outfault`` would make a
+2.0 document normalize differently from the 1.1 document that means the same thing.
 """
 
 from __future__ import annotations
@@ -19,7 +34,6 @@ from .canonical_model import (
     Message,
     MessageRole,
     Operation,
-    OperationKind,
     Server,
     Service,
     StreamingMode,
@@ -29,6 +43,7 @@ from .canonical_model import (
 )
 from .normalizer import Keys, Normalizer, normalize_ordering
 from .wsdl_parser import WsdlDocument, WsdlField, WsdlMessage
+from .wsdl_versions import VERSION_2_0, operation_kind_for_pattern
 
 __all__ = ["WsdlNormalizer"]
 
@@ -91,22 +106,114 @@ def _canonical_field(
     )
 
 
-def _message_payload(
-    message: Optional[WsdlMessage],
+def _element_payload(
+    element_name: Optional[str],
     *,
     namespace: Optional[str],
     element_to_type: Dict[str, str],
     type_names: frozenset[str],
 ) -> Optional[TypeRef]:
-    if message is None or not message.parts:
+    """Resolve a global element declaration to the type it carries.
+
+    Args:
+        element_name: The element's local name, or ``None``.
+        namespace: The document's target namespace.
+        element_to_type: Global element name -> declared type expression.
+        type_names: Names of the document's complex types.
+
+    Returns:
+        The payload reference, or ``None`` when the element is unknown. An element
+        declared with a built-in XSD type resolves to the canonical scalar it maps to,
+        not to a type key nothing declares.
+    """
+    if not element_name or element_name not in element_to_type:
         return None
-    part = message.parts[0]
-    if part.element and part.element in element_to_type:
-        type_name = element_to_type[part.element]
-        return TypeRef(name=_type_key(type_name, namespace))
-    if part.type_name:
-        return _type_ref_from_expr(part.type_name, namespace=namespace, type_names=type_names)
-    return None
+    return _type_ref_from_expr(
+        element_to_type[element_name], namespace=namespace, type_names=type_names
+    )
+
+
+def _operation_payload(
+    message: Optional[WsdlMessage],
+    element_name: Optional[str],
+    *,
+    namespace: Optional[str],
+    element_to_type: Dict[str, str],
+    type_names: frozenset[str],
+) -> Optional[TypeRef]:
+    """Resolve one side of an operation to its canonical payload reference.
+
+    WSDL 1.1 points at a ``message`` whose first part names an element or a type; WSDL 2.0
+    has no ``message`` element and names the payload element on the operation itself.
+    Both arrive here and leave as the same kind of reference.
+
+    Args:
+        message: The 1.1 message, or ``None``.
+        element_name: The 2.0 payload element's local name, or ``None``.
+        namespace: The document's target namespace.
+        element_to_type: Global element name -> declared type expression.
+        type_names: Names of the document's complex types.
+
+    Returns:
+        The payload reference, or ``None`` when this side carries no resolvable payload.
+    """
+    if message is not None and message.parts:
+        part = message.parts[0]
+        resolved = _element_payload(
+            part.element,
+            namespace=namespace,
+            element_to_type=element_to_type,
+            type_names=type_names,
+        )
+        if resolved is not None:
+            return resolved
+        if part.type_name:
+            return _type_ref_from_expr(part.type_name, namespace=namespace, type_names=type_names)
+        return None
+    return _element_payload(
+        element_name,
+        namespace=namespace,
+        element_to_type=element_to_type,
+        type_names=type_names,
+    )
+
+
+def _identity_name(source: WsdlDocument, service_names: List[str]) -> str:
+    """Pick the API identity name for a parsed document.
+
+    Args:
+        source: The parsed document.
+        service_names: Canonical service names, in order.
+
+    Returns:
+        The 1.1 ``definitions/@name`` when present. A WSDL 2.0 ``description`` has no name
+        attribute, so a 2.0 document is named after its ``service`` element — the thing an
+        operator would call the service — falling back to the first interface.
+    """
+    if source.name:
+        return source.name
+    if source.version == VERSION_2_0 and source.services:
+        return source.services[0].name
+    return service_names[0] if service_names else "WSDL service"
+
+
+def _version_extras(source: WsdlDocument) -> Dict[str, Any]:
+    """Provenance keys recording which WSDL grammar the document was written in.
+
+    Only a 2.0 document contributes a key. WSDL 1.1 is the format's original grammar and
+    what the bare ``wsdl`` key has always meant, so stamping ``wsdl_version: "1.1"`` onto
+    every existing import would move every 1.1 fingerprint and golden without telling a
+    reader anything the format key did not already say.
+
+    Args:
+        source: The parsed document.
+
+    Returns:
+        ``{"wsdl_version": "2.0"}`` for a 2.0 document; an empty mapping otherwise.
+    """
+    if source.version != VERSION_2_0:
+        return {}
+    return {"wsdl_version": source.version}
 
 
 class WsdlNormalizer(Normalizer, register=True):
@@ -157,8 +264,9 @@ class WsdlNormalizer(Normalizer, register=True):
                 messages: List[Message] = []
                 input_message = messages_by_name.get(operation.input_message or "")
                 output_message = messages_by_name.get(operation.output_message or "")
-                request_payload = _message_payload(
+                request_payload = _operation_payload(
                     input_message,
+                    operation.input_element,
                     namespace=namespace,
                     element_to_type=element_to_type,
                     type_names=type_names,
@@ -172,8 +280,9 @@ class WsdlNormalizer(Normalizer, register=True):
                             required=True,
                         )
                     )
-                response_payload = _message_payload(
+                response_payload = _operation_payload(
                     output_message,
+                    operation.output_element,
                     namespace=namespace,
                     element_to_type=element_to_type,
                     type_names=type_names,
@@ -190,7 +299,7 @@ class WsdlNormalizer(Normalizer, register=True):
                     Operation(
                         key=op_key,
                         name=operation.name,
-                        kind=OperationKind.REQUEST_RESPONSE,
+                        kind=operation_kind_for_pattern(operation.pattern),
                         streaming=StreamingMode.NONE,
                         messages=messages,
                     )
@@ -208,7 +317,7 @@ class WsdlNormalizer(Normalizer, register=True):
                         )
                     )
 
-        identity_name = source.name or (services[0].name if services else "WSDL service")
+        identity_name = _identity_name(source, [service.name for service in services])
         api = CanonicalApi(
             paradigm=self.paradigm,
             format=self.format,
@@ -220,6 +329,7 @@ class WsdlNormalizer(Normalizer, register=True):
             raw={"wsdl": source.raw} if include_raw else None,
             extras={
                 "wsdl_target_namespace": source.target_namespace,
+                **_version_extras(source),
             },
         )
         return normalize_ordering(api)

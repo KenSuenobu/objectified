@@ -51,7 +51,7 @@ The corpus holds **1418 files** across **103 format directories**. Every file ha
 | `typespec/` | TypeSpec | rest | `import "@typespec/..."` | 11 |
 | `wadl/` | WADL | rest | `<application>` root (WADL namespace) | 12 |
 | `wsdl/` | WSDL 1.1 (SOAP) | soap | `<wsdl:definitions>` root | 13 |
-| `wsdl2/` | WSDL 2.0 (pending #5428) | soap | `<description>` root in the `http://www.w3.org/ns/wsdl` namespace | 13 |
+| `wsdl2/` | WSDL 2.0 | soap | `<description>` root in the `http://www.w3.org/ns/wsdl` namespace | 13 |
 | `zos-connect/` | z/OS Connect | rest | `apiRequester` / `apiProvider` descriptor | 11 |
 
 ### RPC
@@ -2457,25 +2457,27 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/04-wrong-format-wadl-application.wadl` | — | `wsdl` (no guarantee) | invalid | `negative`, `wrong-format`, `wadl-application` |
 | `negative/05-encoding-utf16-bom.wsdl` | — | `wsdl` (no guarantee) | invalid | `negative`, `encoding`, `utf16-bom` |
 
-### `wsdl2/` — WSDL 2.0 (pending #5428)
+### `wsdl2/` — WSDL 2.0
 
 | File | Rung | Expected detection | Class | Features |
 | --- | --- | --- | --- | --- |
-| `01-minimal-ping.wsdl` | minimal | `wsdl-2.0` ≥ 0.95 | valid | `interface`, `in-out`, `soap-binding`, `endpoint`, `pending-adapter` |
-| `02-typical-orders.wsdl` | typical | `wsdl-2.0` ≥ 0.95 | valid | `interface`, `faults`, `in-only`, `safe`, `inline-schema`, `pending-adapter` |
-| `03-composition-interface-extension.wsdl` | composition | `wsdl-2.0` ≥ 0.95 | valid | `interface-extends`, `inherited-operations`, `inherited-faults`, `pending-adapter` |
-| `04-stress-message-exchange-patterns.wsdl` | stress | `wsdl-2.0` ≥ 0.95 | valid | `in-out`, `in-only`, `robust-in-only`, `in-opt-out`, `out-only`, `http-binding`, `wsoap-mep`, `pending-adapter` |
-| `05-real-world-shipment-tracking.wsdl` | real-world | `wsdl-2.0` ≥ 0.95 | valid | `restricted-types`, `enumeration`, `repeated-elements`, `multiple-endpoints`, `pending-adapter` |
-| `06-imported-set/invoice.xsd` ⚠ | multi-file (member) | `xsd` (no guarantee) | valid | `multi-file`, `xs-import`, `types`, `pending-adapter` |
-| `06-imported-set/service.wsdl` | multi-file (root) | `wsdl-2.0` ≥ 0.95 | valid | `multi-file`, `xs-import`, `interface`, `pending-adapter` |
-| `negative/01-syntactic-unclosed-element.wsdl` | — | `wsdl-2.0` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `pending-adapter` |
-| `negative/02-semantic-no-interface.wsdl` | — | `wsdl-2.0` (no guarantee) | invalid | `negative`, `semantic`, `no-interface`, `pending-adapter` |
-| `negative/03-truncated-mid-binding.wsdl` | — | `wsdl-2.0` (no guarantee) | invalid | `negative`, `truncated`, `mid-attribute`, `pending-adapter` |
-| `negative/04-wrong-format-xsd.xsd` | — | `wsdl-2.0` (no guarantee) | invalid | `negative`, `wrong-format`, `xsd`, `pending-adapter` |
-| `negative/05-encoding-utf16.wsdl` | — | `wsdl-2.0` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
-| `negative/06-unresolvable-interface-ref.wsdl` ⚠ | — | `wsdl-2.0` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-interface`, `pending-adapter` |
+| `01-minimal-ping.wsdl` | minimal | `wsdl-2.0` ≥ 0.95 | valid | `interface`, `in-out`, `soap-binding`, `endpoint` |
+| `02-typical-orders.wsdl` | typical | `wsdl-2.0` ≥ 0.95 | valid | `interface`, `faults`, `in-only`, `safe`, `inline-schema` |
+| `03-composition-interface-extension.wsdl` | composition | `wsdl-2.0` ≥ 0.95 | valid | `interface-extends`, `inherited-operations`, `inherited-faults` |
+| `04-stress-message-exchange-patterns.wsdl` | stress | `wsdl-2.0` ≥ 0.95 | valid | `in-out`, `in-only`, `robust-in-only`, `in-opt-out`, `out-only`, `http-binding`, `wsoap-mep` |
+| `05-real-world-shipment-tracking.wsdl` | real-world | `wsdl-2.0` ≥ 0.95 | valid | `restricted-types`, `enumeration`, `repeated-elements`, `multiple-endpoints` |
+| `06-imported-set/invoice.xsd` ⚠ | multi-file (member) | `xsd` (no guarantee) | valid | `multi-file`, `xs-import`, `types` |
+| `06-imported-set/service.wsdl` | multi-file (root) | `wsdl-2.0` ≥ 0.95 | valid | `multi-file`, `xs-import`, `interface` |
+| `negative/01-syntactic-unclosed-element.wsdl` | — | `wsdl-2.0` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element` |
+| `negative/02-semantic-no-interface.wsdl` | — | `wsdl-2.0` (no guarantee) | invalid | `negative`, `semantic`, `no-interface` |
+| `negative/03-truncated-mid-binding.wsdl` ⚠ | — | `wsdl-2.0` (no guarantee) | invalid | `negative`, `truncated`, `mid-attribute` |
+| `negative/04-wrong-format-xsd.xsd` | — | `wsdl-2.0` (no guarantee) | invalid | `negative`, `wrong-format`, `xsd` |
+| `negative/05-encoding-utf16.wsdl` | — | `wsdl-2.0` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+| `negative/06-unresolvable-interface-ref.wsdl` ⚠ | — | `wsdl-2.0` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-interface` |
 
 > ⚠ **`06-imported-set/invoice.xsd`** — Fileset member: the imported schema; on its own it is an XSD, not a WSDL 2.0 description.
+
+> ⚠ **`negative/03-truncated-mid-binding.wsdl`** — Grounded at INPUT_MALFORMED: a document cut mid-attribute is not well-formed XML, so every XML adapter reports it as malformed rather than truncated; the intent is kept in failure_class.
 
 > ⚠ **`negative/06-unresolvable-interface-ref.wsdl`** — The 2.0 unresolvable-interface case FMT-3.3's acceptance criteria call for: binding and service both reference tns:MissingInterface.
 
@@ -2592,7 +2594,6 @@ Rungs that do not apply to an adapter's format, with the manifest-recorded justi
 | `thrift` | multi-file | ThriftImportSource.parse_fileset only parses the fileset root and never resolves included members, so a multi-file set demonstrates nothing beyond a single file. |
 | `typespec` | multi-file | The typespec adapter's parse_fileset parses only the root member and does not resolve relative import statements across members, so a multi-file set demonstrates nothing. |
 | `wadl` | multi-file | parse_fileset in wadl_import_source.py parses only the root member and never resolves references into other members (verified in source), so a multi-file set adds no coverage. |
-| `wsdl` | multi-file | parse_fileset in wsdl_import_source.py parses only the root member and never reads or resolves other fileset members (verified in source), so a multi-file set would exercise nothing beyond the single-file rungs. |
 | `xmlrpc` | multi-file | XmlRpcImportSource.parse_fileset parses only the root member and XML-RPC has no cross-file reference mechanism, so a genuine multi-file set is not importable. |
 | `xsd` | multi-file | parse_fileset in xsd_import_source.py parses only the root member; xs:include/xs:import across members is never resolved (verified in source), so a multi-file set adds no coverage. |
 | `zosconnect` | multi-file | The zosconnect adapter's parse_fileset only parses the root member and resolves no cross-file references (copybook structures are name references only), so a multi-file set exercises nothing. |

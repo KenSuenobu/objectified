@@ -122,7 +122,10 @@ def normalize_format_key(format_key: Optional[str]) -> str:
         # ``odata-v3``). Lint capability is stated per *format*, not per version, so they
         # fold onto the family key rather than adding rows nothing declares rules for.
         return "odata"
-    if key in ("soap",):
+    if key in ("soap",) or key.startswith("wsdl-"):
+        # FMT-3.3 gave the WSDL adapter a version-scoped detection key (``wsdl-2.0``).
+        # Lint capability is stated per *format*, not per grammar, so it folds onto the
+        # family key rather than adding a row nothing declares rules for.
         return "wsdl"
     if key in ("grpc",):
         return "protobuf"

@@ -591,7 +591,7 @@
       "marker": "`<wsdl:definitions>` root"
     },
     "wsdl2": {
-      "label": "WSDL 2.0 (pending #5428)",
+      "label": "WSDL 2.0",
       "category": "rest-http",
       "paradigm": "soap",
       "marker": "`<description>` root in the `http://www.w3.org/ns/wsdl` namespace"
@@ -30707,7 +30707,7 @@
     {
       "path": "wsdl2/01-minimal-ping.wsdl",
       "format": "wsdl2",
-      "adapter_key": null,
+      "adapter_key": "wsdl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "wsdl-2.0",
@@ -30717,8 +30717,7 @@
         "interface",
         "in-out",
         "soap-binding",
-        "endpoint",
-        "pending-adapter"
+        "endpoint"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -30729,7 +30728,7 @@
     {
       "path": "wsdl2/02-typical-orders.wsdl",
       "format": "wsdl2",
-      "adapter_key": null,
+      "adapter_key": "wsdl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "wsdl-2.0",
@@ -30740,8 +30739,7 @@
         "faults",
         "in-only",
         "safe",
-        "inline-schema",
-        "pending-adapter"
+        "inline-schema"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -30752,7 +30750,7 @@
     {
       "path": "wsdl2/03-composition-interface-extension.wsdl",
       "format": "wsdl2",
-      "adapter_key": null,
+      "adapter_key": "wsdl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "wsdl-2.0",
@@ -30761,8 +30759,7 @@
       "features": [
         "interface-extends",
         "inherited-operations",
-        "inherited-faults",
-        "pending-adapter"
+        "inherited-faults"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -30773,7 +30770,7 @@
     {
       "path": "wsdl2/04-stress-message-exchange-patterns.wsdl",
       "format": "wsdl2",
-      "adapter_key": null,
+      "adapter_key": "wsdl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "wsdl-2.0",
@@ -30786,8 +30783,7 @@
         "in-opt-out",
         "out-only",
         "http-binding",
-        "wsoap-mep",
-        "pending-adapter"
+        "wsoap-mep"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -30798,7 +30794,7 @@
     {
       "path": "wsdl2/05-real-world-shipment-tracking.wsdl",
       "format": "wsdl2",
-      "adapter_key": null,
+      "adapter_key": "wsdl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "wsdl-2.0",
@@ -30808,8 +30804,7 @@
         "restricted-types",
         "enumeration",
         "repeated-elements",
-        "multiple-endpoints",
-        "pending-adapter"
+        "multiple-endpoints"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -30820,7 +30815,7 @@
     {
       "path": "wsdl2/06-imported-set/invoice.xsd",
       "format": "wsdl2",
-      "adapter_key": null,
+      "adapter_key": "wsdl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "xsd",
@@ -30829,8 +30824,7 @@
       "features": [
         "multi-file",
         "xs-import",
-        "types",
-        "pending-adapter"
+        "types"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -30843,7 +30837,7 @@
     {
       "path": "wsdl2/06-imported-set/service.wsdl",
       "format": "wsdl2",
-      "adapter_key": null,
+      "adapter_key": "wsdl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "wsdl-2.0",
@@ -30852,8 +30846,7 @@
       "features": [
         "multi-file",
         "xs-import",
-        "interface",
-        "pending-adapter"
+        "interface"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -30865,7 +30858,7 @@
     {
       "path": "wsdl2/negative/01-syntactic-unclosed-element.wsdl",
       "format": "wsdl2",
-      "adapter_key": null,
+      "adapter_key": "wsdl",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "wsdl-2.0",
@@ -30874,8 +30867,7 @@
       "features": [
         "negative",
         "syntactic",
-        "unclosed-element",
-        "pending-adapter"
+        "unclosed-element"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -30887,7 +30879,7 @@
     {
       "path": "wsdl2/negative/02-semantic-no-interface.wsdl",
       "format": "wsdl2",
-      "adapter_key": null,
+      "adapter_key": "wsdl",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "wsdl-2.0",
@@ -30896,8 +30888,7 @@
       "features": [
         "negative",
         "semantic",
-        "no-interface",
-        "pending-adapter"
+        "no-interface"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -30909,7 +30900,7 @@
     {
       "path": "wsdl2/negative/03-truncated-mid-binding.wsdl",
       "format": "wsdl2",
-      "adapter_key": null,
+      "adapter_key": "wsdl",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "wsdl-2.0",
@@ -30918,20 +30909,20 @@
       "features": [
         "negative",
         "truncated",
-        "mid-attribute",
-        "pending-adapter"
+        "mid-attribute"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
       "failure_class": "truncated",
-      "expected_error_code": "INPUT_TRUNCATED"
+      "expected_error_code": "INPUT_MALFORMED",
+      "notes": "Grounded at INPUT_MALFORMED: a document cut mid-attribute is not well-formed XML, so every XML adapter reports it as malformed rather than truncated; the intent is kept in failure_class."
     },
     {
       "path": "wsdl2/negative/04-wrong-format-xsd.xsd",
       "format": "wsdl2",
-      "adapter_key": null,
+      "adapter_key": "wsdl",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "wsdl-2.0",
@@ -30940,8 +30931,7 @@
       "features": [
         "negative",
         "wrong-format",
-        "xsd",
-        "pending-adapter"
+        "xsd"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -30953,7 +30943,7 @@
     {
       "path": "wsdl2/negative/05-encoding-utf16.wsdl",
       "format": "wsdl2",
-      "adapter_key": null,
+      "adapter_key": "wsdl",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "wsdl-2.0",
@@ -30962,8 +30952,7 @@
       "features": [
         "negative",
         "encoding",
-        "utf-16",
-        "pending-adapter"
+        "utf-16"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -30975,7 +30964,7 @@
     {
       "path": "wsdl2/negative/06-unresolvable-interface-ref.wsdl",
       "format": "wsdl2",
-      "adapter_key": null,
+      "adapter_key": "wsdl",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "wsdl-2.0",
@@ -30984,8 +30973,7 @@
       "features": [
         "negative",
         "unresolvable-ref",
-        "missing-interface",
-        "pending-adapter"
+        "missing-interface"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -32205,9 +32193,6 @@
     },
     "wadl": {
       "multi-file": "parse_fileset in wadl_import_source.py parses only the root member and never resolves references into other members (verified in source), so a multi-file set adds no coverage."
-    },
-    "wsdl": {
-      "multi-file": "parse_fileset in wsdl_import_source.py parses only the root member and never reads or resolves other fileset members (verified in source), so a multi-file set would exercise nothing beyond the single-file rungs."
     },
     "xmlrpc": {
       "multi-file": "XmlRpcImportSource.parse_fileset parses only the root member and XML-RPC has no cross-file reference mechanism, so a genuine multi-file set is not importable."
