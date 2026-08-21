@@ -739,6 +739,89 @@
     },
     {
       "corpus_path": "api-blueprint/01-simple-api.apib",
+      "diff_count": 8,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 3,
+      "loss_drop": 6,
+      "loss_ok": 5,
+      "loss_synth": 0,
+      "matched_count": 2,
+      "overclaims": [
+        {
+          "construct": "GET /tasks",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /tasks/{id}",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "NewTask",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /tasks",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Task",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed operation 'GET /tasks', changed operation 'GET /tasks/{id}', changed operation 'POST /tasks', changed root '', removed service 'Task API', added service 'task-api'; overclaim: OK 'GET /tasks', OK 'GET /tasks/{id}', OK 'NewTask', OK 'POST /tasks', OK 'Task' (observed: unexplained: changed operation 'GET /tasks', changed operation 'GET /tasks/{id}', changed operation 'POST /tasks', changed root '', removed service 'Task API', added service 'task-api'; overclaim: OK 'GET /tasks', OK 'GET /tasks/{id}', OK 'NewTask', OK 'POST /tasks', OK 'Task')",
+      "source_format": "api-blueprint",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /tasks"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /tasks/{id}"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /tasks"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Task API"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "task-api"
+        }
+      ]
+    },
+    {
+      "corpus_path": "api-blueprint/01-simple-api.apib",
       "diff_count": 13,
       "emit_format": "graphql",
       "emit_key": "graphql",
@@ -2555,6 +2638,22 @@
     },
     {
       "corpus_path": "arazzo/property-reuse.yaml",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 0,
+      "loss_drop": 0,
+      "loss_ok": 2,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "arazzo",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "arazzo/property-reuse.yaml",
       "diff_count": 6,
       "emit_format": "graphql",
       "emit_key": "graphql",
@@ -4008,7 +4107,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.status', added operation '9f85e58a-cac6-4ae7-afbf-0e0715e35065', changed root '', added service 'com.example.status', removed type 'PersonModule.PhoneNumberType', removed type 'PersonModule.Status'; overclaim: OK 'PersonModule.Address', OK 'PersonModule.Person', OK 'PersonModule.PhoneNumber', OK 'PersonModule.PhoneNumberType', OK 'PersonModule.Status')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.status', added operation 'f256a1d8-ff7d-4039-a7f9-eaf840bcf69e', changed root '', added service 'com.example.status', removed type 'PersonModule.PhoneNumberType', removed type 'PersonModule.Status'; overclaim: OK 'PersonModule.Address', OK 'PersonModule.Person', OK 'PersonModule.PhoneNumber', OK 'PersonModule.PhoneNumberType', OK 'PersonModule.Status')",
       "source_format": "asn1",
       "status": "xfail",
       "unexplained": [
@@ -4020,7 +4119,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "9f85e58a-cac6-4ae7-afbf-0e0715e35065"
+          "key": "f256a1d8-ff7d-4039-a7f9-eaf840bcf69e"
         },
         {
           "change": "changed",
@@ -4071,7 +4170,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-e0wia6yr/PersonModule.proto:17:3:field PersonModule.Person.id: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-ndzn4ga3/PersonModule.proto:17:3:field PersonModule.Person.id: unknown type .integer)",
       "source_format": "asn1",
       "status": "xfail",
       "unexplained": []
@@ -4299,6 +4398,22 @@
           "key": "PersonModule.Status"
         }
       ]
+    },
+    {
+      "corpus_path": "asn1/01-person.asn1",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 12,
+      "loss_drop": 13,
+      "loss_ok": 5,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "asn1",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "asn1/01-person.asn1",
@@ -5033,7 +5148,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-aj4bwbc1/PersonModule.proto:16:3:field PersonModule.Person.id: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-vabl6m01/PersonModule.proto:16:3:field PersonModule.Person.id: unknown type .integer)",
       "source_format": "asn1",
       "status": "xfail",
       "unexplained": []
@@ -5969,6 +6084,22 @@
     },
     {
       "corpus_path": "asyncapi/01-user-events-2.6.yaml",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 0,
+      "loss_drop": 4,
+      "loss_ok": 0,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "asyncapi",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "asyncapi/01-user-events-2.6.yaml",
       "diff_count": 8,
       "emit_format": "graphql",
       "emit_key": "graphql",
@@ -6862,7 +6993,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.user', added operation '0b4cefe0-2c16-4a31-babb-1b2e6d187ae9', changed root '', added service 'com.example.user', removed type 'com.example.user.Status'; overclaim: OK 'com.example.user.Status', OK 'com.example.user.User')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.user', added operation '01a061cc-ba65-4c69-91c4-c1d78fd2392a', changed root '', added service 'com.example.user', removed type 'com.example.user.Status'; overclaim: OK 'com.example.user.Status', OK 'com.example.user.User')",
       "source_format": "avro",
       "status": "xfail",
       "unexplained": [
@@ -6874,7 +7005,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "0b4cefe0-2c16-4a31-babb-1b2e6d187ae9"
+          "key": "01a061cc-ba65-4c69-91c4-c1d78fd2392a"
         },
         {
           "change": "changed",
@@ -7112,6 +7243,22 @@
           "key": "com.example.user.Status"
         }
       ]
+    },
+    {
+      "corpus_path": "avro/01-user-record.avsc",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 6,
+      "loss_drop": 6,
+      "loss_ok": 2,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "avro",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "avro/01-user-record.avsc",
@@ -8349,7 +8496,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-jt7sikba/api.proto:5:29:tag number 0 must be greater than zero\n/tmp/apiome-proto-jt7sikba/api.proto:11:15:tag number 0 must be greater than zero\n/tmp/apiome-proto-jt7sikba/api.proto:21:21:tag number 0 must be greater than zero\n/tmp/apiome-proto-jt7sikba/api.proto:26:15:tag number 0 must be greater than zero)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-t56j7puo/api.proto:5:29:tag number 0 must be greater than zero\n/tmp/apiome-proto-t56j7puo/api.proto:11:15:tag number 0 must be greater than zero\n/tmp/apiome-proto-t56j7puo/api.proto:21:21:tag number 0 must be greater than zero\n/tmp/apiome-proto-t56j7puo/api.proto:26:15:tag number 0 must be greater than zero)",
       "source_format": "capnproto",
       "status": "xfail",
       "unexplained": []
@@ -8777,6 +8924,22 @@
           "key": "Type"
         }
       ]
+    },
+    {
+      "corpus_path": "capnproto/01-address-book.capnp",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 0,
+      "loss_drop": 11,
+      "loss_ok": 7,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "capnproto",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "capnproto/01-address-book.capnp",
@@ -9808,7 +9971,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-7xpnnza7/api.proto:4:29:tag number 0 must be greater than zero\n/tmp/apiome-proto-7xpnnza7/api.proto:10:15:tag number 0 must be greater than zero\n/tmp/apiome-proto-7xpnnza7/api.proto:20:21:tag number 0 must be greater than zero\n/tmp/apiome-proto-7xpnnza7/api.proto:25:15:tag number 0 must be greater than zero)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-xrww1hup/api.proto:4:29:tag number 0 must be greater than zero\n/tmp/apiome-proto-xrww1hup/api.proto:10:15:tag number 0 must be greater than zero\n/tmp/apiome-proto-xrww1hup/api.proto:20:21:tag number 0 must be greater than zero\n/tmp/apiome-proto-xrww1hup/api.proto:25:15:tag number 0 must be greater than zero)",
       "source_format": "capnproto",
       "status": "xfail",
       "unexplained": []
@@ -10920,7 +11083,7 @@
       "loss_synth": 6,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-85j_ebun/api.proto:10:3:field OrderCreated.total: unknown type .number\n/tmp/apiome-proto-85j_ebun/com/example/order.proto:9:23:method com.example.order.com_example_order_created.A234_1234_1234: unknown request type .OrderCreated)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-u7vydjpq/api.proto:10:3:field OrderCreated.total: unknown type .number\n/tmp/apiome-proto-u7vydjpq/com/example/order.proto:9:23:method com.example.order.com_example_order_created.A234_1234_1234: unknown request type .OrderCreated)",
       "source_format": "cloudevents",
       "status": "xfail",
       "unexplained": []
@@ -11106,6 +11269,22 @@
           "key": "com.example.order.created"
         }
       ]
+    },
+    {
+      "corpus_path": "cloudevents/01-order-created.json",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 6,
+      "loss_drop": 2,
+      "loss_ok": 1,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "cloudevents",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "cloudevents/01-order-created.json",
@@ -11533,7 +11712,7 @@
       "loss_synth": 6,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-_czycnjg/api.proto:9:3:field OrderCreated.total: unknown type .number\n/tmp/apiome-proto-_czycnjg/com/example/order.proto:8:23:method com.example.order.com_example_order_created.A234_1234_1234: unknown request type .OrderCreated)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-rn0c7mwe/api.proto:9:3:field OrderCreated.total: unknown type .number\n/tmp/apiome-proto-rn0c7mwe/com/example/order.proto:8:23:method com.example.order.com_example_order_created.A234_1234_1234: unknown request type .OrderCreated)",
       "source_format": "cloudevents",
       "status": "xfail",
       "unexplained": []
@@ -11960,7 +12139,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.customer.record', added operation 'bf731d76-1ac5-411b-9276-85d0916197bc', changed root '', added service 'com.example.customer.record'; overclaim: OK 'CUSTOMER-RECORD.CUSTOMER-RECORD')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.customer.record', added operation '2f78a204-257f-481e-a48c-9d0c05ca5b21', changed root '', added service 'com.example.customer.record'; overclaim: OK 'CUSTOMER-RECORD.CUSTOMER-RECORD')",
       "source_format": "cobolcopybook",
       "status": "xfail",
       "unexplained": [
@@ -11972,7 +12151,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "bf731d76-1ac5-411b-9276-85d0916197bc"
+          "key": "2f78a204-257f-481e-a48c-9d0c05ca5b21"
         },
         {
           "change": "changed",
@@ -12013,7 +12192,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-xw9eju5r/CUSTOMER_RECORD.proto:4:17:syntax error: expecting ';'\n/tmp/apiome-proto-xw9eju5r/CUSTOMER_RECORD.proto:4:17:syntax error: unexpected '-'\n/tmp/apiome-proto-xw9eju5r/CUSTOMER_RECORD.proto:13:12:syntax error: unexpected '-'\n/tmp/apiome-proto-xw9eju5r/CUSTOMER_RECORD.proto:13:24:syntax error: unexpected '-'\n/tmp/apiome-proto-xw9eju5r/CUSTOMER_RECORD.proto:16:21:syntax error: unexpected '-'\n/tmp/apiome-proto-xw9eju5r/CUSTOMER_RECORD.proto:16:33:syntax error: unexpected '-')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-ejn84lb9/CUSTOMER_RECORD.proto:4:17:syntax error: expecting ';'\n/tmp/apiome-proto-ejn84lb9/CUSTOMER_RECORD.proto:4:17:syntax error: unexpected '-'\n/tmp/apiome-proto-ejn84lb9/CUSTOMER_RECORD.proto:13:12:syntax error: unexpected '-'\n/tmp/apiome-proto-ejn84lb9/CUSTOMER_RECORD.proto:13:24:syntax error: unexpected '-'\n/tmp/apiome-proto-ejn84lb9/CUSTOMER_RECORD.proto:16:21:syntax error: unexpected '-'\n/tmp/apiome-proto-ejn84lb9/CUSTOMER_RECORD.proto:16:33:syntax error: unexpected '-')",
       "source_format": "cobolcopybook",
       "status": "xfail",
       "unexplained": []
@@ -12143,6 +12322,22 @@
       "matched_count": 0,
       "overclaims": [],
       "reason": "Re-import failed: Content does not appear to be a FlatBuffers .fbs schema (observed: Re-import failed: Content does not appear to be a FlatBuffers .fbs schema)",
+      "source_format": "cobolcopybook",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "cobol-copybook/01-customer-record.cpy",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 7,
+      "loss_drop": 7,
+      "loss_ok": 1,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
       "source_format": "cobolcopybook",
       "status": "xfail",
       "unexplained": []
@@ -12500,7 +12695,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-1c47v2_d/CUSTOMER_RECORD.proto:3:17:syntax error: expecting ';'\n/tmp/apiome-proto-1c47v2_d/CUSTOMER_RECORD.proto:3:17:syntax error: unexpected '-'\n/tmp/apiome-proto-1c47v2_d/CUSTOMER_RECORD.proto:12:12:syntax error: unexpected '-'\n/tmp/apiome-proto-1c47v2_d/CUSTOMER_RECORD.proto:12:24:syntax error: unexpected '-'\n/tmp/apiome-proto-1c47v2_d/CUSTOMER_RECORD.proto:15:21:syntax error: unexpected '-'\n/tmp/apiome-proto-1c47v2_d/CUSTOMER_RECORD.proto:15:33:syntax error: unexpected '-')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-_pbixahc/CUSTOMER_RECORD.proto:3:17:syntax error: expecting ';'\n/tmp/apiome-proto-_pbixahc/CUSTOMER_RECORD.proto:3:17:syntax error: unexpected '-'\n/tmp/apiome-proto-_pbixahc/CUSTOMER_RECORD.proto:12:12:syntax error: unexpected '-'\n/tmp/apiome-proto-_pbixahc/CUSTOMER_RECORD.proto:12:24:syntax error: unexpected '-'\n/tmp/apiome-proto-_pbixahc/CUSTOMER_RECORD.proto:15:21:syntax error: unexpected '-'\n/tmp/apiome-proto-_pbixahc/CUSTOMER_RECORD.proto:15:33:syntax error: unexpected '-')",
       "source_format": "cobolcopybook",
       "status": "xfail",
       "unexplained": []
@@ -13945,6 +14140,22 @@
           "key": "tasks.v1.TaskState"
         }
       ]
+    },
+    {
+      "corpus_path": "connectrpc/02-tasks-service.proto",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 3,
+      "loss_drop": 15,
+      "loss_ok": 11,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "connectrpc",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "connectrpc/02-tasks-service.proto",
@@ -16927,7 +17138,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-q7iwdkge/Banking.proto:31:19:method Banking.Bank.getAccount: unknown request type .string)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-o4u1gsd9/Banking.proto:31:19:method Banking.Bank.getAccount: unknown request type .string)",
       "source_format": "corbaidl",
       "status": "xfail",
       "unexplained": []
@@ -17194,6 +17405,22 @@
           "key": "Banking.AccountKind"
         }
       ]
+    },
+    {
+      "corpus_path": "corba-idl/01-bank.idl",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 6,
+      "loss_drop": 6,
+      "loss_ok": 8,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "corbaidl",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "corba-idl/01-bank.idl",
@@ -18304,7 +18531,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-77sq54qj/Banking.proto:30:19:method Banking.Bank.getAccount: unknown request type .string)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-a7u9j3to/Banking.proto:30:19:method Banking.Bank.getAccount: unknown request type .string)",
       "source_format": "corbaidl",
       "status": "xfail",
       "unexplained": []
@@ -19880,7 +20107,7 @@
       "loss_synth": 12,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-98byvquv/api.proto:21:3:field BookList.totalItems: unknown type .in... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-g3pm690v/api.proto:21:3:field BookList.totalItems: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-98byvquv/api.proto:21:3:field BookList.totalItems: unknown type .in... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-3jv4gpqw/api.proto:21:3:field BookList.totalItems: unknown type .integer)",
       "source_format": "discovery",
       "status": "xfail",
       "unexplained": []
@@ -20288,6 +20515,159 @@
           "change": "removed",
           "entity": "service",
           "key": "Bookstore API"
+        }
+      ]
+    },
+    {
+      "corpus_path": "discovery/01-bookstore-api.json",
+      "diff_count": 13,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 1,
+      "loss_drop": 0,
+      "loss_ok": 10,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "Author",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "BookList",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutReceipt",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "CheckoutRequest",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /bookstore/v1/books/{bookId}/reviews",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/books",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /bookstore/v1/checkouts",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed operation 'GET /bookstore/v1/books', changed operation 'GET /bookstore/v1/books/{bookId}', changed operation 'GET /bookstore/v1/books/{bookId}/reviews', changed operation 'POST /bookstore/v1/books', changed operation 'POST /bookstore/v1/checkouts', changed root '', removed service 'Bookstore API', added service 'bookstore-api', removed type 'Author', removed type 'Book', removed type 'BookList', removed type 'CheckoutReceipt', removed type 'CheckoutRequest'; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest', OK 'GET /bookstore/v1/books', OK 'GET /bookstore/v1/books/{bookId}', OK 'GET /bookstore/v1/books/{bookId}/reviews', OK 'POST /bookstore/v1/books', OK 'POST /bookstore/v1/checkouts' (observed: unexplained: changed operation 'GET /bookstore/v1/books', changed operation 'GET /bookstore/v1/books/{bookId}', changed operation 'GET /bookstore/v1/books/{bookId}/reviews', changed operation 'POST /bookstore/v1/books', changed operation 'POST /bookstore/v1/checkouts', changed root '', removed service 'Bookstore API', added service 'bookstore-api', removed type 'Author', removed type 'Book', removed type 'BookList', removed type 'CheckoutReceipt', removed type 'CheckoutRequest'; overclaim: OK 'Author', OK 'Book', OK 'BookList', OK 'CheckoutReceipt', OK 'CheckoutRequest', OK 'GET /bookstore/v1/books', OK 'GET /bookstore/v1/books/{bookId}', OK 'GET /bookstore/v1/books/{bookId}/reviews', OK 'POST /bookstore/v1/books', OK 'POST /bookstore/v1/checkouts')",
+      "source_format": "discovery",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /bookstore/v1/books/{bookId}/reviews"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/books"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /bookstore/v1/checkouts"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Bookstore API"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "bookstore-api"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Author"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Book"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "BookList"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutReceipt"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "CheckoutRequest"
         }
       ]
     },
@@ -21178,7 +21558,7 @@
       "loss_synth": 12,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-c_gd19la/api.proto:20:3:field BookList.totalItems: unknown type .in... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-16qzahte/api.proto:20:3:field BookList.totalItems: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-c_gd19la/api.proto:20:3:field BookList.totalItems: unknown type .in... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-h5lppemp/api.proto:20:3:field BookList.totalItems: unknown type .integer)",
       "source_format": "discovery",
       "status": "xfail",
       "unexplained": []
@@ -22266,7 +22646,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.x12.850', added operation '39e50830-0dc3-40b0-8231-b5e378d4fc59', changed root '', added service 'com.example.x12.850'; overclaim: OK 'X12-850.PO1', OK 'X12-850.TransactionSet850')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.x12.850', added operation 'b1b15a42-d800-4e76-9527-7429aa4cd8e8', changed root '', added service 'com.example.x12.850'; overclaim: OK 'X12-850.PO1', OK 'X12-850.TransactionSet850')",
       "source_format": "edix12",
       "status": "xfail",
       "unexplained": [
@@ -22278,7 +22658,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "39e50830-0dc3-40b0-8231-b5e378d4fc59"
+          "key": "b1b15a42-d800-4e76-9527-7429aa4cd8e8"
         },
         {
           "change": "changed",
@@ -22319,7 +22699,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-yee5b8h5/X12_850.proto:4:12:syntax error: expecting ';'\n/tmp/apiome-proto-yee5b8h5/X12_850.proto:4:12:syntax error: unexpected '-'\n/tmp/apiome-proto-yee5b8h5/X12_850.proto:30:16:syntax error: unexpected '-'\n/tmp/apiome-proto-yee5b8h5/X12_850.proto:30:17:invalid syntax in float value: 850.PO1)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-rcd26gtr/X12_850.proto:4:12:syntax error: expecting ';'\n/tmp/apiome-proto-rcd26gtr/X12_850.proto:4:12:syntax error: unexpected '-'\n/tmp/apiome-proto-rcd26gtr/X12_850.proto:30:16:syntax error: unexpected '-'\n/tmp/apiome-proto-rcd26gtr/X12_850.proto:30:17:invalid syntax in float value: 850.PO1)",
       "source_format": "edix12",
       "status": "xfail",
       "unexplained": []
@@ -22508,6 +22888,22 @@
           "key": "X12-850.TransactionSet850"
         }
       ]
+    },
+    {
+      "corpus_path": "edi-x12/01-850-purchase-order.edi",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 23,
+      "loss_drop": 23,
+      "loss_ok": 2,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "edix12",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "edi-x12/01-850-purchase-order.edi",
@@ -22980,7 +23376,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-9jjre_in/X12_850.proto:3:12:syntax error: expecting ';'\n/tmp/apiome-proto-9jjre_in/X12_850.proto:3:12:syntax error: unexpected '-'\n/tmp/apiome-proto-9jjre_in/X12_850.proto:29:16:syntax error: unexpected '-'\n/tmp/apiome-proto-9jjre_in/X12_850.proto:29:17:invalid syntax in float value: 850.PO1)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-n5yayeta/X12_850.proto:3:12:syntax error: expecting ';'\n/tmp/apiome-proto-n5yayeta/X12_850.proto:3:12:syntax error: unexpected '-'\n/tmp/apiome-proto-n5yayeta/X12_850.proto:29:16:syntax error: unexpected '-'\n/tmp/apiome-proto-n5yayeta/X12_850.proto:29:17:invalid syntax in float value: 850.PO1)",
       "source_format": "edix12",
       "status": "xfail",
       "unexplained": []
@@ -23781,7 +24177,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-2szv_m3z/Patient.proto:23:9:symbol \"Patient.Patient\" already defined at Patient.proto:11:9)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-oi1yjute/Patient.proto:23:9:symbol \"Patient.Patient\" already defined at Patient.proto:11:9)",
       "source_format": "fhir",
       "status": "xfail",
       "unexplained": []
@@ -23948,6 +24344,89 @@
         },
         {
           "change": "changed",
+          "entity": "type",
+          "key": "Patient.BackboneElement"
+        }
+      ]
+    },
+    {
+      "corpus_path": "fhir/01-patient.json",
+      "diff_count": 8,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 9,
+      "loss_drop": 9,
+      "loss_ok": 5,
+      "loss_synth": 0,
+      "matched_count": 2,
+      "overclaims": [
+        {
+          "construct": "GET /Patient",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /Patient/{id}",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /Patient",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Patient.BackboneElement",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Patient.Patient",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed operation 'GET /Patient', changed operation 'GET /Patient/{id}', changed operation 'POST /Patient', changed root '', added service 'patient', removed type 'Patient.BackboneElement'; overclaim: OK 'GET /Patient', OK 'GET /Patient/{id}', OK 'POST /Patient', OK 'Patient.BackboneElement', OK 'Patient.Patient' (observed: unexplained: changed operation 'GET /Patient', changed operation 'GET /Patient/{id}', changed operation 'POST /Patient', changed root '', added service 'patient', removed type 'Patient.BackboneElement'; overclaim: OK 'GET /Patient', OK 'GET /Patient/{id}', OK 'POST /Patient', OK 'Patient.BackboneElement', OK 'Patient.Patient')",
+      "source_format": "fhir",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /Patient"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /Patient/{id}"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /Patient"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "patient"
+        },
+        {
+          "change": "removed",
           "entity": "type",
           "key": "Patient.BackboneElement"
         }
@@ -24695,7 +25174,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-f3n71mc_/Patient.proto:22:9:symbol \"Patient.Patient\" already defined at Patient.proto:10:9)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-q0pwjqhk/Patient.proto:22:9:symbol \"Patient.Patient\" already defined at Patient.proto:10:9)",
       "source_format": "fhir",
       "status": "xfail",
       "unexplained": []
@@ -25478,7 +25957,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.executionreport.fix.4.4', added operation '3c1e47e8-7810-46e0-b70d-24e2717a36f1', changed root '', added service 'com.example.executionreport.fix.4.4'; overclaim: OK 'FIX.4.4.Message8')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.executionreport.fix.4.4', added operation '36ac8785-9b35-4fe8-93cb-ac01100b45f8', changed root '', added service 'com.example.executionreport.fix.4.4'; overclaim: OK 'FIX.4.4.Message8')",
       "source_format": "fix",
       "status": "xfail",
       "unexplained": [
@@ -25490,7 +25969,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "3c1e47e8-7810-46e0-b70d-24e2717a36f1"
+          "key": "36ac8785-9b35-4fe8-93cb-ac01100b45f8"
         },
         {
           "change": "changed",
@@ -25531,7 +26010,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-n0q25lrz/FIX/_4/_4.proto:4:12:invalid syntax in float value: .4.4\n/tmp/apiome-proto-n0q25lrz/FIX/_4/_4.proto:4:12:syntax error: expecting ';'\n/tmp/apiome-proto-n0q25lrz/FIX/_4/_4.proto:4:12:syntax error: unexpected error)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-zjdwh8ka/FIX/_4/_4.proto:4:12:invalid syntax in float value: .4.4\n/tmp/apiome-proto-zjdwh8ka/FIX/_4/_4.proto:4:12:syntax error: expecting ';'\n/tmp/apiome-proto-zjdwh8ka/FIX/_4/_4.proto:4:12:syntax error: unexpected error)",
       "source_format": "fix",
       "status": "xfail",
       "unexplained": []
@@ -25673,6 +26152,22 @@
           "key": ""
         }
       ]
+    },
+    {
+      "corpus_path": "fix/02-executionreport.fix",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 21,
+      "loss_drop": 21,
+      "loss_ok": 1,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "fix",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "fix/02-executionreport.fix",
@@ -26056,7 +26551,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-gvm8ui8d/FIX/_4/_4.proto:3:12:invalid syntax in float value: .4.4\n/tmp/apiome-proto-gvm8ui8d/FIX/_4/_4.proto:3:12:syntax error: expecting ';'\n/tmp/apiome-proto-gvm8ui8d/FIX/_4/_4.proto:3:12:syntax error: unexpected error)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-qcr1r0s7/FIX/_4/_4.proto:3:12:invalid syntax in float value: .4.4\n/tmp/apiome-proto-qcr1r0s7/FIX/_4/_4.proto:3:12:syntax error: expecting ';'\n/tmp/apiome-proto-qcr1r0s7/FIX/_4/_4.proto:3:12:syntax error: unexpected error)",
       "source_format": "fix",
       "status": "xfail",
       "unexplained": []
@@ -26670,7 +27165,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.example.game', added operation '3d0a9fe0-0c4e-48fa-927b-12d8411db780', changed root '', added service 'com.example.example.game', removed type 'example.game.Color'; overclaim: OK 'example.game.Color', OK 'example.game.Monster', OK 'example.game.Vec3', OK 'example.game.Weapon')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.example.game', added operation 'ab34cf36-f98d-47f0-a8e6-56fe0ad9004a', changed root '', added service 'com.example.example.game', removed type 'example.game.Color'; overclaim: OK 'example.game.Color', OK 'example.game.Monster', OK 'example.game.Vec3', OK 'example.game.Weapon')",
       "source_format": "flatbuffers",
       "status": "xfail",
       "unexplained": [
@@ -26682,7 +27177,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "3d0a9fe0-0c4e-48fa-927b-12d8411db780"
+          "key": "ab34cf36-f98d-47f0-a8e6-56fe0ad9004a"
         },
         {
           "change": "changed",
@@ -26728,7 +27223,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-x8i581c6/example/game.proto:14:3:field example.game.Monster.hp: unknown type .i16\n/tmp/apiome-proto-x8i581c6/example/game.proto:15:12:field example.game.Monster.inventory: unknown type .uint8\n/tmp/apiome-proto-x8i581c6/example/game.proto:16:3:field example.game.Monster.mana: unknown type .i16\n/tmp/apiome-proto-x8i581c6/example/game.proto:29:3:field example.game.Weapon.damage: unknown type .i16)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-agqefp39/example/game.proto:14:3:field example.game.Monster.hp: unknown type .i16\n/tmp/apiome-proto-agqefp39/example/game.proto:15:12:field example.game.Monster.inventory: unknown type .uint8\n/tmp/apiome-proto-agqefp39/example/game.proto:16:3:field example.game.Monster.mana: unknown type .i16\n/tmp/apiome-proto-agqefp39/example/game.proto:29:3:field example.game.Weapon.damage: unknown type .i16)",
       "source_format": "flatbuffers",
       "status": "xfail",
       "unexplained": []
@@ -26891,6 +27386,22 @@
       "reason": null,
       "source_format": "flatbuffers",
       "status": "pass",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "flatbuffers/01-monster.fbs",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 0,
+      "loss_drop": 12,
+      "loss_ok": 4,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "flatbuffers",
+      "status": "xfail",
       "unexplained": []
     },
     {
@@ -27542,7 +28053,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-9q6y_omf/example/game.proto:13:3:field example.game.Monster.hp: unknown type .i16\n/tmp/apiome-proto-9q6y_omf/example/game.proto:14:12:field example.game.Monster.inventory: unknown type .uint8\n/tmp/apiome-proto-9q6y_omf/example/game.proto:15:3:field example.game.Monster.mana: unknown type .i16\n/tmp/apiome-proto-9q6y_omf/example/game.proto:28:3:field example.game.Weapon.damage: unknown type .i16)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-svt7du34/example/game.proto:13:3:field example.game.Monster.hp: unknown type .i16\n/tmp/apiome-proto-svt7du34/example/game.proto:14:12:field example.game.Monster.inventory: unknown type .uint8\n/tmp/apiome-proto-svt7du34/example/game.proto:15:3:field example.game.Monster.mana: unknown type .i16\n/tmp/apiome-proto-svt7du34/example/game.proto:28:3:field example.game.Weapon.damage: unknown type .i16)",
       "source_format": "flatbuffers",
       "status": "xfail",
       "unexplained": []
@@ -28531,6 +29042,28 @@
       "source_format": "gateway-api",
       "status": "xfail",
       "unexplained": []
+    },
+    {
+      "corpus_path": "gateway-api/02-typical-hostnames-methods.yaml",
+      "diff_count": 1,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 0,
+      "loss_drop": 0,
+      "loss_ok": 3,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "unexplained: changed root '' (observed: unexplained: changed root '')",
+      "source_format": "gateway-api",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        }
+      ]
     },
     {
       "corpus_path": "gateway-api/02-typical-hostnames-methods.yaml",
@@ -29806,7 +30339,7 @@
       "loss_synth": 16,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-8fj6ov4i/api.proto:9:3:field Dimensions.height: unknown type .Float\n/tmp/apiome-proto-8fj6ov4i/api.proto:11:3:field Dimensions.length: unknown type .Float\n/tmp/apiome-proto-8fj6ov4i/api.proto:13:3:field Dimensions.weight: unknown type .Float\n/tmp/apiome-proto-8fj6ov4i/api.proto:15:3:field Dimensions.width: unknown type .Float\n/tmp/apiome-proto-8fj6ov4i/api.proto:21:3:field Product.createdAt: unknown type .DateTime\n/tmp/apiome-proto-8fj6ov4i/api.proto:23:3:field Product.description: unknown type .String\n/tmp/apiome-proto-8fj6ov4i/api.proto:25:3:field Product.id: unknown type .ID\n/tmp/apiome-proto-8fj6ov4i/api.proto:27:3:field Product.inStock: unknown type .Boolean\n/tmp/apiome-proto-8fj6ov4i/api.proto:29:3:field Product.metadata: unknown type .JSON\n/tmp/apiome-proto-8fj6ov4i/api.proto:31:3:field Product.name: unknown type .String\n/tmp/apiome-proto-8fj6ov4i/api.proto:33:3:field Product.price: unknown type .Int\n/tmp/apiome-proto-8fj6ov4i/api.proto:35:3:field Product.priceFloat: unknown type .Float\n/tmp/apiome-proto-8fj6ov4i/api.proto:37:3:field Product.rating: unknown type .Float\n/tmp/apiome-proto-8fj6ov4i/api.proto:39:3:field Product.stockCount: unknown type .Int\n/tmp/apiome-proto-8fj6ov4i/api.proto:41:12:field Product.tags: unknown type .String\n/tmp/apiome-proto-8fj6ov4i/api.proto:43:3:field Product.updatedAt: unknown type .DateTime)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-y31pllm_/api.proto:9:3:field Dimensions.height: unknown type .Float\n/tmp/apiome-proto-y31pllm_/api.proto:11:3:field Dimensions.length: unknown type .Float\n/tmp/apiome-proto-y31pllm_/api.proto:13:3:field Dimensions.weight: unknown type .Float\n/tmp/apiome-proto-y31pllm_/api.proto:15:3:field Dimensions.width: unknown type .Float\n/tmp/apiome-proto-y31pllm_/api.proto:21:3:field Product.createdAt: unknown type .DateTime\n/tmp/apiome-proto-y31pllm_/api.proto:23:3:field Product.description: unknown type .String\n/tmp/apiome-proto-y31pllm_/api.proto:25:3:field Product.id: unknown type .ID\n/tmp/apiome-proto-y31pllm_/api.proto:27:3:field Product.inStock: unknown type .Boolean\n/tmp/apiome-proto-y31pllm_/api.proto:29:3:field Product.metadata: unknown type .JSON\n/tmp/apiome-proto-y31pllm_/api.proto:31:3:field Product.name: unknown type .String\n/tmp/apiome-proto-y31pllm_/api.proto:33:3:field Product.price: unknown type .Int\n/tmp/apiome-proto-y31pllm_/api.proto:35:3:field Product.priceFloat: unknown type .Float\n/tmp/apiome-proto-y31pllm_/api.proto:37:3:field Product.rating: unknown type .Float\n/tmp/apiome-proto-y31pllm_/api.proto:39:3:field Product.stockCount: unknown type .Int\n/tmp/apiome-proto-y31pllm_/api.proto:41:12:field Product.tags: unknown type .String\n/tmp/apiome-proto-y31pllm_/api.proto:43:3:field Product.updatedAt: unknown type .DateTime)",
       "source_format": "graphql",
       "status": "xfail",
       "unexplained": []
@@ -30158,6 +30691,22 @@
           "key": "JSON"
         }
       ]
+    },
+    {
+      "corpus_path": "graphql/02-scalar-types.graphql",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 10,
+      "loss_drop": 0,
+      "loss_ok": 6,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "graphql",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "graphql/02-scalar-types.graphql",
@@ -30968,7 +31517,7 @@
       "loss_synth": 16,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-18klb7yj/api.proto:8:3:field Dimensions.height: unknown type .Float\n/tmp/apiome-proto-18klb7yj/api.proto:10:3:field Dimensions.length: unknown type .Float\n/tmp/apiome-proto-18klb7yj/api.proto:12:3:field Dimensions.weight: unknown type .Float\n/tmp/apiome-proto-18klb7yj/api.proto:14:3:field Dimensions.width: unknown type .Float\n/tmp/apiome-proto-18klb7yj/api.proto:20:3:field Product.createdAt: unknown type .DateTime\n/tmp/apiome-proto-18klb7yj/api.proto:22:3:field Product.description: unknown type .String\n/tmp/apiome-proto-18klb7yj/api.proto:24:3:field Product.id: unknown type .ID\n/tmp/apiome-proto-18klb7yj/api.proto:26:3:field Product.inStock: unknown type .Boolean\n/tmp/apiome-proto-18klb7yj/api.proto:28:3:field Product.metadata: unknown type .JSON\n/tmp/apiome-proto-18klb7yj/api.proto:30:3:field Product.name: unknown type .String\n/tmp/apiome-proto-18klb7yj/api.proto:32:3:field Product.price: unknown type .Int\n/tmp/apiome-proto-18klb7yj/api.proto:34:3:field Product.priceFloat: unknown type .Float\n/tmp/apiome-proto-18klb7yj/api.proto:36:3:field Product.rating: unknown type .Float\n/tmp/apiome-proto-18klb7yj/api.proto:38:3:field Product.stockCount: unknown type .Int\n/tmp/apiome-proto-18klb7yj/api.proto:40:12:field Product.tags: unknown type .String\n/tmp/apiome-proto-18klb7yj/api.proto:42:3:field Product.updatedAt: unknown type .DateTime)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-z6wdst42/api.proto:8:3:field Dimensions.height: unknown type .Float\n/tmp/apiome-proto-z6wdst42/api.proto:10:3:field Dimensions.length: unknown type .Float\n/tmp/apiome-proto-z6wdst42/api.proto:12:3:field Dimensions.weight: unknown type .Float\n/tmp/apiome-proto-z6wdst42/api.proto:14:3:field Dimensions.width: unknown type .Float\n/tmp/apiome-proto-z6wdst42/api.proto:20:3:field Product.createdAt: unknown type .DateTime\n/tmp/apiome-proto-z6wdst42/api.proto:22:3:field Product.description: unknown type .String\n/tmp/apiome-proto-z6wdst42/api.proto:24:3:field Product.id: unknown type .ID\n/tmp/apiome-proto-z6wdst42/api.proto:26:3:field Product.inStock: unknown type .Boolean\n/tmp/apiome-proto-z6wdst42/api.proto:28:3:field Product.metadata: unknown type .JSON\n/tmp/apiome-proto-z6wdst42/api.proto:30:3:field Product.name: unknown type .String\n/tmp/apiome-proto-z6wdst42/api.proto:32:3:field Product.price: unknown type .Int\n/tmp/apiome-proto-z6wdst42/api.proto:34:3:field Product.priceFloat: unknown type .Float\n/tmp/apiome-proto-z6wdst42/api.proto:36:3:field Product.rating: unknown type .Float\n/tmp/apiome-proto-z6wdst42/api.proto:38:3:field Product.stockCount: unknown type .Int\n/tmp/apiome-proto-z6wdst42/api.proto:40:12:field Product.tags: unknown type .String\n/tmp/apiome-proto-z6wdst42/api.proto:42:3:field Product.updatedAt: unknown type .DateTime)",
       "source_format": "graphql",
       "status": "xfail",
       "unexplained": []
@@ -31993,7 +32542,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.adt.a01', added operation 'a6f71e52-c5c2-4f27-8075-a3cf14d8c31e', changed root '', added service 'com.example.adt.a01'; overclaim: OK 'ADT-A01.MSH', OK 'ADT-A01.MessageADTA01')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.adt.a01', added operation '91857dd5-9eff-4578-ad42-8c0396338d88', changed root '', added service 'com.example.adt.a01'; overclaim: OK 'ADT-A01.MSH', OK 'ADT-A01.MessageADTA01')",
       "source_format": "hl7v2",
       "status": "xfail",
       "unexplained": [
@@ -32005,7 +32554,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "a6f71e52-c5c2-4f27-8075-a3cf14d8c31e"
+          "key": "91857dd5-9eff-4578-ad42-8c0396338d88"
         },
         {
           "change": "changed",
@@ -32046,7 +32595,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-q81h6r3a/ADT_A01.proto:4:12:syntax error: expecting ';'\n/tmp/apiome-proto-q81h6r3a/ADT_A01.proto:4:12:syntax error: unexpected '-')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-jne7y74s/ADT_A01.proto:4:12:syntax error: expecting ';'\n/tmp/apiome-proto-jne7y74s/ADT_A01.proto:4:12:syntax error: unexpected '-')",
       "source_format": "hl7v2",
       "status": "xfail",
       "unexplained": []
@@ -32227,6 +32776,22 @@
           "key": "MessageADTA01"
         }
       ]
+    },
+    {
+      "corpus_path": "hl7v2/01-adt-a01.hl7",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 49,
+      "loss_drop": 49,
+      "loss_ok": 2,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "hl7v2",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "hl7v2/01-adt-a01.hl7",
@@ -32699,7 +33264,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-l7oxavzf/ADT_A01.proto:3:12:syntax error: expecting ';'\n/tmp/apiome-proto-l7oxavzf/ADT_A01.proto:3:12:syntax error: unexpected '-')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-a_y4m_ws/ADT_A01.proto:3:12:syntax error: expecting ';'\n/tmp/apiome-proto-a_y4m_ws/ADT_A01.proto:3:12:syntax error: unexpected '-')",
       "source_format": "hl7v2",
       "status": "xfail",
       "unexplained": []
@@ -33366,7 +33931,7 @@
       "loss_synth": 2,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-mebc7zs1/http_file_02_typical_vars_auth.proto:4:13:syntax error: ex... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-1il9o_s7/http_file_02_typical_vars_auth.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-1il9o_s7/http_file_02_typical_vars_auth.proto:4:13:syntax error: unexpected '-')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-mebc7zs1/http_file_02_typical_vars_auth.proto:4:13:syntax error: ex... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-lrm0wphn/http_file_02_typical_vars_auth.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-lrm0wphn/http_file_02_typical_vars_auth.proto:4:13:syntax error: unexpected '-')",
       "source_format": "http-file",
       "status": "xfail",
       "unexplained": []
@@ -33579,6 +34144,70 @@
           "change": "removed",
           "entity": "service",
           "key": "http-file/02-typical-vars-auth.http"
+        }
+      ]
+    },
+    {
+      "corpus_path": "http-file/02-typical-vars-auth.http",
+      "diff_count": 5,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 2,
+      "loss_drop": 0,
+      "loss_ok": 3,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "GET /users",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /users",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "PostUserRequest",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed operation 'GET /users', changed operation 'POST /users', changed root '', changed service 'http-file/02-typical-vars-auth.http', removed type 'PostUserRequest'; overclaim: OK 'GET /users', OK 'POST /users', OK 'PostUserRequest' (observed: unexplained: changed operation 'GET /users', changed operation 'POST /users', changed root '', changed service 'http-file/02-typical-vars-auth.http', removed type 'PostUserRequest'; overclaim: OK 'GET /users', OK 'POST /users', OK 'PostUserRequest')",
+      "source_format": "http-file",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /users"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /users"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "changed",
+          "entity": "service",
+          "key": "http-file/02-typical-vars-auth.http"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "PostUserRequest"
         }
       ]
     },
@@ -34198,7 +34827,7 @@
       "loss_synth": 2,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-7kj4u8vo/http_file_02_typical_vars_auth.proto:3:13:syntax error: ex... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-2dlyer8v/http_file_02_typical_vars_auth.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-2dlyer8v/http_file_02_typical_vars_auth.proto:3:13:syntax error: unexpected '-')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-7kj4u8vo/http_file_02_typical_vars_auth.proto:3:13:syntax error: ex... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-i1w2bvzs/http_file_02_typical_vars_auth.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-i1w2bvzs/http_file_02_typical_vars_auth.proto:3:13:syntax error: unexpected '-')",
       "source_format": "http-file",
       "status": "xfail",
       "unexplained": []
@@ -35814,7 +36443,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.cstmrcdttrfinitn.pain.001.001.09', added operation '8d563c7b-096c-490e-be70-4c0f70c4213b', changed root '', added service 'com.example.cstmrcdttrfinitn.pain.001.001.09'; overclaim: OK 'pain.001.001.09.Amt', OK 'pain.001.001.09.CdtTrfTxInf', OK 'pain.001.001.09.Cdtr', OK 'pain.001.001.09.CdtrAcct', OK 'pain.001.001.09.CdtrAgt', OK 'pain.001.001.09.CstmrCdtTrfInitn', OK 'pain.001.001.09.Dbtr', OK 'pain.001.001.09.DbtrAcct', OK 'pain.001.001.09.DbtrAgt', OK 'pain.001.001.09.Document', OK 'pain.001.001.09.FinInstnId', OK 'pain.001.001.09.GrpHdr', OK 'pain.001.001.09.Id', OK 'pain.001.001.09.InitgPty', OK 'pain.001.001.09.PmtId', OK 'pain.001.001.09.PmtInf', OK 'pain.001.001.09.ReqdExctnDt', OK 'pain.001.001.09.RmtInf')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.cstmrcdttrfinitn.pain.001.001.09', added operation '02133d22-3c5f-417b-87ed-dc9e743db4fc', changed root '', added service 'com.example.cstmrcdttrfinitn.pain.001.001.09'; overclaim: OK 'pain.001.001.09.Amt', OK 'pain.001.001.09.CdtTrfTxInf', OK 'pain.001.001.09.Cdtr', OK 'pain.001.001.09.CdtrAcct', OK 'pain.001.001.09.CdtrAgt', OK 'pain.001.001.09.CstmrCdtTrfInitn', OK 'pain.001.001.09.Dbtr', OK 'pain.001.001.09.DbtrAcct', OK 'pain.001.001.09.DbtrAgt', OK 'pain.001.001.09.Document', OK 'pain.001.001.09.FinInstnId', OK 'pain.001.001.09.GrpHdr', OK 'pain.001.001.09.Id', OK 'pain.001.001.09.InitgPty', OK 'pain.001.001.09.PmtId', OK 'pain.001.001.09.PmtInf', OK 'pain.001.001.09.ReqdExctnDt', OK 'pain.001.001.09.RmtInf')",
       "source_format": "iso20022",
       "status": "xfail",
       "unexplained": [
@@ -35826,7 +36455,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "8d563c7b-096c-490e-be70-4c0f70c4213b"
+          "key": "02133d22-3c5f-417b-87ed-dc9e743db4fc"
         },
         {
           "change": "changed",
@@ -35867,7 +36496,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:4:13:invalid syntax in float value: .001.001.09\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:4:13:syntax error: unexpected error\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:11:8:invalid syntax in float value: .001.001.09.Amt\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:11:8:syntax error: unexpected error\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:12:8:invalid syntax in float value: .001.001.09.Cdtr\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:13:8:invalid syntax in float value: .001.001.09.CdtrAcct\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:14:8:invalid syntax in float value: .001.001.09.CdtrAgt\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:15:8:invalid syntax in float value: .001.001.09.PmtId\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:16:8:invalid syntax in float value: .001.001.09.RmtInf\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:24:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:24:8:syntax error: unexpected error\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:28:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:28:8:syntax error: unexpected error\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:32:8:invalid syntax in float value: .001.001.09.GrpHdr\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:32:8:syntax error: unexpected error\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:33:8:invalid syntax in float value: .001.001.09.PmtInf\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:41:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:41:8:syntax error: unexpected error\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:45:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:45:8:syntax error: unexpected error\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:49:8:invalid syntax in float value: .001.001.09.CstmrCdtTrfInitn\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:49:8:syntax error: unexpected error\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:59:8:invalid syntax in float value: .001.001.09.InitgPty\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:59:8:syntax error: unexpected error\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:77:8:invalid syntax in float value: .001.001.09.CdtTrfTxInf\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:77:8:syntax error: unexpected error\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:79:8:invalid syntax in float value: .001.001.09.Dbtr\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:79:8:syntax error: unexpected error\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:80:8:invalid syntax in float value: .001.001.09.DbtrAcct\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:81:8:invalid syntax in float value: .001.001.09.DbtrAgt\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:85:8:invalid syntax in float value: .001.001.09.ReqdExctnDt\n/tmp/apiome-proto-0y2sh8qc/pain/_001/_001/_09.proto:85:8:syntax error: unexpected error)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:4:13:invalid syntax in float value: .001.001.09\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:4:13:syntax error: unexpected error\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:11:8:invalid syntax in float value: .001.001.09.Amt\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:11:8:syntax error: unexpected error\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:12:8:invalid syntax in float value: .001.001.09.Cdtr\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:13:8:invalid syntax in float value: .001.001.09.CdtrAcct\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:14:8:invalid syntax in float value: .001.001.09.CdtrAgt\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:15:8:invalid syntax in float value: .001.001.09.PmtId\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:16:8:invalid syntax in float value: .001.001.09.RmtInf\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:24:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:24:8:syntax error: unexpected error\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:28:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:28:8:syntax error: unexpected error\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:32:8:invalid syntax in float value: .001.001.09.GrpHdr\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:32:8:syntax error: unexpected error\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:33:8:invalid syntax in float value: .001.001.09.PmtInf\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:41:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:41:8:syntax error: unexpected error\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:45:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:45:8:syntax error: unexpected error\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:49:8:invalid syntax in float value: .001.001.09.CstmrCdtTrfInitn\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:49:8:syntax error: unexpected error\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:59:8:invalid syntax in float value: .001.001.09.InitgPty\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:59:8:syntax error: unexpected error\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:77:8:invalid syntax in float value: .001.001.09.CdtTrfTxInf\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:77:8:syntax error: unexpected error\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:79:8:invalid syntax in float value: .001.001.09.Dbtr\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:79:8:syntax error: unexpected error\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:80:8:invalid syntax in float value: .001.001.09.DbtrAcct\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:81:8:invalid syntax in float value: .001.001.09.DbtrAgt\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:85:8:invalid syntax in float value: .001.001.09.ReqdExctnDt\n/tmp/apiome-proto-dy6kpf6u/pain/_001/_001/_09.proto:85:8:syntax error: unexpected error)",
       "source_format": "iso20022",
       "status": "xfail",
       "unexplained": []
@@ -36332,6 +36961,22 @@
           "key": ""
         }
       ]
+    },
+    {
+      "corpus_path": "iso20022/01-pain.001-credit-transfer.xml",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 36,
+      "loss_drop": 36,
+      "loss_ok": 18,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "iso20022",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "iso20022/01-pain.001-credit-transfer.xml",
@@ -38148,7 +38793,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:3:13:invalid syntax in float value: .001.001.09\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:3:13:syntax error: unexpected error\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:10:8:invalid syntax in float value: .001.001.09.Amt\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:10:8:syntax error: unexpected error\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:11:8:invalid syntax in float value: .001.001.09.Cdtr\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:12:8:invalid syntax in float value: .001.001.09.CdtrAcct\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:13:8:invalid syntax in float value: .001.001.09.CdtrAgt\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:14:8:invalid syntax in float value: .001.001.09.PmtId\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:15:8:invalid syntax in float value: .001.001.09.RmtInf\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:23:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:23:8:syntax error: unexpected error\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:27:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:27:8:syntax error: unexpected error\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:31:8:invalid syntax in float value: .001.001.09.GrpHdr\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:31:8:syntax error: unexpected error\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:32:8:invalid syntax in float value: .001.001.09.PmtInf\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:40:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:40:8:syntax error: unexpected error\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:44:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:44:8:syntax error: unexpected error\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:48:8:invalid syntax in float value: .001.001.09.CstmrCdtTrfInitn\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:48:8:syntax error: unexpected error\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:58:8:invalid syntax in float value: .001.001.09.InitgPty\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:58:8:syntax error: unexpected error\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:76:8:invalid syntax in float value: .001.001.09.CdtTrfTxInf\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:76:8:syntax error: unexpected error\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:78:8:invalid syntax in float value: .001.001.09.Dbtr\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:78:8:syntax error: unexpected error\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:79:8:invalid syntax in float value: .001.001.09.DbtrAcct\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:80:8:invalid syntax in float value: .001.001.09.DbtrAgt\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:84:8:invalid syntax in float value: .001.001.09.ReqdExctnDt\n/tmp/apiome-proto-iawhbyif/pain/_001/_001/_09.proto:84:8:syntax error: unexpected error)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:3:13:invalid syntax in float value: .001.001.09\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:3:13:syntax error: unexpected error\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:10:8:invalid syntax in float value: .001.001.09.Amt\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:10:8:syntax error: unexpected error\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:11:8:invalid syntax in float value: .001.001.09.Cdtr\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:12:8:invalid syntax in float value: .001.001.09.CdtrAcct\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:13:8:invalid syntax in float value: .001.001.09.CdtrAgt\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:14:8:invalid syntax in float value: .001.001.09.PmtId\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:15:8:invalid syntax in float value: .001.001.09.RmtInf\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:23:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:23:8:syntax error: unexpected error\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:27:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:27:8:syntax error: unexpected error\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:31:8:invalid syntax in float value: .001.001.09.GrpHdr\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:31:8:syntax error: unexpected error\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:32:8:invalid syntax in float value: .001.001.09.PmtInf\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:40:8:invalid syntax in float value: .001.001.09.Id\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:40:8:syntax error: unexpected error\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:44:8:invalid syntax in float value: .001.001.09.FinInstnId\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:44:8:syntax error: unexpected error\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:48:8:invalid syntax in float value: .001.001.09.CstmrCdtTrfInitn\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:48:8:syntax error: unexpected error\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:58:8:invalid syntax in float value: .001.001.09.InitgPty\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:58:8:syntax error: unexpected error\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:76:8:invalid syntax in float value: .001.001.09.CdtTrfTxInf\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:76:8:syntax error: unexpected error\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:78:8:invalid syntax in float value: .001.001.09.Dbtr\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:78:8:syntax error: unexpected error\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:79:8:invalid syntax in float value: .001.001.09.DbtrAcct\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:80:8:invalid syntax in float value: .001.001.09.DbtrAgt\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:84:8:invalid syntax in float value: .001.001.09.ReqdExctnDt\n/tmp/apiome-proto-4qved6rn/pain/_001/_001/_09.proto:84:8:syntax error: unexpected error)",
       "source_format": "iso20022",
       "status": "xfail",
       "unexplained": []
@@ -40592,7 +41237,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.authorization.request', added operation 'a8b7bcc4-d304-45a8-bb51-e2e0c7567c6e', changed root '', added service 'com.example.authorization.request'; overclaim: OK '0100.DE11', OK '0100.DE12', OK '0100.DE13', OK '0100.DE18', OK '0100.DE2', OK '0100.DE3', OK '0100.DE32', OK '0100.DE4', OK '0100.DE41', OK '0100.DE49', OK '0100.DE7', OK '0100.Message0100')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.authorization.request', added operation 'e9d7936a-76ae-495e-99da-9d2a97ab7b75', changed root '', added service 'com.example.authorization.request'; overclaim: OK '0100.DE11', OK '0100.DE12', OK '0100.DE13', OK '0100.DE18', OK '0100.DE2', OK '0100.DE3', OK '0100.DE32', OK '0100.DE4', OK '0100.DE41', OK '0100.DE49', OK '0100.DE7', OK '0100.Message0100')",
       "source_format": "iso8583",
       "status": "xfail",
       "unexplained": [
@@ -40604,7 +41249,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "a8b7bcc4-d304-45a8-bb51-e2e0c7567c6e"
+          "key": "e9d7936a-76ae-495e-99da-9d2a97ab7b75"
         },
         {
           "change": "changed",
@@ -40645,7 +41290,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-5_2o464o/_0100.proto:4:9:syntax error: unexpected int literal)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-m23nz0fx/_0100.proto:4:9:syntax error: unexpected int literal)",
       "source_format": "iso8583",
       "status": "xfail",
       "unexplained": []
@@ -40996,6 +41641,22 @@
           "key": ""
         }
       ]
+    },
+    {
+      "corpus_path": "iso8583/01-authorization-0100.json",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 22,
+      "loss_drop": 22,
+      "loss_ok": 12,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "iso8583",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "iso8583/01-authorization-0100.json",
@@ -42308,7 +42969,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-60xe4e9u/_0100.proto:3:9:syntax error: unexpected int literal)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-7j1ei4jy/_0100.proto:3:9:syntax error: unexpected int literal)",
       "source_format": "iso8583",
       "status": "xfail",
       "unexplained": []
@@ -43530,7 +44191,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.product', added operation '25c18149-5e1c-4c8f-b592-3e13bc6ab27c', changed root '', added service 'com.example.product', removed type 'Product'; overclaim: OK 'Product')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.product', added operation 'a4122c8e-5810-449e-a373-4ffd76347ddb', changed root '', added service 'com.example.product', removed type 'Product'; overclaim: OK 'Product')",
       "source_format": "json-schema",
       "status": "xfail",
       "unexplained": [
@@ -43542,7 +44203,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "25c18149-5e1c-4c8f-b592-3e13bc6ab27c"
+          "key": "a4122c8e-5810-449e-a373-4ffd76347ddb"
         },
         {
           "change": "changed",
@@ -43588,7 +44249,7 @@
       "loss_synth": 7,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-tgiqo_0e/api.proto:7:3:field Product.id: unknown type .integer\n/tmp/apiome-proto-tgiqo_0e/api.proto:11:3:field Product.price: unknown type .number\n/tmp/apiome-proto-tgiqo_0e/api.proto:13:3:field Product.inStock: unknown type .boolean\n/tmp/apiome-proto-tgiqo_0e/api.proto:19:3:field Product.dimensions: unknown type .object)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-6kzi2vnc/api.proto:7:3:field Product.id: unknown type .integer\n/tmp/apiome-proto-6kzi2vnc/api.proto:11:3:field Product.price: unknown type .number\n/tmp/apiome-proto-6kzi2vnc/api.proto:13:3:field Product.inStock: unknown type .boolean\n/tmp/apiome-proto-6kzi2vnc/api.proto:19:3:field Product.dimensions: unknown type .object)",
       "source_format": "json-schema",
       "status": "xfail",
       "unexplained": []
@@ -43740,6 +44401,22 @@
           "key": ""
         }
       ]
+    },
+    {
+      "corpus_path": "json-schema/02-product-types.json",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 3,
+      "loss_drop": 0,
+      "loss_ok": 1,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "json-schema",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "json-schema/02-product-types.json",
@@ -44089,7 +44766,7 @@
       "loss_synth": 7,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-iit9wm_6/api.proto:6:3:field Product.id: unknown type .integer\n/tmp/apiome-proto-iit9wm_6/api.proto:10:3:field Product.price: unknown type .number\n/tmp/apiome-proto-iit9wm_6/api.proto:12:3:field Product.inStock: unknown type .boolean\n/tmp/apiome-proto-iit9wm_6/api.proto:18:3:field Product.dimensions: unknown type .object)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-mpnhzd12/api.proto:6:3:field Product.id: unknown type .integer\n/tmp/apiome-proto-mpnhzd12/api.proto:10:3:field Product.price: unknown type .number\n/tmp/apiome-proto-mpnhzd12/api.proto:12:3:field Product.inStock: unknown type .boolean\n/tmp/apiome-proto-mpnhzd12/api.proto:18:3:field Product.dimensions: unknown type .object)",
       "source_format": "json-schema",
       "status": "xfail",
       "unexplained": []
@@ -44585,7 +45262,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.user', added operation 'bd28556d-186c-470f-86e1-840580055653', changed root '', added service 'com.example.user', removed type 'User', removed type 'UserAddress', removed type 'UserStatus'; overclaim: OK 'User', OK 'UserAddress', OK 'UserStatus')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.user', added operation 'dddbc8b3-a358-49d2-abf1-edfecbbb191b', changed root '', added service 'com.example.user', removed type 'User', removed type 'UserAddress', removed type 'UserStatus'; overclaim: OK 'User', OK 'UserAddress', OK 'UserStatus')",
       "source_format": "jtd",
       "status": "xfail",
       "unexplained": [
@@ -44597,7 +45274,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "bd28556d-186c-470f-86e1-840580055653"
+          "key": "dddbc8b3-a358-49d2-abf1-edfecbbb191b"
         },
         {
           "change": "changed",
@@ -44653,7 +45330,7 @@
       "loss_synth": 11,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-r4elqw24/api.proto:21:3:field User.createdAt: unknown type .timestamp)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-q5e7gjqh/api.proto:21:3:field User.createdAt: unknown type .timestamp)",
       "source_format": "jtd",
       "status": "xfail",
       "unexplained": []
@@ -44838,6 +45515,22 @@
           "key": "UserStatus"
         }
       ]
+    },
+    {
+      "corpus_path": "jtd/01-user.jtd.json",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 7,
+      "loss_drop": 0,
+      "loss_ok": 3,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "jtd",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "jtd/01-user.jtd.json",
@@ -45288,7 +45981,7 @@
       "loss_synth": 11,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-ux4b1nh8/api.proto:20:3:field User.createdAt: unknown type .timestamp)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-glugvg2e/api.proto:20:3:field User.createdAt: unknown type .timestamp)",
       "source_format": "jtd",
       "status": "xfail",
       "unexplained": []
@@ -45979,7 +46672,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "unexplained: added channel 'com.example.cronwidget', added operation '9d2bdd36-7b40-4293-80ee-e5b7902e53dc', changed root '', added service 'com.example.cron... (observed: unexplained: added channel 'com.example.cronwidget', added operation 'd5ae2257-6197-4f57-8d46-b1cc61951ae6', changed root '', added service 'com.example.cronwidget', removed service 'cronwidgets.apps.example.io', removed type 'apps.example.io/v1.CronWidget'; overclaim: OK 'apps.example.io/v1.CronWidget')",
+      "reason": "unexplained: added channel 'com.example.cronwidget', added operation '9d2bdd36-7b40-4293-80ee-e5b7902e53dc', changed root '', added service 'com.example.cron... (observed: unexplained: added channel 'com.example.cronwidget', added operation '4de2b9ea-25aa-4168-8956-9120246ec932', changed root '', added service 'com.example.cronwidget', removed service 'cronwidgets.apps.example.io', removed type 'apps.example.io/v1.CronWidget'; overclaim: OK 'apps.example.io/v1.CronWidget')",
       "source_format": "k8s-crd",
       "status": "xfail",
       "unexplained": [
@@ -45991,7 +46684,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "d5ae2257-6197-4f57-8d46-b1cc61951ae6"
+          "key": "4de2b9ea-25aa-4168-8956-9120246ec932"
         },
         {
           "change": "changed",
@@ -46042,7 +46735,7 @@
       "loss_synth": 2,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-x_k3k0ae/apps/example/io_v1.proto:4:24:syntax error: expecting ';'\n... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-_cry_6nc/apps/example/io_v1.proto:4:24:syntax error: expecting ';'\n/tmp/apiome-proto-_cry_6nc/apps/example/io_v1.proto:4:24:syntax error: unexpected '/')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-x_k3k0ae/apps/example/io_v1.proto:4:24:syntax error: expecting ';'\n... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-jkmwmfqc/apps/example/io_v1.proto:4:24:syntax error: expecting ';'\n/tmp/apiome-proto-jkmwmfqc/apps/example/io_v1.proto:4:24:syntax error: unexpected '/')",
       "source_format": "k8s-crd",
       "status": "xfail",
       "unexplained": []
@@ -46238,6 +46931,22 @@
           "key": "apps.example.io/v1.CronWidget"
         }
       ]
+    },
+    {
+      "corpus_path": "k8s-crd/02-typical-cronwidget.yaml",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 0,
+      "loss_drop": 0,
+      "loss_ok": 1,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "k8s-crd",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "k8s-crd/02-typical-cronwidget.yaml",
@@ -46686,7 +47395,7 @@
       "loss_synth": 2,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-3eveu44g/apps/example/io_v1.proto:3:24:syntax error: expecting ';'\n... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-36pbnf3r/apps/example/io_v1.proto:3:24:syntax error: expecting ';'\n/tmp/apiome-proto-36pbnf3r/apps/example/io_v1.proto:3:24:syntax error: unexpected '/')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-3eveu44g/apps/example/io_v1.proto:3:24:syntax error: expecting ';'\n... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-a0ph83pp/apps/example/io_v1.proto:3:24:syntax error: expecting ';'\n/tmp/apiome-proto-a0ph83pp/apps/example/io_v1.proto:3:24:syntax error: unexpected '/')",
       "source_format": "k8s-crd",
       "status": "xfail",
       "unexplained": []
@@ -47630,6 +48339,94 @@
       "source_format": "kong",
       "status": "xfail",
       "unexplained": []
+    },
+    {
+      "corpus_path": "kong/02-typical-single-service-auth.yaml",
+      "diff_count": 7,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 0,
+      "loss_drop": 0,
+      "loss_ok": 5,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "DELETE /users/{userId}",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /users",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /users/{userId}",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /users",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "PUT /users/{userId}",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed operation 'DELETE /users/{userId}', changed operation 'GET /users', changed operation 'GET /users/{userId}', changed operation 'POST /users', changed operation 'PUT /users/{userId}', changed root '', changed service 'users-service'; overclaim: OK 'DELETE /users/{userId}', OK 'GET /users', OK 'GET /users/{userId}', OK 'POST /users', OK 'PUT /users/{userId}' (observed: unexplained: changed operation 'DELETE /users/{userId}', changed operation 'GET /users', changed operation 'GET /users/{userId}', changed operation 'POST /users', changed operation 'PUT /users/{userId}', changed root '', changed service 'users-service'; overclaim: OK 'DELETE /users/{userId}', OK 'GET /users', OK 'GET /users/{userId}', OK 'POST /users', OK 'PUT /users/{userId}')",
+      "source_format": "kong",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "DELETE /users/{userId}"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /users"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /users/{userId}"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /users"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "PUT /users/{userId}"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "changed",
+          "entity": "service",
+          "key": "users-service"
+        }
+      ]
     },
     {
       "corpus_path": "kong/02-typical-single-service-auth.yaml",
@@ -48996,7 +49793,7 @@
       "loss_synth": 5,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-sud_faed/api.proto:17:3:field search_docsParams.limit: unknown type... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-72o44ull/api.proto:17:3:field search_docsParams.limit: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-sud_faed/api.proto:17:3:field search_docsParams.limit: unknown type... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-aefc7jfp/api.proto:17:3:field search_docsParams.limit: unknown type .integer)",
       "source_format": "llm-tools",
       "status": "xfail",
       "unexplained": []
@@ -49261,6 +50058,22 @@
           "key": "02-typical-anthropic"
         }
       ]
+    },
+    {
+      "corpus_path": "llm-tools/02-typical-anthropic.json",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 5,
+      "loss_drop": 0,
+      "loss_ok": 4,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "llm-tools",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "llm-tools/02-typical-anthropic.json",
@@ -49861,7 +50674,7 @@
       "loss_synth": 5,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-xlqp2ah9/api.proto:16:3:field search_docsParams.limit: unknown type... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-f8ayxn_h/api.proto:16:3:field search_docsParams.limit: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-xlqp2ah9/api.proto:16:3:field search_docsParams.limit: unknown type... (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-z92hm38z/api.proto:16:3:field search_docsParams.limit: unknown type .integer)",
       "source_format": "llm-tools",
       "status": "xfail",
       "unexplained": []
@@ -51043,7 +51856,7 @@
       "loss_synth": 9,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-4fucqi45/Acme_Support_Tickets.proto:4:14:syntax error: expecting ';'\n/tmp/apiome-proto-4fucqi45/Acme_Support_Tickets.proto:4:14:syntax error: unexpected identifier\n/tmp/apiome-proto-4fucqi45/api.proto:17:3:field Toolsearch_ticketsInput.limit: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-l9tswvxm/Acme_Support_Tickets.proto:4:14:syntax error: expecting ';'\n/tmp/apiome-proto-l9tswvxm/Acme_Support_Tickets.proto:4:14:syntax error: unexpected identifier\n/tmp/apiome-proto-l9tswvxm/api.proto:17:3:field Toolsearch_ticketsInput.limit: unknown type .integer)",
       "source_format": "mcp",
       "status": "xfail",
       "unexplained": []
@@ -51515,6 +52328,22 @@
           "key": "Acme Support Tickets.tools"
         }
       ]
+    },
+    {
+      "corpus_path": "mcp/02-typical-tickets-server.json",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 12,
+      "loss_drop": 0,
+      "loss_ok": 9,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "mcp",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "mcp/02-typical-tickets-server.json",
@@ -52701,7 +53530,7 @@
       "loss_synth": 9,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-epn_u56a/Acme_Support_Tickets.proto:3:14:syntax error: expecting ';'\n/tmp/apiome-proto-epn_u56a/Acme_Support_Tickets.proto:3:14:syntax error: unexpected identifier\n/tmp/apiome-proto-epn_u56a/api.proto:16:3:field Toolsearch_ticketsInput.limit: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-146pxmt6/Acme_Support_Tickets.proto:3:14:syntax error: expecting ';'\n/tmp/apiome-proto-146pxmt6/Acme_Support_Tickets.proto:3:14:syntax error: unexpected identifier\n/tmp/apiome-proto-146pxmt6/api.proto:16:3:field Toolsearch_ticketsInput.limit: unknown type .integer)",
       "source_format": "mcp",
       "status": "xfail",
       "unexplained": []
@@ -54294,7 +55123,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-_cyljy12/Example/Orders.proto:14:3:field Example.Orders.Order.Id: unknown type .i32)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-4d7_emoq/Example/Orders.proto:14:3:field Example.Orders.Order.Id: unknown type .i32)",
       "source_format": "odata",
       "status": "xfail",
       "unexplained": []
@@ -54624,6 +55453,106 @@
         },
         {
           "change": "changed",
+          "entity": "type",
+          "key": "Example.Orders.OrderStatus"
+        }
+      ]
+    },
+    {
+      "corpus_path": "odata/02-orders.edmx",
+      "diff_count": 10,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 1,
+      "loss_drop": 5,
+      "loss_ok": 6,
+      "loss_synth": 0,
+      "matched_count": 2,
+      "overclaims": [
+        {
+          "construct": "Example.Orders.Address",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Example.Orders.Order",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Example.Orders.OrderStatus",
+          "kind": "ok",
+          "message": "enum type carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /Orders",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /Orders({key})",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /Orders",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed operation 'GET /Orders', removed operation 'GET /Orders({key})', added operation 'GET /{key}', changed operation 'POST /Orders', changed root '', removed service 'Example.Orders.Orders', added service 'orders', removed type 'Example.Orders.OrderStatus'; overclaim: OK 'Example.Orders.Address', OK 'Example.Orders.Order', OK 'Example.Orders.OrderStatus', OK 'GET /Orders', OK 'GET /Orders({key})', OK 'POST /Orders' (observed: unexplained: changed operation 'GET /Orders', removed operation 'GET /Orders({key})', added operation 'GET /{key}', changed operation 'POST /Orders', changed root '', removed service 'Example.Orders.Orders', added service 'orders', removed type 'Example.Orders.OrderStatus'; overclaim: OK 'Example.Orders.Address', OK 'Example.Orders.Order', OK 'Example.Orders.OrderStatus', OK 'GET /Orders', OK 'GET /Orders({key})', OK 'POST /Orders')",
+      "source_format": "odata",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /Orders"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "GET /Orders({key})"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "GET /{key}"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /Orders"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Example.Orders.Orders"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "orders"
+        },
+        {
+          "change": "removed",
           "entity": "type",
           "key": "Example.Orders.OrderStatus"
         }
@@ -55435,7 +56364,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-tbez3586/Example/Orders.proto:13:3:field Example.Orders.Order.Id: unknown type .i32)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-_kuzo_ja/Example/Orders.proto:13:3:field Example.Orders.Order.Id: unknown type .i32)",
       "source_format": "odata",
       "status": "xfail",
       "unexplained": []
@@ -56551,7 +57480,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-10cmj6jg/KV_PROG.proto:14:5:field KV_PROG.kv_get_res.void: unknown type .void\n/tmp/apiome-proto-10cmj6jg/KV_PROG.proto:30:18:method KV_PROG.KV_PROG.KV_DELETE: unknown request type .string\n/tmp/apiome-proto-10cmj6jg/KV_PROG.proto:30:36:method KV_PROG.KV_PROG.KV_DELETE: invalid response type: KV_PROG.kv_status is an enum, not a message\n/tmp/apiome-proto-10cmj6jg/KV_PROG.proto:31:15:method KV_PROG.KV_PROG.KV_GET: unknown request type .string\n/tmp/apiome-proto-10cmj6jg/KV_PROG.proto:32:46:method KV_PROG.KV_PROG.KV_PUT: invalid response type: KV_PROG.kv_status is an enum, not a message)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-0m5l5n1k/KV_PROG.proto:14:5:field KV_PROG.kv_get_res.void: unknown type .void\n/tmp/apiome-proto-0m5l5n1k/KV_PROG.proto:30:18:method KV_PROG.KV_PROG.KV_DELETE: unknown request type .string\n/tmp/apiome-proto-0m5l5n1k/KV_PROG.proto:30:36:method KV_PROG.KV_PROG.KV_DELETE: invalid response type: KV_PROG.kv_status is an enum, not a message\n/tmp/apiome-proto-0m5l5n1k/KV_PROG.proto:31:15:method KV_PROG.KV_PROG.KV_GET: unknown request type .string\n/tmp/apiome-proto-0m5l5n1k/KV_PROG.proto:32:46:method KV_PROG.KV_PROG.KV_PUT: invalid response type: KV_PROG.kv_status is an enum, not a message)",
       "source_format": "oncrpc",
       "status": "xfail",
       "unexplained": []
@@ -56863,6 +57792,22 @@
           "key": "KV_PROG.kv_status"
         }
       ]
+    },
+    {
+      "corpus_path": "onc-rpc/01-key-value-store.x",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 8,
+      "loss_drop": 5,
+      "loss_ok": 6,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "oncrpc",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "onc-rpc/01-key-value-store.x",
@@ -57627,7 +58572,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-4lgbnrqk/KV_PROG.proto:13:5:field KV_PROG.kv_get_res.void: unknown type .void\n/tmp/apiome-proto-4lgbnrqk/KV_PROG.proto:29:18:method KV_PROG.KV_PROG.KV_DELETE: unknown request type .string\n/tmp/apiome-proto-4lgbnrqk/KV_PROG.proto:29:36:method KV_PROG.KV_PROG.KV_DELETE: invalid response type: KV_PROG.kv_status is an enum, not a message\n/tmp/apiome-proto-4lgbnrqk/KV_PROG.proto:30:15:method KV_PROG.KV_PROG.KV_GET: unknown request type .string\n/tmp/apiome-proto-4lgbnrqk/KV_PROG.proto:31:46:method KV_PROG.KV_PROG.KV_PUT: invalid response type: KV_PROG.kv_status is an enum, not a message)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-s4fyt5s4/KV_PROG.proto:13:5:field KV_PROG.kv_get_res.void: unknown type .void\n/tmp/apiome-proto-s4fyt5s4/KV_PROG.proto:29:18:method KV_PROG.KV_PROG.KV_DELETE: unknown request type .string\n/tmp/apiome-proto-s4fyt5s4/KV_PROG.proto:29:36:method KV_PROG.KV_PROG.KV_DELETE: invalid response type: KV_PROG.kv_status is an enum, not a message\n/tmp/apiome-proto-s4fyt5s4/KV_PROG.proto:30:15:method KV_PROG.KV_PROG.KV_GET: unknown request type .string\n/tmp/apiome-proto-s4fyt5s4/KV_PROG.proto:31:46:method KV_PROG.KV_PROG.KV_PUT: invalid response type: KV_PROG.kv_status is an enum, not a message)",
       "source_format": "oncrpc",
       "status": "xfail",
       "unexplained": []
@@ -58611,7 +59556,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.nullable.types.example', added operation '71613a77-7167-40b6-9696-3ab4a37ec5c8', changed root '', added service 'com.example.nullable.types.example', removed type 'UserProfile'; overclaim: OK 'UserProfile')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.nullable.types.example', added operation '09893063-8242-4fef-96c2-70365599fd09', changed root '', added service 'com.example.nullable.types.example', removed type 'UserProfile'; overclaim: OK 'UserProfile')",
       "source_format": "openapi",
       "status": "xfail",
       "unexplained": [
@@ -58623,7 +59568,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "71613a77-7167-40b6-9696-3ab4a37ec5c8"
+          "key": "09893063-8242-4fef-96c2-70365599fd09"
         },
         {
           "change": "changed",
@@ -58669,7 +59614,7 @@
       "loss_synth": 6,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-_zjlxod_/api.proto:7:3:field UserProfile.age: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-80laxtnf/api.proto:7:3:field UserProfile.age: unknown type .integer)",
       "source_format": "openapi",
       "status": "xfail",
       "unexplained": []
@@ -58811,6 +59756,22 @@
           "key": ""
         }
       ]
+    },
+    {
+      "corpus_path": "openapi/07-nullable-types.yaml",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 6,
+      "loss_drop": 0,
+      "loss_ok": 1,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "openapi",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "openapi/07-nullable-types.yaml",
@@ -59167,7 +60128,7 @@
       "loss_synth": 6,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-jzo0jsgk/api.proto:6:3:field UserProfile.age: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-e_vz6miu/api.proto:6:3:field UserProfile.age: unknown type .integer)",
       "source_format": "openapi",
       "status": "xfail",
       "unexplained": []
@@ -59811,7 +60772,7 @@
       "loss_synth": 6,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-gc4m6142/api.proto:11:3:field Balance.amount: unknown type .integer\n/tmp/apiome-proto-gc4m6142/api.proto:26:19:method Wallet_API.getBalance: unknown request type .string)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-kyrg5mvk/api.proto:11:3:field Balance.amount: unknown type .integer\n/tmp/apiome-proto-kyrg5mvk/api.proto:26:19:method Wallet_API.getBalance: unknown request type .string)",
       "source_format": "openrpc",
       "status": "xfail",
       "unexplained": []
@@ -60076,6 +61037,22 @@
           "key": "Wallet API"
         }
       ]
+    },
+    {
+      "corpus_path": "openrpc/01-wallet-api.json",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 7,
+      "loss_drop": 0,
+      "loss_ok": 4,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "openrpc",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "openrpc/01-wallet-api.json",
@@ -60618,7 +61595,7 @@
       "loss_synth": 6,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-scbns99a/api.proto:10:3:field Balance.amount: unknown type .integer\n/tmp/apiome-proto-scbns99a/api.proto:25:19:method Wallet_API.getBalance: unknown request type .string)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-pb41qu2_/api.proto:10:3:field Balance.amount: unknown type .integer\n/tmp/apiome-proto-pb41qu2_/api.proto:25:19:method Wallet_API.getBalance: unknown request type .string)",
       "source_format": "openrpc",
       "status": "xfail",
       "unexplained": []
@@ -61516,7 +62493,7 @@
       "loss_synth": 3,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-6mlct_91/api.proto:7:3:field Task.done: unknown type .boolean)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-94nq2sg8/api.proto:7:3:field Task.done: unknown type .boolean)",
       "source_format": "postman",
       "status": "xfail",
       "unexplained": []
@@ -61746,6 +62723,87 @@
           "change": "removed",
           "entity": "service",
           "key": "Tasks API"
+        }
+      ]
+    },
+    {
+      "corpus_path": "postman/01-tasks-collection.postman_collection.json",
+      "diff_count": 7,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 3,
+      "loss_drop": 0,
+      "loss_ok": 4,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "GET /tasks",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /tasks/{id}",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /tasks",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Task",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed operation 'GET /tasks', changed operation 'GET /tasks/{id}', changed operation 'POST /tasks', changed root '', removed service 'Tasks API', added service 'tasks-api', removed type 'Task'; overclaim: OK 'GET /tasks', OK 'GET /tasks/{id}', OK 'POST /tasks', OK 'Task' (observed: unexplained: changed operation 'GET /tasks', changed operation 'GET /tasks/{id}', changed operation 'POST /tasks', changed root '', removed service 'Tasks API', added service 'tasks-api', removed type 'Task'; overclaim: OK 'GET /tasks', OK 'GET /tasks/{id}', OK 'POST /tasks', OK 'Task')",
+      "source_format": "postman",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /tasks"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /tasks/{id}"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /tasks"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Tasks API"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "tasks-api"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Task"
         }
       ]
     },
@@ -62325,7 +63383,7 @@
       "loss_synth": 3,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-_ml67sf_/api.proto:6:3:field Task.done: unknown type .boolean)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-qohcnt83/api.proto:6:3:field Task.done: unknown type .boolean)",
       "source_format": "postman",
       "status": "xfail",
       "unexplained": []
@@ -63926,6 +64984,22 @@
           "key": "example.catalog.v1.Product.AttributesEntry"
         }
       ]
+    },
+    {
+      "corpus_path": "protobuf/02-grpc-service.proto",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 2,
+      "loss_drop": 15,
+      "loss_ok": 10,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "protobuf",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "protobuf/02-grpc-service.proto",
@@ -66984,6 +68058,89 @@
     },
     {
       "corpus_path": "raml/01-simple-api.raml",
+      "diff_count": 8,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 7,
+      "loss_drop": 8,
+      "loss_ok": 5,
+      "loss_synth": 0,
+      "matched_count": 2,
+      "overclaims": [
+        {
+          "construct": "Book",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /books",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /books/{bookId}",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "NewBook",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /books",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed operation 'GET /books', changed operation 'GET /books/{bookId}', changed operation 'POST /books', changed root '', removed service 'Bookstore API', added service 'bookstore-api'; overclaim: OK 'Book', OK 'GET /books', OK 'GET /books/{bookId}', OK 'NewBook', OK 'POST /books' (observed: unexplained: changed operation 'GET /books', changed operation 'GET /books/{bookId}', changed operation 'POST /books', changed root '', removed service 'Bookstore API', added service 'bookstore-api'; overclaim: OK 'Book', OK 'GET /books', OK 'GET /books/{bookId}', OK 'NewBook', OK 'POST /books')",
+      "source_format": "raml",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /books"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /books/{bookId}"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /books"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "Bookstore API"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "bookstore-api"
+        }
+      ]
+    },
+    {
+      "corpus_path": "raml/01-simple-api.raml",
       "diff_count": 13,
       "emit_format": "graphql",
       "emit_key": "graphql",
@@ -68927,7 +70084,7 @@
       "loss_synth": 11,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-wtznjwtd/example/weather.proto:28:3:field example.weather.Forecast.days: unknown type .example.weather.DayForecastList\n/tmp/apiome-proto-wtznjwtd/example/weather.proto:33:3:field example.weather.GetForecastInput.days: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-7lvgms9q/example/weather.proto:28:3:field example.weather.Forecast.days: unknown type .example.weather.DayForecastList\n/tmp/apiome-proto-7lvgms9q/example/weather.proto:33:3:field example.weather.GetForecastInput.days: unknown type .integer)",
       "source_format": "smithy",
       "status": "xfail",
       "unexplained": []
@@ -69356,6 +70513,22 @@
           "key": "example.weather.DayForecastList"
         }
       ]
+    },
+    {
+      "corpus_path": "smithy/01-weather-service.smithy",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 5,
+      "loss_drop": 0,
+      "loss_ok": 8,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "smithy",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "smithy/01-weather-service.smithy",
@@ -70410,7 +71583,7 @@
       "loss_synth": 11,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-27r3_c20/example/weather.proto:27:3:field example.weather.Forecast.days: unknown type .example.weather.DayForecastList\n/tmp/apiome-proto-27r3_c20/example/weather.proto:32:3:field example.weather.GetForecastInput.days: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-uw5colee/example/weather.proto:27:3:field example.weather.Forecast.days: unknown type .example.weather.DayForecastList\n/tmp/apiome-proto-uw5colee/example/weather.proto:32:3:field example.weather.GetForecastInput.days: unknown type .integer)",
       "source_format": "smithy",
       "status": "xfail",
       "unexplained": []
@@ -72002,7 +73175,7 @@
       "loss_synth": 36,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-t8swr375/api.proto:8:3:field Category.id: unknown type .integer\n/tmp/apiome-proto-t8swr375/api.proto:15:3:field Error.code: unknown type .integer\n/tmp/apiome-proto-t8swr375/api.proto:25:3:field NewPet.categoryId: unknown type .integer\n/tmp/apiome-proto-t8swr375/api.proto:35:3:field Order.complete: unknown type .boolean\n/tmp/apiome-proto-t8swr375/api.proto:36:3:field Order.id: unknown type .integer\n/tmp/apiome-proto-t8swr375/api.proto:37:3:field Order.petId: unknown type .integer\n/tmp/apiome-proto-t8swr375/api.proto:38:3:field Order.quantity: unknown type .integer\n/tmp/apiome-proto-t8swr375/api.proto:49:3:field Pet.id: unknown type .integer\n/tmp/apiome-proto-t8swr375/api.proto:74:3:field UploadResponse.size: unknown type .integer\n/tmp/apiome-proto-t8swr375/api.proto:76:3:field UploadResponse.success: unknown type .boolean\n/tmp/apiome-proto-t8swr375/api.proto:85:3:field User.id: unknown type .integer\n/tmp/apiome-proto-t8swr375/api.proto:89:3:field User.userStatus: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-qmz17dqd/api.proto:8:3:field Category.id: unknown type .integer\n/tmp/apiome-proto-qmz17dqd/api.proto:15:3:field Error.code: unknown type .integer\n/tmp/apiome-proto-qmz17dqd/api.proto:25:3:field NewPet.categoryId: unknown type .integer\n/tmp/apiome-proto-qmz17dqd/api.proto:35:3:field Order.complete: unknown type .boolean\n/tmp/apiome-proto-qmz17dqd/api.proto:36:3:field Order.id: unknown type .integer\n/tmp/apiome-proto-qmz17dqd/api.proto:37:3:field Order.petId: unknown type .integer\n/tmp/apiome-proto-qmz17dqd/api.proto:38:3:field Order.quantity: unknown type .integer\n/tmp/apiome-proto-qmz17dqd/api.proto:49:3:field Pet.id: unknown type .integer\n/tmp/apiome-proto-qmz17dqd/api.proto:74:3:field UploadResponse.size: unknown type .integer\n/tmp/apiome-proto-qmz17dqd/api.proto:76:3:field UploadResponse.success: unknown type .boolean\n/tmp/apiome-proto-qmz17dqd/api.proto:85:3:field User.id: unknown type .integer\n/tmp/apiome-proto-qmz17dqd/api.proto:89:3:field User.userStatus: unknown type .integer)",
       "source_format": "swagger",
       "status": "xfail",
       "unexplained": []
@@ -72570,6 +73743,202 @@
           "change": "removed",
           "entity": "service",
           "key": "pet"
+        }
+      ]
+    },
+    {
+      "corpus_path": "swagger/01-swagger-2-petstore.yaml",
+      "diff_count": 16,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 28,
+      "loss_drop": 0,
+      "loss_ok": 14,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "Category",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "DELETE /pets/{petId}",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Error",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /pets",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /pets/{petId}",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "NewPet",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Order",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /pets",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /pets/{petId}/upload",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "PUT /pets/{petId}",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "Pet",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "UpdatePet",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "UploadResponse",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "User",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed operation 'DELETE /pets/{petId}', changed operation 'GET /pets', changed operation 'GET /pets/{petId}', changed operation 'POST /pets', changed operation 'POST /pets/{petId}/upload', changed operation 'PUT /pets/{petId}', changed root '', changed service 'pet', removed type 'Category', removed type 'Error', removed type 'NewPet', removed type 'Order', removed type 'Pet', removed type 'UpdatePet', removed type 'UploadResponse', removed type 'User'; overclaim: OK 'Category', OK 'DELETE /pets/{petId}', OK 'Error', OK 'GET /pets', OK 'GET /pets/{petId}', OK 'NewPet', OK 'Order', OK 'POST /pets', OK 'POST /pets/{petId}/upload', OK 'PUT /pets/{petId}', OK 'Pet', OK 'UpdatePet', OK 'UploadResponse', OK 'User' (observed: unexplained: changed operation 'DELETE /pets/{petId}', changed operation 'GET /pets', changed operation 'GET /pets/{petId}', changed operation 'POST /pets', changed operation 'POST /pets/{petId}/upload', changed operation 'PUT /pets/{petId}', changed root '', changed service 'pet', removed type 'Category', removed type 'Error', removed type 'NewPet', removed type 'Order', removed type 'Pet', removed type 'UpdatePet', removed type 'UploadResponse', removed type 'User'; overclaim: OK 'Category', OK 'DELETE /pets/{petId}', OK 'Error', OK 'GET /pets', OK 'GET /pets/{petId}', OK 'NewPet', OK 'Order', OK 'POST /pets', OK 'POST /pets/{petId}/upload', OK 'PUT /pets/{petId}', OK 'Pet', OK 'UpdatePet', OK 'UploadResponse', OK 'User')",
+      "source_format": "swagger",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "DELETE /pets/{petId}"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /pets"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /pets/{petId}"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /pets"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /pets/{petId}/upload"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "PUT /pets/{petId}"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "changed",
+          "entity": "service",
+          "key": "pet"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Category"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Error"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "NewPet"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Order"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "Pet"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "UpdatePet"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "UploadResponse"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "User"
         }
       ]
     },
@@ -73856,7 +75225,7 @@
       "loss_synth": 36,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-xx3zcwnz/api.proto:7:3:field Category.id: unknown type .integer\n/tmp/apiome-proto-xx3zcwnz/api.proto:14:3:field Error.code: unknown type .integer\n/tmp/apiome-proto-xx3zcwnz/api.proto:24:3:field NewPet.categoryId: unknown type .integer\n/tmp/apiome-proto-xx3zcwnz/api.proto:34:3:field Order.complete: unknown type .boolean\n/tmp/apiome-proto-xx3zcwnz/api.proto:35:3:field Order.id: unknown type .integer\n/tmp/apiome-proto-xx3zcwnz/api.proto:36:3:field Order.petId: unknown type .integer\n/tmp/apiome-proto-xx3zcwnz/api.proto:37:3:field Order.quantity: unknown type .integer\n/tmp/apiome-proto-xx3zcwnz/api.proto:48:3:field Pet.id: unknown type .integer\n/tmp/apiome-proto-xx3zcwnz/api.proto:73:3:field UploadResponse.size: unknown type .integer\n/tmp/apiome-proto-xx3zcwnz/api.proto:75:3:field UploadResponse.success: unknown type .boolean\n/tmp/apiome-proto-xx3zcwnz/api.proto:84:3:field User.id: unknown type .integer\n/tmp/apiome-proto-xx3zcwnz/api.proto:88:3:field User.userStatus: unknown type .integer)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-oxax7baj/api.proto:7:3:field Category.id: unknown type .integer\n/tmp/apiome-proto-oxax7baj/api.proto:14:3:field Error.code: unknown type .integer\n/tmp/apiome-proto-oxax7baj/api.proto:24:3:field NewPet.categoryId: unknown type .integer\n/tmp/apiome-proto-oxax7baj/api.proto:34:3:field Order.complete: unknown type .boolean\n/tmp/apiome-proto-oxax7baj/api.proto:35:3:field Order.id: unknown type .integer\n/tmp/apiome-proto-oxax7baj/api.proto:36:3:field Order.petId: unknown type .integer\n/tmp/apiome-proto-oxax7baj/api.proto:37:3:field Order.quantity: unknown type .integer\n/tmp/apiome-proto-oxax7baj/api.proto:48:3:field Pet.id: unknown type .integer\n/tmp/apiome-proto-oxax7baj/api.proto:73:3:field UploadResponse.size: unknown type .integer\n/tmp/apiome-proto-oxax7baj/api.proto:75:3:field UploadResponse.success: unknown type .boolean\n/tmp/apiome-proto-oxax7baj/api.proto:84:3:field User.id: unknown type .integer\n/tmp/apiome-proto-oxax7baj/api.proto:88:3:field User.userStatus: unknown type .integer)",
       "source_format": "swagger",
       "status": "xfail",
       "unexplained": []
@@ -75496,7 +76865,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-b9oruxvq/com/example/user.proto:25:3:field com.example.user.User.createdAt: unknown type .i64)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-ok7h9sll/com/example/user.proto:25:3:field com.example.user.User.createdAt: unknown type .i64)",
       "source_format": "thrift",
       "status": "xfail",
       "unexplained": []
@@ -75887,6 +77256,22 @@
           "key": "com.example.user.Status"
         }
       ]
+    },
+    {
+      "corpus_path": "thrift/01-user-service.thrift",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 3,
+      "loss_drop": 9,
+      "loss_ok": 7,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "thrift",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "thrift/01-user-service.thrift",
@@ -76912,7 +78297,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-379t2a5v/com/example/user.proto:24:3:field com.example.user.User.createdAt: unknown type .i64)",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-2u2mui3q/com/example/user.proto:24:3:field com.example.user.User.createdAt: unknown type .i64)",
       "source_format": "thrift",
       "status": "xfail",
       "unexplained": []
@@ -78597,6 +79982,111 @@
         },
         {
           "change": "changed",
+          "entity": "type",
+          "key": "PetStore.PetStatus"
+        }
+      ]
+    },
+    {
+      "corpus_path": "typespec/01-pets-api.tsp",
+      "diff_count": 9,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 0,
+      "loss_drop": 0,
+      "loss_ok": 6,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [
+        {
+          "construct": "GET /pets",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /pets/{id}",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /pets",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "PetStore.NewPet",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "PetStore.Pet",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "PetStore.PetStatus",
+          "kind": "ok",
+          "message": "enum type carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed operation 'GET /pets', changed operation 'GET /pets/{id}', changed operation 'POST /pets', changed root '', removed service 'PetStore.Pets', added service 'pets', removed type 'PetStore.NewPet', removed type 'PetStore.Pet', removed type 'PetStore.PetStatus'; overclaim: OK 'GET /pets', OK 'GET /pets/{id}', OK 'POST /pets', OK 'PetStore.NewPet', OK 'PetStore.Pet', OK 'PetStore.PetStatus' (observed: unexplained: changed operation 'GET /pets', changed operation 'GET /pets/{id}', changed operation 'POST /pets', changed root '', removed service 'PetStore.Pets', added service 'pets', removed type 'PetStore.NewPet', removed type 'PetStore.Pet', removed type 'PetStore.PetStatus'; overclaim: OK 'GET /pets', OK 'GET /pets/{id}', OK 'POST /pets', OK 'PetStore.NewPet', OK 'PetStore.Pet', OK 'PetStore.PetStatus')",
+      "source_format": "typespec",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /pets"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /pets/{id}"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /pets"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "PetStore.Pets"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "pets"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "PetStore.NewPet"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "PetStore.Pet"
+        },
+        {
+          "change": "removed",
           "entity": "type",
           "key": "PetStore.PetStatus"
         }
@@ -80628,7 +82118,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-c_6zzpj0/http___example/com_bookstore.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-c_6zzpj0/http___example/com_bookstore.proto:4:13:syntax error: unexpected ':'\n/tmp/apiome-proto-c_6zzpj0/http___example/com_bookstore.proto:16:56:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-c_6zzpj0/http___example/com_bookstore.proto:17:54:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-c_6zzpj0/http___example/com_bookstore.proto:18:24:syntax error: unexpected ':', expecting ')')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-3hmptucb/http___example/com_bookstore.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-3hmptucb/http___example/com_bookstore.proto:4:13:syntax error: unexpected ':'\n/tmp/apiome-proto-3hmptucb/http___example/com_bookstore.proto:16:56:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-3hmptucb/http___example/com_bookstore.proto:17:54:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-3hmptucb/http___example/com_bookstore.proto:18:24:syntax error: unexpected ':', expecting ')')",
       "source_format": "wadl",
       "status": "xfail",
       "unexplained": []
@@ -80824,6 +82314,82 @@
           "change": "removed",
           "entity": "type",
           "key": "http://example.com/bookstore.Book"
+        }
+      ]
+    },
+    {
+      "corpus_path": "wadl/01-bookstore.wadl",
+      "diff_count": 7,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 0,
+      "loss_drop": 4,
+      "loss_ok": 4,
+      "loss_synth": 0,
+      "matched_count": 1,
+      "overclaims": [
+        {
+          "construct": "GET /books",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "GET /books/{bookId}",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /books",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "http://example.com/bookstore.Book",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed operation 'GET /books', changed operation 'GET /books/{bookId}', changed operation 'POST /books', changed root '', removed service 'http://example.com/bookstore.WADL API', added service 'wadl-api'; overclaim: OK 'GET /books', OK 'GET /books/{bookId}', OK 'POST /books', OK 'http://example.com/bookstore.Book' (observed: unexplained: changed operation 'GET /books', changed operation 'GET /books/{bookId}', changed operation 'POST /books', changed root '', removed service 'http://example.com/bookstore.WADL API', added service 'wadl-api'; overclaim: OK 'GET /books', OK 'GET /books/{bookId}', OK 'POST /books', OK 'http://example.com/bookstore.Book')",
+      "source_format": "wadl",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /books"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /books/{bookId}"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /books"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "http://example.com/bookstore.WADL API"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "wadl-api"
         }
       ]
     },
@@ -81427,7 +82993,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-vcnkyprv/http___example/com_bookstore.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-vcnkyprv/http___example/com_bookstore.proto:3:13:syntax error: unexpected ':'\n/tmp/apiome-proto-vcnkyprv/http___example/com_bookstore.proto:15:56:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-vcnkyprv/http___example/com_bookstore.proto:16:54:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-vcnkyprv/http___example/com_bookstore.proto:17:24:syntax error: unexpected ':', expecting ')')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-4qsyflm2/http___example/com_bookstore.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-4qsyflm2/http___example/com_bookstore.proto:3:13:syntax error: unexpected ':'\n/tmp/apiome-proto-4qsyflm2/http___example/com_bookstore.proto:15:56:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-4qsyflm2/http___example/com_bookstore.proto:16:54:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-4qsyflm2/http___example/com_bookstore.proto:17:24:syntax error: unexpected ':', expecting ')')",
       "source_format": "wadl",
       "status": "xfail",
       "unexplained": []
@@ -82277,7 +83843,7 @@
       "loss_synth": 3,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-kletos5f/examples_calculator.proto:4:17:syntax error: expecting ';' /tmp/apiome-proto-klet (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-v_t7qozv/examples_calculator.proto:4:17:syntax error: expecting ';'\n/tmp/apiome-proto-v_t7qozv/examples_calculator.proto:4:17:syntax error: unexpected ':'\n/tmp/apiome-proto-v_t7qozv/examples_calculator.proto:9:26:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-v_t7qozv/examples_calculator.proto:10:22:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-v_t7qozv/examples_calculator/calculate.proto:4:17:syntax error: expecting ';'\n/tmp/apiome-proto-v_t7qozv/examples_calculator/calculate.proto:4:17:syntax error: unexpected ':'\n/tmp/apiome-proto-v_t7qozv/examples_calculator/calculate.proto:22:12:syntax error: unexpected ':')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-kletos5f/examples_calculator.proto:4:17:syntax error: expecting ';' /tmp/apiome-proto-klet (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-eqwvz5fo/examples_calculator.proto:4:17:syntax error: expecting ';'\n/tmp/apiome-proto-eqwvz5fo/examples_calculator.proto:4:17:syntax error: unexpected ':'\n/tmp/apiome-proto-eqwvz5fo/examples_calculator.proto:9:26:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-eqwvz5fo/examples_calculator.proto:10:22:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-eqwvz5fo/examples_calculator/calculate.proto:4:17:syntax error: expecting ';'\n/tmp/apiome-proto-eqwvz5fo/examples_calculator/calculate.proto:4:17:syntax error: unexpected ':'\n/tmp/apiome-proto-eqwvz5fo/examples_calculator/calculate.proto:22:12:syntax error: unexpected ':')",
       "source_format": "wit",
       "status": "xfail",
       "unexplained": []
@@ -82609,6 +84175,22 @@
           "key": "request"
         }
       ]
+    },
+    {
+      "corpus_path": "wit/02-typical-calculator.wit",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 3,
+      "loss_drop": 1,
+      "loss_ok": 4,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "wit",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "wit/02-typical-calculator.wit",
@@ -83422,7 +85004,7 @@
       "loss_synth": 3,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-bejmv9r2/examples_calculator.proto:3:17:syntax error: expecting ';' /tmp/apiome-proto-bejm (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-cjou3i9j/examples_calculator.proto:3:17:syntax error: expecting ';'\n/tmp/apiome-proto-cjou3i9j/examples_calculator.proto:3:17:syntax error: unexpected ':'\n/tmp/apiome-proto-cjou3i9j/examples_calculator.proto:8:26:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-cjou3i9j/examples_calculator.proto:9:22:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-cjou3i9j/examples_calculator/calculate.proto:3:17:syntax error: expecting ';'\n/tmp/apiome-proto-cjou3i9j/examples_calculator/calculate.proto:3:17:syntax error: unexpected ':'\n/tmp/apiome-proto-cjou3i9j/examples_calculator/calculate.proto:21:12:syntax error: unexpected ':')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files /tmp/apiome-proto-bejmv9r2/examples_calculator.proto:3:17:syntax error: expecting ';' /tmp/apiome-proto-bejm (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-2knum5kf/examples_calculator.proto:3:17:syntax error: expecting ';'\n/tmp/apiome-proto-2knum5kf/examples_calculator.proto:3:17:syntax error: unexpected ':'\n/tmp/apiome-proto-2knum5kf/examples_calculator.proto:8:26:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-2knum5kf/examples_calculator.proto:9:22:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-2knum5kf/examples_calculator/calculate.proto:3:17:syntax error: expecting ';'\n/tmp/apiome-proto-2knum5kf/examples_calculator/calculate.proto:3:17:syntax error: unexpected ':'\n/tmp/apiome-proto-2knum5kf/examples_calculator/calculate.proto:21:12:syntax error: unexpected ':')",
       "source_format": "wit",
       "status": "xfail",
       "unexplained": []
@@ -84893,7 +86475,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-g3w9g6lo/http___example/com_orders.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-g3w9g6lo/http___example/com_orders.proto:4:13:syntax error: unexpected ':'\n/tmp/apiome-proto-g3w9g6lo/http___example/com_orders.proto:17:8:syntax error: unexpected ':'\n/tmp/apiome-proto-g3w9g6lo/http___example/com_orders.proto:21:8:syntax error: unexpected ':'\n/tmp/apiome-proto-g3w9g6lo/http___example/com_orders.proto:29:8:syntax error: unexpected ':'\n/tmp/apiome-proto-g3w9g6lo/http___example/com_orders.proto:34:8:syntax error: unexpected ':'\n/tmp/apiome-proto-g3w9g6lo/http___example/com_orders.proto:52:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-g3w9g6lo/http___example/com_orders.proto:53:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-g3w9g6lo/http___example/com_orders.proto:54:22:syntax error: unexpected ':', expecting ')')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-x57vylh7/http___example/com_orders.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-x57vylh7/http___example/com_orders.proto:4:13:syntax error: unexpected ':'\n/tmp/apiome-proto-x57vylh7/http___example/com_orders.proto:17:8:syntax error: unexpected ':'\n/tmp/apiome-proto-x57vylh7/http___example/com_orders.proto:21:8:syntax error: unexpected ':'\n/tmp/apiome-proto-x57vylh7/http___example/com_orders.proto:29:8:syntax error: unexpected ':'\n/tmp/apiome-proto-x57vylh7/http___example/com_orders.proto:34:8:syntax error: unexpected ':'\n/tmp/apiome-proto-x57vylh7/http___example/com_orders.proto:52:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-x57vylh7/http___example/com_orders.proto:53:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-x57vylh7/http___example/com_orders.proto:54:22:syntax error: unexpected ':', expecting ')')",
       "source_format": "wsdl",
       "status": "xfail",
       "unexplained": []
@@ -85544,6 +87126,22 @@
           "key": "http://example.com/orders.OrderLine"
         }
       ]
+    },
+    {
+      "corpus_path": "wsdl/02-order-service.wsdl",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 0,
+      "loss_drop": 18,
+      "loss_ok": 12,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "wsdl",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "wsdl/02-order-service.wsdl",
@@ -86883,7 +88481,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-09nnj651/http___example/com_orders.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-09nnj651/http___example/com_orders.proto:3:13:syntax error: unexpected ':'\n/tmp/apiome-proto-09nnj651/http___example/com_orders.proto:16:8:syntax error: unexpected ':'\n/tmp/apiome-proto-09nnj651/http___example/com_orders.proto:20:8:syntax error: unexpected ':'\n/tmp/apiome-proto-09nnj651/http___example/com_orders.proto:28:8:syntax error: unexpected ':'\n/tmp/apiome-proto-09nnj651/http___example/com_orders.proto:33:8:syntax error: unexpected ':'\n/tmp/apiome-proto-09nnj651/http___example/com_orders.proto:51:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-09nnj651/http___example/com_orders.proto:52:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-09nnj651/http___example/com_orders.proto:53:22:syntax error: unexpected ':', expecting ')')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-di6444kd/http___example/com_orders.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-di6444kd/http___example/com_orders.proto:3:13:syntax error: unexpected ':'\n/tmp/apiome-proto-di6444kd/http___example/com_orders.proto:16:8:syntax error: unexpected ':'\n/tmp/apiome-proto-di6444kd/http___example/com_orders.proto:20:8:syntax error: unexpected ':'\n/tmp/apiome-proto-di6444kd/http___example/com_orders.proto:28:8:syntax error: unexpected ':'\n/tmp/apiome-proto-di6444kd/http___example/com_orders.proto:33:8:syntax error: unexpected ':'\n/tmp/apiome-proto-di6444kd/http___example/com_orders.proto:51:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-di6444kd/http___example/com_orders.proto:52:25:syntax error: unexpected ':', expecting ')'\n/tmp/apiome-proto-di6444kd/http___example/com_orders.proto:53:22:syntax error: unexpected ':', expecting ')')",
       "source_format": "wsdl",
       "status": "xfail",
       "unexplained": []
@@ -88683,6 +90281,22 @@
     },
     {
       "corpus_path": "xml-rpc/01-method-call.xml",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 2,
+      "loss_drop": 2,
+      "loss_ok": 2,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "xmlrpc",
+      "status": "xfail",
+      "unexplained": []
+    },
+    {
+      "corpus_path": "xml-rpc/01-method-call.xml",
       "diff_count": 8,
       "emit_format": "graphql",
       "emit_key": "graphql",
@@ -89921,7 +91535,7 @@
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.purchaseorder', added operation '2fe2b894-78f8-4661-8b09-ca1f8763493a', changed root '', added service 'com.example.purchaseorder', removed type 'http://example.com/po.Status'; overclaim: OK 'http://example.com/po.Address', OK 'http://example.com/po.Item', OK 'http://example.com/po.PurchaseOrder', OK 'http://example.com/po.Status')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added channel 'com.example.purchaseorder', added operation '21b567a1-eece-4883-97f4-e758bde293a8', changed root '', added service 'com.example.purchaseorder', removed type 'http://example.com/po.Status'; overclaim: OK 'http://example.com/po.Address', OK 'http://example.com/po.Item', OK 'http://example.com/po.PurchaseOrder', OK 'http://example.com/po.Status')",
       "source_format": "xsd",
       "status": "xfail",
       "unexplained": [
@@ -89933,7 +91547,7 @@
         {
           "change": "added",
           "entity": "operation",
-          "key": "2fe2b894-78f8-4661-8b09-ca1f8763493a"
+          "key": "21b567a1-eece-4883-97f4-e758bde293a8"
         },
         {
           "change": "changed",
@@ -89979,7 +91593,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-vonoyj1d/http___example/com_po.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-vonoyj1d/http___example/com_po.proto:4:13:syntax error: unexpected ':'\n/tmp/apiome-proto-vonoyj1d/http___example/com_po.proto:21:8:syntax error: unexpected ':'\n/tmp/apiome-proto-vonoyj1d/http___example/com_po.proto:22:17:syntax error: unexpected ':'\n/tmp/apiome-proto-vonoyj1d/http___example/com_po.proto:25:8:syntax error: unexpected ':')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-o0rp9wy2/http___example/com_po.proto:4:13:syntax error: expecting ';'\n/tmp/apiome-proto-o0rp9wy2/http___example/com_po.proto:4:13:syntax error: unexpected ':'\n/tmp/apiome-proto-o0rp9wy2/http___example/com_po.proto:21:8:syntax error: unexpected ':'\n/tmp/apiome-proto-o0rp9wy2/http___example/com_po.proto:22:17:syntax error: unexpected ':'\n/tmp/apiome-proto-o0rp9wy2/http___example/com_po.proto:25:8:syntax error: unexpected ':')",
       "source_format": "xsd",
       "status": "xfail",
       "unexplained": []
@@ -90218,6 +91832,22 @@
           "key": "http://example.com/po.Status"
         }
       ]
+    },
+    {
+      "corpus_path": "xsd/01-purchase-order.xsd",
+      "diff_count": 0,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 15,
+      "loss_drop": 14,
+      "loss_ok": 4,
+      "loss_synth": 0,
+      "matched_count": 0,
+      "overclaims": [],
+      "reason": "Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing). (observed: Emit failed: Gateway API export requires at least one HTTP operation: an HTTPRoute is a routing surface, and a model with no operations has no rule to declare (an HTTPRoute with no rules routes nothing).)",
+      "source_format": "xsd",
+      "status": "xfail",
+      "unexplained": []
     },
     {
       "corpus_path": "xsd/01-purchase-order.xsd",
@@ -90868,7 +92498,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-8b5cv3vj/http___example/com_po.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-8b5cv3vj/http___example/com_po.proto:3:13:syntax error: unexpected ':'\n/tmp/apiome-proto-8b5cv3vj/http___example/com_po.proto:20:8:syntax error: unexpected ':'\n/tmp/apiome-proto-8b5cv3vj/http___example/com_po.proto:21:17:syntax error: unexpected ':'\n/tmp/apiome-proto-8b5cv3vj/http___example/com_po.proto:24:8:syntax error: unexpected ':')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-ykvdbgkk/http___example/com_po.proto:3:13:syntax error: expecting ';'\n/tmp/apiome-proto-ykvdbgkk/http___example/com_po.proto:3:13:syntax error: unexpected ':'\n/tmp/apiome-proto-ykvdbgkk/http___example/com_po.proto:20:8:syntax error: unexpected ':'\n/tmp/apiome-proto-ykvdbgkk/http___example/com_po.proto:21:17:syntax error: unexpected ':'\n/tmp/apiome-proto-ykvdbgkk/http___example/com_po.proto:24:8:syntax error: unexpected ':')",
       "source_format": "xsd",
       "status": "xfail",
       "unexplained": []
@@ -91823,7 +93453,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-pcaffd90/InventoryRequester.proto:23:45:syntax error: unexpected '-', expecting ')'\n/tmp/apiome-proto-pcaffd90/InventoryRequester.proto:24:48:syntax error: unexpected '-', expecting ')')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-dggzh6hi/InventoryRequester.proto:23:45:syntax error: unexpected '-', expecting ')'\n/tmp/apiome-proto-dggzh6hi/InventoryRequester.proto:24:48:syntax error: unexpected '-', expecting ')')",
       "source_format": "zosconnect",
       "status": "xfail",
       "unexplained": []
@@ -92091,6 +93721,101 @@
       "source_format": "zosconnect",
       "status": "xfail",
       "unexplained": []
+    },
+    {
+      "corpus_path": "zos-connect/01-api-requester.json",
+      "diff_count": 9,
+      "emit_format": "gateway-api",
+      "emit_key": "gateway-api",
+      "loss_approx": 0,
+      "loss_drop": 2,
+      "loss_ok": 6,
+      "loss_synth": 0,
+      "matched_count": 2,
+      "overclaims": [
+        {
+          "construct": "GET /items/{sku}/stock",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "InventoryRequester.GET-STOCK-REQUEST",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "InventoryRequester.GET-STOCK-RESPONSE",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "InventoryRequester.RESERVE-REQUEST",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "InventoryRequester.RESERVE-RESPONSE",
+          "kind": "ok",
+          "message": "object carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "POST /items/{sku}/reservations",
+          "kind": "ok",
+          "message": "operation carried to Gateway API HTTPRoute",
+          "severity": "info",
+          "target_mapping": null
+        }
+      ],
+      "reason": "unexplained: changed operation 'GET /items/{sku}/stock', changed operation 'POST /items/{sku}/reservations', changed root '', removed service 'InventoryRequester.InventoryRequester', added service 'inventoryrequester', removed type 'InventoryRequester.GET-STOCK-RESPONSE', removed type 'InventoryRequester.RESERVE-RESPONSE'; overclaim: OK 'GET /items/{sku}/stock', OK 'InventoryRequester.GET-STOCK-REQUEST', OK 'InventoryRequester.GET-STOCK-RESPONSE', OK 'InventoryRequester.RESERVE-REQUEST', OK 'InventoryRequester.RESERVE-RESPONSE', OK 'POST /items/{sku}/reservations' (observed: unexplained: changed operation 'GET /items/{sku}/stock', changed operation 'POST /items/{sku}/reservations', changed root '', removed service 'InventoryRequester.InventoryRequester', added service 'inventoryrequester', removed type 'InventoryRequester.GET-STOCK-RESPONSE', removed type 'InventoryRequester.RESERVE-RESPONSE'; overclaim: OK 'GET /items/{sku}/stock', OK 'InventoryRequester.GET-STOCK-REQUEST', OK 'InventoryRequester.GET-STOCK-RESPONSE', OK 'InventoryRequester.RESERVE-REQUEST', OK 'InventoryRequester.RESERVE-RESPONSE', OK 'POST /items/{sku}/reservations')",
+      "source_format": "zosconnect",
+      "status": "xfail",
+      "unexplained": [
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "GET /items/{sku}/stock"
+        },
+        {
+          "change": "changed",
+          "entity": "operation",
+          "key": "POST /items/{sku}/reservations"
+        },
+        {
+          "change": "changed",
+          "entity": "root",
+          "key": ""
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "InventoryRequester.InventoryRequester"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "inventoryrequester"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "InventoryRequester.GET-STOCK-RESPONSE"
+        },
+        {
+          "change": "removed",
+          "entity": "type",
+          "key": "InventoryRequester.RESERVE-RESPONSE"
+        }
+      ]
     },
     {
       "corpus_path": "zos-connect/01-api-requester.json",
@@ -93032,7 +94757,7 @@
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-cl4pmdy9/InventoryRequester.proto:22:45:syntax error: unexpected '-', expecting ')'\n/tmp/apiome-proto-cl4pmdy9/InventoryRequester.proto:23:48:syntax error: unexpected '-', expecting ')')",
+      "reason": "Re-import failed: buf build failed to compile the supplied .proto files (observed: Re-import failed: buf build failed to compile the supplied .proto files\n/tmp/apiome-proto-exax6xhg/InventoryRequester.proto:22:45:syntax error: unexpected '-', expecting ')'\n/tmp/apiome-proto-exax6xhg/InventoryRequester.proto:23:48:syntax error: unexpected '-', expecting ')')",
       "source_format": "zosconnect",
       "status": "xfail",
       "unexplained": []
@@ -93704,6 +95429,7 @@
     "fhir",
     "fix",
     "flatbuffers",
+    "gateway-api",
     "graphql",
     "hl7v2",
     "iso20022",
