@@ -1279,9 +1279,16 @@
       "golden_directories": [
         "kong"
       ],
-      "emit_key": null,
+      "emit_key": "kong",
       "roundtrip_row": true,
-      "roundtrip_cells": [],
+      "roundtrip_cells": [
+        {
+          "source_format": "kong",
+          "emit_key": "kong",
+          "status": "xfail",
+          "has_reason": true
+        }
+      ],
       "capability_provenance": "derived",
       "requirements": {
         "valid-examples": "satisfied",
