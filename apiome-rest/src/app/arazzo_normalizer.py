@@ -1,4 +1,4 @@
-"""Arazzo → canonical model normalizer — MFI-30.2 (#4395).
+"""Arazzo → canonical model normalizer — MFI-30.2 (#4395), FMT-3.1 (#5426).
 
 Maps a parsed **Arazzo** workflow document into a :class:`~app.canonical_model.CanonicalApi`:
 
@@ -11,12 +11,30 @@ Maps a parsed **Arazzo** workflow document into a :class:`~app.canonical_model.C
 
 Workflow step order is captured on each service's ``extras.stepOrder`` so reordering diffs
 at the workflow level even though operations are sorted by stable key.
+
+**Arazzo 1.1 (FMT-3.1, #5426).** The May 2026 revision lets one workflow span a
+synchronous OpenAPI-described API and an asynchronous AsyncAPI-described event stream.
+That is modelled here rather than left in the raw document: the root extras carry the
+declared source *types* and the names of the AsyncAPI ones, and each step records the
+source description it targets, that source's type, and whether the step is asynchronous
+(:func:`app.arazzo_spec.step_is_async`). Every canonical consumer — lint, diff, emit,
+workflow persistence — therefore sees the sync/async split without re-reading the source.
+The document's own version is preserved verbatim in ``extras.arazzo`` so a 1.0 import
+re-emits as 1.0.
 """
 
 from __future__ import annotations
 
 from typing import Any, Dict, List
 
+from .arazzo_spec import (
+    SOURCE_TYPE_ASYNCAPI,
+    resolve_step_target,
+    source_description_names,
+    source_description_types,
+    step_is_async,
+    validate_arazzo_version,
+)
 from .canonical_model import (
     ApiIdentity,
     ApiParadigm,
@@ -56,23 +74,68 @@ class ArazzoNormalizer(Normalizer, register=True):
             description=info.get("description"),
             services=self._services(source),
             raw=source if include_raw else None,
-            extras={
-                "arazzo": source.get("arazzo"),
-                "sourceDescriptions": source_descriptions,
-            },
+            extras=self._root_extras(source, info, source_descriptions),
         )
         return normalize_ordering(api)
 
     @staticmethod
     def _validate_version(source: Dict[str, Any]) -> None:
-        version = source.get("arazzo")
-        if isinstance(version, str) and version.strip():
-            return
-        raise ValueError(
-            "not an Arazzo document (missing or unsupported `arazzo` version marker)"
+        """Require a version marker this normalizer reads (Arazzo 1.0.x or 1.1.x).
+
+        Args:
+            source: The parsed Arazzo document.
+
+        Raises:
+            ValueError: When the marker is missing, unparseable, or names an
+                unsupported version. The import adapter converts this into an
+                ``ImportSourceError`` carrying the right taxonomy code.
+        """
+        validate_arazzo_version(source.get("arazzo"))
+
+    @staticmethod
+    def _root_extras(
+        source: Dict[str, Any], info: Dict[str, Any], source_descriptions: List[Any]
+    ) -> Dict[str, Any]:
+        """Build the artifact-root ``extras`` bag.
+
+        Args:
+            source: The parsed Arazzo document.
+            info: The document's ``info`` object (already defaulted to a mapping).
+            source_descriptions: The document's ``sourceDescriptions`` list.
+
+        Returns:
+            The extras mapping: the source's own version marker, its source
+            descriptions verbatim, the declared source types and the AsyncAPI ones
+            among them (1.1), plus the document-level constructs the canonical model
+            has no column for (``components``, ``info.summary``) so an export can
+            rebuild them.
+        """
+        extras: Dict[str, Any] = {
+            "arazzo": source.get("arazzo"),
+            "sourceDescriptions": source_descriptions,
+        }
+        source_types = source_description_types(source_descriptions)
+        if source_types:
+            extras["sourceTypes"] = source_types
+        async_sources = sorted(
+            name for name, kind in source_types.items() if kind == SOURCE_TYPE_ASYNCAPI
         )
+        if async_sources:
+            extras["asyncSources"] = async_sources
+        if isinstance(source.get("components"), dict) and source["components"]:
+            # Arazzo's reusable-component bag (`$ref` targets for inputs, parameters and
+            # success/failure actions). It is document-level, so it has no canonical home
+            # other than here — without it a rebuilt export would emit dangling `$ref`s.
+            extras["components"] = source["components"]
+        summary = info.get("summary")
+        if isinstance(summary, str) and summary:
+            # `info.summary` is distinct from `info.description`, which maps onto the model.
+            extras["infoSummary"] = summary
+        return extras
 
     def _services(self, source: Dict[str, Any]) -> List[Service]:
+        source_names = source_description_names(source.get("sourceDescriptions"))
+        source_types = source_description_types(source.get("sourceDescriptions"))
         workflows = source.get("workflows") or []
         services: List[Service] = []
         for workflow_index, workflow in enumerate(workflows):
@@ -95,7 +158,15 @@ class ArazzoNormalizer(Normalizer, register=True):
                 op
                 for index, step in enumerate(steps)
                 if isinstance(step, dict)
-                for op in [self._step_operation(workflow_id, step, index)]
+                for op in [
+                    self._step_operation(
+                        workflow_id,
+                        step,
+                        index,
+                        source_names=source_names,
+                        source_types=source_types,
+                    )
+                ]
             ]
             service_extras: Dict[str, Any] = {
                 "workflowId": workflow_id,
@@ -125,8 +196,27 @@ class ArazzoNormalizer(Normalizer, register=True):
 
     @staticmethod
     def _step_operation(
-        workflow_id: str, step: Dict[str, Any], index: int
+        workflow_id: str,
+        step: Dict[str, Any],
+        index: int,
+        *,
+        source_names: List[str],
+        source_types: Dict[str, str],
     ) -> Operation:
+        """Map one workflow step onto a canonical :class:`Operation`.
+
+        Args:
+            workflow_id: The owning workflow's identifier, used for the operation key.
+            step: The step mapping from the source document.
+            index: The step's declaration position, preserved as ``extras.stepIndex``.
+            source_names: Declared source-description names in declaration order, so an
+                ``operationRef`` that points at a source by index resolves to a name.
+            source_types: ``{name: type}`` for the declared source descriptions.
+
+        Returns:
+            The operation, with every step field the canonical model has no column for
+            preserved in ``extras`` (Arazzo 1.1's source link and async marker included).
+        """
         step_id = step.get("stepId")
         if not isinstance(step_id, str) or not step_id.strip():
             step_id = step.get("name")
@@ -165,6 +255,18 @@ class ArazzoNormalizer(Normalizer, register=True):
         for key in ("onFailure", "onSuccess", "workflowId"):
             if step.get(key) is not None:
                 extras[key] = step[key]
+
+        # Arazzo 1.1 (FMT-3.1, #5426): link the step to the source description it calls
+        # and record whether that call is asynchronous. Both are derived, not copied, so
+        # they are written only when the document actually says enough to know.
+        target = resolve_step_target(step, source_names=source_names)
+        if target is not None and target.source_name:
+            extras["sourceDescription"] = target.source_name
+            source_type = source_types.get(target.source_name)
+            if source_type:
+                extras["sourceType"] = source_type
+        if step_is_async(step, target=target, source_types=source_types):
+            extras["asyncStep"] = True
 
         return Operation(
             key=op_key,

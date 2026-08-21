@@ -1,0 +1,51 @@
+{
+  "kind": "catalog_arazzo",
+  "document": {
+    "arazzo": "1.0.1",
+    "info": {
+      "title": "Order to cash",
+      "version": "1.0.0"
+    },
+    "sourceDescriptions": [
+      {
+        "name": "orders",
+        "type": "openapi",
+        "url": "https://api.example.test/openapi.yaml"
+      },
+      {
+        "name": "orderEvents",
+        "type": "asyncapi",
+        "url": "https://events.example.test/asyncapi.yaml"
+      }
+    ],
+    "workflows": [
+      {
+        "workflowId": "orderToCash",
+        "summary": "A 1.0 document using the AsyncAPI source type Arazzo 1.1 introduced.",
+        "steps": [
+          {
+            "stepId": "placeOrder",
+            "operationId": "$sourceDescriptions.orders.createOrder",
+            "successCriteria": [
+              {
+                "condition": "$statusCode == 201",
+                "type": "simple"
+              }
+            ]
+          },
+          {
+            "stepId": "awaitAccepted",
+            "operationId": "$sourceDescriptions.orderEvents.receiveOrderAccepted",
+            "successCriteria": [
+              {
+                "context": "$message.payload",
+                "condition": "$.status == 'accepted'",
+                "type": "jsonpath"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

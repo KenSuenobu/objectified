@@ -1,0 +1,276 @@
+{
+  "adapter": "arazzo",
+  "canonical": {
+    "channels": [],
+    "description": "The pairing Arazzo 1.1 exists for: a workflow whose steps span an OpenAPI-described synchronous API and an AsyncAPI-described event stream.\n",
+    "extras": {
+      "arazzo": "1.1.0",
+      "asyncSources": [
+        "orderEvents"
+      ],
+      "infoSummary": "Place an order over REST, then wait for the async settlement event.",
+      "sourceDescriptions": [
+        {
+          "name": "orders",
+          "type": "openapi",
+          "url": "https://api.example.com/orders/openapi.yaml"
+        },
+        {
+          "name": "orderEvents",
+          "type": "asyncapi",
+          "url": "https://events.example.com/orders/asyncapi.yaml"
+        }
+      ],
+      "sourceTypes": {
+        "orderEvents": "asyncapi",
+        "orders": "openapi"
+      }
+    },
+    "format": "arazzo",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Order to cash",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Place an order and observe its settlement.",
+        "extras": {
+          "inputs": {
+            "properties": {
+              "customerId": {
+                "type": "string"
+              },
+              "quantity": {
+                "minimum": 1,
+                "type": "integer"
+              },
+              "sku": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "customerId",
+              "sku",
+              "quantity"
+            ],
+            "type": "object"
+          },
+          "outputs": {
+            "invoiceUrl": "$steps.fetchInvoice.outputs.invoiceUrl",
+            "orderId": "$steps.placeOrder.outputs.orderId",
+            "settledAmount": "$steps.awaitSettlement.outputs.settledAmount"
+          },
+          "stepOrder": [
+            "placeOrder",
+            "awaitOrderAccepted",
+            "awaitSettlement",
+            "fetchInvoice"
+          ],
+          "summary": "Place an order and observe its settlement.",
+          "workflowId": "orderToCash",
+          "workflowIndex": 0
+        },
+        "key": "orderToCash",
+        "name": "orderToCash",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Asynchronous step — the order-accepted event on the events broker.",
+            "extras": {
+              "asyncStep": true,
+              "operationId": "$sourceDescriptions.orderEvents.receiveOrderAccepted",
+              "outputs": {
+                "acceptedAt": "$message.payload#/acceptedAt"
+              },
+              "sourceDescription": "orderEvents",
+              "sourceType": "asyncapi",
+              "stepId": "awaitOrderAccepted",
+              "stepIndex": 1,
+              "successCriteria": [
+                {
+                  "condition": "$.orderId == $steps.placeOrder.outputs.orderId",
+                  "context": "$message.payload",
+                  "type": "jsonpath"
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "orderToCash#awaitOrderAccepted",
+            "kind": "one_way",
+            "messages": [],
+            "name": "awaitOrderAccepted",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "orderToCash"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Asynchronous step — settlement completes on a different channel.",
+            "extras": {
+              "asyncStep": true,
+              "onFailure": [
+                {
+                  "name": "retrySettlement",
+                  "retryAfter": 30,
+                  "retryLimit": 10,
+                  "type": "retry"
+                }
+              ],
+              "operationId": "$sourceDescriptions.orderEvents.receivePaymentSettled",
+              "outputs": {
+                "settledAmount": "$message.payload#/amount"
+              },
+              "sourceDescription": "orderEvents",
+              "sourceType": "asyncapi",
+              "stepId": "awaitSettlement",
+              "stepIndex": 2,
+              "successCriteria": [
+                {
+                  "condition": "$.orderId == $steps.placeOrder.outputs.orderId",
+                  "context": "$message.payload",
+                  "type": "jsonpath"
+                },
+                {
+                  "condition": "$.status == 'settled'",
+                  "context": "$message.payload",
+                  "type": "jsonpath"
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "orderToCash#awaitSettlement",
+            "kind": "one_way",
+            "messages": [],
+            "name": "awaitSettlement",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "orderToCash"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Back to REST once the event has been seen.",
+            "extras": {
+              "operationId": "$sourceDescriptions.orders.getInvoice",
+              "outputs": {
+                "invoiceUrl": "$response.body#/invoiceUrl"
+              },
+              "parameters": [
+                {
+                  "in": "path",
+                  "name": "orderId",
+                  "value": "$steps.placeOrder.outputs.orderId"
+                }
+              ],
+              "sourceDescription": "orders",
+              "sourceType": "openapi",
+              "stepId": "fetchInvoice",
+              "stepIndex": 3,
+              "successCriteria": [
+                {
+                  "condition": "$statusCode == 200"
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "orderToCash#fetchInvoice",
+            "kind": "one_way",
+            "messages": [],
+            "name": "fetchInvoice",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "orderToCash"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Synchronous REST call that creates the order.",
+            "extras": {
+              "operationId": "$sourceDescriptions.orders.createOrder",
+              "outputs": {
+                "orderId": "$response.body#/id"
+              },
+              "requestBody": {
+                "contentType": "application/json",
+                "payload": {
+                  "customerId": "$inputs.customerId",
+                  "lines": [
+                    {
+                      "quantity": "$inputs.quantity",
+                      "sku": "$inputs.sku"
+                    }
+                  ]
+                }
+              },
+              "sourceDescription": "orders",
+              "sourceType": "openapi",
+              "stepId": "placeOrder",
+              "stepIndex": 0,
+              "successCriteria": [
+                {
+                  "condition": "$statusCode == 201"
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "orderToCash#placeOrder",
+            "kind": "one_way",
+            "messages": [],
+            "name": "placeOrder",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "orderToCash"
+            ]
+          }
+        ]
+      }
+    ],
+    "title": "Order to cash",
+    "types": [],
+    "version": "4.0.0"
+  },
+  "corpus_path": "arazzo-1.1/05-real-world-order-to-cash.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "arazzo"
+  },
+  "fingerprint": "sha256:9ff7d50a61c0514e635ff1a750134464645b609823d84fe0e883614831f07344",
+  "lint": {
+    "findings": 0,
+    "grade": "A",
+    "report_fingerprint": "49f00aff0ad03525a1e73592c60211f9f8572853ba37d488054fdb78f1f77bd1",
+    "score": 100,
+    "severity_counts": {
+      "error": 0,
+      "info": 0,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

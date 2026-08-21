@@ -2343,32 +2343,39 @@
       "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 6,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 7,
       "emit_format": "apiblueprint",
       "emit_key": "apiblueprint",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [
         {
-          "construct": "RegisterAndNotify#RegisterUser",
+          "construct": "checkout#addItem",
           "kind": "ok",
           "message": "operation carried to API Blueprint",
           "severity": "info",
           "target_mapping": null
         },
         {
-          "construct": "RegisterAndNotify#SendWelcome",
+          "construct": "checkout#createCart",
+          "kind": "ok",
+          "message": "operation carried to API Blueprint",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "checkout#pay",
           "kind": "ok",
           "message": "operation carried to API Blueprint",
           "severity": "info",
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'GET /', removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', changed root '', added service 'Property Reuse Workflow', removed service 'RegisterAndNotify'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'GET /', removed operation 'checkout#addItem', removed operation 'checkout#createCart', removed operation 'checkout#pay', changed root '', added service 'Storefront checkout', removed service 'checkout'; overclaim: OK 'checkout#addItem', OK 'checkout#createCart', OK 'checkout#pay')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
@@ -2380,12 +2387,17 @@
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#RegisterUser"
+          "key": "checkout#addItem"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#SendWelcome"
+          "key": "checkout#createCart"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#pay"
         },
         {
           "change": "changed",
@@ -2395,23 +2407,23 @@
         {
           "change": "added",
           "entity": "service",
-          "key": "Property Reuse Workflow"
+          "key": "Storefront checkout"
         },
         {
           "change": "removed",
           "entity": "service",
-          "key": "RegisterAndNotify"
+          "key": "checkout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "diff_count": 0,
       "emit_format": "arazzo",
       "emit_key": "arazzo",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
@@ -2421,44 +2433,44 @@
       "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "diff_count": 0,
       "emit_format": "asn1",
       "emit_key": "asn1",
       "loss_approx": 0,
-      "loss_drop": 2,
+      "loss_drop": 3,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: ASN.1 module `PropertyReuseWorkflow` defines no types (observed: Re-import failed: ASN.1 module `PropertyReuseWorkflow` defines no types)",
+      "reason": "Re-import failed: ASN.1 module `Storefrontcheckout` defines no types (observed: Re-import failed: ASN.1 module `Storefrontcheckout` defines no types)",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "diff_count": 0,
       "emit_format": "asyncapi-3",
       "emit_key": "asyncapi",
-      "loss_approx": 2,
+      "loss_approx": 3,
       "loss_drop": 0,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
-      "reason": "Re-import failed: Property \"outputs\" is not expected to be here (observed: Re-import failed: Property \"outputs\" is not expected to be here)",
+      "reason": "Re-import failed: Property \"operationId\" is not expected to be here (observed: Re-import failed: Property \"operationId\" is not expected to be here)",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "diff_count": 0,
       "emit_format": "avro",
       "emit_key": "avro",
       "loss_approx": 0,
-      "loss_drop": 2,
+      "loss_drop": 3,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
@@ -2469,54 +2481,71 @@
       "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 6,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 8,
       "emit_format": "capnproto",
       "emit_key": "capnproto",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [
         {
-          "construct": "RegisterAndNotify#RegisterUser",
+          "construct": "checkout#addItem",
           "kind": "ok",
           "message": "operation carried to Cap'n Proto",
           "severity": "info",
           "target_mapping": null
         },
         {
-          "construct": "RegisterAndNotify#SendWelcome",
+          "construct": "checkout#createCart",
+          "kind": "ok",
+          "message": "operation carried to Cap'n Proto",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "checkout#pay",
           "kind": "ok",
           "message": "operation carried to Cap'n Proto",
           "severity": "info",
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', added operation 'RegisterAndNotify.RegisterUser', added operation 'RegisterAndNotify.SendWelcome', changed root '', changed service 'RegisterAndNotify'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'checkout#addItem', removed operation 'checkout#createCart', removed operation 'checkout#pay', added operation 'checkout.addItem', added operation 'checkout.createCart', added operation 'checkout.pay', changed root '', changed service 'checkout'; overclaim: OK 'checkout#addItem', OK 'checkout#createCart', OK 'checkout#pay')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#RegisterUser"
+          "key": "checkout#addItem"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#SendWelcome"
+          "key": "checkout#createCart"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#pay"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "RegisterAndNotify.RegisterUser"
+          "key": "checkout.addItem"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "RegisterAndNotify.SendWelcome"
+          "key": "checkout.createCart"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "checkout.pay"
         },
         {
           "change": "changed",
@@ -2526,17 +2555,17 @@
         {
           "change": "changed",
           "entity": "service",
-          "key": "RegisterAndNotify"
+          "key": "checkout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "diff_count": 0,
       "emit_format": "cloudevents",
       "emit_key": "cloudevents",
       "loss_approx": 0,
-      "loss_drop": 2,
+      "loss_drop": 3,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
@@ -2547,12 +2576,12 @@
       "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "diff_count": 0,
       "emit_format": "cobolcopybook",
       "emit_key": "cobolcopybook",
       "loss_approx": 0,
-      "loss_drop": 2,
+      "loss_drop": 3,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
@@ -2563,54 +2592,71 @@
       "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 6,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 8,
       "emit_format": "connectrpc",
       "emit_key": "connectrpc",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [
         {
-          "construct": "RegisterAndNotify#RegisterUser",
+          "construct": "checkout#addItem",
           "kind": "ok",
           "message": "operation carried to Connect RPC",
           "severity": "info",
           "target_mapping": null
         },
         {
-          "construct": "RegisterAndNotify#SendWelcome",
+          "construct": "checkout#createCart",
+          "kind": "ok",
+          "message": "operation carried to Connect RPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "checkout#pay",
           "kind": "ok",
           "message": "operation carried to Connect RPC",
           "severity": "info",
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', added operation 'RegisterAndNotify.RegisterUser', added operation 'RegisterAndNotify.SendWelcome', changed root '', changed service 'RegisterAndNotify'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'checkout#addItem', removed operation 'checkout#createCart', removed operation 'checkout#pay', added operation 'checkout.addItem', added operation 'checkout.createCart', added operation 'checkout.pay', changed root '', changed service 'checkout'; overclaim: OK 'checkout#addItem', OK 'checkout#createCart', OK 'checkout#pay')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#RegisterUser"
+          "key": "checkout#addItem"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#SendWelcome"
+          "key": "checkout#createCart"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#pay"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "RegisterAndNotify.RegisterUser"
+          "key": "checkout.addItem"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "RegisterAndNotify.SendWelcome"
+          "key": "checkout.createCart"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "checkout.pay"
         },
         {
           "change": "changed",
@@ -2620,59 +2666,76 @@
         {
           "change": "changed",
           "entity": "service",
-          "key": "RegisterAndNotify"
+          "key": "checkout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 7,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 9,
       "emit_format": "corbaidl",
       "emit_key": "corbaidl",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [
         {
-          "construct": "RegisterAndNotify#RegisterUser",
+          "construct": "checkout#addItem",
           "kind": "ok",
           "message": "operation carried to CORBA IDL",
           "severity": "info",
           "target_mapping": null
         },
         {
-          "construct": "RegisterAndNotify#SendWelcome",
+          "construct": "checkout#createCart",
+          "kind": "ok",
+          "message": "operation carried to CORBA IDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "checkout#pay",
           "kind": "ok",
           "message": "operation carried to CORBA IDL",
           "severity": "info",
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'Exported.RegisterAndNotify.RegisterUser', added operation 'Exported.RegisterAndNotify.SendWelcome', removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', changed root '', added service 'Exported.RegisterAndNotify', removed service 'RegisterAndNotify'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'Exported.checkout.addItem', added operation 'Exported.checkout.createCart', added operation 'Exported.checkout.pay', removed operation 'checkout#addItem', removed operation 'checkout#createCart', removed operation 'checkout#pay', changed root '', added service 'Exported.checkout', removed service 'checkout'; overclaim: OK 'checkout#addItem', OK 'checkout#createCart', OK 'checkout#pay')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
         {
           "change": "added",
           "entity": "operation",
-          "key": "Exported.RegisterAndNotify.RegisterUser"
+          "key": "Exported.checkout.addItem"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "Exported.RegisterAndNotify.SendWelcome"
+          "key": "Exported.checkout.createCart"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Exported.checkout.pay"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#RegisterUser"
+          "key": "checkout#addItem"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#SendWelcome"
+          "key": "checkout#createCart"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#pay"
         },
         {
           "change": "changed",
@@ -2682,22 +2745,22 @@
         {
           "change": "added",
           "entity": "service",
-          "key": "Exported.RegisterAndNotify"
+          "key": "Exported.checkout"
         },
         {
           "change": "removed",
           "entity": "service",
-          "key": "RegisterAndNotify"
+          "key": "checkout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "diff_count": 0,
       "emit_format": "edix12",
       "emit_key": "edix12",
       "loss_approx": 0,
-      "loss_drop": 2,
+      "loss_drop": 3,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
@@ -2708,59 +2771,71 @@
       "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 9,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 10,
       "emit_format": "fhir",
       "emit_key": "fhir",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [
         {
-          "construct": "RegisterAndNotify#RegisterUser",
+          "construct": "checkout#addItem",
           "kind": "ok",
           "message": "operation carried to FHIR",
           "severity": "info",
           "target_mapping": null
         },
         {
-          "construct": "RegisterAndNotify#SendWelcome",
+          "construct": "checkout#createCart",
+          "kind": "ok",
+          "message": "operation carried to FHIR",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "checkout#pay",
           "kind": "ok",
           "message": "operation carried to FHIR",
           "severity": "info",
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'GET /RegisterAndNotify', added operation 'GET /RegisterAndNotify/{id}', added operation 'POST /RegisterAndNotify', removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', changed root '', removed service 'RegisterAndNotify', added service 'RegisterAndNotify.RegisterAndNotify', added type 'RegisterAndNotify.RegisterAndNotify'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'GET /checkout', added operation 'GET /checkout/{id}', added operation 'POST /checkout', removed operation 'checkout#addItem', removed operation 'checkout#createCart', removed operation 'checkout#pay', changed root '', removed service 'checkout', added service 'checkout.checkout', added type 'checkout.checkout'; overclaim: OK 'checkout#addItem', OK 'checkout#createCart', OK 'checkout#pay')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
         {
           "change": "added",
           "entity": "operation",
-          "key": "GET /RegisterAndNotify"
+          "key": "GET /checkout"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "GET /RegisterAndNotify/{id}"
+          "key": "GET /checkout/{id}"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "POST /RegisterAndNotify"
+          "key": "POST /checkout"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#RegisterUser"
+          "key": "checkout#addItem"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#SendWelcome"
+          "key": "checkout#createCart"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#pay"
         },
         {
           "change": "changed",
@@ -2770,27 +2845,27 @@
         {
           "change": "removed",
           "entity": "service",
-          "key": "RegisterAndNotify"
+          "key": "checkout"
         },
         {
           "change": "added",
           "entity": "service",
-          "key": "RegisterAndNotify.RegisterAndNotify"
+          "key": "checkout.checkout"
         },
         {
           "change": "added",
           "entity": "type",
-          "key": "RegisterAndNotify.RegisterAndNotify"
+          "key": "checkout.checkout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "diff_count": 0,
       "emit_format": "fix",
       "emit_key": "fix",
       "loss_approx": 0,
-      "loss_drop": 2,
+      "loss_drop": 3,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
@@ -2801,12 +2876,12 @@
       "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "diff_count": 0,
       "emit_format": "flatbuffers",
       "emit_key": "flatbuffers",
       "loss_approx": 0,
-      "loss_drop": 2,
+      "loss_drop": 3,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
@@ -2817,12 +2892,12 @@
       "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "diff_count": 0,
       "emit_format": "gateway-api",
       "emit_key": "gateway-api",
       "loss_approx": 1,
-      "loss_drop": 2,
+      "loss_drop": 3,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
@@ -2833,32 +2908,39 @@
       "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 6,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 7,
       "emit_format": "graphql",
       "emit_key": "graphql",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [
         {
-          "construct": "RegisterAndNotify#RegisterUser",
+          "construct": "checkout#addItem",
           "kind": "ok",
           "message": "operation carried to GraphQL SDL",
           "severity": "info",
           "target_mapping": null
         },
         {
-          "construct": "RegisterAndNotify#SendWelcome",
+          "construct": "checkout#createCart",
+          "kind": "ok",
+          "message": "operation carried to GraphQL SDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "checkout#pay",
           "kind": "ok",
           "message": "operation carried to GraphQL SDL",
           "severity": "info",
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'Query._', removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', changed root '', added service 'Query', removed service 'RegisterAndNotify'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'Query._', removed operation 'checkout#addItem', removed operation 'checkout#createCart', removed operation 'checkout#pay', changed root '', added service 'Query', removed service 'checkout'; overclaim: OK 'checkout#addItem', OK 'checkout#createCart', OK 'checkout#pay')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
@@ -2870,12 +2952,17 @@
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#RegisterUser"
+          "key": "checkout#addItem"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#SendWelcome"
+          "key": "checkout#createCart"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#pay"
         },
         {
           "change": "changed",
@@ -2890,17 +2977,17 @@
         {
           "change": "removed",
           "entity": "service",
-          "key": "RegisterAndNotify"
+          "key": "checkout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "diff_count": 0,
       "emit_format": "hl7v2",
       "emit_key": "hl7v2",
       "loss_approx": 0,
-      "loss_drop": 2,
+      "loss_drop": 3,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
@@ -2911,12 +2998,12 @@
       "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "diff_count": 0,
       "emit_format": "http-file",
       "emit_key": "http-file",
       "loss_approx": 1,
-      "loss_drop": 2,
+      "loss_drop": 3,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
@@ -2927,12 +3014,12 @@
       "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "diff_count": 0,
       "emit_format": "iso20022",
       "emit_key": "iso20022",
       "loss_approx": 0,
-      "loss_drop": 2,
+      "loss_drop": 3,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
@@ -2943,12 +3030,12 @@
       "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "diff_count": 0,
       "emit_format": "iso8583",
       "emit_key": "iso8583",
       "loss_approx": 0,
-      "loss_drop": 2,
+      "loss_drop": 3,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
@@ -2959,17 +3046,17 @@
       "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 5,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 6,
       "emit_format": "json-schema",
       "emit_key": "json-schema",
       "loss_approx": 0,
-      "loss_drop": 2,
+      "loss_drop": 3,
       "loss_ok": 0,
       "loss_synth": 0,
-      "matched_count": 2,
+      "matched_count": 3,
       "overclaims": [],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', removed service 'RegisterAndNotify', added type 'Property Reuse Workflow')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', removed service 'checkout', added type 'Storefront checkout')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
@@ -2981,27 +3068,27 @@
         {
           "change": "removed",
           "entity": "service",
-          "key": "RegisterAndNotify"
+          "key": "checkout"
         },
         {
           "change": "added",
           "entity": "type",
-          "key": "Property Reuse Workflow"
+          "key": "Storefront checkout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 5,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 6,
       "emit_format": "jtd",
       "emit_key": "jtd",
       "loss_approx": 0,
-      "loss_drop": 2,
+      "loss_drop": 3,
       "loss_ok": 0,
       "loss_synth": 0,
-      "matched_count": 2,
+      "matched_count": 3,
       "overclaims": [],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', removed service 'RegisterAndNotify', added type 'Property Reuse Workflow')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', removed service 'checkout', added type 'Storefront checkout')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
@@ -3013,27 +3100,27 @@
         {
           "change": "removed",
           "entity": "service",
-          "key": "RegisterAndNotify"
+          "key": "checkout"
         },
         {
           "change": "added",
           "entity": "type",
-          "key": "Property Reuse Workflow"
+          "key": "Storefront checkout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 6,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 7,
       "emit_format": "k8s-crd",
       "emit_key": "k8s-crd",
       "loss_approx": 0,
-      "loss_drop": 2,
+      "loss_drop": 3,
       "loss_ok": 0,
       "loss_synth": 0,
-      "matched_count": 2,
+      "matched_count": 3,
       "overclaims": [],
-      "reason": "unexplained: changed root '', removed service 'RegisterAndNotify', added service 'propertyreuseworkflows.example.com', added type 'example.com/v1.PropertyReuseWorkflow' (observed: unexplained: changed root '', removed service 'RegisterAndNotify', added service 'propertyreuseworkflows.example.com', added type 'example.com/v1.PropertyReuseWorkflow')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: changed root '', removed service 'checkout', added service 'storefrontcheckouts.example.com', added type 'example.com/v1.StorefrontCheckout')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
@@ -3045,27 +3132,27 @@
         {
           "change": "removed",
           "entity": "service",
-          "key": "RegisterAndNotify"
+          "key": "checkout"
         },
         {
           "change": "added",
           "entity": "service",
-          "key": "propertyreuseworkflows.example.com"
+          "key": "storefrontcheckouts.example.com"
         },
         {
           "change": "added",
           "entity": "type",
-          "key": "example.com/v1.PropertyReuseWorkflow"
+          "key": "example.com/v1.StorefrontCheckout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "diff_count": 0,
       "emit_format": "kong",
       "emit_key": "kong",
       "loss_approx": 1,
-      "loss_drop": 2,
+      "loss_drop": 3,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
@@ -3076,59 +3163,71 @@
       "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 9,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 12,
       "emit_format": "llm-tools",
       "emit_key": "llm-tools",
       "loss_approx": 1,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 1,
       "overclaims": [
         {
-          "construct": "RegisterAndNotify#RegisterUser",
+          "construct": "checkout#addItem",
           "kind": "ok",
           "message": "operation carried to LLM Tool Definitions",
           "severity": "info",
           "target_mapping": null
         },
         {
-          "construct": "RegisterAndNotify#SendWelcome",
+          "construct": "checkout#createCart",
+          "kind": "ok",
+          "message": "operation carried to LLM Tool Definitions",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "checkout#pay",
           "kind": "ok",
           "message": "operation carried to LLM Tool Definitions",
           "severity": "info",
           "target_mapping": null
         }
       ],
-      "reason": "unexplained: removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', added operation 'arazzo->llm-tools.RegisterUser', added operation 'arazzo->llm-tools.SendWelcome', changed root '', removed service 'RegisterAndNotify', added service 'arazzo->llm-tools', added type 'RegisterUserParams', added type 'SendWelcomeParams'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome' (observed: unexplained: removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', added operation 'arazzo->llm-tools.RegisterUser', added operation 'arazzo->llm-tools.SendWelcome', removed service 'RegisterAndNotify', added service 'arazzo->llm-tools', added type 'RegisterUserParams', added type 'SendWelcomeParams'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'arazzo->llm-tools.sourceDescriptions_storefront_addCartItem', added operation 'arazzo->llm-tools.sourceDescriptions_storefront_createCart', added operation 'arazzo->llm-tools.sourceDescriptions_storefront_payCart', removed operation 'checkout#addItem', removed operation 'checkout#createCart', removed operation 'checkout#pay', added service 'arazzo->llm-tools', removed service 'checkout', added type 'sourceDescriptions_storefront_addCartItemParams', added type 'sourceDescriptions_storefront_createCartParams', added type 'sourceDescriptions_storefront_payCartParams'; overclaim: OK 'checkout#addItem', OK 'checkout#createCart', OK 'checkout#pay')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
         {
-          "change": "removed",
+          "change": "added",
           "entity": "operation",
-          "key": "RegisterAndNotify#RegisterUser"
-        },
-        {
-          "change": "removed",
-          "entity": "operation",
-          "key": "RegisterAndNotify#SendWelcome"
+          "key": "arazzo->llm-tools.sourceDescriptions_storefront_addCartItem"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "arazzo->llm-tools.RegisterUser"
+          "key": "arazzo->llm-tools.sourceDescriptions_storefront_createCart"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "arazzo->llm-tools.SendWelcome"
+          "key": "arazzo->llm-tools.sourceDescriptions_storefront_payCart"
         },
         {
           "change": "removed",
-          "entity": "service",
-          "key": "RegisterAndNotify"
+          "entity": "operation",
+          "key": "checkout#addItem"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#createCart"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#pay"
         },
         {
           "change": "added",
@@ -3136,71 +3235,93 @@
           "key": "arazzo->llm-tools"
         },
         {
-          "change": "added",
-          "entity": "type",
-          "key": "RegisterUserParams"
+          "change": "removed",
+          "entity": "service",
+          "key": "checkout"
         },
         {
           "change": "added",
           "entity": "type",
-          "key": "SendWelcomeParams"
+          "key": "sourceDescriptions_storefront_addCartItemParams"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "sourceDescriptions_storefront_createCartParams"
+        },
+        {
+          "change": "added",
+          "entity": "type",
+          "key": "sourceDescriptions_storefront_payCartParams"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 8,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 9,
       "emit_format": "odata",
       "emit_key": "odata",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [
         {
-          "construct": "RegisterAndNotify#RegisterUser",
+          "construct": "checkout#addItem",
           "kind": "ok",
           "message": "operation carried to OData",
           "severity": "info",
           "target_mapping": null
         },
         {
-          "construct": "RegisterAndNotify#SendWelcome",
+          "construct": "checkout#createCart",
+          "kind": "ok",
+          "message": "operation carried to OData",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "checkout#pay",
           "kind": "ok",
           "message": "operation carried to OData",
           "severity": "info",
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'GET /RegisterAndNotify', added operation 'GET /RegisterAndNotify({key})', added operation 'POST /RegisterAndNotify', removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', changed root '', added service 'Property Reuse Workflow.RegisterAndNotify', removed service 'RegisterAndNotify'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'GET /checkout', added operation 'GET /checkout({key})', added operation 'POST /checkout', removed operation 'checkout#addItem', removed operation 'checkout#createCart', removed operation 'checkout#pay', changed root '', added service 'Storefront checkout.checkout', removed service 'checkout'; overclaim: OK 'checkout#addItem', OK 'checkout#createCart', OK 'checkout#pay')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
         {
           "change": "added",
           "entity": "operation",
-          "key": "GET /RegisterAndNotify"
+          "key": "GET /checkout"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "GET /RegisterAndNotify({key})"
+          "key": "GET /checkout({key})"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "POST /RegisterAndNotify"
+          "key": "POST /checkout"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#RegisterUser"
+          "key": "checkout#addItem"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#SendWelcome"
+          "key": "checkout#createCart"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#pay"
         },
         {
           "change": "changed",
@@ -3210,64 +3331,81 @@
         {
           "change": "added",
           "entity": "service",
-          "key": "Property Reuse Workflow.RegisterAndNotify"
+          "key": "Storefront checkout.checkout"
         },
         {
           "change": "removed",
           "entity": "service",
-          "key": "RegisterAndNotify"
+          "key": "checkout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 7,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 9,
       "emit_format": "oncrpc",
       "emit_key": "oncrpc",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [
         {
-          "construct": "RegisterAndNotify#RegisterUser",
+          "construct": "checkout#addItem",
           "kind": "ok",
           "message": "operation carried to ONC RPC",
           "severity": "info",
           "target_mapping": null
         },
         {
-          "construct": "RegisterAndNotify#SendWelcome",
+          "construct": "checkout#createCart",
+          "kind": "ok",
+          "message": "operation carried to ONC RPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "checkout#pay",
           "kind": "ok",
           "message": "operation carried to ONC RPC",
           "severity": "info",
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', added operation 'RegisterAndNotify.RegisterAndNotify.RegisterUser', added operation 'RegisterAndNotify.RegisterAndNotify.SendWelcome', changed root '', removed service 'RegisterAndNotify', added service 'RegisterAndNotify.RegisterAndNotify'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'checkout#addItem', removed operation 'checkout#createCart', removed operation 'checkout#pay', added operation 'checkout.checkout.addItem', added operation 'checkout.checkout.createCart', added operation 'checkout.checkout.pay', changed root '', removed service 'checkout', added service 'checkout.checkout'; overclaim: OK 'checkout#addItem', OK 'checkout#createCart', OK 'checkout#pay')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#RegisterUser"
+          "key": "checkout#addItem"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#SendWelcome"
+          "key": "checkout#createCart"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#pay"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "RegisterAndNotify.RegisterAndNotify.RegisterUser"
+          "key": "checkout.checkout.addItem"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "RegisterAndNotify.RegisterAndNotify.SendWelcome"
+          "key": "checkout.checkout.createCart"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "checkout.checkout.pay"
         },
         {
           "change": "changed",
@@ -3277,64 +3415,81 @@
         {
           "change": "removed",
           "entity": "service",
-          "key": "RegisterAndNotify"
+          "key": "checkout"
         },
         {
           "change": "added",
           "entity": "service",
-          "key": "RegisterAndNotify.RegisterAndNotify"
+          "key": "checkout.checkout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 6,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 8,
       "emit_format": "openapi-3.1",
       "emit_key": "openapi",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [
         {
-          "construct": "RegisterAndNotify#RegisterUser",
+          "construct": "checkout#addItem",
           "kind": "ok",
           "message": "operation carried to OpenAPI 3.1",
           "severity": "info",
           "target_mapping": null
         },
         {
-          "construct": "RegisterAndNotify#SendWelcome",
+          "construct": "checkout#createCart",
+          "kind": "ok",
+          "message": "operation carried to OpenAPI 3.1",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "checkout#pay",
           "kind": "ok",
           "message": "operation carried to OpenAPI 3.1",
           "severity": "info",
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'POST /RegisterAndNotify#RegisterUser', added operation 'POST /RegisterAndNotify#SendWelcome', removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', changed root '', changed service 'RegisterAndNotify'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'POST /checkout#addItem', added operation 'POST /checkout#createCart', added operation 'POST /checkout#pay', removed operation 'checkout#addItem', removed operation 'checkout#createCart', removed operation 'checkout#pay', changed root '', changed service 'checkout'; overclaim: OK 'checkout#addItem', OK 'checkout#createCart', OK 'checkout#pay')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
         {
           "change": "added",
           "entity": "operation",
-          "key": "POST /RegisterAndNotify#RegisterUser"
+          "key": "POST /checkout#addItem"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "POST /RegisterAndNotify#SendWelcome"
+          "key": "POST /checkout#createCart"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "POST /checkout#pay"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#RegisterUser"
+          "key": "checkout#addItem"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#SendWelcome"
+          "key": "checkout#createCart"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#pay"
         },
         {
           "change": "changed",
@@ -3344,59 +3499,76 @@
         {
           "change": "changed",
           "entity": "service",
-          "key": "RegisterAndNotify"
+          "key": "checkout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 7,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 9,
       "emit_format": "openrpc",
       "emit_key": "openrpc",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [
         {
-          "construct": "RegisterAndNotify#RegisterUser",
+          "construct": "checkout#addItem",
           "kind": "ok",
           "message": "operation carried to OpenRPC",
           "severity": "info",
           "target_mapping": null
         },
         {
-          "construct": "RegisterAndNotify#SendWelcome",
+          "construct": "checkout#createCart",
+          "kind": "ok",
+          "message": "operation carried to OpenRPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "checkout#pay",
           "kind": "ok",
           "message": "operation carried to OpenRPC",
           "severity": "info",
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'Property Reuse Workflow.RegisterUser', added operation 'Property Reuse Workflow.SendWelcome', removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', changed root '', added service 'Property Reuse Workflow', removed service 'RegisterAndNotify'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'Storefront checkout.addItem', added operation 'Storefront checkout.createCart', added operation 'Storefront checkout.pay', removed operation 'checkout#addItem', removed operation 'checkout#createCart', removed operation 'checkout#pay', changed root '', added service 'Storefront checkout', removed service 'checkout'; overclaim: OK 'checkout#addItem', OK 'checkout#createCart', OK 'checkout#pay')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
         {
           "change": "added",
           "entity": "operation",
-          "key": "Property Reuse Workflow.RegisterUser"
+          "key": "Storefront checkout.addItem"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "Property Reuse Workflow.SendWelcome"
+          "key": "Storefront checkout.createCart"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "Storefront checkout.pay"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#RegisterUser"
+          "key": "checkout#addItem"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#SendWelcome"
+          "key": "checkout#createCart"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#pay"
         },
         {
           "change": "changed",
@@ -3406,22 +3578,22 @@
         {
           "change": "added",
           "entity": "service",
-          "key": "Property Reuse Workflow"
+          "key": "Storefront checkout"
         },
         {
           "change": "removed",
           "entity": "service",
-          "key": "RegisterAndNotify"
+          "key": "checkout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "diff_count": 0,
       "emit_format": "postman",
       "emit_key": "postman",
       "loss_approx": 0,
-      "loss_drop": 2,
+      "loss_drop": 3,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
@@ -3432,54 +3604,71 @@
       "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 6,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 8,
       "emit_format": "proto3",
       "emit_key": "protobuf",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [
         {
-          "construct": "RegisterAndNotify#RegisterUser",
+          "construct": "checkout#addItem",
           "kind": "ok",
           "message": "operation carried to Protocol Buffers (proto3)",
           "severity": "info",
           "target_mapping": null
         },
         {
-          "construct": "RegisterAndNotify#SendWelcome",
+          "construct": "checkout#createCart",
+          "kind": "ok",
+          "message": "operation carried to Protocol Buffers (proto3)",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "checkout#pay",
           "kind": "ok",
           "message": "operation carried to Protocol Buffers (proto3)",
           "severity": "info",
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', added operation 'RegisterAndNotify.RegisterUser', added operation 'RegisterAndNotify.SendWelcome', changed root '', changed service 'RegisterAndNotify'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'checkout#addItem', removed operation 'checkout#createCart', removed operation 'checkout#pay', added operation 'checkout.addItem', added operation 'checkout.createCart', added operation 'checkout.pay', changed root '', changed service 'checkout'; overclaim: OK 'checkout#addItem', OK 'checkout#createCart', OK 'checkout#pay')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#RegisterUser"
+          "key": "checkout#addItem"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#SendWelcome"
+          "key": "checkout#createCart"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#pay"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "RegisterAndNotify.RegisterUser"
+          "key": "checkout.addItem"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "RegisterAndNotify.SendWelcome"
+          "key": "checkout.createCart"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "checkout.pay"
         },
         {
           "change": "changed",
@@ -3489,121 +3678,92 @@
         {
           "change": "changed",
           "entity": "service",
-          "key": "RegisterAndNotify"
+          "key": "checkout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 6,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 0,
       "emit_format": "raml",
       "emit_key": "raml",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
-      "overclaims": [
-        {
-          "construct": "RegisterAndNotify#RegisterUser",
-          "kind": "ok",
-          "message": "operation carried to RAML",
-          "severity": "info",
-          "target_mapping": null
-        },
-        {
-          "construct": "RegisterAndNotify#SendWelcome",
-          "kind": "ok",
-          "message": "operation carried to RAML",
-          "severity": "info",
-          "target_mapping": null
-        }
-      ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'GET /', removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', changed root '', added service 'Property Reuse Workflow', removed service 'RegisterAndNotify'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome')",
+      "overclaims": [],
+      "reason": "Re-import failed: No RAML types or resources found (arazzo->raml) (observed: Re-import failed: No RAML types or resources found (arazzo->raml))",
       "source_format": "arazzo",
       "status": "xfail",
-      "unexplained": [
-        {
-          "change": "added",
-          "entity": "operation",
-          "key": "GET /"
-        },
-        {
-          "change": "removed",
-          "entity": "operation",
-          "key": "RegisterAndNotify#RegisterUser"
-        },
-        {
-          "change": "removed",
-          "entity": "operation",
-          "key": "RegisterAndNotify#SendWelcome"
-        },
-        {
-          "change": "changed",
-          "entity": "root",
-          "key": ""
-        },
-        {
-          "change": "added",
-          "entity": "service",
-          "key": "Property Reuse Workflow"
-        },
-        {
-          "change": "removed",
-          "entity": "service",
-          "key": "RegisterAndNotify"
-        }
-      ]
+      "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 6,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 8,
       "emit_format": "smithy",
       "emit_key": "smithy",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [
         {
-          "construct": "RegisterAndNotify#RegisterUser",
+          "construct": "checkout#addItem",
           "kind": "ok",
           "message": "operation carried to Smithy",
           "severity": "info",
           "target_mapping": null
         },
         {
-          "construct": "RegisterAndNotify#SendWelcome",
+          "construct": "checkout#createCart",
+          "kind": "ok",
+          "message": "operation carried to Smithy",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "checkout#pay",
           "kind": "ok",
           "message": "operation carried to Smithy",
           "severity": "info",
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', added operation 'RegisterAndNotify.RegisterUser', added operation 'RegisterAndNotify.SendWelcome', changed root '', changed service 'RegisterAndNotify'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'checkout#addItem', removed operation 'checkout#createCart', removed operation 'checkout#pay', added operation 'checkout.addItem', added operation 'checkout.createCart', added operation 'checkout.pay', changed root '', changed service 'checkout'; overclaim: OK 'checkout#addItem', OK 'checkout#createCart', OK 'checkout#pay')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#RegisterUser"
+          "key": "checkout#addItem"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#SendWelcome"
+          "key": "checkout#createCart"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#pay"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "RegisterAndNotify.RegisterUser"
+          "key": "checkout.addItem"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "RegisterAndNotify.SendWelcome"
+          "key": "checkout.createCart"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "checkout.pay"
         },
         {
           "change": "changed",
@@ -3613,59 +3773,76 @@
         {
           "change": "changed",
           "entity": "service",
-          "key": "RegisterAndNotify"
+          "key": "checkout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 6,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 8,
       "emit_format": "thrift",
       "emit_key": "thrift",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [
         {
-          "construct": "RegisterAndNotify#RegisterUser",
+          "construct": "checkout#addItem",
           "kind": "ok",
           "message": "operation carried to Apache Thrift",
           "severity": "info",
           "target_mapping": null
         },
         {
-          "construct": "RegisterAndNotify#SendWelcome",
+          "construct": "checkout#createCart",
+          "kind": "ok",
+          "message": "operation carried to Apache Thrift",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "checkout#pay",
           "kind": "ok",
           "message": "operation carried to Apache Thrift",
           "severity": "info",
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', added operation 'RegisterAndNotify.RegisterUser', added operation 'RegisterAndNotify.SendWelcome', changed root '', changed service 'RegisterAndNotify'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'checkout#addItem', removed operation 'checkout#createCart', removed operation 'checkout#pay', added operation 'checkout.addItem', added operation 'checkout.createCart', added operation 'checkout.pay', changed root '', changed service 'checkout'; overclaim: OK 'checkout#addItem', OK 'checkout#createCart', OK 'checkout#pay')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#RegisterUser"
+          "key": "checkout#addItem"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#SendWelcome"
+          "key": "checkout#createCart"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#pay"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "RegisterAndNotify.RegisterUser"
+          "key": "checkout.addItem"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "RegisterAndNotify.SendWelcome"
+          "key": "checkout.createCart"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "checkout.pay"
         },
         {
           "change": "changed",
@@ -3675,37 +3852,44 @@
         {
           "change": "changed",
           "entity": "service",
-          "key": "RegisterAndNotify"
+          "key": "checkout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 6,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 7,
       "emit_format": "typespec",
       "emit_key": "typespec",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [
         {
-          "construct": "RegisterAndNotify#RegisterUser",
+          "construct": "checkout#addItem",
           "kind": "ok",
           "message": "operation carried to TypeSpec",
           "severity": "info",
           "target_mapping": null
         },
         {
-          "construct": "RegisterAndNotify#SendWelcome",
+          "construct": "checkout#createCart",
+          "kind": "ok",
+          "message": "operation carried to TypeSpec",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "checkout#pay",
           "kind": "ok",
           "message": "operation carried to TypeSpec",
           "severity": "info",
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'GET /', removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', changed root '', added service 'Exported.RegisterAndNotify', removed service 'RegisterAndNotify'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'GET /', removed operation 'checkout#addItem', removed operation 'checkout#createCart', removed operation 'checkout#pay', changed root '', added service 'Exported.checkout', removed service 'checkout'; overclaim: OK 'checkout#addItem', OK 'checkout#createCart', OK 'checkout#pay')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
@@ -3717,12 +3901,17 @@
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#RegisterUser"
+          "key": "checkout#addItem"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#SendWelcome"
+          "key": "checkout#createCart"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#pay"
         },
         {
           "change": "changed",
@@ -3732,23 +3921,23 @@
         {
           "change": "added",
           "entity": "service",
-          "key": "Exported.RegisterAndNotify"
+          "key": "Exported.checkout"
         },
         {
           "change": "removed",
           "entity": "service",
-          "key": "RegisterAndNotify"
+          "key": "checkout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "diff_count": 0,
       "emit_format": "wadl",
       "emit_key": "wadl",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [],
@@ -3758,54 +3947,71 @@
       "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 8,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 10,
       "emit_format": "wit",
       "emit_key": "wit",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [
         {
-          "construct": "RegisterAndNotify#RegisterUser",
+          "construct": "checkout#addItem",
           "kind": "ok",
           "message": "operation carried to WIT (WebAssembly)",
           "severity": "info",
           "target_mapping": null
         },
         {
-          "construct": "RegisterAndNotify#SendWelcome",
+          "construct": "checkout#createCart",
+          "kind": "ok",
+          "message": "operation carried to WIT (WebAssembly)",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "checkout#pay",
           "kind": "ok",
           "message": "operation carried to WIT (WebAssembly)",
           "severity": "info",
           "target_mapping": null
         }
       ],
-      "reason": "unexplained: removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', added operation 'apiome:property-reuse-workflow.register-and-notify.register-user', added operation 'apiome:property-reuse-workflow.register-and-notify.send-welcome', changed root '', removed service 'RegisterAndNotify', added service 'apiome:property-reuse-workflow.property-reuse-workflow', added service 'apiome:property-reuse-workflow.register-and-notify'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome' (observed: unexplained: removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', added operation 'apiome:property-reuse-workflow.register-and-notify.register-user', added operation 'apiome:property-reuse-workflow.register-and-notify.send-welcome', changed root '', removed service 'RegisterAndNotify', added service 'apiome:property-reuse-workflow.property-reuse-workflow', added service 'apiome:property-reuse-workflow.register-and-notify'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'apiome:storefront-checkout.checkout.add-item', added operation 'apiome:storefront-checkout.checkout.create-cart', added operation 'apiome:storefront-checkout.checkout.pay', removed operation 'checkout#addItem', removed operation 'checkout#createCart', removed operation 'checkout#pay', changed root '', added service 'apiome:storefront-checkout.checkout', added service 'apiome:storefront-checkout.storefront-checkout', removed service 'checkout'; overclaim: OK 'checkout#addItem', OK 'checkout#createCart', OK 'checkout#pay')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
         {
-          "change": "removed",
+          "change": "added",
           "entity": "operation",
-          "key": "RegisterAndNotify#RegisterUser"
-        },
-        {
-          "change": "removed",
-          "entity": "operation",
-          "key": "RegisterAndNotify#SendWelcome"
+          "key": "apiome:storefront-checkout.checkout.add-item"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "apiome:property-reuse-workflow.register-and-notify.register-user"
+          "key": "apiome:storefront-checkout.checkout.create-cart"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "apiome:property-reuse-workflow.register-and-notify.send-welcome"
+          "key": "apiome:storefront-checkout.checkout.pay"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#addItem"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#createCart"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#pay"
         },
         {
           "change": "changed",
@@ -3813,71 +4019,88 @@
           "key": ""
         },
         {
+          "change": "added",
+          "entity": "service",
+          "key": "apiome:storefront-checkout.checkout"
+        },
+        {
+          "change": "added",
+          "entity": "service",
+          "key": "apiome:storefront-checkout.storefront-checkout"
+        },
+        {
           "change": "removed",
           "entity": "service",
-          "key": "RegisterAndNotify"
-        },
-        {
-          "change": "added",
-          "entity": "service",
-          "key": "apiome:property-reuse-workflow.property-reuse-workflow"
-        },
-        {
-          "change": "added",
-          "entity": "service",
-          "key": "apiome:property-reuse-workflow.register-and-notify"
+          "key": "checkout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 7,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 9,
       "emit_format": "wsdl",
       "emit_key": "wsdl",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [
         {
-          "construct": "RegisterAndNotify#RegisterUser",
+          "construct": "checkout#addItem",
           "kind": "ok",
           "message": "operation carried to WSDL",
           "severity": "info",
           "target_mapping": null
         },
         {
-          "construct": "RegisterAndNotify#SendWelcome",
+          "construct": "checkout#createCart",
+          "kind": "ok",
+          "message": "operation carried to WSDL",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "checkout#pay",
           "kind": "ok",
           "message": "operation carried to WSDL",
           "severity": "info",
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', added operation 'http://example.com/service.RegisterAndNotify.RegisterUser', added operation 'http://example.com/service.RegisterAndNotify.SendWelcome', changed root '', removed service 'RegisterAndNotify', added service 'http://example.com/service.RegisterAndNotify'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'checkout#addItem', removed operation 'checkout#createCart', removed operation 'checkout#pay', added operation 'http://example.com/service.checkout.addItem', added operation 'http://example.com/service.checkout.createCart', added operation 'http://example.com/service.checkout.pay', changed root '', removed service 'checkout', added service 'http://example.com/service.checkout'; overclaim: OK 'checkout#addItem', OK 'checkout#createCart', OK 'checkout#pay')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#RegisterUser"
+          "key": "checkout#addItem"
         },
         {
           "change": "removed",
           "entity": "operation",
-          "key": "RegisterAndNotify#SendWelcome"
+          "key": "checkout#createCart"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#pay"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "http://example.com/service.RegisterAndNotify.RegisterUser"
+          "key": "http://example.com/service.checkout.addItem"
         },
         {
           "change": "added",
           "entity": "operation",
-          "key": "http://example.com/service.RegisterAndNotify.SendWelcome"
+          "key": "http://example.com/service.checkout.createCart"
+        },
+        {
+          "change": "added",
+          "entity": "operation",
+          "key": "http://example.com/service.checkout.pay"
         },
         {
           "change": "changed",
@@ -3887,59 +4110,71 @@
         {
           "change": "removed",
           "entity": "service",
-          "key": "RegisterAndNotify"
+          "key": "checkout"
         },
         {
           "change": "added",
           "entity": "service",
-          "key": "http://example.com/service.RegisterAndNotify"
+          "key": "http://example.com/service.checkout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
-      "diff_count": 6,
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
+      "diff_count": 7,
       "emit_format": "xmlrpc",
       "emit_key": "xmlrpc",
       "loss_approx": 0,
       "loss_drop": 0,
-      "loss_ok": 2,
+      "loss_ok": 3,
       "loss_synth": 0,
       "matched_count": 0,
       "overclaims": [
         {
-          "construct": "RegisterAndNotify#RegisterUser",
+          "construct": "checkout#addItem",
           "kind": "ok",
           "message": "operation carried to XML-RPC",
           "severity": "info",
           "target_mapping": null
         },
         {
-          "construct": "RegisterAndNotify#SendWelcome",
+          "construct": "checkout#createCart",
+          "kind": "ok",
+          "message": "operation carried to XML-RPC",
+          "severity": "info",
+          "target_mapping": null
+        },
+        {
+          "construct": "checkout#pay",
           "kind": "ok",
           "message": "operation carried to XML-RPC",
           "severity": "info",
           "target_mapping": null
         }
       ],
-      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: removed operation 'RegisterAndNotify#RegisterUser', removed operation 'RegisterAndNotify#SendWelcome', added operation 'RegisterUser.RegisterUser', changed root '', removed service 'RegisterAndNotify', added service 'RegisterUser'; overclaim: OK 'RegisterAndNotify#RegisterUser', OK 'RegisterAndNotify#SendWelcome')",
+      "reason": "Empirical canonical_diff not fully explained by fidelity report (unexplained diff and/or OK over-claim). (observed: unexplained: added operation 'addItem.addItem', removed operation 'checkout#addItem', removed operation 'checkout#createCart', removed operation 'checkout#pay', changed root '', added service 'addItem', removed service 'checkout'; overclaim: OK 'checkout#addItem', OK 'checkout#createCart', OK 'checkout#pay')",
       "source_format": "arazzo",
       "status": "xfail",
       "unexplained": [
         {
-          "change": "removed",
-          "entity": "operation",
-          "key": "RegisterAndNotify#RegisterUser"
-        },
-        {
-          "change": "removed",
-          "entity": "operation",
-          "key": "RegisterAndNotify#SendWelcome"
-        },
-        {
           "change": "added",
           "entity": "operation",
-          "key": "RegisterUser.RegisterUser"
+          "key": "addItem.addItem"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#addItem"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#createCart"
+        },
+        {
+          "change": "removed",
+          "entity": "operation",
+          "key": "checkout#pay"
         },
         {
           "change": "changed",
@@ -3947,24 +4182,24 @@
           "key": ""
         },
         {
-          "change": "removed",
-          "entity": "service",
-          "key": "RegisterAndNotify"
-        },
-        {
           "change": "added",
           "entity": "service",
-          "key": "RegisterUser"
+          "key": "addItem"
+        },
+        {
+          "change": "removed",
+          "entity": "service",
+          "key": "checkout"
         }
       ]
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "diff_count": 0,
       "emit_format": "xsd",
       "emit_key": "xsd",
       "loss_approx": 0,
-      "loss_drop": 2,
+      "loss_drop": 3,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,
@@ -3975,12 +4210,12 @@
       "unexplained": []
     },
     {
-      "corpus_path": "arazzo/property-reuse.yaml",
+      "corpus_path": "arazzo-1.1/02-typical-checkout-flow.yaml",
       "diff_count": 0,
       "emit_format": "zosconnect",
       "emit_key": "zosconnect",
       "loss_approx": 0,
-      "loss_drop": 2,
+      "loss_drop": 3,
       "loss_ok": 0,
       "loss_synth": 0,
       "matched_count": 0,

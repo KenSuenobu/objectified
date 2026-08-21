@@ -11,7 +11,10 @@
           "type": "openapi",
           "url": "https://example.com/openapi/todo.json"
         }
-      ]
+      ],
+      "sourceTypes": {
+        "TodoAPI": "openapi"
+      }
     },
     "format": "arazzo",
     "identity": {
@@ -61,6 +64,8 @@
                 },
                 "source": "TodoAPI"
               },
+              "sourceDescription": "TodoAPI",
+              "sourceType": "openapi",
               "stepId": "CreateTodo",
               "stepIndex": 0
             },
@@ -100,6 +105,8 @@
                 },
                 "source": "TodoAPI"
               },
+              "sourceDescription": "TodoAPI",
+              "sourceType": "openapi",
               "stepId": "GetTodo",
               "stepIndex": 1,
               "when": {
@@ -137,7 +144,7 @@
     "confidence": 0.99,
     "format": "arazzo"
   },
-  "fingerprint": "sha256:582d89f2794502e9054c4dd5779d02da0e79de9b61b709bac5c004650e069217",
+  "fingerprint": "sha256:9377b2693673c496f59a035f0ea90311589df10e60dd875b73effd80e51e4fd5",
   "lint": {
     "findings": 2,
     "grade": "A",

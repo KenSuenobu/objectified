@@ -75,7 +75,14 @@ def test_descriptor_metadata(adapter: ArazzoImportSource) -> None:
     assert descriptor.key == "arazzo"
     assert descriptor.label == "Arazzo"
     assert descriptor.paradigm is ApiParadigm.REST
-    assert set(descriptor.input_kinds) == {InputKind.FILE, InputKind.URL, InputKind.PASTE}
+    assert set(descriptor.input_kinds) == {
+        InputKind.FILE,
+        InputKind.URL,
+        InputKind.PASTE,
+        # FMT-3.1 (#5426): a workflow imports together with the documents its
+        # `sourceDescriptions` point at.
+        InputKind.FILESET,
+    }
     assert descriptor.formats == ["arazzo"]
     assert descriptor.available is True
 

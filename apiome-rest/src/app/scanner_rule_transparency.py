@@ -155,6 +155,19 @@ BLOCKING_RULES: Dict[str, BlockingRuleMeta] = {
         fixture_id="catalog/arazzo-dangling-operation-id",
         docs_page="docs/guide/lint-rules.md",
     ),
+    "arazzo.async-source-before-1-1": _meta(
+        "arazzo.async-source-before-1-1",
+        ENGINE_SCHEMA,
+        rationale="An AsyncAPI sourceDescription requires Arazzo 1.1 or newer.",
+        reference=_SCHEMA_REF + "#arazzo-async-source-before-1-1",
+        remediation="Declare `arazzo: 1.1.0` at the top of the document, or change the "
+        "source description's `type` to one Arazzo 1.0 defines (`openapi` or `arazzo`).",
+        false_positive_guidance="Only false if a runner is known to accept the 1.1 source "
+        "types under a 1.0 marker; the published 1.0 schema does not, so prefer declaring 1.1.",
+        scan_modes=("lint",),
+        fixture_id="catalog/arazzo-async-source-before-1-1",
+        docs_page="docs/guide/lint-rules.md",
+    ),
     "arzzo.unresolvable-operation-ref": _meta(
         "arzzo.unresolvable-operation-ref",
         ENGINE_SCHEMA,

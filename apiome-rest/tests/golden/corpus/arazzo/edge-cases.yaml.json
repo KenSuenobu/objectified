@@ -11,7 +11,10 @@
           "type": "openapi",
           "url": "https://example.com/openapi/content.json"
         }
-      ]
+      ],
+      "sourceTypes": {
+        "ContentAPI": "openapi"
+      }
     },
     "format": "arazzo",
     "identity": {
@@ -60,6 +63,8 @@
                 },
                 "source": "ContentAPI"
               },
+              "sourceDescription": "ContentAPI",
+              "sourceType": "openapi",
               "stepId": "AddTags",
               "stepIndex": 1,
               "when": {
@@ -103,6 +108,8 @@
                 },
                 "source": "ContentAPI"
               },
+              "sourceDescription": "ContentAPI",
+              "sourceType": "openapi",
               "stepId": "CreateArticle",
               "stepIndex": 0
             },
@@ -138,6 +145,8 @@
                 },
                 "source": "ContentAPI"
               },
+              "sourceDescription": "ContentAPI",
+              "sourceType": "openapi",
               "stepId": "Publish",
               "stepIndex": 2
             },
@@ -172,7 +181,7 @@
     "confidence": 0.99,
     "format": "arazzo"
   },
-  "fingerprint": "sha256:809b6f0d141ad94c1d0c36ef9ddaea69530d8d4caa90400b1ac8fd9e8afd1d3a",
+  "fingerprint": "sha256:05938faf6d28bfa9bb5ded75989de7819bcfacb2263da4c6c26a72c7c1942a27",
   "lint": {
     "findings": 6,
     "grade": "C",

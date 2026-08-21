@@ -40,7 +40,7 @@ The **Direction** column below says whether a format can be imported, exported, 
 | Format | Key | Direction | Publishable | Input kinds | Live discovery | Format keys | File extensions | Analysis | Runtime |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | API Blueprint | `apiblueprint` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `apiblueprint`, `api-blueprint`, `apib`, `blueprint` | `.apib`, `.md`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
-| Arazzo | `arazzo` | Import + export | Catalog | `file`, `url`, `paste` | — | `arazzo` | `.arazzo.yaml`, `.arazzo.yml`, `.arazzo.json`, `.yaml`, `.yml`, `.json` | Generic | Ready |
+| Arazzo | `arazzo` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `arazzo` | `.arazzo.yaml`, `.arazzo.yml`, `.arazzo.json`, `.yaml`, `.yml`, `.json`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 | FHIR | `fhir` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `fhir`, `fhirr4`, `structuredefinition` | `.fhir.json`, `.structuredefinition.json`, `.json`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 | Gateway API HTTPRoute | `gateway-api` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `gateway-api`, `httproute` | `.yaml`, `.yml`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 | Google API Discovery | `discovery` | Import only | Catalog | `file`, `url`, `paste`, `discovery`, `fileset` | Yes | `discovery` | `.discovery.json`, `.discovery`, `.json`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |

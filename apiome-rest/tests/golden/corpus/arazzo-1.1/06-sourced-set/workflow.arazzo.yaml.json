@@ -1,0 +1,198 @@
+{
+  "adapter": "arazzo",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "arazzo": "1.1.0",
+      "resolvedSources": [
+        {
+          "content": {
+            "info": {
+              "title": "Inventory",
+              "version": "1.0.0"
+            },
+            "openapi": "3.1.0",
+            "paths": {
+              "/reservations": {
+                "post": {
+                  "operationId": "reserveStock",
+                  "requestBody": {
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "properties": {
+                            "quantity": {
+                              "minimum": 1,
+                              "type": "integer"
+                            },
+                            "sku": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "sku",
+                            "quantity"
+                          ],
+                          "type": "object"
+                        }
+                      }
+                    },
+                    "required": true
+                  },
+                  "responses": {
+                    "201": {
+                      "content": {
+                        "application/json": {
+                          "schema": {
+                            "properties": {
+                              "reservationId": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "reservationId"
+                            ],
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "description": "Reserved"
+                    }
+                  },
+                  "summary": "Reserve stock for a SKU"
+                }
+              }
+            },
+            "servers": [
+              {
+                "url": "https://api.example.com/inventory"
+              }
+            ]
+          },
+          "name": "inventory",
+          "path": "inventory.openapi.yaml",
+          "type": "openapi"
+        }
+      ],
+      "sourceDescriptions": [
+        {
+          "name": "inventory",
+          "type": "openapi",
+          "url": "./inventory.openapi.yaml"
+        }
+      ],
+      "sourceTypes": {
+        "inventory": "openapi"
+      }
+    },
+    "format": "arazzo",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Locally sourced workflow",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": "Reserve stock through the API described by the sibling file.",
+        "extras": {
+          "inputs": {
+            "properties": {
+              "sku": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "sku"
+            ],
+            "type": "object"
+          },
+          "outputs": {
+            "reservationId": "$steps.reserve.outputs.reservationId"
+          },
+          "stepOrder": [
+            "reserve"
+          ],
+          "summary": "Reserve stock through the API described by the sibling file.",
+          "workflowId": "reserveStock",
+          "workflowIndex": 0
+        },
+        "key": "reserveStock",
+        "name": "reserveStock",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "operationId": "$sourceDescriptions.inventory.reserveStock",
+              "outputs": {
+                "reservationId": "$response.body#/reservationId"
+              },
+              "requestBody": {
+                "contentType": "application/json",
+                "payload": {
+                  "quantity": 1,
+                  "sku": "$inputs.sku"
+                }
+              },
+              "sourceDescription": "inventory",
+              "sourceType": "openapi",
+              "stepId": "reserve",
+              "stepIndex": 0,
+              "successCriteria": [
+                {
+                  "condition": "$statusCode == 201"
+                }
+              ]
+            },
+            "http_method": null,
+            "http_path": null,
+            "key": "reserveStock#reserve",
+            "kind": "one_way",
+            "messages": [],
+            "name": "reserve",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "reserveStock"
+            ]
+          }
+        ]
+      }
+    ],
+    "title": "Locally sourced workflow",
+    "types": [],
+    "version": "1.0.0"
+  },
+  "corpus_path": "arazzo-1.1/06-sourced-set/workflow.arazzo.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.99,
+    "format": "arazzo"
+  },
+  "fingerprint": "sha256:c7561b1ee5b2cd983458e2abb989d68ccfd4bffe9a64d10b1301cacb822cc173",
+  "lint": {
+    "findings": 2,
+    "grade": "A",
+    "report_fingerprint": "73439bef4f52a5dc62d10a92927bcdefd16572935be8650347aae20774b4f64f",
+    "score": 95,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}
