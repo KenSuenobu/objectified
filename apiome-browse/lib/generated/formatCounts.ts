@@ -66,9 +66,9 @@ export const FORMAT_COUNTS: FormatCounts = {
   capabilityRegistryVersion: '3',
   total: 43,
   importable: 43,
-  exportable: 39,
-  roundTrip: 39,
-  importOnly: 4,
+  exportable: 40,
+  roundTrip: 40,
+  importOnly: 3,
   exportOnly: 0,
   liveDiscovery: 4,
   publishable: 1,
@@ -80,7 +80,7 @@ export const FORMAT_COUNTS: FormatCounts = {
     { id: 'event', label: 'Event-driven', total: 2, importable: 2, exportable: 2 },
     { id: 'graph', label: 'Graph', total: 1, importable: 1, exportable: 1 },
     { id: 'data_schema', label: 'Data schema', total: 13, importable: 13, exportable: 13 },
-    { id: 'agent', label: 'Agent', total: 2, importable: 2, exportable: 0 },
+    { id: 'agent', label: 'Agent', total: 2, importable: 2, exportable: 1 },
   ],
 };
 

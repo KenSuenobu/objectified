@@ -1324,11 +1324,11 @@
         "llm-tools"
       ],
       "fixtures": {
-        "valid": 6,
+        "valid": 8,
         "negative": 5,
         "adversarial": 0,
         "scale": 0,
-        "total": 11
+        "total": 13
       },
       "rungs": [
         "composition",
@@ -1340,13 +1340,20 @@
       "rung_waivers": [
         "multi-file"
       ],
-      "goldens": 6,
+      "goldens": 8,
       "golden_directories": [
         "llm-tools"
       ],
-      "emit_key": null,
+      "emit_key": "llm-tools",
       "roundtrip_row": true,
-      "roundtrip_cells": [],
+      "roundtrip_cells": [
+        {
+          "source_format": "llm-tools",
+          "emit_key": "llm-tools",
+          "status": "xfail",
+          "has_reason": true
+        }
+      ],
       "capability_provenance": "derived",
       "requirements": {
         "valid-examples": "satisfied",

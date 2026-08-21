@@ -147,6 +147,7 @@ CORPUS_COVERAGE: Dict[str, Union[str, Waiver]] = {
     "jtd": GENERIC,
     "k8s-crd": GENERIC,
     "kong": GENERIC,
+    "llm-tools": GENERIC,
     "odata": GENERIC,
     "oncrpc": GENERIC,
     "openrpc": GENERIC,

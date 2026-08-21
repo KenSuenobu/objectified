@@ -15656,6 +15656,52 @@
       "notes": "Object wrapper with a tools array; multi-file ladder rung is waived because tool bundles do not resolve cross-file references."
     },
     {
+      "path": "llm-tools/07-emitted-openai-tools.json",
+      "format": "llm-tools",
+      "adapter_key": "llm-tools",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "llm-tools",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "emitted",
+        "openai",
+        "multi-tool",
+        "merged-parameters",
+        "function-calling"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Emitted in-repo by app.llm_tools_emitter (FMT-2.5) from openapi/31-paths-comprehensive.yaml in the OpenAI dialect.",
+      "notes": "Round-trip fixture for the tool-array emitter: each REST operation becomes one tool whose parameters merge the path, query, header and body arguments.",
+      "rung": "real-world"
+    },
+    {
+      "path": "llm-tools/08-emitted-anthropic-strict.json",
+      "format": "llm-tools",
+      "adapter_key": "llm-tools",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "llm-tools",
+        "min_confidence": 0.95
+      },
+      "features": [
+        "emitted",
+        "anthropic",
+        "strict-schema",
+        "multi-tool",
+        "nullable-optional"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Emitted in-repo by app.llm_tools_emitter (FMT-2.5) from openapi/31-paths-comprehensive.yaml in the Anthropic dialect with strict_schema enabled.",
+      "notes": "The same API as 07 in the strict structured-output subset: every object is closed and every property is required, with the optional ones widened to accept null.",
+      "rung": "stress"
+    },
+    {
       "path": "llm-tools/negative/01-syntactic-unclosed-array.json",
       "format": "llm-tools",
       "adapter_key": "llm-tools",

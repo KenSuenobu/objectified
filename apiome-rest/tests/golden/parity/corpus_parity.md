@@ -39,7 +39,7 @@ Every shipped, non-preview import adapter must carry four artifacts: corpus exam
 | `jtd` | JSON Type Definition | data_schema | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `jtd` |
 | `k8s-crd` | Kubernetes CRD | data_schema | 7 | 5 | 0 | 0 | 12 | 5/6 (+1 waived) | 7 | `k8s-crd` |
 | `kong` | Kong Declarative Config | rest | 7 | 5 | 0 | 0 | 12 | 6/6 | 6 | `kong` |
-| `llm-tools` | LLM Tools | agent | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | — |
+| `llm-tools` | LLM Tools | agent | 8 | 5 | 0 | 0 | 13 | 5/6 (+1 waived) | 8 | `llm-tools` |
 | `mcp` | MCP Server Manifest | agent | 7 | 5 | 0 | 0 | 12 | 6/6 | 6 | — |
 | `odata` | OData | rest | 6 | 5 | 1 | 0 | 12 | 5/6 (+1 waived) | 6 | `odata` |
 | `oncrpc` | ONC RPC | rpc | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `oncrpc` |
