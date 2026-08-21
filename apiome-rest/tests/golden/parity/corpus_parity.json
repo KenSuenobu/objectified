@@ -1413,31 +1413,33 @@
       "label": "OData",
       "paradigm": "rest",
       "corpus_formats": [
-        "odata"
+        "odata",
+        "odata-v2"
       ],
       "corpus_directories": [
-        "odata"
+        "odata",
+        "odata-v2"
       ],
       "fixtures": {
-        "valid": 6,
-        "negative": 5,
+        "valid": 14,
+        "negative": 11,
         "adversarial": 1,
         "scale": 0,
-        "total": 12
+        "total": 26
       },
       "rungs": [
         "composition",
         "minimal",
+        "multi-file",
         "real-world",
         "stress",
         "typical"
       ],
-      "rung_waivers": [
-        "multi-file"
-      ],
-      "goldens": 6,
+      "rung_waivers": [],
+      "goldens": 13,
       "golden_directories": [
-        "odata"
+        "odata",
+        "odata-v2"
       ],
       "emit_key": "odata",
       "roundtrip_row": true,
@@ -1447,6 +1449,12 @@
           "emit_key": "odata",
           "status": "pass",
           "has_reason": false
+        },
+        {
+          "source_format": "odata-v2",
+          "emit_key": "odata",
+          "status": "xfail",
+          "has_reason": true
         }
       ],
       "capability_provenance": "derived",
@@ -2219,7 +2227,6 @@
     "natural-ddm",
     "ncpdp",
     "nginx",
-    "odata-v2",
     "odcs",
     "opcua-nodeset",
     "owl",

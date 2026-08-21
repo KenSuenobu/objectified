@@ -1,0 +1,331 @@
+{
+  "adapter": "odata",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "odata_csdl_version": "2.0",
+      "odata_data_service_version": "2.0",
+      "odata_edm_namespace": "http://schemas.microsoft.com/ado/2008/09/edm",
+      "odata_edmx_namespace": "http://schemas.microsoft.com/ado/2007/06/edmx",
+      "odata_edmx_version": "1.0",
+      "odata_entity_sets": [
+        {
+          "entity_type": "Ping.Beacon",
+          "name": "Beacons"
+        }
+      ],
+      "odata_schemas": [
+        {
+          "complex_types": [],
+          "entity_container": {
+            "annotations": {
+              "m:IsDefaultEntityContainer": "true"
+            },
+            "entity_sets": [
+              {
+                "entity_type": "Ping.Beacon",
+                "name": "Beacons"
+              }
+            ],
+            "name": "PingContainer"
+          },
+          "entity_types": [
+            {
+              "key_properties": [
+                "Id"
+              ],
+              "name": "Beacon",
+              "navigation_properties": [],
+              "properties": [
+                {
+                  "annotations": {
+                    "MaxLength": "16"
+                  },
+                  "name": "Id",
+                  "nullable": false,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "SeenAt",
+                  "nullable": null,
+                  "type": "Edm.DateTime"
+                }
+              ]
+            }
+          ],
+          "enum_types": [],
+          "namespace": "Ping"
+        }
+      ],
+      "odata_version": "2.0"
+    },
+    "format": "odata",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Ping",
+      "namespace": "Ping"
+    },
+    "paradigm": "rest",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Ping.Beacons",
+        "name": "Beacons",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Beacons",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/Beacons",
+            "key": "GET /Beacons",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Beacons#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Ping.Beacon",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listBeacons",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /Beacons#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Beacons",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/Beacons({key})",
+            "key": "GET /Beacons({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Beacons({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Ping.Beacon",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getBeacon",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Beacons",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/Beacons",
+            "key": "POST /Beacons",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Beacons#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Ping.Beacon",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Beacons#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Ping.Beacon",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createBeacon",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_key_properties": [
+            "Id"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": []
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "16"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Ping.Beacon.Id",
+            "name": "Id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.DateTime"
+            },
+            "field_number": 2,
+            "key": "Ping.Beacon.SeenAt",
+            "name": "SeenAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Ping.Beacon",
+        "key_type": null,
+        "kind": "record",
+        "name": "Beacon",
+        "namespace": "Ping",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "2.0"
+  },
+  "corpus_path": "odata-v2/01-minimal-v2-single-entity.xml",
+  "counts": {
+    "channels": 0,
+    "operations": 3,
+    "servers": 0,
+    "services": 1,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "odata-v2"
+  },
+  "fingerprint": "sha256:1271044bd843f478ea2d21d856909442bf98999e0290ab8d42e453d227f20fcf",
+  "lint": {
+    "findings": 11,
+    "grade": "C",
+    "report_fingerprint": "16fc03092d6351fc53ca2e6411eee93da2a2cb2bcd9355dc735dbf7b109061a0",
+    "score": 77,
+    "severity_counts": {
+      "error": 0,
+      "info": 7,
+      "warning": 4
+    }
+  },
+  "snapshot_version": 1
+}

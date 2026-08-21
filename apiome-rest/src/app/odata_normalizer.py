@@ -1,14 +1,25 @@
-"""OData CSDL / EDMX → canonical model normalizer — MFI-22.1.
+"""OData CSDL / EDMX → canonical model normalizer — MFI-22.1, v2/v3 in FMT-3.4 (#5429).
 
 Maps a parsed :class:`~app.odata_parser.ODataDocument` into a
 :class:`~app.canonical_model.CanonicalApi` of paradigm
 :attr:`~app.canonical_model.ApiParadigm.REST`.
+
+All three CSDL generations produce the *same* canonical shape: the parser has already
+projected v2/v3 associations onto v4-shaped navigation properties, so the entity types,
+entity sets and operations built here do not know which version they came from. What
+differs is provenance and the constructs v4 has no place for — the source CSDL version,
+the association declarations, association sets, function-import signatures and the
+``m:``/``sap:`` annotation bags — which are carried in ``extras``.
+
+Those extras keys are **only emitted for a pre-v4 document**. A v4 import produces exactly
+the bytes it produced before FMT-3.4, which is that ticket's third acceptance criterion and
+what keeps the committed v4 corpus goldens valid.
 """
 
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from .canonical_model import (
     ApiIdentity,
@@ -30,13 +41,18 @@ from .canonical_model import (
     TypeRef,
 )
 from .normalizer import Keys, Normalizer, normalize_ordering
+from .odata_associations import ODataAssociation, ODataAssociationSet
 from .odata_parser import (
     ODataComplexType,
     ODataDocument,
+    ODataEntityContainer,
     ODataEntitySet,
     ODataEntityType,
     ODataEnumType,
+    ODataFunctionImport,
+    ODataNavigationProperty,
     ODataProperty,
+    ODataSchema,
 )
 
 __all__ = ["ODataNormalizer"]
@@ -60,6 +76,11 @@ _EDM_BASE_TO_CANONICAL: Dict[str, str] = {
     "Edm.TimeOfDay": "string",
     "Edm.Binary": "bytes",
     "Edm.Stream": "bytes",
+    # v2/v3-only primitives, dropped from the v4 vocabulary. Absent from this map they
+    # would fall through to the named-type branch and mint a dangling `type:NS.DateTime`
+    # reference for every SAP timestamp column.
+    "Edm.DateTime": "string",
+    "Edm.Time": "string",
 }
 
 
@@ -134,7 +155,9 @@ def _canonical_field(
         type=type_ref,
         field_number=field_number,
         constraints=_constraints_for_property(prop),
-        extras={"odata_type": prop.type_expr},
+        extras=_annotated(
+            {"odata_type": prop.type_expr}, prop.annotations, key="odata_annotations"
+        ),
     )
 
 
@@ -236,6 +259,261 @@ def _entity_set_operations(
     return operations
 
 
+# ---------------------------------------------------------------------------
+# extras projection (FMT-3.4)
+#
+# Every helper below omits its key when the source carried nothing for it. That is the
+# mechanism keeping a v4 import byte-identical: the parser captures annotations,
+# associations, association sets and function-import signatures only for pre-v4 documents,
+# so for a v4 document each of these collapses to exactly the payload it produced before.
+# ---------------------------------------------------------------------------
+
+
+def _annotated(
+    payload: Dict[str, Any], pairs: Sequence[Tuple[str, str]], *, key: str = "annotations"
+) -> Dict[str, Any]:
+    """Attach the source's unmodeled attributes to an extras payload.
+
+    The bag holds everything a CSDL element declared that the canonical model has no field
+    for: facets (``MaxLength``, ``Precision``, ``Scale``), the v2/v3 ``m:`` attributes
+    (``FC_TargetPath``, ``HasStream``, ``HttpMethod``, ``IsDefaultEntityContainer``) and
+    vendor annotations such as SAP's ``sap:label``/``sap:semantics``. Recording them is the
+    FMT-3.4 requirement that a construct with no v4 analogue is kept rather than dropped.
+
+    Args:
+        payload: The extras payload being built.
+        pairs: The parser's ordered ``(key, value)`` annotation pairs.
+        key: The key the bag is stored under — ``odata_annotations`` inside a canonical
+            ``extras`` bag (whose keys are format-namespaced), plain ``annotations`` inside
+            the ``odata_schemas`` tree (whose keys mirror CSDL).
+
+    Returns:
+        ``payload``, with the bag added when ``pairs`` is non-empty and untouched when it is
+        — which is what keeps a v4 import, parsed with annotation capture off, byte-identical.
+    """
+    if pairs:
+        payload[key] = dict(pairs)
+    return payload
+
+
+def _navigation_extras(navigation: ODataNavigationProperty) -> Dict[str, Any]:
+    """One navigation property as the canonical model records it.
+
+    The ``name``/``type``/``partner`` triple is what every generation produces — the parser
+    derived the last two from the association for a v2/v3 document. The relationship fields
+    are the v2/v3 spelling itself, kept so an export or a diff can say which association a
+    traversal came from.
+    """
+    payload: Dict[str, Any] = {
+        "name": navigation.name,
+        "type": navigation.type_expr,
+        "partner": navigation.partner,
+    }
+    if navigation.relationship:
+        payload["relationship"] = navigation.relationship
+        payload["from_role"] = navigation.from_role
+        payload["to_role"] = navigation.to_role
+        payload["multiplicity"] = navigation.multiplicity
+    return _annotated(payload, navigation.annotations)
+
+
+def _association_extras(association: ODataAssociation) -> Dict[str, Any]:
+    """One ``<Association>`` declaration, ends and referential constraints included."""
+    return _annotated(
+        {
+            "name": association.name,
+            "namespace": association.namespace,
+            "ends": [
+                {
+                    "role": end.role,
+                    "type": end.type_expr,
+                    "multiplicity": end.multiplicity,
+                }
+                for end in association.ends
+            ],
+            "referential_constraints": [
+                {
+                    "principal_role": constraint.principal_role,
+                    "principal_properties": list(constraint.principal_properties),
+                    "dependent_role": constraint.dependent_role,
+                    "dependent_properties": list(constraint.dependent_properties),
+                }
+                for constraint in association.referential_constraints
+            ],
+        },
+        association.annotations,
+    )
+
+
+def _association_set_extras(association_set: ODataAssociationSet) -> Dict[str, Any]:
+    """One ``<AssociationSet>``: an association bound onto two container entity sets."""
+    return _annotated(
+        {
+            "name": association_set.name,
+            "association": association_set.association,
+            "ends": [
+                {"role": end.role, "entity_set": end.entity_set}
+                for end in association_set.ends
+            ],
+        },
+        association_set.annotations,
+    )
+
+
+def _function_import_extras(function_import: ODataFunctionImport) -> Dict[str, Any]:
+    """One v2/v3 ``<FunctionImport>`` with its inline parameter signature."""
+    return _annotated(
+        {
+            "name": function_import.name,
+            "return_type": function_import.return_type,
+            "entity_set": function_import.entity_set,
+            "parameters": [
+                {
+                    "name": parameter.name,
+                    "type": parameter.type_expr,
+                    "mode": parameter.mode,
+                    "nullable": parameter.nullable,
+                }
+                for parameter in function_import.parameters
+            ],
+        },
+        function_import.annotations,
+    )
+
+
+def _entity_set_extras(entity_set: ODataEntitySet) -> Dict[str, Any]:
+    """One ``<EntitySet>`` as the container extras record it."""
+    return _annotated(
+        {"name": entity_set.name, "entity_type": entity_set.entity_type},
+        entity_set.annotations,
+    )
+
+
+def _container_extras(container: ODataEntityContainer) -> Dict[str, Any]:
+    """One ``<EntityContainer>``: its entity sets, plus the v2/v3 sets and function imports."""
+    payload: Dict[str, Any] = {
+        "name": container.name,
+        "entity_sets": [_entity_set_extras(entity_set) for entity_set in container.entity_sets],
+    }
+    if container.association_sets:
+        payload["association_sets"] = [
+            _association_set_extras(association_set)
+            for association_set in container.association_sets
+        ]
+    if container.function_imports:
+        payload["function_imports"] = [
+            _function_import_extras(function_import)
+            for function_import in container.function_imports
+        ]
+    return _annotated(payload, container.annotations)
+
+
+def _property_extras(prop: ODataProperty) -> Dict[str, Any]:
+    """One structural property as the schema extras record it."""
+    return _annotated(
+        {"name": prop.name, "type": prop.type_expr, "nullable": prop.nullable},
+        prop.annotations,
+    )
+
+
+def _schema_extras(schema: ODataSchema) -> Dict[str, Any]:
+    """One ``<Schema>`` in full — the store-raw view the OData emitter re-renders from."""
+    payload: Dict[str, Any] = {
+        "namespace": schema.namespace,
+        "entity_container": (
+            _container_extras(schema.entity_container)
+            if schema.entity_container is not None
+            else None
+        ),
+        "entity_types": [
+            _annotated(
+                {
+                    "name": entity.name,
+                    "key_properties": list(entity.key_properties),
+                    "properties": [_property_extras(prop) for prop in entity.properties],
+                    "navigation_properties": [
+                        _navigation_extras(navigation)
+                        for navigation in entity.navigation_properties
+                    ],
+                },
+                entity.annotations,
+            )
+            for entity in schema.entity_types
+        ],
+        "complex_types": [
+            _annotated(
+                {
+                    "name": complex_type.name,
+                    "properties": [
+                        _property_extras(prop) for prop in complex_type.properties
+                    ],
+                },
+                complex_type.annotations,
+            )
+            for complex_type in schema.complex_types
+        ],
+        "enum_types": [
+            {
+                "name": enum_type.name,
+                "members": [
+                    {"name": member.name, "value": member.value}
+                    for member in enum_type.members
+                ],
+            }
+            for enum_type in schema.enum_types
+        ],
+    }
+    if schema.associations:
+        payload["associations"] = [
+            _association_extras(association) for association in schema.associations
+        ]
+    return _annotated(payload, schema.annotations)
+
+
+def _source_version_extras(source: ODataDocument) -> Dict[str, Any]:
+    """Provenance for the CSDL generation a document was written in.
+
+    Only a pre-v4 document contributes keys. v4 already states its version in
+    ``version``/``odata_version`` and adding namespace evidence to it would change the
+    committed v4 goldens for no gain — FMT-3.4's third acceptance criterion.
+
+    Args:
+        source: The parsed document.
+
+    Returns:
+        The provenance keys, empty for a v4 document or one parsed without dialect evidence.
+    """
+    dialect = source.dialect
+    if dialect is None or dialect.is_v4:
+        return {}
+    provenance: Dict[str, Any] = {"odata_csdl_version": dialect.version}
+    if dialect.edm_namespace:
+        provenance["odata_edm_namespace"] = dialect.edm_namespace
+    if dialect.edmx_namespace:
+        provenance["odata_edmx_namespace"] = dialect.edmx_namespace
+    if dialect.edmx_version:
+        provenance["odata_edmx_version"] = dialect.edmx_version
+    if dialect.data_service_version:
+        provenance["odata_data_service_version"] = dialect.data_service_version
+    return provenance
+
+
+def _reference_extras(source: ODataDocument) -> Dict[str, Any]:
+    """The ``<edmx:Reference>`` declarations a multi-file set resolved, when there are any."""
+    if not source.references:
+        return {}
+    return {
+        "odata_references": [
+            {
+                "uri": reference.uri,
+                "namespaces": [namespace for namespace, _ in reference.includes],
+                "resolved": reference.resolved,
+            }
+            for reference in source.references
+        ]
+    }
+
+
 class ODataNormalizer(Normalizer, register=True):
     """Normalize a parsed OData document into a :class:`CanonicalApi`."""
 
@@ -296,12 +574,8 @@ class ODataNormalizer(Normalizer, register=True):
                 entity_types_by_qualified[entity_type.name] = entity_type
                 type_key = _type_key(entity_type.name, namespace)
                 nav_extras = [
-                    {
-                        "name": nav.name,
-                        "type": nav.type_expr,
-                        "partner": nav.partner,
-                    }
-                    for nav in entity_type.navigation_properties
+                    _navigation_extras(navigation)
+                    for navigation in entity_type.navigation_properties
                 ]
                 types.append(
                     Type(
@@ -320,27 +594,26 @@ class ODataNormalizer(Normalizer, register=True):
                             )
                             for index, prop in enumerate(entity_type.properties, start=1)
                         ),
-                        extras={
-                            "odata_kind": "entity",
-                            "odata_key_properties": list(entity_type.key_properties),
-                            "odata_navigation_properties": nav_extras,
-                        },
+                        extras=_annotated(
+                            {
+                                "odata_kind": "entity",
+                                "odata_key_properties": list(entity_type.key_properties),
+                                "odata_navigation_properties": nav_extras,
+                            },
+                            entity_type.annotations,
+                            key="odata_annotations",
+                        ),
                     )
                 )
 
         services: List[Service] = []
-        entity_sets: List[Dict[str, str]] = []
+        entity_sets: List[Dict[str, Any]] = []
         for schema in source.schemas:
             container = schema.entity_container
             if container is None:
                 continue
             for entity_set in container.entity_sets:
-                entity_sets.append(
-                    {
-                        "name": entity_set.name,
-                        "entity_type": entity_set.entity_type,
-                    }
-                )
+                entity_sets.append(_entity_set_extras(entity_set))
                 service_key = Keys.type(entity_set.name, namespace)
                 services.append(
                     Service(
@@ -364,74 +637,10 @@ class ODataNormalizer(Normalizer, register=True):
             raw={"odata": source.raw} if include_raw else None,
             extras={
                 "odata_version": source.version,
-                "odata_schemas": [
-                    {
-                        "namespace": schema.namespace,
-                        "entity_container": (
-                            {
-                                "name": schema.entity_container.name,
-                                "entity_sets": [
-                                    {
-                                        "name": entity_set.name,
-                                        "entity_type": entity_set.entity_type,
-                                    }
-                                    for entity_set in schema.entity_container.entity_sets
-                                ],
-                            }
-                            if schema.entity_container
-                            else None
-                        ),
-                        "entity_types": [
-                            {
-                                "name": entity.name,
-                                "key_properties": list(entity.key_properties),
-                                "properties": [
-                                    {
-                                        "name": prop.name,
-                                        "type": prop.type_expr,
-                                        "nullable": prop.nullable,
-                                    }
-                                    for prop in entity.properties
-                                ],
-                                "navigation_properties": [
-                                    {
-                                        "name": nav.name,
-                                        "type": nav.type_expr,
-                                        "partner": nav.partner,
-                                    }
-                                    for nav in entity.navigation_properties
-                                ],
-                            }
-                            for entity in schema.entity_types
-                        ],
-                        "complex_types": [
-                            {
-                                "name": complex_type.name,
-                                "properties": [
-                                    {
-                                        "name": prop.name,
-                                        "type": prop.type_expr,
-                                        "nullable": prop.nullable,
-                                    }
-                                    for prop in complex_type.properties
-                                ],
-                            }
-                            for complex_type in schema.complex_types
-                        ],
-                        "enum_types": [
-                            {
-                                "name": enum_type.name,
-                                "members": [
-                                    {"name": member.name, "value": member.value}
-                                    for member in enum_type.members
-                                ],
-                            }
-                            for enum_type in schema.enum_types
-                        ],
-                    }
-                    for schema in source.schemas
-                ],
+                "odata_schemas": [_schema_extras(schema) for schema in source.schemas],
                 "odata_entity_sets": entity_sets,
+                **_source_version_extras(source),
+                **_reference_extras(source),
             },
         )
         return normalize_ordering(api)
@@ -478,5 +687,9 @@ class ODataNormalizer(Normalizer, register=True):
                 )
                 for index, prop in enumerate(complex_type.properties, start=1)
             ),
-            extras={"odata_kind": kind},
+            extras=_annotated(
+                {"odata_kind": kind},
+                complex_type.annotations,
+                key="odata_annotations",
+            ),
         )

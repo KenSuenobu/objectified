@@ -357,7 +357,7 @@
       "marker": "`<edmx:Edmx>` root"
     },
     "odata-v2": {
-      "label": "OData v2 / v3 (CSDL) (pending #5429)",
+      "label": "OData v2 / v3 (CSDL)",
       "category": "rest-http",
       "paradigm": "rest",
       "marker": "`<edmx:Edmx>` with the 2007/06 or 2009/11 EDM namespaces"
@@ -18038,7 +18038,7 @@
     {
       "path": "odata-v2/01-minimal-v2-single-entity.xml",
       "format": "odata-v2",
-      "adapter_key": null,
+      "adapter_key": "odata",
       "validity_class": "valid",
       "expected_detection": {
         "format": "odata-v2",
@@ -18047,8 +18047,7 @@
       "features": [
         "EntityType",
         "EntitySet",
-        "v2",
-        "pending-adapter"
+        "v2"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -18059,7 +18058,7 @@
     {
       "path": "odata-v2/02-typical-v2-orders.xml",
       "format": "odata-v2",
-      "adapter_key": null,
+      "adapter_key": "odata",
       "validity_class": "valid",
       "expected_detection": {
         "format": "odata-v2",
@@ -18071,8 +18070,7 @@
         "ReferentialConstraint",
         "compound-key",
         "FunctionImport",
-        "v2",
-        "pending-adapter"
+        "v2"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -18083,7 +18081,7 @@
     {
       "path": "odata-v2/03-composition-v3-inheritance.xml",
       "format": "odata-v2",
-      "adapter_key": null,
+      "adapter_key": "odata",
       "validity_class": "valid",
       "expected_detection": {
         "format": "odata-v3",
@@ -18094,8 +18092,7 @@
         "abstract-entity",
         "ComplexType",
         "EnumType",
-        "v3",
-        "pending-adapter"
+        "v3"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -18106,7 +18103,7 @@
     {
       "path": "odata-v2/04-stress-v2-customizable-feeds.xml",
       "format": "odata-v2",
-      "adapter_key": null,
+      "adapter_key": "odata",
       "validity_class": "valid",
       "expected_detection": {
         "format": "odata-v2",
@@ -18118,8 +18115,7 @@
         "HasStream",
         "Edm.Time",
         "many-to-many",
-        "v2",
-        "pending-adapter"
+        "v2"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -18130,7 +18126,7 @@
     {
       "path": "odata-v2/05-real-world-sap-gateway-service.xml",
       "format": "odata-v2",
-      "adapter_key": null,
+      "adapter_key": "odata",
       "validity_class": "valid",
       "expected_detection": {
         "format": "odata-v2",
@@ -18141,8 +18137,7 @@
         "sap-semantics",
         "ReferentialConstraint",
         "FunctionImport",
-        "v2",
-        "pending-adapter"
+        "v2"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -18153,7 +18148,7 @@
     {
       "path": "odata-v2/06-typical-v3-catalog.xml",
       "format": "odata-v2",
-      "adapter_key": null,
+      "adapter_key": "odata",
       "validity_class": "valid",
       "expected_detection": {
         "format": "odata-v3",
@@ -18162,8 +18157,7 @@
       "features": [
         "v3",
         "IsSideEffecting",
-        "Association",
-        "pending-adapter"
+        "Association"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -18174,7 +18168,7 @@
     {
       "path": "odata-v2/07-referenced-set/service.xml",
       "format": "odata-v2",
-      "adapter_key": null,
+      "adapter_key": "odata",
       "validity_class": "valid",
       "expected_detection": {
         "format": "odata-v3",
@@ -18183,8 +18177,7 @@
       "features": [
         "multi-file",
         "edmx-Reference",
-        "v3",
-        "pending-adapter"
+        "v3"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -18196,7 +18189,7 @@
     {
       "path": "odata-v2/07-referenced-set/shared-types.xml",
       "format": "odata-v2",
-      "adapter_key": null,
+      "adapter_key": "odata",
       "validity_class": "valid",
       "expected_detection": {
         "format": "odata-v3",
@@ -18205,8 +18198,7 @@
       "features": [
         "multi-file",
         "ComplexType",
-        "v3",
-        "pending-adapter"
+        "v3"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -18219,7 +18211,7 @@
     {
       "path": "odata-v2/negative/01-syntactic-unclosed-entitytype.xml",
       "format": "odata-v2",
-      "adapter_key": null,
+      "adapter_key": "odata",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "odata-v2",
@@ -18228,8 +18220,7 @@
       "features": [
         "negative",
         "syntactic",
-        "unclosed-element",
-        "pending-adapter"
+        "unclosed-element"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -18241,7 +18232,7 @@
     {
       "path": "odata-v2/negative/02-semantic-no-entity-container.xml",
       "format": "odata-v2",
-      "adapter_key": null,
+      "adapter_key": "odata",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "odata-v2",
@@ -18250,8 +18241,7 @@
       "features": [
         "negative",
         "semantic",
-        "no-entity-container",
-        "pending-adapter"
+        "no-entity-container"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -18263,7 +18253,7 @@
     {
       "path": "odata-v2/negative/03-truncated-mid-property.xml",
       "format": "odata-v2",
-      "adapter_key": null,
+      "adapter_key": "odata",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "odata-v2",
@@ -18272,20 +18262,20 @@
       "features": [
         "negative",
         "truncated",
-        "mid-attribute",
-        "pending-adapter"
+        "mid-attribute"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
       "failure_class": "truncated",
-      "expected_error_code": "INPUT_TRUNCATED"
+      "expected_error_code": "INPUT_MALFORMED",
+      "notes": "Truncation reaches the secure XML parser as a not-well-formed document, so the grounded code is INPUT_MALFORMED rather than INPUT_TRUNCATED - the same reading every XML adapter's truncated fixture gets. The intent stays in failure_class."
     },
     {
       "path": "odata-v2/negative/04-wrong-format-wsdl.wsdl",
       "format": "odata-v2",
-      "adapter_key": null,
+      "adapter_key": "odata",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "odata-v2",
@@ -18294,8 +18284,7 @@
       "features": [
         "negative",
         "wrong-format",
-        "wsdl",
-        "pending-adapter"
+        "wsdl"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -18307,7 +18296,7 @@
     {
       "path": "odata-v2/negative/05-encoding-utf16.xml",
       "format": "odata-v2",
-      "adapter_key": null,
+      "adapter_key": "odata",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "odata-v2",
@@ -18316,8 +18305,7 @@
       "features": [
         "negative",
         "encoding",
-        "utf-16",
-        "pending-adapter"
+        "utf-16"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -18329,7 +18317,7 @@
     {
       "path": "odata-v2/negative/06-unresolvable-association-ref.xml",
       "format": "odata-v2",
-      "adapter_key": null,
+      "adapter_key": "odata",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "odata-v2",
@@ -18338,8 +18326,7 @@
       "features": [
         "negative",
         "unresolvable-ref",
-        "missing-association",
-        "pending-adapter"
+        "missing-association"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -32194,9 +32181,6 @@
     },
     "jtd": {
       "multi-file": "The jtd adapter has no parse_fileset; JTD (RFC 8927) documents carry their definitions inline and import as single self-contained files."
-    },
-    "odata": {
-      "multi-file": "The odata adapter's parse_fileset only parses the root member and does not resolve edmx:Reference includes across other members, so a multi-file set exercises nothing."
     },
     "oncrpc": {
       "multi-file": "The ONC RPC adapter's parse_fileset only parses the root document and does not resolve references across fileset members, so a multi-file set would exercise nothing."

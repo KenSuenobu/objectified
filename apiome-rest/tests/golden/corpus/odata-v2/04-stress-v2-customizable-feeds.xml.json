@@ -1,0 +1,919 @@
+{
+  "adapter": "odata",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "odata_csdl_version": "2.0",
+      "odata_data_service_version": "2.0",
+      "odata_edm_namespace": "http://schemas.microsoft.com/ado/2008/09/edm",
+      "odata_edmx_namespace": "http://schemas.microsoft.com/ado/2007/06/edmx",
+      "odata_edmx_version": "1.0",
+      "odata_entity_sets": [
+        {
+          "entity_type": "Feeds.Article",
+          "name": "Articles"
+        },
+        {
+          "entity_type": "Feeds.Tag",
+          "name": "Tags"
+        }
+      ],
+      "odata_schemas": [
+        {
+          "associations": [
+            {
+              "ends": [
+                {
+                  "multiplicity": "*",
+                  "role": "Article",
+                  "type": "Feeds.Article"
+                },
+                {
+                  "multiplicity": "*",
+                  "role": "Tag",
+                  "type": "Feeds.Tag"
+                }
+              ],
+              "name": "ArticleTags",
+              "namespace": "Feeds",
+              "referential_constraints": []
+            }
+          ],
+          "complex_types": [],
+          "entity_container": {
+            "annotations": {
+              "m:IsDefaultEntityContainer": "true"
+            },
+            "association_sets": [
+              {
+                "association": "Feeds.ArticleTags",
+                "ends": [
+                  {
+                    "entity_set": "Articles",
+                    "role": "Article"
+                  },
+                  {
+                    "entity_set": "Tags",
+                    "role": "Tag"
+                  }
+                ],
+                "name": "ArticleTagsSet"
+              }
+            ],
+            "entity_sets": [
+              {
+                "entity_type": "Feeds.Article",
+                "name": "Articles"
+              },
+              {
+                "entity_type": "Feeds.Tag",
+                "name": "Tags"
+              }
+            ],
+            "function_imports": [
+              {
+                "annotations": {
+                  "m:HttpMethod": "GET"
+                },
+                "entity_set": "Articles",
+                "name": "MostRead",
+                "parameters": [
+                  {
+                    "mode": "In",
+                    "name": "Days",
+                    "nullable": null,
+                    "type": "Edm.Int32"
+                  }
+                ],
+                "return_type": "Collection(Feeds.Article)"
+              },
+              {
+                "annotations": {
+                  "m:HttpMethod": "POST"
+                },
+                "entity_set": null,
+                "name": "Publish",
+                "parameters": [
+                  {
+                    "mode": "In",
+                    "name": "ArticleId",
+                    "nullable": null,
+                    "type": "Edm.String"
+                  }
+                ],
+                "return_type": null
+              }
+            ],
+            "name": "FeedContainer"
+          },
+          "entity_types": [
+            {
+              "annotations": {
+                "m:HasStream": "true"
+              },
+              "key_properties": [
+                "ArticleId"
+              ],
+              "name": "Article",
+              "navigation_properties": [],
+              "properties": [
+                {
+                  "annotations": {
+                    "MaxLength": "20"
+                  },
+                  "name": "ArticleId",
+                  "nullable": false,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "200",
+                    "m:FC_ContentKind": "text",
+                    "m:FC_KeepInContent": "false",
+                    "m:FC_TargetPath": "SyndicationTitle"
+                  },
+                  "name": "Title",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "1000",
+                    "m:FC_ContentKind": "html",
+                    "m:FC_KeepInContent": "true",
+                    "m:FC_TargetPath": "SyndicationSummary"
+                  },
+                  "name": "Summary",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "m:FC_KeepInContent": "false",
+                    "m:FC_TargetPath": "SyndicationUpdated"
+                  },
+                  "name": "PublishedOn",
+                  "nullable": null,
+                  "type": "Edm.DateTimeOffset"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "80",
+                    "m:FC_TargetPath": "SyndicationAuthorName"
+                  },
+                  "name": "AuthorName",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "Rating",
+                  "nullable": null,
+                  "type": "Edm.Single"
+                },
+                {
+                  "annotations": {
+                    "m:FC_KeepInContent": "true"
+                  },
+                  "name": "Draft",
+                  "nullable": null,
+                  "type": "Edm.Boolean"
+                },
+                {
+                  "annotations": {
+                    "FixedLength": "false",
+                    "MaxLength": "Max"
+                  },
+                  "name": "Binary",
+                  "nullable": null,
+                  "type": "Edm.Binary"
+                },
+                {
+                  "name": "Ticks",
+                  "nullable": null,
+                  "type": "Edm.Int64"
+                },
+                {
+                  "name": "Duration",
+                  "nullable": null,
+                  "type": "Edm.Time"
+                },
+                {
+                  "name": "Guid",
+                  "nullable": null,
+                  "type": "Edm.Guid"
+                }
+              ]
+            },
+            {
+              "key_properties": [
+                "Name"
+              ],
+              "name": "Tag",
+              "navigation_properties": [
+                {
+                  "from_role": "Tag",
+                  "multiplicity": "*",
+                  "name": "Articles",
+                  "partner": null,
+                  "relationship": "Feeds.ArticleTags",
+                  "to_role": "Article",
+                  "type": "Collection(Feeds.Article)"
+                }
+              ],
+              "properties": [
+                {
+                  "annotations": {
+                    "MaxLength": "40"
+                  },
+                  "name": "Name",
+                  "nullable": false,
+                  "type": "Edm.String"
+                }
+              ]
+            }
+          ],
+          "enum_types": [],
+          "namespace": "Feeds"
+        }
+      ],
+      "odata_version": "2.0"
+    },
+    "format": "odata",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Feeds",
+      "namespace": "Feeds"
+    },
+    "paradigm": "rest",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Feeds.Articles",
+        "name": "Articles",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Articles",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/Articles",
+            "key": "GET /Articles",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Articles#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Feeds.Article",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listArticles",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /Articles#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Articles",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/Articles({key})",
+            "key": "GET /Articles({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Articles({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Feeds.Article",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getArticle",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Articles",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/Articles",
+            "key": "POST /Articles",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Articles#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Feeds.Article",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Articles#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Feeds.Article",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createArticle",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "Feeds.Tags",
+        "name": "Tags",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Tags",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/Tags",
+            "key": "GET /Tags",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Tags#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Feeds.Tag",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listTags",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /Tags#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Tags",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/Tags({key})",
+            "key": "GET /Tags({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Tags({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Feeds.Tag",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getTag",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Tags",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/Tags",
+            "key": "POST /Tags",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Tags#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Feeds.Tag",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Tags#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Feeds.Tag",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createTag",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_annotations": {
+            "m:HasStream": "true"
+          },
+          "odata_key_properties": [
+            "ArticleId"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": []
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "20"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Feeds.Article.ArticleId",
+            "name": "ArticleId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "80",
+                "m:FC_TargetPath": "SyndicationAuthorName"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 5,
+            "key": "Feeds.Article.AuthorName",
+            "name": "AuthorName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "FixedLength": "false",
+                "MaxLength": "Max"
+              },
+              "odata_type": "Edm.Binary"
+            },
+            "field_number": 8,
+            "key": "Feeds.Article.Binary",
+            "name": "Binary",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "m:FC_KeepInContent": "true"
+              },
+              "odata_type": "Edm.Boolean"
+            },
+            "field_number": 7,
+            "key": "Feeds.Article.Draft",
+            "name": "Draft",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Time"
+            },
+            "field_number": 10,
+            "key": "Feeds.Article.Duration",
+            "name": "Duration",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Guid"
+            },
+            "field_number": 11,
+            "key": "Feeds.Article.Guid",
+            "name": "Guid",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "m:FC_KeepInContent": "false",
+                "m:FC_TargetPath": "SyndicationUpdated"
+              },
+              "odata_type": "Edm.DateTimeOffset"
+            },
+            "field_number": 4,
+            "key": "Feeds.Article.PublishedOn",
+            "name": "PublishedOn",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Single"
+            },
+            "field_number": 6,
+            "key": "Feeds.Article.Rating",
+            "name": "Rating",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "1000",
+                "m:FC_ContentKind": "html",
+                "m:FC_KeepInContent": "true",
+                "m:FC_TargetPath": "SyndicationSummary"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 3,
+            "key": "Feeds.Article.Summary",
+            "name": "Summary",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Int64"
+            },
+            "field_number": 9,
+            "key": "Feeds.Article.Ticks",
+            "name": "Ticks",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "200",
+                "m:FC_ContentKind": "text",
+                "m:FC_KeepInContent": "false",
+                "m:FC_TargetPath": "SyndicationTitle"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 2,
+            "key": "Feeds.Article.Title",
+            "name": "Title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Feeds.Article",
+        "key_type": null,
+        "kind": "record",
+        "name": "Article",
+        "namespace": "Feeds",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_key_properties": [
+            "Name"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": [
+            {
+              "from_role": "Tag",
+              "multiplicity": "*",
+              "name": "Articles",
+              "partner": null,
+              "relationship": "Feeds.ArticleTags",
+              "to_role": "Article",
+              "type": "Collection(Feeds.Article)"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "40"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Feeds.Tag.Name",
+            "name": "Name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Feeds.Tag",
+        "key_type": null,
+        "kind": "record",
+        "name": "Tag",
+        "namespace": "Feeds",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "2.0"
+  },
+  "corpus_path": "odata-v2/04-stress-v2-customizable-feeds.xml",
+  "counts": {
+    "channels": 0,
+    "operations": 6,
+    "servers": 0,
+    "services": 2,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "odata-v2"
+  },
+  "fingerprint": "sha256:fc2683f23cd75cd3668db57a651c647e95f5707013c40129356f770c3f7ab9e0",
+  "lint": {
+    "findings": 29,
+    "grade": "F",
+    "report_fingerprint": "77d20972f7c43e3aa9ce39c6142dc7795fe63010bcb8e2a6cacac692cfc44796",
+    "score": 51,
+    "severity_counts": {
+      "error": 0,
+      "info": 21,
+      "warning": 8
+    }
+  },
+  "snapshot_version": 1
+}

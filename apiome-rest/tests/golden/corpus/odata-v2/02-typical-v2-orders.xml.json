@@ -1,0 +1,1186 @@
+{
+  "adapter": "odata",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "odata_csdl_version": "2.0",
+      "odata_data_service_version": "2.0",
+      "odata_edm_namespace": "http://schemas.microsoft.com/ado/2008/09/edm",
+      "odata_edmx_namespace": "http://schemas.microsoft.com/ado/2007/06/edmx",
+      "odata_edmx_version": "1.0",
+      "odata_entity_sets": [
+        {
+          "entity_type": "Northbound.Orders.Customer",
+          "name": "Customers"
+        },
+        {
+          "entity_type": "Northbound.Orders.Order",
+          "name": "Orders"
+        },
+        {
+          "entity_type": "Northbound.Orders.Item",
+          "name": "Items"
+        }
+      ],
+      "odata_schemas": [
+        {
+          "associations": [
+            {
+              "ends": [
+                {
+                  "multiplicity": "1",
+                  "role": "Customer",
+                  "type": "Northbound.Orders.Customer"
+                },
+                {
+                  "multiplicity": "*",
+                  "role": "Order",
+                  "type": "Northbound.Orders.Order"
+                }
+              ],
+              "name": "CustomerOrders",
+              "namespace": "Northbound.Orders",
+              "referential_constraints": [
+                {
+                  "dependent_properties": [
+                    "CustomerId"
+                  ],
+                  "dependent_role": "Order",
+                  "principal_properties": [
+                    "CustomerId"
+                  ],
+                  "principal_role": "Customer"
+                }
+              ]
+            },
+            {
+              "ends": [
+                {
+                  "multiplicity": "1",
+                  "role": "Order",
+                  "type": "Northbound.Orders.Order"
+                },
+                {
+                  "multiplicity": "*",
+                  "role": "Item",
+                  "type": "Northbound.Orders.Item"
+                }
+              ],
+              "name": "OrderItems",
+              "namespace": "Northbound.Orders",
+              "referential_constraints": []
+            }
+          ],
+          "complex_types": [],
+          "entity_container": {
+            "annotations": {
+              "m:IsDefaultEntityContainer": "true"
+            },
+            "association_sets": [
+              {
+                "association": "Northbound.Orders.CustomerOrders",
+                "ends": [
+                  {
+                    "entity_set": "Customers",
+                    "role": "Customer"
+                  },
+                  {
+                    "entity_set": "Orders",
+                    "role": "Order"
+                  }
+                ],
+                "name": "CustomerOrdersSet"
+              },
+              {
+                "association": "Northbound.Orders.OrderItems",
+                "ends": [
+                  {
+                    "entity_set": "Orders",
+                    "role": "Order"
+                  },
+                  {
+                    "entity_set": "Items",
+                    "role": "Item"
+                  }
+                ],
+                "name": "OrderItemsSet"
+              }
+            ],
+            "entity_sets": [
+              {
+                "entity_type": "Northbound.Orders.Customer",
+                "name": "Customers"
+              },
+              {
+                "entity_type": "Northbound.Orders.Order",
+                "name": "Orders"
+              },
+              {
+                "entity_type": "Northbound.Orders.Item",
+                "name": "Items"
+              }
+            ],
+            "function_imports": [
+              {
+                "annotations": {
+                  "m:HttpMethod": "POST"
+                },
+                "entity_set": "Orders",
+                "name": "CancelOrder",
+                "parameters": [
+                  {
+                    "mode": "In",
+                    "name": "OrderId",
+                    "nullable": null,
+                    "type": "Edm.String"
+                  },
+                  {
+                    "mode": "In",
+                    "name": "Reason",
+                    "nullable": null,
+                    "type": "Edm.String"
+                  }
+                ],
+                "return_type": "Northbound.Orders.Order"
+              }
+            ],
+            "name": "OrdersContainer"
+          },
+          "entity_types": [
+            {
+              "key_properties": [
+                "CustomerId"
+              ],
+              "name": "Customer",
+              "navigation_properties": [
+                {
+                  "from_role": "Customer",
+                  "multiplicity": "*",
+                  "name": "Orders",
+                  "partner": "Customer",
+                  "relationship": "Northbound.Orders.CustomerOrders",
+                  "to_role": "Order",
+                  "type": "Collection(Northbound.Orders.Order)"
+                }
+              ],
+              "properties": [
+                {
+                  "annotations": {
+                    "MaxLength": "10"
+                  },
+                  "name": "CustomerId",
+                  "nullable": false,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "80"
+                  },
+                  "name": "Name",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "2"
+                  },
+                  "name": "Country",
+                  "nullable": null,
+                  "type": "Edm.String"
+                }
+              ]
+            },
+            {
+              "key_properties": [
+                "OrderId"
+              ],
+              "name": "Order",
+              "navigation_properties": [
+                {
+                  "from_role": "Order",
+                  "multiplicity": "1",
+                  "name": "Customer",
+                  "partner": "Orders",
+                  "relationship": "Northbound.Orders.CustomerOrders",
+                  "to_role": "Customer",
+                  "type": "Northbound.Orders.Customer"
+                },
+                {
+                  "from_role": "Order",
+                  "multiplicity": "*",
+                  "name": "Items",
+                  "partner": null,
+                  "relationship": "Northbound.Orders.OrderItems",
+                  "to_role": "Item",
+                  "type": "Collection(Northbound.Orders.Item)"
+                }
+              ],
+              "properties": [
+                {
+                  "annotations": {
+                    "MaxLength": "10"
+                  },
+                  "name": "OrderId",
+                  "nullable": false,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "10"
+                  },
+                  "name": "CustomerId",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "OrderedOn",
+                  "nullable": null,
+                  "type": "Edm.DateTime"
+                },
+                {
+                  "annotations": {
+                    "Precision": "13",
+                    "Scale": "2"
+                  },
+                  "name": "Total",
+                  "nullable": null,
+                  "type": "Edm.Decimal"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "3"
+                  },
+                  "name": "Currency",
+                  "nullable": null,
+                  "type": "Edm.String"
+                }
+              ]
+            },
+            {
+              "key_properties": [
+                "OrderId",
+                "ItemNo"
+              ],
+              "name": "Item",
+              "navigation_properties": [],
+              "properties": [
+                {
+                  "annotations": {
+                    "MaxLength": "10"
+                  },
+                  "name": "OrderId",
+                  "nullable": false,
+                  "type": "Edm.String"
+                },
+                {
+                  "name": "ItemNo",
+                  "nullable": false,
+                  "type": "Edm.Int32"
+                },
+                {
+                  "annotations": {
+                    "MaxLength": "18"
+                  },
+                  "name": "Sku",
+                  "nullable": null,
+                  "type": "Edm.String"
+                },
+                {
+                  "annotations": {
+                    "Precision": "13",
+                    "Scale": "3"
+                  },
+                  "name": "Quantity",
+                  "nullable": null,
+                  "type": "Edm.Decimal"
+                }
+              ]
+            }
+          ],
+          "enum_types": [],
+          "namespace": "Northbound.Orders"
+        }
+      ],
+      "odata_version": "2.0"
+    },
+    "format": "odata",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Northbound.Orders",
+      "namespace": "Northbound.Orders"
+    },
+    "paradigm": "rest",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Northbound.Orders.Customers",
+        "name": "Customers",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Customers",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/Customers",
+            "key": "GET /Customers",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Customers#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Northbound.Orders.Customer",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listCustomers",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /Customers#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Customers",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/Customers({key})",
+            "key": "GET /Customers({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Customers({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Northbound.Orders.Customer",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getCustomer",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Customers",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/Customers",
+            "key": "POST /Customers",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Customers#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Northbound.Orders.Customer",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Customers#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Northbound.Orders.Customer",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createCustomer",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "Northbound.Orders.Items",
+        "name": "Items",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Items",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/Items",
+            "key": "GET /Items",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Items#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Northbound.Orders.Item",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listItems",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /Items#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Items",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/Items({key})",
+            "key": "GET /Items({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Items({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Northbound.Orders.Item",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getItem",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Items",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/Items",
+            "key": "POST /Items",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Items#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Northbound.Orders.Item",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Items#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Northbound.Orders.Item",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createItem",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      },
+      {
+        "description": null,
+        "extras": {},
+        "key": "Northbound.Orders.Orders",
+        "name": "Orders",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Orders",
+              "odata_operation": "list"
+            },
+            "http_method": "GET",
+            "http_path": "/Orders",
+            "key": "GET /Orders",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Orders#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Northbound.Orders.Order",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listOrders",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /Orders#query.$top",
+                "location": "query",
+                "name": "$top",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "i32",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Orders",
+              "odata_operation": "get"
+            },
+            "http_method": "GET",
+            "http_path": "/Orders({key})",
+            "key": "GET /Orders({key})",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "GET /Orders({key})#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Northbound.Orders.Order",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "getOrder",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_entity_set": "Orders",
+              "odata_operation": "create"
+            },
+            "http_method": "POST",
+            "http_path": "/Orders",
+            "key": "POST /Orders",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Orders#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Northbound.Orders.Order",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /Orders#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Northbound.Orders.Order",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createOrder",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_key_properties": [
+            "CustomerId"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": [
+            {
+              "from_role": "Customer",
+              "multiplicity": "*",
+              "name": "Orders",
+              "partner": "Customer",
+              "relationship": "Northbound.Orders.CustomerOrders",
+              "to_role": "Order",
+              "type": "Collection(Northbound.Orders.Order)"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "2"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 3,
+            "key": "Northbound.Orders.Customer.Country",
+            "name": "Country",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "10"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Northbound.Orders.Customer.CustomerId",
+            "name": "CustomerId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "80"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 2,
+            "key": "Northbound.Orders.Customer.Name",
+            "name": "Name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Northbound.Orders.Customer",
+        "key_type": null,
+        "kind": "record",
+        "name": "Customer",
+        "namespace": "Northbound.Orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_key_properties": [
+            "OrderId",
+            "ItemNo"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": []
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.Int32"
+            },
+            "field_number": 2,
+            "key": "Northbound.Orders.Item.ItemNo",
+            "name": "ItemNo",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "10"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Northbound.Orders.Item.OrderId",
+            "name": "OrderId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "Precision": "13",
+                "Scale": "3"
+              },
+              "odata_type": "Edm.Decimal"
+            },
+            "field_number": 4,
+            "key": "Northbound.Orders.Item.Quantity",
+            "name": "Quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "18"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 3,
+            "key": "Northbound.Orders.Item.Sku",
+            "name": "Sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Northbound.Orders.Item",
+        "key_type": null,
+        "kind": "record",
+        "name": "Item",
+        "namespace": "Northbound.Orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odata_key_properties": [
+            "OrderId"
+          ],
+          "odata_kind": "entity",
+          "odata_navigation_properties": [
+            {
+              "from_role": "Order",
+              "multiplicity": "1",
+              "name": "Customer",
+              "partner": "Orders",
+              "relationship": "Northbound.Orders.CustomerOrders",
+              "to_role": "Customer",
+              "type": "Northbound.Orders.Customer"
+            },
+            {
+              "from_role": "Order",
+              "multiplicity": "*",
+              "name": "Items",
+              "partner": null,
+              "relationship": "Northbound.Orders.OrderItems",
+              "to_role": "Item",
+              "type": "Collection(Northbound.Orders.Item)"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "3"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 5,
+            "key": "Northbound.Orders.Order.Currency",
+            "name": "Currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "10"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 2,
+            "key": "Northbound.Orders.Order.CustomerId",
+            "name": "CustomerId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "MaxLength": "10"
+              },
+              "odata_type": "Edm.String"
+            },
+            "field_number": 1,
+            "key": "Northbound.Orders.Order.OrderId",
+            "name": "OrderId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_type": "Edm.DateTime"
+            },
+            "field_number": 3,
+            "key": "Northbound.Orders.Order.OrderedOn",
+            "name": "OrderedOn",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odata_annotations": {
+                "Precision": "13",
+                "Scale": "2"
+              },
+              "odata_type": "Edm.Decimal"
+            },
+            "field_number": 4,
+            "key": "Northbound.Orders.Order.Total",
+            "name": "Total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Northbound.Orders.Order",
+        "key_type": null,
+        "kind": "record",
+        "name": "Order",
+        "namespace": "Northbound.Orders",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "2.0"
+  },
+  "corpus_path": "odata-v2/02-typical-v2-orders.xml",
+  "counts": {
+    "channels": 0,
+    "operations": 9,
+    "servers": 0,
+    "services": 3,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "odata-v2"
+  },
+  "fingerprint": "sha256:749816f6f53982164251b64ac22f5c41023ee5adbb7e891664a222b93216f4bc",
+  "lint": {
+    "findings": 37,
+    "grade": "F",
+    "report_fingerprint": "e850f68bfa8c2a31de879af3f88e43c551c6d584abf0649d90c0ddba021b9b96",
+    "score": 43,
+    "severity_counts": {
+      "error": 0,
+      "info": 25,
+      "warning": 12
+    }
+  },
+  "snapshot_version": 1
+}
