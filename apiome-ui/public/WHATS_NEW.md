@@ -9,9 +9,10 @@ We continue to improve the platform based on your feedback with improvements and
 - Import:
   - Hardening import functionality
   - Adds formats:
-    - MCP
-    - Kong
-    - Arazzo 1.1
+    - MCP import and export
+    - Kong import and export
+    - Arazzo 1.1 import and export
+    - AsyncAPI 2.x export
 
 ## Bug Fixes
 
