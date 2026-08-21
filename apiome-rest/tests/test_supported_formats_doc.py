@@ -189,7 +189,9 @@ def test_every_shipped_emitter_appears(page: str) -> None:
     )
 
 
-@pytest.mark.parametrize("key", ["openapi", "grpc", "asyncapi", "graphql", "avro"])
+@pytest.mark.parametrize(
+    "key", ["openapi", "grpc", "asyncapi", "graphql", "avro", "http-file"]
+)
 def test_known_round_tripping_formats_are_not_reported_as_import_only(
     key: str, rows: List[FormatRow]
 ) -> None:
@@ -199,6 +201,9 @@ def test_known_round_tripping_formats_are_not_reported_as_import_only(
     under ``asyncapi-3`` but describes itself as ``asyncapi`` — so a join on the wrong one silently
     reports these round-tripping formats as import-only. Naming them explicitly turns that into a
     failure instead of a quiet under-claim on a page whose entire purpose is not to under-claim.
+
+    ``http-file`` is here because it was import-only until FMT-2.4 (#5422) gave it an emitter,
+    which is exactly the transition this join has to notice.
     """
     row = next(r for r in rows if r.key == key)
     assert row.can_export is True, f"{key} has a registered emitter but the page says otherwise"

@@ -665,6 +665,7 @@ def load_builtin_emitters() -> None:
     from . import k8s_crd_emitter as _k8s_crd_emitter  # noqa: F401
     from . import kong_emitter as _kong_emitter  # noqa: F401
     from . import gateway_api_emitter as _gateway_api_emitter  # noqa: F401
+    from . import http_file_emitter as _http_file_emitter  # noqa: F401
 
 
 def get_emitter(format_key: str) -> Optional[type[Emitter]]:

@@ -6,7 +6,7 @@ Sample source documents for exercising the catalog **Import** flow (the ImportDi
 
 > **Adding an example?** Read the [corpus contributor guide](../../docs/CORPUS_CONTRIBUTOR_GUIDE.md) first — it covers the ladder, every manifest field, the licensing rules for documents derived from third-party specs, the anonymization rule for captured payloads, and the review checklist. `python3 scripts/check_corpus_provenance.py` enforces the provenance rules in CI.
 
-The corpus holds **1411 files** across **103 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
+The corpus holds **1413 files** across **103 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
 
 ## How the corpus is used
 
@@ -32,7 +32,7 @@ The corpus holds **1411 files** across **103 format directories**. Every file ha
 | `gateway-api/` | Gateway API HTTPRoute | rest | `apiVersion: gateway.networking.k8s.io/*` + `kind: HTTPRoute` | 13 |
 | `haproxy/` | HAProxy configuration (pending #5459) | rest | `frontend`/`backend`/`listen` sections with `bind`, `acl`, `use_backend` | 16 |
 | `hoppscotch/` | Hoppscotch collections (pending #5473) | rest | top-level `v` + `folders[]`/`requests[]` with `endpoint` and `auth.authType` | 14 |
-| `http-file/` | HTTP Request File | rest | HTTP request line / `###` separators / `curl` / `.http` `.rest` | 13 |
+| `http-file/` | HTTP Request File | rest | HTTP request line / `###` separators / `curl` / `.http` `.rest` | 15 |
 | `istio/` | Istio traffic resources (pending #5458) | rest | `apiVersion: networking.istio.io/*` + `kind: VirtualService` | 15 |
 | `kong/` | Kong Declarative Config | rest | `_format_version` + `services:`/`routes:` declarative sections | 12 |
 | `nginx/` | nginx configuration (pending #5459) | rest | `server { listen … location … }` / `upstream … { server … }` blocks | 15 |
@@ -1043,6 +1043,8 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `06-users-set/admin.http` ⚠ | multi-file (member) | `http-file` (no guarantee) | valid | `multi-file`, `member` |
 | `06-users-set/api.http` | multi-file (root) | `http-file` ≥ 0.9 | valid | `multi-file`, `env`, `provenance` |
 | `06-users-set/http-client.env.json` ⚠ | multi-file (member) | `http-file` (no guarantee) | valid | `multi-file`, `env` |
+| `07-emitted-vscode-collection.http` ⚠ | real-world | `http-file` ≥ 0.9 | valid | `emitted`, `vscode`, `collection`, `path-template`, `header-param` |
+| `08-emitted-jetbrains-collection.http` ⚠ | real-world | `http-file` ≥ 0.9 | valid | `emitted`, `jetbrains`, `collection`, `path-template`, `header-param` |
 | `negative/01-syntactic-no-request.http` | — | `http-file` (no guarantee) | invalid | `negative`, `syntactic` |
 | `negative/02-semantic-curl-missing-url.http` | — | `http-file` (no guarantee) | invalid | `negative`, `semantic`, `curl` |
 | `negative/03-truncated-mid-body.http` | — | `http-file` (no guarantee) | invalid | `negative`, `truncated` |
@@ -1052,6 +1054,10 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 > ⚠ **`06-users-set/admin.http`** — Fileset member imported through the set root api.http together with http-client.env.json.
 
 > ⚠ **`06-users-set/http-client.env.json`** — JetBrains-style environment file; not independently importable as requests.
+
+> ⚠ **`07-emitted-vscode-collection.http`** — Round-trip fixture for the request-file emitter: the VS Code dialect names each request on a `# @name` line and comments with `#`.
+
+> ⚠ **`08-emitted-jetbrains-collection.http`** — The same API as 07 in the other dialect: the request name is the `###` separator itself and comments use `//`.
 
 ### `idoc/` — SAP IDoc (pending #5446)
 
@@ -2580,7 +2586,7 @@ Every entry declares where its bytes came from (`origin`), under what license, a
 
 | Origin | Files | Licenses |
 | --- | --- | --- |
-| `hand-authored` | 1411 | `Apache-2.0` |
+| `hand-authored` | 1413 | `Apache-2.0` |
 
 ## Trying an import
 
