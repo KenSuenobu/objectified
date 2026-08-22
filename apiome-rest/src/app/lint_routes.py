@@ -54,6 +54,9 @@ from .models import (
     LintReportResponse,
     LintRuleCatalogResponse,
     LintRuleOut,
+    SchematronImportEntryOut,
+    SchematronImportRequest,
+    SchematronImportResponse,
     SpectralImportBuiltinRuleOut,
     SpectralImportEntryOut,
     SpectralImportExtendsOut,
@@ -67,6 +70,7 @@ from .models import (
 from .permissions import Action, Resource, enforce_permission
 from .policy_evaluate import match_decision_for_fingerprint
 from .schema_lint import merge_compatibility_findings
+from .schematron_import import SchematronImportError, import_schematron_ruleset
 from .spectral_import import (
     SpectralImportError,
     fetch_spectral_ruleset,
@@ -315,6 +319,90 @@ async def import_spectral_ruleset_document(
                 detail=item.detail,
             )
             for item in result.extends
+        ],
+        notes=list(result.notes),
+    )
+
+
+@rules_router.post(
+    "/schematron/import",
+    response_model=SchematronImportResponse,
+    responses={
+        400: {
+            "description": "The rule set could not be read: not XML, not Schematron, truncated, "
+            "not UTF-8, an unresolvable `include`/`is-a`, or no assertion at all. `detail.code` "
+            "carries the intake taxonomy code."
+        }
+    },
+)
+async def import_schematron_document(
+    payload: SchematronImportRequest,
+    auth_data: Dict[str, Any] = Depends(validate_session_credentials),
+) -> SchematronImportResponse:
+    """
+    Import a Schematron rule set as a style guide (FMT-4.3, #5436).
+
+    Schematron is a rule language, not a schema language, so it lands on the governance engine
+    rather than the canonical schema model: every `assert`/`report` becomes one rule, its `@id`
+    the rule id, its `@role` the severity, its text the message, and its `@context` the target.
+
+    Assertions about *shape* — a child or attribute must (or must not) be declared, a value must
+    come from a fixed set — are imported as evaluable rules scored against the canonical model,
+    so an imported Peppol-shaped profile re-scores any XSD- or UBL-derived catalog item.
+    Assertions that need a document in hand (arithmetic, computed variables, string lengths, an
+    instance-selecting context predicate) are imported as **declared-but-unevaluable** rules
+    carrying a machine-readable `reason` — they are never dropped, and `entries` says exactly
+    what happened to each one.
+
+    Nothing is persisted: `yaml` is ready for
+    `PUT /v1/style-guides/{tenantSlug}/{guideId}/custom-rules`.
+    """
+    _ = auth_data
+    try:
+        result = import_schematron_ruleset(
+            payload.content,
+            source_label=payload.source_label,
+            members=payload.members,
+            reserved_rule_ids=frozenset(builtin_rule_ids()),
+        )
+    except SchematronImportError as exc:
+        raise HTTPException(
+            status_code=400, detail={"message": exc.message, "code": exc.code}
+        ) from exc
+
+    return SchematronImportResponse(
+        source_label=result.source_label,
+        guide_name=result.guide_name,
+        description=result.description,
+        assertion_count=result.assertion_count,
+        projected_count=result.projected_count,
+        declared_count=result.declared_count,
+        coverage=result.coverage,
+        yaml=result.yaml,
+        resolved_phase=result.resolved_phase,
+        phases=list(result.phases),
+        namespaces=dict(result.namespaces or {}),
+        modules=list(result.modules),
+        entries=[
+            SchematronImportEntryOut(
+                assertion_id=entry.assertion_id,
+                kind=entry.kind,
+                outcome=entry.outcome,
+                rule_id=entry.rule_id,
+                severity=entry.severity,
+                role=entry.role,
+                context=entry.context,
+                test=entry.test,
+                target=entry.target,
+                pattern_id=entry.pattern_id,
+                phases=list(entry.phases),
+                active=entry.active,
+                reason=entry.reason,
+                detail=entry.detail,
+                notes=list(entry.notes),
+                stored=entry.stored,
+            )
+            for entry in result.entries
         ],
         notes=list(result.notes),
     )

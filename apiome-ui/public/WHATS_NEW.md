@@ -21,6 +21,7 @@ We continue to improve the platform based on your feedback with improvements and
     - Protobuf editions 2023/2024 normalization parity
     - RELAX NG import
     - DTD import
+    - Schematron import
   - Added pills to supported format list to show the source and type that the API format provides
   - Every format now declares which versions it reads and writes, and which version an export
     produces by default — published on the format capability endpoint, the format matrix and the

@@ -7404,6 +7404,172 @@ class SpectralImportResponse(BaseModel):
     )
 
 
+class SchematronImportRequest(BaseModel):
+    """Import a Schematron rule set as a style guide (FMT-4.3, #5436).
+
+    ``content`` is the rule set's text — the root document of the set. A rule set assembled from
+    modules by ``include`` additionally supplies ``members``: the other files of the upload,
+    keyed by their path relative to the set root. Nothing is fetched, so an ``include`` naming a
+    file that is not a member fails with an unresolved-reference error.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    content: str = Field(
+        min_length=1,
+        max_length=262_144,
+        description="The Schematron document text (paste or uploaded `.sch` file).",
+    )
+    source_label: Optional[str] = Field(
+        default=None,
+        max_length=255,
+        validation_alias=AliasChoices("sourceLabel", "source_label"),
+        serialization_alias="sourceLabel",
+        description=(
+            "Path of `content` within the uploaded set (e.g. `main.sch`), echoed back and used "
+            "to resolve a relative `include` href."
+        ),
+    )
+    members: Optional[Dict[str, str]] = Field(
+        default=None,
+        description=(
+            "Other files of a multi-file rule set, keyed by path relative to the set root. Only "
+            "consulted by `include`."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _bounded_members(self) -> "SchematronImportRequest":
+        """Bound the fileset the way the single document is bounded."""
+        if self.members is None:
+            return self
+        if len(self.members) > 64:
+            raise ValueError("a Schematron rule set may not carry more than 64 members")
+        if sum(len(text) for text in self.members.values()) > 1_048_576:
+            raise ValueError("the Schematron rule set's members exceed 1 MiB in total")
+        return self
+
+
+class SchematronImportEntryOut(BaseModel):
+    """What became of one `assert` / `report` of an imported Schematron rule set (FMT-4.3)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    assertion_id: str = Field(
+        serialization_alias="assertionId",
+        description="The assertion's `@id` as written, or the coordinate derived for it.",
+    )
+    kind: str = Field(description="`assert` (the test must hold) or `report` (it must not).")
+    outcome: str = Field(
+        description=(
+            "projected (an evaluable rule scored against the canonical model) | declared "
+            "(recorded with a reason, never evaluated)."
+        )
+    )
+    rule_id: str = Field(
+        serialization_alias="ruleId",
+        description="The Apiome rule id the assertion imported as (`schematron.<id>`).",
+    )
+    severity: str = Field(description="Lint severity the `@role` maps onto: error|warning|info.")
+    role: Optional[str] = Field(
+        default=None, description="The `@role` as written (fatal, error, warning, info, ...)."
+    )
+    context: str = Field(description="The rule's `@context` XPath, recorded as the rule's target.")
+    test: str = Field(description="The assertion's `@test` XPath, recorded verbatim.")
+    target: Optional[str] = Field(
+        default=None,
+        description="Canonical element the rule scores, when the context named a single one.",
+    )
+    pattern_id: str = Field(
+        default="", serialization_alias="patternId", description="The enclosing pattern's id."
+    )
+    phases: List[str] = Field(
+        default_factory=list,
+        description="Phases whose `active` list names the pattern (empty when none declared).",
+    )
+    active: bool = Field(
+        default=True, description="Whether the pattern is active in the resolved phase."
+    )
+    reason: Optional[str] = Field(
+        default=None,
+        description=(
+            "Why the rule is declared rather than evaluable: context_predicate | "
+            "context_not_projectable | variable_reference | unsupported_xpath_function | "
+            "unsupported_xpath_operator | unsupported_xpath_path | instance_value_assertion | "
+            "unsupported_report_inversion | no_test | inactive_phase | rule_limit."
+        ),
+    )
+    detail: Optional[str] = Field(
+        default=None, description="Human explanation of `reason` (declared outcome only)."
+    )
+    notes: List[str] = Field(
+        default_factory=list,
+        description="What a successful projection narrowed (dropped prefix, unfollowed steps).",
+    )
+    stored: bool = Field(
+        default=True, description="False only when the guide's rule ceiling excluded the rule."
+    )
+
+
+class SchematronImportResponse(BaseModel):
+    """A Schematron rule set translated into style-guide state (FMT-4.3, #5436).
+
+    `yaml` is the ready-to-store custom-rules document — the exact body
+    `PUT /v1/style-guides/{tenantSlug}/{guideId}/custom-rules` accepts. Nothing is persisted by
+    the import call itself. Every assertion appears in `entries` *and* in `yaml`: one that could
+    not be projected is stored as a declared rule carrying its reason, never dropped.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    source_label: Optional[str] = Field(
+        default=None, serialization_alias="sourceLabel", description="Label of the imported source."
+    )
+    guide_name: str = Field(
+        serialization_alias="guideName",
+        description="Suggested guide name: the rule set's `title`, else the source label.",
+    )
+    description: Optional[str] = Field(
+        default=None, description="The rule set's prose, for the guide's description."
+    )
+    assertion_count: int = Field(
+        serialization_alias="assertionCount",
+        description="Assertions the rule set declared.",
+    )
+    projected_count: int = Field(
+        serialization_alias="projectedCount",
+        description="Assertions that became evaluable canonical-model rules.",
+    )
+    declared_count: int = Field(
+        serialization_alias="declaredCount",
+        description="Assertions recorded as declared-but-unevaluable, each with a reason.",
+    )
+    coverage: float = Field(
+        description="projectedCount / assertionCount, 0.0-1.0. Reported, never gated on."
+    )
+    yaml: str = Field(description="The imported rules as a style-guide YAML document.")
+    resolved_phase: str = Field(
+        serialization_alias="resolvedPhase",
+        description="The phase whose patterns are active (`#ALL` when none was selected).",
+    )
+    phases: List[str] = Field(
+        default_factory=list, description="Every phase the rule set declares, in document order."
+    )
+    namespaces: Dict[str, str] = Field(
+        default_factory=dict, description="The `ns` prefix bindings the rule set declares."
+    )
+    modules: List[str] = Field(
+        default_factory=list, description="Modules spliced in by `include`, in resolution order."
+    )
+    entries: List[SchematronImportEntryOut] = Field(
+        description="One entry per assertion, in document order."
+    )
+    notes: List[str] = Field(
+        default_factory=list,
+        description="Document-level notes (rule ceiling reached, assembled modules, ...).",
+    )
+
+
 class StyleGuideProjectAssignmentOut(BaseModel):
     """One project-level style-guide assignment (GOV-2.1, #4433)."""
 

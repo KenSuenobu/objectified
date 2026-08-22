@@ -1857,7 +1857,7 @@ async def run_adapter_import_job(
             # adapter-produced report is persisted verbatim. An unscored report has
             # nothing to re-score either (``apply`` returns it untouched).
             if lint.score is not None and guide.source != FALLBACK_GUIDE_SOURCE:
-                lint = apply_style_guide_to_lint_report(lint, guide)
+                lint = apply_style_guide_to_lint_report(lint, guide, api=model)
         except Exception:  # noqa: BLE001 - guide application must never fail the import
             logger.warning(
                 "Style-guide application failed for import job %s; keeping default score",

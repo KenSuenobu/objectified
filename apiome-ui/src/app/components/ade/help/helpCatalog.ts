@@ -287,6 +287,15 @@ export const GUIDE_ENTRIES: readonly GuideEntry[] = [
     keywords: ['stoplight', 'redocly', 'migrate', 'yaml', 'convert'],
   },
   {
+    id: 'schematron-import',
+    title: 'Import a Schematron rule set',
+    summary:
+      'Turn a .sch rule set into a governance style guide: one rule per assertion, with a reason for every assertion that cannot be scored.',
+    page: 'docs/guide/schematron-import.md',
+    section: 'reference',
+    keywords: ['.sch', 'xml', 'peppol', 'ubl', 'assert', 'xpath', 'governance', 'iso 19757'],
+  },
+  {
     id: 'style-guide-revisions',
     title: 'Style-guide revisions & governance audit',
     summary:
