@@ -327,6 +327,7 @@ export const CATALOG_FORMATS: readonly CatalogFormat[] = [
   { id: 'avro', label: 'Avro', icon: Binary, tone: 'cyan', dataType: 'schema', origin: 'data', importable: true, aliases: ['avsc'], description: 'Apache Avro record schema (.avsc).' },
   { id: 'jtd', label: 'JSON Type Definition', icon: Braces, tone: 'indigo', dataType: 'schema', origin: 'web', importable: true, aliases: ['jsontypedefinition', 'rfc8927'], description: 'JSON Type Definition (RFC 8927).' },
   { id: 'xsd', label: 'XSD', icon: FileCode, tone: 'stone', dataType: 'schema', origin: 'enterprise', importable: true, aliases: ['xmlschema'], description: 'XML Schema Definition (XSD).' },
+  { id: 'relaxng', label: 'RELAX NG', icon: FileCode, tone: 'amber', dataType: 'schema', origin: 'enterprise', importable: true, aliases: ['rng', 'rnc', 'relaxng-compact'], description: 'RELAX NG grammar — XML (.rng) or compact (.rnc) syntax.' },
   { id: 'asn1', label: 'ASN.1', icon: Binary, tone: 'stone', dataType: 'schema', origin: 'telecom', importable: true, aliases: ['asn'], description: 'ASN.1 data structure definitions.' },
   { id: 'cobolcopybook', label: 'COBOL Copybook', icon: FileCode, tone: 'slate', dataType: 'records', origin: 'mainframe', importable: true, aliases: ['copybook', 'cobol', 'cobol-copybook'], description: 'COBOL copybook record layout.' },
 

@@ -1101,6 +1101,12 @@ def load_builtin_import_sources() -> None:
     from . import avro_import_source as _avro  # noqa: F401
     from . import xmlrpc_import_source as _xmlrpc  # noqa: F401
     from . import xsd_import_source as _xsd  # noqa: F401
+
+    # ``relaxng_import_source`` (FMT-4.1) self-registers the ``relaxng`` adapter — both
+    # the XML (`.rng`) and compact (`.rnc`) syntaxes — and, via its own imports, the
+    # RELAX NG normalizer under ``relaxng``.
+    from . import relaxng_import_source as _relaxng  # noqa: F401
+
     from . import postman_import_source as _postman  # noqa: F401
     from . import cloudevents_import_source as _cloudevents  # noqa: F401
     from . import smithy_import_source as _smithy  # noqa: F401

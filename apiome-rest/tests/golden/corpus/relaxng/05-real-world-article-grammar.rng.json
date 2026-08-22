@@ -1,0 +1,1158 @@
+{
+  "adapter": "relaxng",
+  "canonical": {
+    "channels": [],
+    "description": "Publishing article grammar in the shape DocBook- and TEI-derived house schemas take: a metadata header, recursive sections, mixed-content prose, and a figure model.",
+    "extras": {
+      "relaxng": {
+        "capability_limits": [
+          {
+            "construct": "relaxng.interleave",
+            "count": 1,
+            "detail": "`interleave` admits its branches in any order. Neither the canonical model nor JSON Schema has an unordered-any-order construct, so the branches are kept as ordinary members and their order-independence is not expressible.",
+            "locations": [
+              "info"
+            ]
+          },
+          {
+            "construct": "relaxng.mixed",
+            "count": 1,
+            "detail": "`mixed` interleaves text with element content. The canonical model has no mixed-content record, so the text half is carried as an open-content member alongside the element members.",
+            "locations": [
+              "inline"
+            ]
+          }
+        ],
+        "datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+        "namespace": "http://example.com/publishing/article",
+        "root_type": "http://example.com/publishing/article.article"
+      }
+    },
+    "format": "relaxng",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "article",
+      "namespace": "http://example.com/publishing/article"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "article",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "article",
+          "relaxng_pattern": "define"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element",
+              "relaxng_ref": "bibliography"
+            },
+            "field_number": 5,
+            "key": "http://example.com/publishing/article.article.bibliography",
+            "name": "bibliography",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/publishing/article.bibliography",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element",
+              "relaxng_ref": "info"
+            },
+            "field_number": 3,
+            "key": "http://example.com/publishing/article.article.info",
+            "name": "info",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/publishing/article.info",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "language",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "http://example.com/publishing/article.article.lang",
+            "name": "lang",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element",
+              "relaxng_ref": "section"
+            },
+            "field_number": 4,
+            "key": "http://example.com/publishing/article.article.section",
+            "name": "section",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "http://example.com/publishing/article.section",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "draft",
+                "review",
+                "published"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 2,
+            "key": "http://example.com/publishing/article.article.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/publishing/article.article",
+        "key_type": null,
+        "kind": "record",
+        "name": "article",
+        "namespace": "http://example.com/publishing/article",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "bibliography",
+          "relaxng_pattern": "define"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element",
+              "relaxng_ns": "http://example.com/publishing/article"
+            },
+            "field_number": 1,
+            "key": "http://example.com/publishing/article.bibliography.entry",
+            "name": "entry",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "http://example.com/publishing/article.bibliographyEntry",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/publishing/article.bibliography",
+        "key_type": null,
+        "kind": "record",
+        "name": "bibliography",
+        "namespace": "http://example.com/publishing/article",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "entry",
+          "relaxng_pattern": "inline"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element",
+              "relaxng_ns": "http://example.com/publishing/article"
+            },
+            "field_number": 2,
+            "key": "http://example.com/publishing/article.bibliographyEntry.citationTitle",
+            "name": "citationTitle",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element",
+              "relaxng_ns": "http://example.com/publishing/article"
+            },
+            "field_number": 4,
+            "key": "http://example.com/publishing/article.bibliographyEntry.doi",
+            "name": "doi",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "ID",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "http://example.com/publishing/article.bibliographyEntry.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "gYear",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "element",
+              "relaxng_ns": "http://example.com/publishing/article"
+            },
+            "field_number": 3,
+            "key": "http://example.com/publishing/article.bibliographyEntry.year",
+            "name": "year",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/publishing/article.bibliographyEntry",
+        "key_type": null,
+        "kind": "record",
+        "name": "bibliographyEntry",
+        "namespace": "http://example.com/publishing/article",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "figure",
+          "relaxng_pattern": "define"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element",
+              "relaxng_ns": "http://example.com/publishing/article",
+              "relaxng_ref": "inline"
+            },
+            "field_number": 2,
+            "key": "http://example.com/publishing/article.figure.caption",
+            "name": "caption",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/publishing/article.inline",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "ID",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "http://example.com/publishing/article.figure.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element",
+              "relaxng_ns": "http://example.com/publishing/article"
+            },
+            "field_number": 3,
+            "key": "http://example.com/publishing/article.figure.image",
+            "name": "image",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/publishing/article.figureImage",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/publishing/article.figure",
+        "key_type": null,
+        "kind": "record",
+        "name": "figure",
+        "namespace": "http://example.com/publishing/article",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "image",
+          "relaxng_pattern": "inline"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uri",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "anyURI",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "http://example.com/publishing/article.figureImage.src",
+            "name": "src",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "positiveInteger",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 2,
+            "key": "http://example.com/publishing/article.figureImage.width",
+            "name": "width",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/publishing/article.figureImage",
+        "key_type": null,
+        "kind": "record",
+        "name": "figureImage",
+        "namespace": "http://example.com/publishing/article",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "info",
+          "relaxng_pattern": "define"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_interleaved": true,
+              "relaxng_kind": "element",
+              "relaxng_ns": "http://example.com/publishing/article"
+            },
+            "field_number": 3,
+            "key": "http://example.com/publishing/article.info.author",
+            "name": "author",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "http://example.com/publishing/article.infoAuthor",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_interleaved": true,
+              "relaxng_kind": "element",
+              "relaxng_ns": "http://example.com/publishing/article"
+            },
+            "field_number": 5,
+            "key": "http://example.com/publishing/article.info.keyword",
+            "name": "keyword",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "date",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_interleaved": true,
+              "relaxng_kind": "element",
+              "relaxng_ns": "http://example.com/publishing/article"
+            },
+            "field_number": 4,
+            "key": "http://example.com/publishing/article.info.published",
+            "name": "published",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_interleaved": true,
+              "relaxng_kind": "element",
+              "relaxng_ns": "http://example.com/publishing/article",
+              "relaxng_ref": "inline"
+            },
+            "field_number": 2,
+            "key": "http://example.com/publishing/article.info.subtitle",
+            "name": "subtitle",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/publishing/article.inline",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_interleaved": true,
+              "relaxng_kind": "element",
+              "relaxng_ns": "http://example.com/publishing/article",
+              "relaxng_ref": "inline"
+            },
+            "field_number": 1,
+            "key": "http://example.com/publishing/article.info.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/publishing/article.inline",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/publishing/article.info",
+        "key_type": null,
+        "kind": "record",
+        "name": "info",
+        "namespace": "http://example.com/publishing/article",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "author",
+          "relaxng_pattern": "inline"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element",
+              "relaxng_ns": "http://example.com/publishing/article"
+            },
+            "field_number": 3,
+            "key": "http://example.com/publishing/article.infoAuthor.affiliation",
+            "name": "affiliation",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element",
+              "relaxng_ns": "http://example.com/publishing/article"
+            },
+            "field_number": 2,
+            "key": "http://example.com/publishing/article.infoAuthor.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": "[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{3}[0-9X]",
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "string",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "http://example.com/publishing/article.infoAuthor.orcid",
+            "name": "orcid",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/publishing/article.infoAuthor",
+        "key_type": null,
+        "kind": "record",
+        "name": "infoAuthor",
+        "namespace": "http://example.com/publishing/article",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_pattern": "define"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "choice"
+            },
+            "field_number": 1,
+            "key": "http://example.com/publishing/article.inline.inlineChoice",
+            "name": "inlineChoice",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "http://example.com/publishing/article.inlineChoice",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "text",
+              "relaxng_mixed": true
+            },
+            "field_number": 2,
+            "key": "http://example.com/publishing/article.inline.text",
+            "name": "text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "http://example.com/publishing/article.inline",
+        "key_type": null,
+        "kind": "record",
+        "name": "inline",
+        "namespace": "http://example.com/publishing/article",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_owner": "inline",
+          "relaxng_pattern": "choice"
+        },
+        "fields": [],
+        "key": "http://example.com/publishing/article.inlineChoice",
+        "key_type": null,
+        "kind": "union",
+        "name": "inlineChoice",
+        "namespace": "http://example.com/publishing/article",
+        "union_members": [
+          "http://example.com/publishing/article.inlineChoiceEmphasis",
+          "http://example.com/publishing/article.inlineChoiceCode",
+          "http://example.com/publishing/article.inlineChoiceCitation",
+          "http://example.com/publishing/article.inlineChoiceLink"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "citation",
+          "relaxng_pattern": "inline"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "IDREF",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "http://example.com/publishing/article.inlineChoiceCitation.ref",
+            "name": "ref",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/publishing/article.inlineChoiceCitation",
+        "key_type": null,
+        "kind": "record",
+        "name": "inlineChoiceCitation",
+        "namespace": "http://example.com/publishing/article",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "code",
+          "relaxng_pattern": "inline"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "text"
+            },
+            "field_number": 1,
+            "key": "http://example.com/publishing/article.inlineChoiceCode.text",
+            "name": "text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/publishing/article.inlineChoiceCode",
+        "key_type": null,
+        "kind": "record",
+        "name": "inlineChoiceCode",
+        "namespace": "http://example.com/publishing/article",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "emphasis",
+          "relaxng_pattern": "inline"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "group",
+              "relaxng_ref": "inline"
+            },
+            "field_number": 1,
+            "key": "http://example.com/publishing/article.inlineChoiceEmphasis.inline",
+            "name": "inline",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/publishing/article.inline",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/publishing/article.inlineChoiceEmphasis",
+        "key_type": null,
+        "kind": "record",
+        "name": "inlineChoiceEmphasis",
+        "namespace": "http://example.com/publishing/article",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "link",
+          "relaxng_pattern": "inline"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uri",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "anyURI",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "http://example.com/publishing/article.inlineChoiceLink.href",
+            "name": "href",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "group",
+              "relaxng_ref": "inline"
+            },
+            "field_number": 2,
+            "key": "http://example.com/publishing/article.inlineChoiceLink.inline",
+            "name": "inline",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/publishing/article.inline",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/publishing/article.inlineChoiceLink",
+        "key_type": null,
+        "kind": "record",
+        "name": "inlineChoiceLink",
+        "namespace": "http://example.com/publishing/article",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": {
+          "extras": {},
+          "item": null,
+          "name": "http://example.com/publishing/article.inline",
+          "nullable": false
+        },
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "para",
+          "relaxng_pattern": "define",
+          "relaxng_ref": "inline"
+        },
+        "fields": [],
+        "key": "http://example.com/publishing/article.para",
+        "key_type": null,
+        "kind": "alias",
+        "name": "para",
+        "namespace": "http://example.com/publishing/article",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "section",
+          "relaxng_pattern": "define"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "ID",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "http://example.com/publishing/article.section.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "choice"
+            },
+            "field_number": 3,
+            "key": "http://example.com/publishing/article.section.sectionChoice",
+            "name": "sectionChoice",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "http://example.com/publishing/article.sectionChoice",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element",
+              "relaxng_ns": "http://example.com/publishing/article",
+              "relaxng_ref": "inline"
+            },
+            "field_number": 2,
+            "key": "http://example.com/publishing/article.section.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "http://example.com/publishing/article.inline",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "http://example.com/publishing/article.section",
+        "key_type": null,
+        "kind": "record",
+        "name": "section",
+        "namespace": "http://example.com/publishing/article",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_owner": "section",
+          "relaxng_pattern": "choice"
+        },
+        "fields": [],
+        "key": "http://example.com/publishing/article.sectionChoice",
+        "key_type": null,
+        "kind": "union",
+        "name": "sectionChoice",
+        "namespace": "http://example.com/publishing/article",
+        "union_members": [
+          "http://example.com/publishing/article.para",
+          "http://example.com/publishing/article.figure",
+          "http://example.com/publishing/article.section"
+        ],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "relaxng/05-real-world-article-grammar.rng",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 16
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "relaxng"
+  },
+  "fingerprint": "sha256:644d313484f76bcc1cbc80167ca455717e56f4bb661df17e8b34de622af7de71",
+  "lint": {
+    "findings": 52,
+    "grade": "F",
+    "report_fingerprint": "34361aa343c6be2a90c3b680f3768a1da36945d281be214605f3afa2230c0349",
+    "score": 48,
+    "severity_counts": {
+      "error": 0,
+      "info": 33,
+      "warning": 19
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,398 @@
+{
+  "adapter": "relaxng",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "relaxng": {
+        "capability_limits": [],
+        "datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+        "external_refs": [
+          "parcel.rng"
+        ],
+        "includes": [
+          "address.rng"
+        ],
+        "root_type": "shipment"
+      }
+    },
+    "format": "relaxng",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "shipment",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "shipment",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_pattern": "define"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element"
+            },
+            "field_number": 3,
+            "key": "address.city",
+            "name": "city",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 2,
+              "maximum": null,
+              "min_items": null,
+              "min_length": 2,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "string",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "element"
+            },
+            "field_number": 5,
+            "key": "address.countryCode",
+            "name": "countryCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element"
+            },
+            "field_number": 1,
+            "key": "address.line1",
+            "name": "line1",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element"
+            },
+            "field_number": 2,
+            "key": "address.line2",
+            "name": "line2",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element"
+            },
+            "field_number": 4,
+            "key": "address.postalCode",
+            "name": "postalCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "postalCode",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "address",
+        "key_type": null,
+        "kind": "record",
+        "name": "address",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": {
+          "enum": null,
+          "exclusive_maximum": null,
+          "exclusive_minimum": null,
+          "extras": {},
+          "format": null,
+          "max_items": null,
+          "max_length": null,
+          "maximum": null,
+          "min_items": null,
+          "min_length": null,
+          "minimum": null,
+          "multiple_of": null,
+          "pattern": "[0-9]{4} [A-Z]{2}",
+          "unique_items": null
+        },
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_datatype": "string",
+          "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+          "relaxng_pattern": "define",
+          "relaxng_type": "string"
+        },
+        "fields": [],
+        "key": "postalCode",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "postalCode",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "shipment",
+          "relaxng_pattern": "start"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element",
+              "relaxng_ref": "address"
+            },
+            "field_number": 2,
+            "key": "shipment.destination",
+            "name": "destination",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "address",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "string",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "shipment.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element"
+            },
+            "field_number": 3,
+            "key": "shipment.parcel",
+            "name": "parcel",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "shipmentParcel",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "shipment",
+        "key_type": null,
+        "kind": "record",
+        "name": "shipment",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "parcel",
+          "relaxng_pattern": "inline"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element"
+            },
+            "field_number": 1,
+            "key": "shipmentParcel.parcelContent",
+            "name": "parcelContent",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "shipmentParcelParcelContent",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "shipmentParcel",
+        "key_type": null,
+        "kind": "record",
+        "name": "shipmentParcel",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "parcelContent",
+          "relaxng_pattern": "inline"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "boolean",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 2,
+            "key": "shipmentParcelParcelContent.fragile",
+            "name": "fragile",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "decimal",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "shipmentParcelParcelContent.weightKg",
+            "name": "weightKg",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "shipmentParcelParcelContent",
+        "key_type": null,
+        "kind": "record",
+        "name": "shipmentParcelParcelContent",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "relaxng/03-modular-set/main.rng",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 5
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "relaxng"
+  },
+  "fingerprint": "sha256:800861f0bd5e5e8dfe0cbb10988e7cb7cc6ab2e58b96d0ca5c17658014348ef2",
+  "lint": {
+    "findings": 17,
+    "grade": "D",
+    "report_fingerprint": "0f9f5b1f7e190ce400036800fafd65bf1fafe6ed7455c214096fc7c11cc2c774",
+    "score": 68,
+    "severity_counts": {
+      "error": 0,
+      "info": 12,
+      "warning": 5
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1914,25 +1914,27 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 | File | Rung | Expected detection | Class | Features |
 | --- | --- | --- | --- | --- |
-| `01-minimal-note.rng` | minimal | `relaxng` ≥ 0.9 | valid | `element-pattern`, `attribute`, `text`, `pending-adapter` |
-| `02-typical-catalogue.rng` | typical | `relaxng` ≥ 0.9 | valid | `grammar`, `define`, `ref`, `optional`, `zeroOrMore`, `choice`, `data-param`, `pending-adapter` |
-| `03-modular-set/address.rng` | multi-file (member) | `relaxng` (no guarantee) | valid | `multi-file`, `include`, `define`, `pending-adapter` |
-| `03-modular-set/main.rng` | multi-file (root) | `relaxng` ≥ 0.9 | valid | `multi-file`, `include`, `define-override`, `externalRef`, `pending-adapter` |
-| `03-modular-set/parcel.rng` | multi-file (member) | `relaxng` (no guarantee) | valid | `multi-file`, `externalRef`, `element-pattern`, `pending-adapter` |
-| `04-stress-interleave-and-datatypes.rng` ⚠ | stress | `relaxng` ≥ 0.9 | valid | `interleave`, `mixed`, `list`, `except`, `anyName`, `nsName`, `empty`, `recursion`, `pending-adapter` |
-| `05-real-world-article-grammar.rng` | real-world | `relaxng` ≥ 0.9 | valid | `interleave`, `recursion`, `mixed`, `ID`, `IDREF`, `ns`, `pending-adapter` |
-| `06-compact-catalogue.rnc` ⚠ | typical | `relaxng` ≥ 0.9 | valid | `compact-syntax`, `datatypes`, `same-grammar-as-02`, `pending-adapter` |
-| `07-composition-named-pattern-reuse.rng` | composition | `relaxng` ≥ 0.9 | valid | `define`, `ref`, `combine-choice`, `shared-attributes`, `recursion`, `pending-adapter` |
-| `negative/01-syntactic-unclosed-define.rng` | — | `relaxng` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `pending-adapter` |
-| `negative/02-semantic-grammar-without-start.rng` | — | `relaxng` (no guarantee) | invalid | `negative`, `semantic`, `no-start`, `pending-adapter` |
-| `negative/03-truncated-mid-pattern.rng` | — | `relaxng` (no guarantee) | invalid | `negative`, `truncated`, `mid-attribute`, `pending-adapter` |
-| `negative/04-wrong-format-xsd.xsd` | — | `relaxng` (no guarantee) | invalid | `negative`, `wrong-format`, `xsd`, `pending-adapter` |
-| `negative/05-encoding-utf16.rng` | — | `relaxng` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
-| `negative/06-unresolvable-ref.rng` | — | `relaxng` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `undefined-pattern`, `pending-adapter` |
+| `01-minimal-note.rng` | minimal | `relaxng` ≥ 0.9 | valid | `element-pattern`, `attribute`, `text` |
+| `02-typical-catalogue.rng` | typical | `relaxng` ≥ 0.9 | valid | `grammar`, `define`, `ref`, `optional`, `zeroOrMore`, `choice`, `data-param` |
+| `03-modular-set/address.rng` | multi-file (member) | `relaxng` (no guarantee) | valid | `multi-file`, `include`, `define` |
+| `03-modular-set/main.rng` | multi-file (root) | `relaxng` ≥ 0.9 | valid | `multi-file`, `include`, `define-override`, `externalRef` |
+| `03-modular-set/parcel.rng` | multi-file (member) | `relaxng` (no guarantee) | valid | `multi-file`, `externalRef`, `element-pattern` |
+| `04-stress-interleave-and-datatypes.rng` ⚠ | stress | `relaxng` ≥ 0.9 | valid | `interleave`, `mixed`, `list`, `except`, `anyName`, `nsName`, `empty`, `recursion` |
+| `05-real-world-article-grammar.rng` | real-world | `relaxng` ≥ 0.9 | valid | `interleave`, `recursion`, `mixed`, `ID`, `IDREF`, `ns` |
+| `06-compact-catalogue.rnc` ⚠ | typical | `relaxng-compact` ≥ 0.9 | valid | `compact-syntax`, `datatypes`, `same-grammar-as-02` |
+| `07-composition-named-pattern-reuse.rng` | composition | `relaxng` ≥ 0.9 | valid | `define`, `ref`, `combine-choice`, `shared-attributes`, `recursion` |
+| `negative/01-syntactic-unclosed-define.rng` | — | `relaxng` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element` |
+| `negative/02-semantic-grammar-without-start.rng` | — | `relaxng` (no guarantee) | invalid | `negative`, `semantic`, `no-start` |
+| `negative/03-truncated-mid-pattern.rng` ⚠ | — | `relaxng` (no guarantee) | invalid | `negative`, `truncated`, `mid-attribute` |
+| `negative/04-wrong-format-xsd.xsd` | — | `relaxng` (no guarantee) | invalid | `negative`, `wrong-format`, `xsd` |
+| `negative/05-encoding-utf16.rng` | — | `relaxng` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+| `negative/06-unresolvable-ref.rng` | — | `relaxng` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `undefined-pattern` |
 
 > ⚠ **`04-stress-interleave-and-datatypes.rng`** — interleave and the wildcard/except constructs have no canonical analogue; FMT-4.1 requires them declared as parsing limits, so a clean import here is expected to carry declared-loss warnings.
 
 > ⚠ **`06-compact-catalogue.rnc`** — The compact form of 02-typical-catalogue.rng; the acceptance criterion is that both produce the same canonical model.
+
+> ⚠ **`negative/03-truncated-mid-pattern.rng`** — Truncation is grounded at INPUT_MALFORMED, as for every other XML adapter's truncated fixture: a document cut mid-attribute is rejected by the XML parser before RELAX NG semantics are reached, and the intent is kept in failure_class.
 
 ### `ros2/` — ROS 2 interfaces (pending #5470)
 

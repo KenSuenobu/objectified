@@ -23408,7 +23408,7 @@
     {
       "path": "relaxng/01-minimal-note.rng",
       "format": "relaxng",
-      "adapter_key": null,
+      "adapter_key": "relaxng",
       "validity_class": "valid",
       "expected_detection": {
         "format": "relaxng",
@@ -23417,8 +23417,7 @@
       "features": [
         "element-pattern",
         "attribute",
-        "text",
-        "pending-adapter"
+        "text"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -23429,7 +23428,7 @@
     {
       "path": "relaxng/02-typical-catalogue.rng",
       "format": "relaxng",
-      "adapter_key": null,
+      "adapter_key": "relaxng",
       "validity_class": "valid",
       "expected_detection": {
         "format": "relaxng",
@@ -23442,8 +23441,7 @@
         "optional",
         "zeroOrMore",
         "choice",
-        "data-param",
-        "pending-adapter"
+        "data-param"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -23454,7 +23452,7 @@
     {
       "path": "relaxng/03-modular-set/address.rng",
       "format": "relaxng",
-      "adapter_key": null,
+      "adapter_key": "relaxng",
       "validity_class": "valid",
       "expected_detection": {
         "format": "relaxng",
@@ -23463,8 +23461,7 @@
       "features": [
         "multi-file",
         "include",
-        "define",
-        "pending-adapter"
+        "define"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -23476,7 +23473,7 @@
     {
       "path": "relaxng/03-modular-set/main.rng",
       "format": "relaxng",
-      "adapter_key": null,
+      "adapter_key": "relaxng",
       "validity_class": "valid",
       "expected_detection": {
         "format": "relaxng",
@@ -23486,8 +23483,7 @@
         "multi-file",
         "include",
         "define-override",
-        "externalRef",
-        "pending-adapter"
+        "externalRef"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -23499,7 +23495,7 @@
     {
       "path": "relaxng/03-modular-set/parcel.rng",
       "format": "relaxng",
-      "adapter_key": null,
+      "adapter_key": "relaxng",
       "validity_class": "valid",
       "expected_detection": {
         "format": "relaxng",
@@ -23508,8 +23504,7 @@
       "features": [
         "multi-file",
         "externalRef",
-        "element-pattern",
-        "pending-adapter"
+        "element-pattern"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -23521,7 +23516,7 @@
     {
       "path": "relaxng/04-stress-interleave-and-datatypes.rng",
       "format": "relaxng",
-      "adapter_key": null,
+      "adapter_key": "relaxng",
       "validity_class": "valid",
       "expected_detection": {
         "format": "relaxng",
@@ -23535,8 +23530,7 @@
         "anyName",
         "nsName",
         "empty",
-        "recursion",
-        "pending-adapter"
+        "recursion"
       ],
       "expected_outcome": "imports_with_warnings",
       "source": "hand-authored",
@@ -23548,7 +23542,7 @@
     {
       "path": "relaxng/05-real-world-article-grammar.rng",
       "format": "relaxng",
-      "adapter_key": null,
+      "adapter_key": "relaxng",
       "validity_class": "valid",
       "expected_detection": {
         "format": "relaxng",
@@ -23560,8 +23554,7 @@
         "mixed",
         "ID",
         "IDREF",
-        "ns",
-        "pending-adapter"
+        "ns"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -23572,17 +23565,16 @@
     {
       "path": "relaxng/06-compact-catalogue.rnc",
       "format": "relaxng",
-      "adapter_key": null,
+      "adapter_key": "relaxng",
       "validity_class": "valid",
       "expected_detection": {
-        "format": "relaxng",
+        "format": "relaxng-compact",
         "min_confidence": 0.9
       },
       "features": [
         "compact-syntax",
         "datatypes",
-        "same-grammar-as-02",
-        "pending-adapter"
+        "same-grammar-as-02"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -23594,7 +23586,7 @@
     {
       "path": "relaxng/07-composition-named-pattern-reuse.rng",
       "format": "relaxng",
-      "adapter_key": null,
+      "adapter_key": "relaxng",
       "validity_class": "valid",
       "expected_detection": {
         "format": "relaxng",
@@ -23605,8 +23597,7 @@
         "ref",
         "combine-choice",
         "shared-attributes",
-        "recursion",
-        "pending-adapter"
+        "recursion"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -23617,7 +23608,7 @@
     {
       "path": "relaxng/negative/01-syntactic-unclosed-define.rng",
       "format": "relaxng",
-      "adapter_key": null,
+      "adapter_key": "relaxng",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "relaxng",
@@ -23626,8 +23617,7 @@
       "features": [
         "negative",
         "syntactic",
-        "unclosed-element",
-        "pending-adapter"
+        "unclosed-element"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -23639,7 +23629,7 @@
     {
       "path": "relaxng/negative/02-semantic-grammar-without-start.rng",
       "format": "relaxng",
-      "adapter_key": null,
+      "adapter_key": "relaxng",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "relaxng",
@@ -23648,8 +23638,7 @@
       "features": [
         "negative",
         "semantic",
-        "no-start",
-        "pending-adapter"
+        "no-start"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -23661,7 +23650,7 @@
     {
       "path": "relaxng/negative/03-truncated-mid-pattern.rng",
       "format": "relaxng",
-      "adapter_key": null,
+      "adapter_key": "relaxng",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "relaxng",
@@ -23670,20 +23659,20 @@
       "features": [
         "negative",
         "truncated",
-        "mid-attribute",
-        "pending-adapter"
+        "mid-attribute"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
       "failure_class": "truncated",
-      "expected_error_code": "INPUT_TRUNCATED"
+      "expected_error_code": "INPUT_MALFORMED",
+      "notes": "Truncation is grounded at INPUT_MALFORMED, as for every other XML adapter's truncated fixture: a document cut mid-attribute is rejected by the XML parser before RELAX NG semantics are reached, and the intent is kept in failure_class."
     },
     {
       "path": "relaxng/negative/04-wrong-format-xsd.xsd",
       "format": "relaxng",
-      "adapter_key": null,
+      "adapter_key": "relaxng",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "relaxng",
@@ -23692,8 +23681,7 @@
       "features": [
         "negative",
         "wrong-format",
-        "xsd",
-        "pending-adapter"
+        "xsd"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -23705,7 +23693,7 @@
     {
       "path": "relaxng/negative/05-encoding-utf16.rng",
       "format": "relaxng",
-      "adapter_key": null,
+      "adapter_key": "relaxng",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "relaxng",
@@ -23714,8 +23702,7 @@
       "features": [
         "negative",
         "encoding",
-        "utf-16",
-        "pending-adapter"
+        "utf-16"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -23727,7 +23714,7 @@
     {
       "path": "relaxng/negative/06-unresolvable-ref.rng",
       "format": "relaxng",
-      "adapter_key": null,
+      "adapter_key": "relaxng",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "relaxng",
@@ -23736,8 +23723,7 @@
       "features": [
         "negative",
         "unresolvable-ref",
-        "undefined-pattern",
-        "pending-adapter"
+        "undefined-pattern"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
