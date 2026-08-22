@@ -1,0 +1,570 @@
+{
+  "adapter": "odcs",
+  "canonical": {
+    "channels": [],
+    "description": "Provide point-of-sale and online transaction facts for revenue reporting, fraud analytics and inventory reconciliation.",
+    "extras": {
+      "odcs": {
+        "api_version": "v3.1.0",
+        "capability_limits": [
+          {
+            "construct": "odcs.classification",
+            "count": 2,
+            "detail": "`classification` (`confidential`, `restricted`, …) and `criticalDataElement` are governance labels on a field. The canonical model has no classification vocabulary, so both are carried on the field in `extras` — which is what keeps a PII marker visible on the catalog detail view without pretending it is a validation constraint.",
+            "locations": [
+              "transactions"
+            ]
+          },
+          {
+            "construct": "odcs.custom_property",
+            "count": 1,
+            "detail": "`customProperties[]` is the standard's own extension point: a list of `property`/`value` pairs whose meaning is defined by the publisher. It is carried verbatim in `extras['odcs_custom_properties']` on whichever node declared it, and no meaning is assigned to any key.",
+            "locations": []
+          },
+          {
+            "construct": "odcs.declaration_order",
+            "count": 1,
+            "detail": "A dataset's column order is physical: it is the order the table, file or topic actually presents. Canonical entities are keyed and sorted by key, so declaration order is not a canonical property; the source index is recorded on every schema object and every property as `extras['odcs_position']` and the canonical ordering does not follow it.",
+            "locations": [
+              "transactions"
+            ]
+          },
+          {
+            "construct": "odcs.key_uniqueness",
+            "count": 2,
+            "detail": "`primaryKey`/`primaryKeyPosition` and `unique` declare identity and uniqueness over the *rows* of a dataset. The canonical constraint vocabulary has no identity facet (`unique_items` is about the members of one array), so the declarations are carried on the field in `extras` and are not enforced.",
+            "locations": [
+              "transactions"
+            ]
+          },
+          {
+            "construct": "odcs.partitioning",
+            "count": 1,
+            "detail": "`partitioned`/`partitionKeyPosition` describe the physical layout of the dataset in the serving system. The canonical model describes shape, not layout, so the declarations are carried on the field in `extras`.",
+            "locations": [
+              "transactions"
+            ]
+          },
+          {
+            "construct": "odcs.physical_type",
+            "count": 13,
+            "detail": "`physicalType` (`varchar(20)`, `numeric(13,2)`, `jsonb`, `array<struct>`) is the storage type in the serving system, and `physicalName` is what the object or column is actually called there. Both describe the *physical* dataset, which the canonical model does not: it names the logical shape. They are carried verbatim in `extras['odcs_physical_type']` and `extras['odcs_physical_name']`, and the type is deliberately not interpreted — `varchar(20)` does **not** become `maxLength: 20`, because the unit differs by dialect and by encoding. Declared lengths and ranges come from `logicalTypeOptions`, which is the portable half.",
+            "locations": [
+              "transactions"
+            ]
+          },
+          {
+            "construct": "odcs.price",
+            "count": 1,
+            "detail": "`price` states an amount, a currency and a billing unit for consuming the dataset. Nothing in the canonical model prices an API, so the block is carried verbatim in `extras['odcs_price']`.",
+            "locations": []
+          },
+          {
+            "construct": "odcs.quality_rule",
+            "count": 3,
+            "detail": "A quality rule — a library rule (`rowCount`, `nullCount`, `duplicateCount`, `freshness`, …), a `sql` query, a free-text expectation or a `custom` engine block — states an expectation about the *data*, not about the schema. The canonical model constrains shape, so the rule is carried verbatim in `extras['odcs_quality']` on the contract, the type or the field that declared it, and is never executed, translated into a constraint, or checked.",
+            "locations": [
+              "transactions"
+            ]
+          },
+          {
+            "construct": "odcs.server",
+            "count": 1,
+            "detail": "A `servers[]` entry describes *serving infrastructure* — a BigQuery dataset, an S3 prefix, a Snowflake warehouse, a Kafka broker — with a different field set per `type`. The canonical `Server` is a URL with variables and cannot hold them without inventing one, so each entry is carried verbatim in `extras['odcs_servers']` and no canonical server is synthesized.",
+            "locations": []
+          },
+          {
+            "construct": "odcs.sla_property",
+            "count": 2,
+            "detail": "`slaProperties` states latency, freshness, retention, frequency and availability windows against a named element. The canonical model has no service-level vocabulary, so the entries are carried verbatim in `extras['odcs_sla_properties']` with `slaDefaultElement` beside them.",
+            "locations": []
+          },
+          {
+            "construct": "odcs.support_channel",
+            "count": 1,
+            "detail": "`support[]` names the channels a consumer reaches the producer through. The canonical model has no contact vocabulary, so the entries are carried verbatim in `extras['odcs_support']`.",
+            "locations": []
+          },
+          {
+            "construct": "odcs.tag",
+            "count": 1,
+            "detail": "`tags[]` labels a contract, a schema object or a property with free-form keywords. The canonical model tags *operations*, not data-schema entities, so the list is carried verbatim in `extras['odcs_tags']` on whichever node declared it.",
+            "locations": []
+          },
+          {
+            "construct": "odcs.team_role",
+            "count": 2,
+            "detail": "`team[]` (who owns the contract, since when, and who replaced whom) and `roles[]` (which access role is granted through which approvers) are ownership and access-governance facts. The canonical model carries neither, so both are carried verbatim in `extras['odcs_team']` and `extras['odcs_roles']`.",
+            "locations": []
+          }
+        ],
+        "contract_id": "53581432-6c55-4ba2-a65f-000000000005",
+        "data_product": "transactions",
+        "domain": "seller",
+        "schema_objects": [
+          "transactions"
+        ],
+        "status": "active",
+        "tenant": "ExampleRetail"
+      },
+      "odcs_custom_properties": [
+        {
+          "property": "dataGovernanceTier",
+          "value": "gold"
+        },
+        {
+          "property": "sourceSystem",
+          "value": "pos-central"
+        }
+      ],
+      "odcs_description": {
+        "limitations": "Refunds appear as negative rows on the original transaction date, not on the refund date. Card details are tokenized upstream and are not available here.\n",
+        "purpose": "Provide point-of-sale and online transaction facts for revenue reporting, fraud analytics and inventory reconciliation.\n",
+        "usage": "Query through the analytics warehouse. Do not join to raw payment-network records; use the settlement contract for that.\n"
+      },
+      "odcs_price": {
+        "priceAmount": 0,
+        "priceCurrency": "EUR",
+        "priceUnit": "megabyte"
+      },
+      "odcs_roles": [
+        {
+          "access": "read",
+          "firstLevelApprovers": "Retail Analytics Lead",
+          "role": "retail_reader"
+        },
+        {
+          "access": "read",
+          "firstLevelApprovers": "Retail Analytics Lead",
+          "role": "retail_pii_reader",
+          "secondLevelApprovers": "Privacy Officer"
+        }
+      ],
+      "odcs_servers": [
+        {
+          "account": "exampleretail",
+          "database": "RETAIL",
+          "schema": "SALES",
+          "server": "warehouse",
+          "type": "snowflake",
+          "warehouse": "REPORTING_WH"
+        },
+        {
+          "format": "parquet",
+          "location": "s3://exampleretail-lake/transactions/",
+          "server": "lake",
+          "type": "s3"
+        }
+      ],
+      "odcs_sla_default_element": "transactions.txn_ref_dt",
+      "odcs_sla_properties": [
+        {
+          "element": "transactions.txn_ref_dt",
+          "property": "latency",
+          "unit": "h",
+          "value": 6
+        },
+        {
+          "element": "transactions.txn_ref_dt",
+          "property": "retention",
+          "unit": "y",
+          "value": 7
+        },
+        {
+          "property": "frequency",
+          "unit": "h",
+          "value": 1
+        },
+        {
+          "property": "generalAvailability",
+          "value": "2025-07-01T00:00:00Z"
+        }
+      ],
+      "odcs_support": [
+        {
+          "channel": "#retail-data",
+          "scope": "interactive",
+          "tool": "slack",
+          "url": "https://example.slack.com/archives/C0000RETAIL"
+        },
+        {
+          "channel": "retail-data-issues",
+          "scope": "issues",
+          "tool": "ticket",
+          "url": "https://tickets.example.com/projects/RETAILDATA"
+        }
+      ],
+      "odcs_tags": [
+        "retail",
+        "revenue",
+        "pii-present"
+      ],
+      "odcs_team": [
+        {
+          "dateIn": "2025-06-01",
+          "role": "Data Product Owner",
+          "username": "r.owner"
+        },
+        {
+          "dateIn": "2025-06-01",
+          "role": "Data Steward",
+          "username": "k.steward"
+        },
+        {
+          "dateIn": "2025-09-15",
+          "role": "Privacy Officer",
+          "username": "p.privacy"
+        }
+      ]
+    },
+    "format": "odcs",
+    "identity": {
+      "extras": {},
+      "id": "53581432-6c55-4ba2-a65f-000000000005",
+      "name": "retail_transactions",
+      "namespace": "seller"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "retail_transactions",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "One row per completed transaction line.",
+        "enum_values": [],
+        "extras": {
+          "odcs_data_granularity": "Aggregation on transaction_id and line_number.",
+          "odcs_physical_name": "tbl_transactions_v1",
+          "odcs_physical_type": "table",
+          "odcs_position": 0,
+          "odcs_quality": [
+            {
+              "dimension": "volume",
+              "mustBeGreaterThan": 0,
+              "rule": "rowCount"
+            },
+            {
+              "businessImpact": "operational",
+              "dimension": "timeliness",
+              "mustBeLessThan": 1,
+              "property": "txn_ref_dt",
+              "rule": "freshness",
+              "unit": "day"
+            },
+            {
+              "description": "Tax must never exceed the net amount on a line.",
+              "mustBe": 0,
+              "query": "SELECT COUNT(*) FROM tbl_transactions_v1 WHERE tax_amount > net_amount",
+              "type": "sql"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": [
+                "in-store",
+                "online",
+                "click-collect",
+                "telephone"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "string",
+              "odcs_logical_type_options": {
+                "enum": [
+                  "in-store",
+                  "online",
+                  "click-collect",
+                  "telephone"
+                ]
+              },
+              "odcs_physical_type": "varchar(12)",
+              "odcs_position": 10
+            },
+            "field_number": null,
+            "key": "transactions.channel",
+            "name": "channel",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "char(3)",
+              "odcs_position": 8
+            },
+            "field_number": null,
+            "key": "transactions.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_key": {
+                "primaryKey": true,
+                "primaryKeyPosition": 2
+              },
+              "odcs_logical_type": "integer",
+              "odcs_physical_type": "smallint",
+              "odcs_position": 1
+            },
+            "field_number": null,
+            "key": "transactions.line_number",
+            "name": "line_number",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Present only when the customer identified themselves.",
+            "extras": {
+              "odcs_classification": "confidential",
+              "odcs_critical_data_element": true,
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "varchar(24)",
+              "odcs_position": 9
+            },
+            "field_number": null,
+            "key": "transactions.loyalty_member_id",
+            "name": "loyalty_member_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Line amount excluding tax, in the transaction currency.",
+            "extras": {
+              "odcs_logical_type": "number",
+              "odcs_physical_type": "numeric(13,2)",
+              "odcs_position": 6
+            },
+            "field_number": null,
+            "key": "transactions.net_amount",
+            "name": "net_amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "number",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "number",
+              "odcs_physical_type": "numeric(9,3)",
+              "odcs_position": 5
+            },
+            "field_number": null,
+            "key": "transactions.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "number",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "varchar(18)",
+              "odcs_position": 4
+            },
+            "field_number": null,
+            "key": "transactions.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Five-character store identifier; ONLINE for storefront sales.",
+            "extras": {
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "char(5)",
+              "odcs_position": 3
+            },
+            "field_number": null,
+            "key": "transactions.store_code",
+            "name": "store_code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "number",
+              "odcs_physical_type": "numeric(13,2)",
+              "odcs_position": 7
+            },
+            "field_number": null,
+            "key": "transactions.tax_amount",
+            "name": "tax_amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "number",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Identifier assigned by the till or the storefront.",
+            "extras": {
+              "odcs_examples": [
+                "TXN-2026-08-0000041233"
+              ],
+              "odcs_key": {
+                "primaryKey": true,
+                "primaryKeyPosition": 1
+              },
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "varchar(24)",
+              "odcs_position": 0
+            },
+            "field_number": null,
+            "key": "transactions.transaction_id",
+            "name": "transaction_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Business date of the transaction, store local time.",
+            "extras": {
+              "odcs_logical_type": "date",
+              "odcs_partition": {
+                "partitionKeyPosition": 1,
+                "partitioned": true
+              },
+              "odcs_physical_type": "date",
+              "odcs_position": 2
+            },
+            "field_number": null,
+            "key": "transactions.txn_ref_dt",
+            "name": "txn_ref_dt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "date",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "transactions",
+        "key_type": null,
+        "kind": "record",
+        "name": "transactions",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.1.0"
+  },
+  "corpus_path": "odcs/05-real-world-transactions-contract.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "odcs"
+  },
+  "fingerprint": "sha256:8a32503984ddf77df38b62a9732bff2d38828de6742e70f7c592b4f78dc10b26",
+  "lint": {
+    "findings": 6,
+    "grade": "A",
+    "report_fingerprint": "d1b3121055d68d0720940716bc7396dac9aaaa90c59acd39e19609fc296df55b",
+    "score": 94,
+    "severity_counts": {
+      "error": 0,
+      "info": 6,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

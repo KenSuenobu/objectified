@@ -106,7 +106,7 @@ describe('catalog-import-formats', () => {
 
   test('exposes the distinct storable sources (deduped by source_kind)', () => {
     const kinds = CATALOG_STORABLE_SOURCES.map((s) => s.sourceKind).sort();
-    expect(kinds).toEqual(['apiblueprint', 'arazzo', 'arrow', 'asn1', 'asyncapi', 'avro', 'capnproto', 'cddl', 'cloudevents', 'cobolcopybook', 'connectrpc', 'corbaidl', 'discovery', 'dtd', 'edix12', 'fhir', 'fix', 'flatbuffers', 'gateway-api', 'graphql', 'grpc', 'hl7v2', 'http-file', 'iso20022', 'iso8583', 'json-schema', 'jtd', 'k8s-crd', 'kong', 'llm-tools', 'mcp', 'odata', 'oncrpc', 'openrpc', 'postman', 'raml', 'relaxng', 'smithy', 'thrift', 'typespec', 'wadl', 'wit', 'wsdl', 'xmlrpc', 'xsd', 'zosconnect']);
+    expect(kinds).toEqual(['apiblueprint', 'arazzo', 'arrow', 'asn1', 'asyncapi', 'avro', 'capnproto', 'cddl', 'cloudevents', 'cobolcopybook', 'connectrpc', 'corbaidl', 'discovery', 'dtd', 'edix12', 'fhir', 'fix', 'flatbuffers', 'gateway-api', 'graphql', 'grpc', 'hl7v2', 'http-file', 'iso20022', 'iso8583', 'json-schema', 'jtd', 'k8s-crd', 'kong', 'llm-tools', 'mcp', 'odata', 'odcs', 'oncrpc', 'openrpc', 'postman', 'raml', 'relaxng', 'smithy', 'thrift', 'typespec', 'wadl', 'wit', 'wsdl', 'xmlrpc', 'xsd', 'zosconnect']);
   });
 
   test('routes adapter-backed formats to catalog', () => {

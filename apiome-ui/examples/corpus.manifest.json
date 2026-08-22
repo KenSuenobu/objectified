@@ -363,7 +363,7 @@
       "marker": "`<edmx:Edmx>` with the 2007/06 or 2009/11 EDM namespaces"
     },
     "odcs": {
-      "label": "Open Data Contract Standard v3.1 (pending #5439)",
+      "label": "Open Data Contract Standard v3.1",
       "category": "data-schema",
       "paradigm": "data_schema",
       "marker": "`apiVersion: v3.x` + `kind: DataContract` + `schema:`"
@@ -18609,7 +18609,7 @@
     {
       "path": "odcs/01-minimal-contract.yaml",
       "format": "odcs",
-      "adapter_key": null,
+      "adapter_key": "odcs",
       "validity_class": "valid",
       "expected_detection": {
         "format": "odcs",
@@ -18618,8 +18618,7 @@
       "features": [
         "schema",
         "properties",
-        "primaryKey",
-        "pending-adapter"
+        "primaryKey"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -18630,7 +18629,7 @@
     {
       "path": "odcs/02-typical-orders-contract.yaml",
       "format": "odcs",
-      "adapter_key": null,
+      "adapter_key": "odcs",
       "validity_class": "valid",
       "expected_detection": {
         "format": "odcs",
@@ -18644,8 +18643,7 @@
         "slaProperties",
         "partitioned",
         "classification",
-        "tags",
-        "pending-adapter"
+        "tags"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -18656,7 +18654,7 @@
     {
       "path": "odcs/03-composition-nested-schema.yaml",
       "format": "odcs",
-      "adapter_key": null,
+      "adapter_key": "odcs",
       "validity_class": "valid",
       "expected_detection": {
         "format": "odcs",
@@ -18666,8 +18664,7 @@
         "nested-object",
         "array-of-objects",
         "authoritativeDefinitions",
-        "multiple-schema-objects",
-        "pending-adapter"
+        "multiple-schema-objects"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -18678,7 +18675,7 @@
     {
       "path": "odcs/04-stress-quality-sla-and-custom.yaml",
       "format": "odcs",
-      "adapter_key": null,
+      "adapter_key": "odcs",
       "validity_class": "valid",
       "expected_detection": {
         "format": "odcs",
@@ -18694,8 +18691,7 @@
         "roles",
         "price",
         "customProperties",
-        "slaProperties",
-        "pending-adapter"
+        "slaProperties"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -18706,7 +18702,7 @@
     {
       "path": "odcs/05-real-world-transactions-contract.yaml",
       "format": "odcs",
-      "adapter_key": null,
+      "adapter_key": "odcs",
       "validity_class": "valid",
       "expected_detection": {
         "format": "odcs",
@@ -18718,8 +18714,7 @@
         "pii",
         "roles",
         "retention",
-        "quality-sql",
-        "pending-adapter"
+        "quality-sql"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -18730,7 +18725,7 @@
     {
       "path": "odcs/06-typical-contract.json",
       "format": "odcs",
-      "adapter_key": null,
+      "adapter_key": "odcs",
       "validity_class": "valid",
       "expected_detection": {
         "format": "odcs",
@@ -18740,8 +18735,7 @@
         "json-serialization",
         "quality",
         "servers",
-        "slaProperties",
-        "pending-adapter"
+        "slaProperties"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -18752,7 +18746,7 @@
     {
       "path": "odcs/07-contract-set/contract.yaml",
       "format": "odcs",
-      "adapter_key": null,
+      "adapter_key": "odcs",
       "validity_class": "valid",
       "expected_detection": {
         "format": "odcs",
@@ -18761,8 +18755,7 @@
       "features": [
         "authoritativeDefinitions",
         "delegated-schema",
-        "slaProperties",
-        "pending-adapter"
+        "slaProperties"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -18774,7 +18767,7 @@
     {
       "path": "odcs/07-contract-set/quality.yaml",
       "format": "odcs",
-      "adapter_key": null,
+      "adapter_key": "odcs",
       "validity_class": "valid",
       "expected_detection": {
         "format": "odcs",
@@ -18783,8 +18776,7 @@
       "features": [
         "quality-pack",
         "sql-rule",
-        "freshness",
-        "pending-adapter"
+        "freshness"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -18797,7 +18789,7 @@
     {
       "path": "odcs/07-contract-set/shipment-event.schema.json",
       "format": "odcs",
-      "adapter_key": null,
+      "adapter_key": "odcs",
       "validity_class": "valid",
       "expected_detection": {
         "format": "odcs",
@@ -18805,8 +18797,7 @@
       },
       "features": [
         "json-schema",
-        "payload-definition",
-        "pending-adapter"
+        "payload-definition"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -18819,7 +18810,7 @@
     {
       "path": "odcs/negative/01-syntactic-bad-yaml-indent.yaml",
       "format": "odcs",
-      "adapter_key": null,
+      "adapter_key": "odcs",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "odcs",
@@ -18828,8 +18819,7 @@
       "features": [
         "negative",
         "syntactic",
-        "bad-indentation",
-        "pending-adapter"
+        "bad-indentation"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -18841,7 +18831,7 @@
     {
       "path": "odcs/negative/02-semantic-schema-without-properties.yaml",
       "format": "odcs",
-      "adapter_key": null,
+      "adapter_key": "odcs",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "odcs",
@@ -18850,8 +18840,7 @@
       "features": [
         "negative",
         "semantic",
-        "no-properties",
-        "pending-adapter"
+        "no-properties"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -18863,7 +18852,7 @@
     {
       "path": "odcs/negative/03-truncated-mid-property.yaml",
       "format": "odcs",
-      "adapter_key": null,
+      "adapter_key": "odcs",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "odcs",
@@ -18872,8 +18861,7 @@
       "features": [
         "negative",
         "truncated",
-        "mid-quoted-scalar",
-        "pending-adapter"
+        "mid-quoted-scalar"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -18885,7 +18873,7 @@
     {
       "path": "odcs/negative/04-wrong-format-dbt-schema.yml",
       "format": "odcs",
-      "adapter_key": null,
+      "adapter_key": "odcs",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "odcs",
@@ -18894,8 +18882,7 @@
       "features": [
         "negative",
         "wrong-format",
-        "dbt",
-        "pending-adapter"
+        "dbt"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -18907,7 +18894,7 @@
     {
       "path": "odcs/negative/05-encoding-utf16.yaml",
       "format": "odcs",
-      "adapter_key": null,
+      "adapter_key": "odcs",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "odcs",
@@ -18916,8 +18903,7 @@
       "features": [
         "negative",
         "encoding",
-        "utf-16",
-        "pending-adapter"
+        "utf-16"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -18929,7 +18915,7 @@
     {
       "path": "odcs/negative/06-version-out-of-range-v2.yaml",
       "format": "odcs",
-      "adapter_key": null,
+      "adapter_key": "odcs",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "odcs",
@@ -18938,8 +18924,7 @@
       "features": [
         "negative",
         "version-out-of-range",
-        "odcs-v2.2",
-        "pending-adapter"
+        "odcs-v2.2"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",

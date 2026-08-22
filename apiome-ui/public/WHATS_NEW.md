@@ -24,6 +24,7 @@ We continue to improve the platform based on your feedback with improvements and
     - Schematron import
     - CDDL (RFC-8610) import and export
     - Apache Arrow/Flight import
+    - Open Data Contract Standard (ODCS v3.1) import
   - Added pills to supported format list to show the source and type that the API format provides
   - Every format now declares which versions it reads and writes, and which version an export produces by default
 

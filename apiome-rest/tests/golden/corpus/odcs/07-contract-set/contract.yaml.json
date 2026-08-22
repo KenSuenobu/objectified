@@ -1,0 +1,375 @@
+{
+  "adapter": "odcs",
+  "canonical": {
+    "channels": [],
+    "description": "Root of the set. The schema's structural detail is delegated to a sibling JSON Schema through authoritativeDefinitions, and the quality rule pack lives in a second file — so this contract is only complete alongside them.",
+    "extras": {
+      "odcs": {
+        "api_version": "v3.1.0",
+        "capability_limits": [
+          {
+            "construct": "odcs.authoritative_definition",
+            "count": 1,
+            "detail": "`authoritativeDefinitions[]` points at an external business definition, lineage record, or schema document by URL. The URLs are recorded in `extras['odcs_authoritative_definitions']` and **never fetched** during import; a relative URL that names a member of the same imported file set is additionally recorded as resolved, but its content is not expanded into the canonical model.",
+            "locations": [
+              "shipment_events"
+            ]
+          },
+          {
+            "construct": "odcs.declaration_order",
+            "count": 1,
+            "detail": "A dataset's column order is physical: it is the order the table, file or topic actually presents. Canonical entities are keyed and sorted by key, so declaration order is not a canonical property; the source index is recorded on every schema object and every property as `extras['odcs_position']` and the canonical ordering does not follow it.",
+            "locations": [
+              "shipment_events"
+            ]
+          },
+          {
+            "construct": "odcs.free_form_object",
+            "count": 1,
+            "detail": "A property typed `object` that declares no `properties` of its own (an event body stored as `jsonb`, a payload whose shape is delegated to an external schema) has no members to name. It becomes an open-content record with no fields, and the fact that arbitrary content is admitted is not expressible as a canonical constraint.",
+            "locations": [
+              "shipment_events"
+            ]
+          },
+          {
+            "construct": "odcs.key_uniqueness",
+            "count": 1,
+            "detail": "`primaryKey`/`primaryKeyPosition` and `unique` declare identity and uniqueness over the *rows* of a dataset. The canonical constraint vocabulary has no identity facet (`unique_items` is about the members of one array), so the declarations are carried on the field in `extras` and are not enforced.",
+            "locations": [
+              "shipment_events"
+            ]
+          },
+          {
+            "construct": "odcs.partitioning",
+            "count": 1,
+            "detail": "`partitioned`/`partitionKeyPosition` describe the physical layout of the dataset in the serving system. The canonical model describes shape, not layout, so the declarations are carried on the field in `extras`.",
+            "locations": [
+              "shipment_events"
+            ]
+          },
+          {
+            "construct": "odcs.physical_type",
+            "count": 6,
+            "detail": "`physicalType` (`varchar(20)`, `numeric(13,2)`, `jsonb`, `array<struct>`) is the storage type in the serving system, and `physicalName` is what the object or column is actually called there. Both describe the *physical* dataset, which the canonical model does not: it names the logical shape. They are carried verbatim in `extras['odcs_physical_type']` and `extras['odcs_physical_name']`, and the type is deliberately not interpreted — `varchar(20)` does **not** become `maxLength: 20`, because the unit differs by dialect and by encoding. Declared lengths and ranges come from `logicalTypeOptions`, which is the portable half.",
+            "locations": [
+              "shipment_events"
+            ]
+          },
+          {
+            "construct": "odcs.quality_rule",
+            "count": 5,
+            "detail": "A quality rule — a library rule (`rowCount`, `nullCount`, `duplicateCount`, `freshness`, …), a `sql` query, a free-text expectation or a `custom` engine block — states an expectation about the *data*, not about the schema. The canonical model constrains shape, so the rule is carried verbatim in `extras['odcs_quality']` on the contract, the type or the field that declared it, and is never executed, translated into a constraint, or checked.",
+            "locations": [
+              "shipment_events"
+            ]
+          },
+          {
+            "construct": "odcs.server",
+            "count": 1,
+            "detail": "A `servers[]` entry describes *serving infrastructure* — a BigQuery dataset, an S3 prefix, a Snowflake warehouse, a Kafka broker — with a different field set per `type`. The canonical `Server` is a URL with variables and cannot hold them without inventing one, so each entry is carried verbatim in `extras['odcs_servers']` and no canonical server is synthesized.",
+            "locations": []
+          },
+          {
+            "construct": "odcs.sla_property",
+            "count": 1,
+            "detail": "`slaProperties` states latency, freshness, retention, frequency and availability windows against a named element. The canonical model has no service-level vocabulary, so the entries are carried verbatim in `extras['odcs_sla_properties']` with `slaDefaultElement` beside them.",
+            "locations": []
+          },
+          {
+            "construct": "odcs.tag",
+            "count": 1,
+            "detail": "`tags[]` labels a contract, a schema object or a property with free-form keywords. The canonical model tags *operations*, not data-schema entities, so the list is carried verbatim in `extras['odcs_tags']` on whichever node declared it.",
+            "locations": []
+          },
+          {
+            "construct": "odcs.team_role",
+            "count": 1,
+            "detail": "`team[]` (who owns the contract, since when, and who replaced whom) and `roles[]` (which access role is granted through which approvers) are ownership and access-governance facts. The canonical model carries neither, so both are carried verbatim in `extras['odcs_team']` and `extras['odcs_roles']`.",
+            "locations": []
+          }
+        ],
+        "contract_id": "0f6d2f0e-1b2c-4a5e-9f2a-000000000007",
+        "domain": "logistics",
+        "fileset": {
+          "members": [
+            "contract.yaml",
+            "quality.yaml",
+            "shipment-event.schema.json"
+          ],
+          "quality_packs": {
+            "quality.yaml": {
+              "rules": 5,
+              "schema": "shipment_events"
+            }
+          },
+          "resolved_definitions": {
+            "./shipment-event.schema.json": "shipment-event.schema.json"
+          },
+          "root": "contract.yaml"
+        },
+        "schema_objects": [
+          "shipment_events"
+        ],
+        "status": "active"
+      },
+      "odcs_description": {
+        "purpose": "Root of the set. The schema's structural detail is delegated to a sibling JSON Schema through authoritativeDefinitions, and the quality rule pack lives in a second file — so this contract is only complete alongside them.\n"
+      },
+      "odcs_servers": [
+        {
+          "database": "analytics",
+          "host": "warehouse.example.com",
+          "port": 5432,
+          "schema": "logistics",
+          "server": "warehouse",
+          "type": "postgres"
+        }
+      ],
+      "odcs_sla_properties": [
+        {
+          "element": "shipment_events.occurred_at",
+          "property": "latency",
+          "unit": "m",
+          "value": 15
+        }
+      ],
+      "odcs_tags": [
+        "logistics"
+      ],
+      "odcs_team": [
+        {
+          "dateIn": "2026-05-01",
+          "role": "Data Product Owner",
+          "username": "l.owner"
+        }
+      ]
+    },
+    "format": "odcs",
+    "identity": {
+      "extras": {},
+      "id": "0f6d2f0e-1b2c-4a5e-9f2a-000000000007",
+      "name": "shipment_events",
+      "namespace": "logistics"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "shipment_events",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "One row per shipment lifecycle event.",
+        "enum_values": [],
+        "extras": {
+          "odcs_authoritative_defs": [
+            {
+              "type": "schemaDefinition",
+              "url": "./shipment-event.schema.json"
+            }
+          ],
+          "odcs_physical_type": "table",
+          "odcs_position": 0,
+          "odcs_quality": [
+            {
+              "dimension": "volume",
+              "mustBeGreaterThan": 0,
+              "rule": "rowCount",
+              "severity": "error"
+            },
+            {
+              "dimension": "completeness",
+              "mustBe": 0,
+              "property": "shipment_id",
+              "rule": "nullCount",
+              "severity": "error"
+            },
+            {
+              "dimension": "uniqueness",
+              "mustBe": 0,
+              "property": "event_id",
+              "rule": "duplicateCount",
+              "severity": "error"
+            },
+            {
+              "businessImpact": "operational",
+              "dimension": "timeliness",
+              "mustBeLessThan": 30,
+              "property": "occurred_at",
+              "rule": "freshness",
+              "unit": "minute"
+            },
+            {
+              "description": "Every event type must be one the payload schema allows.",
+              "mustBe": 0,
+              "query": "SELECT COUNT(*) FROM shipment_events\nWHERE event_type NOT IN\n  ('created','picked','packed','dispatched','delivered','exception')\n",
+              "type": "sql"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_key": {
+                "primaryKey": true
+              },
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "uuid",
+              "odcs_position": 0
+            },
+            "field_number": null,
+            "key": "shipment_events.event_id",
+            "name": "event_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "varchar(24)",
+              "odcs_position": 2
+            },
+            "field_number": null,
+            "key": "shipment_events.event_type",
+            "name": "event_type",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "date",
+              "odcs_partition": {
+                "partitioned": true
+              },
+              "odcs_physical_type": "timestamp",
+              "odcs_position": 3
+            },
+            "field_number": null,
+            "key": "shipment_events.occurred_at",
+            "name": "occurred_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "date",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Event body; its shape is defined by the referenced JSON Schema.",
+            "extras": {
+              "odcs_logical_type": "object",
+              "odcs_physical_type": "jsonb",
+              "odcs_position": 4
+            },
+            "field_number": null,
+            "key": "shipment_events.payload",
+            "name": "payload",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "shipment_events.payload",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "varchar(12)",
+              "odcs_position": 1
+            },
+            "field_number": null,
+            "key": "shipment_events.shipment_id",
+            "name": "shipment_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "shipment_events",
+        "key_type": null,
+        "kind": "record",
+        "name": "shipment_events",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Event body; its shape is defined by the referenced JSON Schema.",
+        "enum_values": [],
+        "extras": {
+          "odcs_physical_type": "jsonb"
+        },
+        "fields": [],
+        "key": "shipment_events.payload",
+        "key_type": null,
+        "kind": "record",
+        "name": "payload",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "corpus_path": "odcs/07-contract-set/contract.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "odcs"
+  },
+  "fingerprint": "sha256:caa147ee142c3749b13b0ce70491f3283682113e5032372f01a8a90683c920e4",
+  "lint": {
+    "findings": 4,
+    "grade": "A",
+    "report_fingerprint": "daa644ed1373e09e53d872ac8a7e4ad32d63bf7d086915d2731cd0f70604f384",
+    "score": 96,
+    "severity_counts": {
+      "error": 0,
+      "info": 4,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

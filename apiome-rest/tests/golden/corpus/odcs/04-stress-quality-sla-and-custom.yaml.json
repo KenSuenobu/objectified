@@ -1,0 +1,619 @@
+{
+  "adapter": "odcs",
+  "canonical": {
+    "channels": [],
+    "description": "Exercise every quality rule type, SLA property and custom extension ODCS v3.1 admits.",
+    "extras": {
+      "odcs": {
+        "api_version": "v3.1.0",
+        "capability_limits": [
+          {
+            "construct": "odcs.classification",
+            "count": 2,
+            "detail": "`classification` (`confidential`, `restricted`, …) and `criticalDataElement` are governance labels on a field. The canonical model has no classification vocabulary, so both are carried on the field in `extras` — which is what keeps a PII marker visible on the catalog detail view without pretending it is a validation constraint.",
+            "locations": [
+              "events"
+            ]
+          },
+          {
+            "construct": "odcs.custom_property",
+            "count": 1,
+            "detail": "`customProperties[]` is the standard's own extension point: a list of `property`/`value` pairs whose meaning is defined by the publisher. It is carried verbatim in `extras['odcs_custom_properties']` on whichever node declared it, and no meaning is assigned to any key.",
+            "locations": []
+          },
+          {
+            "construct": "odcs.declaration_order",
+            "count": 1,
+            "detail": "A dataset's column order is physical: it is the order the table, file or topic actually presents. Canonical entities are keyed and sorted by key, so declaration order is not a canonical property; the source index is recorded on every schema object and every property as `extras['odcs_position']` and the canonical ordering does not follow it.",
+            "locations": [
+              "events"
+            ]
+          },
+          {
+            "construct": "odcs.free_form_object",
+            "count": 1,
+            "detail": "A property typed `object` that declares no `properties` of its own (an event body stored as `jsonb`, a payload whose shape is delegated to an external schema) has no members to name. It becomes an open-content record with no fields, and the fact that arbitrary content is admitted is not expressible as a canonical constraint.",
+            "locations": [
+              "events"
+            ]
+          },
+          {
+            "construct": "odcs.key_uniqueness",
+            "count": 1,
+            "detail": "`primaryKey`/`primaryKeyPosition` and `unique` declare identity and uniqueness over the *rows* of a dataset. The canonical constraint vocabulary has no identity facet (`unique_items` is about the members of one array), so the declarations are carried on the field in `extras` and are not enforced.",
+            "locations": [
+              "events"
+            ]
+          },
+          {
+            "construct": "odcs.partitioning",
+            "count": 1,
+            "detail": "`partitioned`/`partitionKeyPosition` describe the physical layout of the dataset in the serving system. The canonical model describes shape, not layout, so the declarations are carried on the field in `extras`.",
+            "locations": [
+              "events"
+            ]
+          },
+          {
+            "construct": "odcs.physical_type",
+            "count": 8,
+            "detail": "`physicalType` (`varchar(20)`, `numeric(13,2)`, `jsonb`, `array<struct>`) is the storage type in the serving system, and `physicalName` is what the object or column is actually called there. Both describe the *physical* dataset, which the canonical model does not: it names the logical shape. They are carried verbatim in `extras['odcs_physical_type']` and `extras['odcs_physical_name']`, and the type is deliberately not interpreted — `varchar(20)` does **not** become `maxLength: 20`, because the unit differs by dialect and by encoding. Declared lengths and ranges come from `logicalTypeOptions`, which is the portable half.",
+            "locations": [
+              "events"
+            ]
+          },
+          {
+            "construct": "odcs.price",
+            "count": 1,
+            "detail": "`price` states an amount, a currency and a billing unit for consuming the dataset. Nothing in the canonical model prices an API, so the block is carried verbatim in `extras['odcs_price']`.",
+            "locations": []
+          },
+          {
+            "construct": "odcs.quality_rule",
+            "count": 8,
+            "detail": "A quality rule — a library rule (`rowCount`, `nullCount`, `duplicateCount`, `freshness`, …), a `sql` query, a free-text expectation or a `custom` engine block — states an expectation about the *data*, not about the schema. The canonical model constrains shape, so the rule is carried verbatim in `extras['odcs_quality']` on the contract, the type or the field that declared it, and is never executed, translated into a constraint, or checked.",
+            "locations": [
+              "events"
+            ]
+          },
+          {
+            "construct": "odcs.server",
+            "count": 1,
+            "detail": "A `servers[]` entry describes *serving infrastructure* — a BigQuery dataset, an S3 prefix, a Snowflake warehouse, a Kafka broker — with a different field set per `type`. The canonical `Server` is a URL with variables and cannot hold them without inventing one, so each entry is carried verbatim in `extras['odcs_servers']` and no canonical server is synthesized.",
+            "locations": []
+          },
+          {
+            "construct": "odcs.sla_property",
+            "count": 2,
+            "detail": "`slaProperties` states latency, freshness, retention, frequency and availability windows against a named element. The canonical model has no service-level vocabulary, so the entries are carried verbatim in `extras['odcs_sla_properties']` with `slaDefaultElement` beside them.",
+            "locations": []
+          },
+          {
+            "construct": "odcs.support_channel",
+            "count": 1,
+            "detail": "`support[]` names the channels a consumer reaches the producer through. The canonical model has no contact vocabulary, so the entries are carried verbatim in `extras['odcs_support']`.",
+            "locations": []
+          },
+          {
+            "construct": "odcs.tag",
+            "count": 1,
+            "detail": "`tags[]` labels a contract, a schema object or a property with free-form keywords. The canonical model tags *operations*, not data-schema entities, so the list is carried verbatim in `extras['odcs_tags']` on whichever node declared it.",
+            "locations": []
+          },
+          {
+            "construct": "odcs.team_role",
+            "count": 2,
+            "detail": "`team[]` (who owns the contract, since when, and who replaced whom) and `roles[]` (which access role is granted through which approvers) are ownership and access-governance facts. The canonical model carries neither, so both are carried verbatim in `extras['odcs_team']` and `extras['odcs_roles']`.",
+            "locations": []
+          },
+          {
+            "construct": "odcs.transform_metadata",
+            "count": 2,
+            "detail": "`transformSourceObjects`, `transformLogic`, `transformDescription` and `encryptedName` describe how a field is derived and where its encrypted twin lives. That is lineage, not shape, so all four are carried on the field in `extras['odcs_transform']` and `extras['odcs_encrypted_name']`.",
+            "locations": [
+              "events"
+            ]
+          }
+        ],
+        "contract_id": "0f6d2f0e-1b2c-4a5e-9f2a-000000000004",
+        "data_product": "telemetry",
+        "domain": "platform",
+        "schema_objects": [
+          "events"
+        ],
+        "status": "draft",
+        "tenant": "ExampleCorp"
+      },
+      "odcs_custom_properties": [
+        {
+          "property": "dataGovernanceTier",
+          "value": "gold"
+        },
+        {
+          "property": "costCentre",
+          "value": "CC-4711"
+        },
+        {
+          "property": "refRulesetName",
+          "value": "platform.telemetry"
+        }
+      ],
+      "odcs_description": {
+        "authoritativeDefinitions": [
+          {
+            "type": "businessDefinition",
+            "url": "https://example.com/governance/telemetry"
+          }
+        ],
+        "limitations": "Nothing here is served.",
+        "purpose": "Exercise every quality rule type, SLA property and custom extension ODCS v3.1 admits.",
+        "usage": "Fixture only."
+      },
+      "odcs_price": {
+        "priceAmount": 0.0125,
+        "priceCurrency": "USD",
+        "priceUnit": "megabyte"
+      },
+      "odcs_roles": [
+        {
+          "access": "read",
+          "firstLevelApprovers": "Platform Lead",
+          "role": "telemetry_reader",
+          "secondLevelApprovers": "Data Governance Board"
+        },
+        {
+          "access": "write",
+          "firstLevelApprovers": "Platform Lead",
+          "role": "telemetry_admin"
+        }
+      ],
+      "odcs_servers": [
+        {
+          "delimiter": "none",
+          "format": "parquet",
+          "location": "s3://example-telemetry/events/",
+          "server": "lake",
+          "type": "s3"
+        },
+        {
+          "account": "example-account",
+          "database": "TELEMETRY",
+          "schema": "PUBLIC",
+          "server": "warehouse",
+          "type": "snowflake",
+          "warehouse": "ANALYTICS_WH"
+        },
+        {
+          "format": "avro",
+          "host": "kafka.example.com:9092",
+          "server": "stream",
+          "type": "kafka"
+        }
+      ],
+      "odcs_sla_default_element": "events.emitted_at",
+      "odcs_sla_properties": [
+        {
+          "element": "events.emitted_at",
+          "property": "latency",
+          "unit": "m",
+          "value": 15
+        },
+        {
+          "property": "generalAvailability",
+          "value": "2026-09-01T00:00:00Z"
+        },
+        {
+          "property": "endOfSupport",
+          "value": "2028-09-01T00:00:00Z"
+        },
+        {
+          "property": "endOfLife",
+          "value": "2029-09-01T00:00:00Z"
+        },
+        {
+          "element": "events.emitted_at",
+          "property": "retention",
+          "unit": "M",
+          "value": 18
+        },
+        {
+          "element": "events.emitted_at",
+          "property": "frequency",
+          "unit": "m",
+          "value": 5
+        },
+        {
+          "driver": "analytics",
+          "element": "events.emitted_at",
+          "property": "timeOfAvailability",
+          "value": "05:00-07:00"
+        }
+      ],
+      "odcs_support": [
+        {
+          "channel": "#telemetry-help",
+          "scope": "interactive",
+          "tool": "slack",
+          "url": "https://example.slack.com/archives/C0000TELEM"
+        },
+        {
+          "channel": "telemetry-oncall",
+          "scope": "issues",
+          "tool": "email",
+          "url": "mailto:telemetry-oncall@example.com"
+        }
+      ],
+      "odcs_tags": [
+        "platform",
+        "internal-only"
+      ],
+      "odcs_team": [
+        {
+          "dateIn": "2025-11-01",
+          "role": "Data Product Owner",
+          "username": "platform.owner"
+        },
+        {
+          "dateIn": "2024-04-01",
+          "dateOut": "2025-10-31",
+          "replacedByUsername": "platform.owner",
+          "role": "Data Product Owner",
+          "username": "former.owner"
+        },
+        {
+          "dateIn": "2026-03-12",
+          "role": "Security Reviewer",
+          "username": "sec.reviewer"
+        }
+      ]
+    },
+    "format": "odcs",
+    "identity": {
+      "extras": {},
+      "id": "0f6d2f0e-1b2c-4a5e-9f2a-000000000004",
+      "name": "telemetry_events",
+      "namespace": "platform"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "telemetry_events",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odcs_data_granularity": "One row per emitted event.",
+          "odcs_physical_name": "events_2026",
+          "odcs_physical_type": "table",
+          "odcs_position": 0,
+          "odcs_quality": [
+            {
+              "dimension": "volume",
+              "mustBeBetween": [
+                1,
+                100000000
+              ],
+              "rule": "rowCount",
+              "severity": "warning"
+            },
+            {
+              "dimension": "timeliness",
+              "mustBeLessThan": 30,
+              "property": "emitted_at",
+              "rule": "freshness",
+              "unit": "minute"
+            },
+            {
+              "description": "Every event must be traceable to a deployment id recorded in the platform deployment registry. Checked manually during quarterly review.\n",
+              "type": "text"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "date",
+              "odcs_logical_type_options": {
+                "format": "yyyy-MM-dd'T'HH:mm:ssX"
+              },
+              "odcs_partition": {
+                "partitionKeyPosition": 1,
+                "partitioned": true
+              },
+              "odcs_physical_type": "timestamp",
+              "odcs_position": 1
+            },
+            "field_number": null,
+            "key": "events.emitted_at",
+            "name": "emitted_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "date",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uuid",
+              "max_items": null,
+              "max_length": 36,
+              "maximum": null,
+              "min_items": null,
+              "min_length": 36,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_key": {
+                "primaryKey": true,
+                "primaryKeyPosition": 1,
+                "unique": true
+              },
+              "odcs_logical_type": "string",
+              "odcs_logical_type_options": {
+                "format": "uuid",
+                "maxLength": 36,
+                "minLength": 36
+              },
+              "odcs_physical_type": "uuid",
+              "odcs_position": 0,
+              "odcs_quality": [
+                {
+                  "dimension": "completeness",
+                  "mustBe": 0,
+                  "rule": "nullCount",
+                  "severity": "error"
+                },
+                {
+                  "dimension": "uniqueness",
+                  "mustBe": 0,
+                  "rule": "duplicateCount"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "events.event_id",
+            "name": "event_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": 600000.0,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 0.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "integer",
+              "odcs_logical_type_options": {
+                "maximum": 600000,
+                "minimum": 0
+              },
+              "odcs_physical_type": "bigint",
+              "odcs_position": 3,
+              "odcs_quality": [
+                {
+                  "businessImpact": "operational",
+                  "dimension": "timeliness",
+                  "mustBeLessThan": 250,
+                  "property": "latency_ms",
+                  "rule": "avg"
+                },
+                {
+                  "engine": "soda",
+                  "implementation": "checks for events:\n  - invalid_percent(latency_ms) < 1%\n",
+                  "type": "custom"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "events.latency_ms",
+            "name": "latency_ms",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Free-form event body; not modelled further.",
+            "extras": {
+              "odcs_logical_type": "object",
+              "odcs_physical_type": "jsonb",
+              "odcs_position": 4
+            },
+            "field_number": null,
+            "key": "events.payload",
+            "name": "payload",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "events.payload",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_classification": "restricted",
+              "odcs_critical_data_element": true,
+              "odcs_encrypted_name": "pii_email_enc",
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "varchar(255)",
+              "odcs_position": 5,
+              "odcs_transform": {
+                "transformDescription": "Hashed at ingest; the raw value never lands.",
+                "transformLogic": "sha256(lower(trim(email)))",
+                "transformSourceObjects": [
+                  "crm.customers"
+                ]
+              }
+            },
+            "field_number": null,
+            "key": "events.pii_email",
+            "name": "pii_email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "debug",
+                "info",
+                "warn",
+                "error",
+                "fatal"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "string",
+              "odcs_logical_type_options": {
+                "enum": [
+                  "debug",
+                  "info",
+                  "warn",
+                  "error",
+                  "fatal"
+                ]
+              },
+              "odcs_physical_type": "varchar(10)",
+              "odcs_position": 2,
+              "odcs_quality": [
+                {
+                  "description": "Only known severities are accepted.",
+                  "mustBe": 0,
+                  "query": "SELECT COUNT(*) FROM events\nWHERE severity NOT IN ('debug','info','warn','error','fatal')\n",
+                  "type": "sql"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "events.severity",
+            "name": "severity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "events",
+        "key_type": null,
+        "kind": "record",
+        "name": "events",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Free-form event body; not modelled further.",
+        "enum_values": [],
+        "extras": {
+          "odcs_physical_type": "jsonb"
+        },
+        "fields": [],
+        "key": "events.payload",
+        "key_type": null,
+        "kind": "record",
+        "name": "payload",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "0.9.0-rc.2"
+  },
+  "corpus_path": "odcs/04-stress-quality-sla-and-custom.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "odcs"
+  },
+  "fingerprint": "sha256:64bd167642cc910ea5d76c8d27942b7d9746543ddd9690eb0f7f39f843a69f1d",
+  "lint": {
+    "findings": 6,
+    "grade": "A",
+    "report_fingerprint": "91383ceda94ab48ce3bbc43a654abbb375d6d329eb5f5c8035c099b374683566",
+    "score": 91,
+    "severity_counts": {
+      "error": 0,
+      "info": 5,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

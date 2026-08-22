@@ -142,6 +142,7 @@ from .import_source import (
 )
 from .import_source_pipeline import ImportRunArtifacts, _normalize_import_project_slug
 from .models import ImportPreflightCounts, ImportPreflightReport, ImportPreflightRequest
+from .odcs_normalizer import ODCS_EXTRAS_KEY
 from .projection_taxonomy import ProjectionReason, ProjectionStatus
 from .proto_editions import (
     EDITIONS_PROVENANCE_EXTRA_KEY as PROTO_EDITIONS_EXTRA_KEY,
@@ -229,6 +230,12 @@ PROVENANCE_EXTRA_KEYS = frozenset(SOURCE_LOCATION_EXTRA_KEYS) | frozenset(NATIVE
         # source's own `info.schema` is still reported (as `postman_schema_url`).
         "swagger_1_2",
         "postman_collection_version",
+        # FMT-5.1: the ODCS projection record (declared api version, contract status and
+        # identity, the schema objects, declared limits, the composed file set). Our own
+        # bookkeeping about the read — the contract's *own* governance blocks live under
+        # their own `odcs_*` keys and are deliberately NOT listed here, because they are
+        # source constructs the canonical model does not hold and must read as partial.
+        ODCS_EXTRAS_KEY,
         # FMT-3.7: the resolved Protobuf Editions record (per-file edition, syntax and feature
         # set). It is our own resolution of the document, not a construct the document names.
         # Spelled by its owning module rather than repeated as a literal.
@@ -1065,6 +1072,7 @@ def _document_scope_rows(
     ledger.extend(_dtd_capability_rows(api))
     ledger.extend(_cddl_capability_rows(api))
     ledger.extend(_arrow_capability_rows(api))
+    ledger.extend(_odcs_capability_rows(api))
 
     return nodes, edges, ledger
 
@@ -1310,6 +1318,61 @@ def _wit_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
     return rows
 
 
+def _declared_limit_rows(
+    api: CanonicalApi,
+    *,
+    extras_key: str,
+    location_label: str,
+    normalized_noun: str,
+) -> List[CoverageEntry]:
+    """Render one adapter's declared limits as document-scoped ledger rows.
+
+    Every reader that publishes a ``capability_limits`` list in its extras bag renders
+    it the same way, and must: a declared limit is always ``partially-mapped``, never a
+    drop — the construct *is* normalized and only the part with no canonical analogue is
+    lost. Keeping that judgement in one place is what stops the next adapter from
+    quietly grading its own limits as something else.
+
+    Args:
+        api: The normalized model.
+        extras_key: The root extras key holding the reader's projection record.
+        location_label: What a recorded location names in this format ("Rule(s)",
+            "Field(s)", "Schema object(s)"), used to introduce the location list.
+        normalized_noun: What "the … itself is normalized" refers to in this format
+            ("rule", "field", "property").
+
+    Returns:
+        One ledger row per declared limit, or an empty list for a document that met
+        none (or for a model this adapter did not produce).
+    """
+    report = api.extras.get(extras_key) if isinstance(api.extras, dict) else None
+    if not isinstance(report, dict):
+        return []
+    rows: List[CoverageEntry] = []
+    partial_status, partial_reason = STATUS_FOR_COVERAGE[CoverageClass.PARTIALLY_MAPPED]
+    for limit in report.get("capability_limits") or []:
+        if not isinstance(limit, dict) or not limit.get("construct"):
+            continue
+        count = int(limit.get("count") or 1)
+        locations = [str(name) for name in (limit.get("locations") or [])]
+        where = f" {location_label}: {', '.join(locations)}." if locations else ""
+        rows.append(
+            CoverageEntry(
+                source_construct=str(limit.get("construct")),
+                coverage=CoverageClass.PARTIALLY_MAPPED,
+                status=partial_status,
+                reason=partial_reason,
+                detail=(
+                    f"{limit.get('detail')} ({count} occurrence(s); a capability limit of the "
+                    f"canonical model, not a drop — the {normalized_noun} itself is "
+                    f"normalized.){where}"
+                ),
+                document_scoped=True,
+            )
+        )
+    return rows
+
+
 def _relaxng_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
     """Render the FMT-4.1 RELAX NG declared limits as document-scoped ledger rows.
 
@@ -1328,31 +1391,12 @@ def _relaxng_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
     Returns:
         One ledger row per declared limit, or an empty list for a grammar that met none.
     """
-    report = api.extras.get(RELAXNG_EXTRAS_KEY) if isinstance(api.extras, dict) else None
-    if not isinstance(report, dict):
-        return []
-    rows: List[CoverageEntry] = []
-    partial_status, partial_reason = STATUS_FOR_COVERAGE[CoverageClass.PARTIALLY_MAPPED]
-    for limit in report.get("capability_limits") or []:
-        if not isinstance(limit, dict) or not limit.get("construct"):
-            continue
-        count = int(limit.get("count") or 1)
-        locations = [str(name) for name in (limit.get("locations") or [])]
-        where = f" Named pattern(s): {', '.join(locations)}." if locations else ""
-        rows.append(
-            CoverageEntry(
-                source_construct=str(limit.get("construct")),
-                coverage=CoverageClass.PARTIALLY_MAPPED,
-                status=partial_status,
-                reason=partial_reason,
-                detail=(
-                    f"{limit.get('detail')} ({count} occurrence(s); a capability limit of the "
-                    f"canonical model, not a drop — the pattern itself is normalized.){where}"
-                ),
-                document_scoped=True,
-            )
-        )
-    return rows
+    return _declared_limit_rows(
+        api,
+        extras_key=RELAXNG_EXTRAS_KEY,
+        location_label="Named pattern(s)",
+        normalized_noun="pattern",
+    )
 
 
 def _dtd_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
@@ -1374,32 +1418,12 @@ def _dtd_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
     Returns:
         One ledger row per declared limit, or an empty list for a DTD that met none.
     """
-    report = api.extras.get(DTD_EXTRAS_KEY) if isinstance(api.extras, dict) else None
-    if not isinstance(report, dict):
-        return []
-    rows: List[CoverageEntry] = []
-    partial_status, partial_reason = STATUS_FOR_COVERAGE[CoverageClass.PARTIALLY_MAPPED]
-    for limit in report.get("capability_limits") or []:
-        if not isinstance(limit, dict) or not limit.get("construct"):
-            continue
-        count = int(limit.get("count") or 1)
-        locations = [str(name) for name in (limit.get("locations") or [])]
-        where = f" Declaration(s): {', '.join(locations)}." if locations else ""
-        rows.append(
-            CoverageEntry(
-                source_construct=str(limit.get("construct")),
-                coverage=CoverageClass.PARTIALLY_MAPPED,
-                status=partial_status,
-                reason=partial_reason,
-                detail=(
-                    f"{limit.get('detail')} ({count} occurrence(s); a capability limit of the "
-                    f"canonical model, not a drop — the declaration itself is normalized.)"
-                    f"{where}"
-                ),
-                document_scoped=True,
-            )
-        )
-    return rows
+    return _declared_limit_rows(
+        api,
+        extras_key=DTD_EXTRAS_KEY,
+        location_label="Declaration(s)",
+        normalized_noun="declaration",
+    )
 
 
 def _cddl_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
@@ -1422,32 +1446,12 @@ def _cddl_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
     Returns:
         One ledger row per declared limit, or an empty list for a grammar that met none.
     """
-    report = api.extras.get(CDDL_EXTRAS_KEY) if isinstance(api.extras, dict) else None
-    if not isinstance(report, dict):
-        return []
-    rows: List[CoverageEntry] = []
-    partial_status, partial_reason = STATUS_FOR_COVERAGE[CoverageClass.PARTIALLY_MAPPED]
-    for limit in report.get("capability_limits") or []:
-        if not isinstance(limit, dict) or not limit.get("construct"):
-            continue
-        count = int(limit.get("count") or 1)
-        locations = [str(name) for name in (limit.get("locations") or [])]
-        where = f" Rule(s): {', '.join(locations)}." if locations else ""
-        rows.append(
-            CoverageEntry(
-                source_construct=str(limit.get("construct")),
-                coverage=CoverageClass.PARTIALLY_MAPPED,
-                status=partial_status,
-                reason=partial_reason,
-                detail=(
-                    f"{limit.get('detail')} ({count} occurrence(s); a capability limit of the "
-                    f"canonical model, not a drop — the rule itself is normalized.)"
-                    f"{where}"
-                ),
-                document_scoped=True,
-            )
-        )
-    return rows
+    return _declared_limit_rows(
+        api,
+        extras_key=CDDL_EXTRAS_KEY,
+        location_label="Rule(s)",
+        normalized_noun="rule",
+    )
 
 
 def _arrow_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
@@ -1469,32 +1473,40 @@ def _arrow_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
     Returns:
         One ledger row per declared limit, or an empty list for a schema that met none.
     """
-    report = api.extras.get(ARROW_EXTRAS_KEY) if isinstance(api.extras, dict) else None
-    if not isinstance(report, dict):
-        return []
-    rows: List[CoverageEntry] = []
-    partial_status, partial_reason = STATUS_FOR_COVERAGE[CoverageClass.PARTIALLY_MAPPED]
-    for limit in report.get("capability_limits") or []:
-        if not isinstance(limit, dict) or not limit.get("construct"):
-            continue
-        count = int(limit.get("count") or 1)
-        locations = [str(name) for name in (limit.get("locations") or [])]
-        where = f" Field(s): {', '.join(locations)}." if locations else ""
-        rows.append(
-            CoverageEntry(
-                source_construct=str(limit.get("construct")),
-                coverage=CoverageClass.PARTIALLY_MAPPED,
-                status=partial_status,
-                reason=partial_reason,
-                detail=(
-                    f"{limit.get('detail')} ({count} occurrence(s); a capability limit of the "
-                    f"canonical model, not a drop — the field itself is normalized.)"
-                    f"{where}"
-                ),
-                document_scoped=True,
-            )
-        )
-    return rows
+    return _declared_limit_rows(
+        api,
+        extras_key=ARROW_EXTRAS_KEY,
+        location_label="Field(s)",
+        normalized_noun="field",
+    )
+
+
+def _odcs_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
+    """Render the FMT-5.1 ODCS declared limits as document-scoped ledger rows.
+
+    A data contract's *governance* half — quality rules, ``team``/``roles`` ownership,
+    ``slaProperties``, ``servers``, ``support``, ``price``, ``tags``,
+    ``customProperties``, ``authoritativeDefinitions`` — plus the per-field declarations
+    the canonical model has no facet for (``physicalType``, ``primaryKey``/``unique``,
+    ``partitioned``, ``classification``, the transform/lineage block) are stated as
+    ``partially-mapped``: every one of them is carried verbatim under the documented
+    ``odcs_*`` extras namespace, on the node that declared it, and only the ability of a
+    canonical *feature* to read it is lost. A **capability limit, never a silent
+    omission**, which is what the ticket's "the capability registry declares what is
+    modelled and what is carried-but-not-modelled" criterion asks the registry to carry.
+
+    Args:
+        api: The normalized model.
+
+    Returns:
+        One ledger row per declared limit, or an empty list for a contract that met none.
+    """
+    return _declared_limit_rows(
+        api,
+        extras_key=ODCS_EXTRAS_KEY,
+        location_label="Schema object(s)",
+        normalized_noun="declaration",
+    )
 
 
 def _sort_graph(

@@ -127,6 +127,7 @@ const FORMAT_LABELS: Readonly<Record<string, string>> = {
   asn1: 'ASN.1',
   cddl: 'CDDL',
   arrow: 'Apache Arrow',
+  odcs: 'ODCS Data Contract',
   cobolcopybook: 'COBOL Copybook',
   fhir: 'FHIR',
   hl7v2: 'HL7 v2',

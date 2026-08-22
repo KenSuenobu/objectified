@@ -141,7 +141,7 @@ __all__ = [
 #: The registry contract version. Bumped whenever an entry, a reviewed seed, an absence
 #: explanation, or a vocabulary member changes, so a consumer can detect a stale contract and
 #: a cached snapshot can be keyed by it. Mirrored in the committed vocabulary snapshot.
-REGISTRY_VERSION = "9"
+REGISTRY_VERSION = "10"
 
 #: The date the current seeds and absence explanations were last reviewed. Recorded as
 #: provenance on every entry, so a claim about a format carries the date somebody checked it.
@@ -1117,6 +1117,102 @@ _CAPABILITY_SEED: Dict[str, _Seed] = {
             "the absence is the format's, not the reader's.",
             "DTD *output* is not implemented, so a DTD imported here is exported through "
             "another target's emitter and is not written back as a DTD.",
+        ],
+    ),
+    "odcs": _Seed(
+        # ODCS's payload analysis is the format-blind walk, so the first three fields
+        # restate what derivation produces. The reviewed judgement is the projection
+        # statement below: FMT-5.1's acceptance criterion is that the registry declares
+        # what is *modelled* and what is *carried but not modelled*, and this is where a
+        # reader is told which half of a data contract each of its blocks lands in.
+        native_hierarchy=NativeHierarchy.GENERIC,
+        native_hierarchy_note=(
+            "The format-blind walk records containers, ordered collections and leaves. Nesting "
+            "and ordering survive; this format's own semantics are not named, and their absence "
+            "from the tree says nothing about the source."
+        ),
+        source_location=SourceLocationSupport(
+            quality=SourceLocationQuality.PATH_ONLY,
+            note=(
+                "Schema objects and properties locate by name and structural path only. A "
+                "contract published across files is composed before normalization — a quality "
+                "pack maintained beside the contract is merged into the object it names — so a "
+                "rule's position in one member does not identify it inside the composed "
+                "contract."
+            ),
+        ),
+        value_visibility=ValueVisibilitySupport(
+            default=ValueVisibility.DEFAULT,
+            maximum=ValueVisibility.NONE,
+            note=(
+                "A data contract is a schema, not data: the analyzer observes no runtime values "
+                "at any policy level. 'No value here' is the absence of data to observe, not a "
+                "redaction. The values a contract *states* — a property's `examples`, an "
+                "enumerated `logicalTypeOptions.enum` — are part of the schema and are carried "
+                "as constraints and extras."
+            ),
+        ),
+        canonical_projection=CanonicalProjectionSupport(
+            coverage=ProjectionCoverage.PARTIAL,
+            dropped_constructs=[
+                "odcs.authoritative_definition",
+                "odcs.classification",
+                "odcs.custom_property",
+                "odcs.declaration_order",
+                "odcs.free_form_object",
+                "odcs.key_uniqueness",
+                "odcs.partitioning",
+                "odcs.physical_type",
+                "odcs.price",
+                "odcs.quality_rule",
+                "odcs.server",
+                "odcs.sla_property",
+                "odcs.support_channel",
+                "odcs.tag",
+                "odcs.team_role",
+                "odcs.transform_metadata",
+            ],
+            note=(
+                "A data contract has two halves and they land differently. The *structural* "
+                "half is modelled: each `schema[]` object becomes one canonical `RECORD`, each "
+                "property becomes one member, `required` becomes nullability, a nested `object` "
+                "property becomes a synthesized record keyed by its path, an `array` becomes a "
+                "list around its `items` type, and `logicalTypeOptions` — the portable half of "
+                "ODCS typing — becomes canonical constraints: lengths, numeric bounds, "
+                "`pattern`, `enum`, and `format` when the declared value is a format token "
+                "rather than a free-form date pattern. Declaration order is recorded in "
+                "`odcs_position` because a dataset's column order is physical and canonical "
+                "ordering does not follow it. The *governance* "
+                "half — the listed constructs — is **carried but not modelled**: quality rules, "
+                "`team`/`roles` ownership, `slaProperties`, `servers`, `support`, `price`, "
+                "`tags`, `customProperties` and `authoritativeDefinitions` survive verbatim "
+                "under the documented `odcs_*` extras namespace, on whichever node declared "
+                "them, so nothing is lost and nothing is re-spelled — but no canonical feature "
+                "reads them, and none of them is enforced. `physicalType` is deliberately not "
+                "interpreted: `varchar(20)` does not become `maxLength: 20`, because the unit "
+                "differs by dialect. Every occurrence is counted and located in "
+                "`extras['odcs']['capability_limits']`."
+            ),
+        ),
+        notes=[
+            "The reader covers the ODCS v3.x line, and only that line. A v2.2.x contract "
+            "declares the same `apiVersion`/`kind` pair but spells a dataset as `quantumName` "
+            "with `dataset[].columns[]`, so it is claimed by detection and then rejected *by "
+            "version*, with the v2 -> v3 renames named in the message — never parsed into an "
+            "empty contract.",
+            "A contract that describes no structure is refused rather than imported: a "
+            "`schema[]` object with no `properties` would produce an empty catalog type, which "
+            "reads as 'this dataset has no columns' rather than as 'this document did not say'.",
+            "`authoritativeDefinitions` URLs are recorded and **never fetched** during import. "
+            "A relative URL naming a member of the same imported file set is additionally "
+            "recorded as resolved, but its content is not expanded — a JSON Schema a contract "
+            "delegates its payload shape to stays a reference, not a set of canonical types.",
+            "Quality rules are carried, never executed and never translated into constraints. A "
+            "`sql` rule's query, a `custom` rule's engine block and a `text` rule's prose are "
+            "kept exactly as written, which is what lets FMT-5.2 write them back unchanged.",
+            "ODCS *output* is not implemented in this release, so a contract imported here is "
+            "exported through another target's emitter and is not written back as ODCS. FMT-5.2 "
+            "(#5440) adds the emitter, and reuses this reader's extras namespace.",
         ],
     ),
     "arrow": _Seed(

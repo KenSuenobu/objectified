@@ -23,6 +23,17 @@ __all__ = [
 ]
 
 _FORMAT_RE = re.compile(r"^\s*FORMAT\s*:\s*(\S+)\s*$", re.IGNORECASE | re.MULTILINE)
+#: The *detection* marker, deliberately narrower than :data:`_FORMAT_RE` (FMT-5.1).
+#:
+#: API Blueprint's ``FORMAT: 1A`` is a metadata line at column zero declaring the
+#: blueprint revision. The parser's permissive form matches ``format:`` **anywhere** at
+#: **any** indentation with **any** value, which is also how every YAML document in the
+#: world spells a JSON-Schema ``format: int32`` or an ODCS server's ``format: parquet`` —
+#: so used as a sniff it claimed documents that are not blueprints at all. Detection
+#: therefore requires both halves of the real marker: column zero, and a ``1A``-line
+#: revision. Reading a parsed document still uses the permissive form, so nothing a
+#: blueprint can legally say stops being read.
+_FORMAT_MARKER_RE = re.compile(r"^FORMAT\s*:\s*1A[0-9]*\s*$", re.IGNORECASE | re.MULTILINE)
 _HOST_RE = re.compile(r"^\s*HOST\s*:\s*(\S+)\s*$", re.IGNORECASE | re.MULTILINE)
 _RESOURCE_RE = re.compile(r"^##\s+(.+?)\s+\[([^\]]+)\]\s*$")
 _ACTION_RE = re.compile(r"^###\s+(.+?)\s+\[([A-Z]+)(?:\s+([^\]]+))?\]\s*$")
@@ -92,10 +103,20 @@ class ApiblueprintDocument:
 
 
 def is_apiblueprint(content: str) -> bool:
-    """Return ``True`` when ``content`` looks like an API Blueprint document."""
+    """Return ``True`` when ``content`` looks like an API Blueprint document.
+
+    Claims a document carrying the ``FORMAT: 1A`` metadata marker at column zero — see
+    :data:`_FORMAT_MARKER_RE` for why both halves of that marker are required.
+
+    Args:
+        content: The candidate document text.
+
+    Returns:
+        ``True`` when the API Blueprint reader claims the text.
+    """
     if not content or not isinstance(content, str):
         return False
-    return bool(_FORMAT_RE.search(content.strip()))
+    return bool(_FORMAT_MARKER_RE.search(content.strip()))
 
 
 def _parse_type_modifiers(modifiers: str) -> Tuple[str, bool]:

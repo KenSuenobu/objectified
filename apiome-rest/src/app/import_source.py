@@ -1117,6 +1117,11 @@ def load_builtin_import_sources() -> None:
     # normalizer under ``cddl``.
     from . import cddl_import_source as _cddl  # noqa: F401
 
+    # ``odcs_import_source`` (FMT-5.1) self-registers the ``odcs`` adapter — an Open Data
+    # Contract Standard v3.x contract, alone or as a set with its quality packs — and, via
+    # its own imports, the ODCS normalizer under ``odcs``.
+    from . import odcs_import_source as _odcs  # noqa: F401
+
     # ``arrow_import_source`` (FMT-4.5) self-registers the ``arrow`` adapter — the JSON
     # integration form, a binary IPC payload, a captured Flight fileset and a live Flight
     # endpoint — and, via its own imports, the Arrow normalizer under ``arrow``.
