@@ -1,0 +1,261 @@
+{
+  "adapter": "arrow",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "arrow": {
+        "capability_limits": [
+          {
+            "construct": "arrow.temporal_unit",
+            "count": 1,
+            "detail": "A `date`, `time`, `timestamp` or `duration` declares a resolution (`DAY`, `SECOND`, `MILLISECOND`, `MICROSECOND`, `NANOSECOND`) and a `timestamp` may declare a timezone. The canonical model has a semantic format hint and no resolution facet, so the field carries `date`/`time`/`date-time`/`duration` and the unit and timezone are recorded in `arrow_type`.",
+            "locations": [
+              "placed_at"
+            ]
+          }
+        ],
+        "root": "Schema",
+        "schema_metadata": {
+          "generated_by": "apiome corpus",
+          "source": "orders.public.orders"
+        }
+      }
+    },
+    "format": "arrow",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Schema",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Schema",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "arrow_kind": "schema"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "bool"
+              }
+            },
+            "field_number": 6,
+            "key": "Schema.cancelled",
+            "name": "cancelled",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 3,
+              "maximum": null,
+              "min_items": null,
+              "min_length": 3,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "byteWidth": 3,
+                "name": "fixedsizebinary"
+              }
+            },
+            "field_number": 5,
+            "key": "Schema.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "utf8"
+              }
+            },
+            "field_number": 2,
+            "key": "Schema.customer_id",
+            "name": "customer_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "utf8"
+              }
+            },
+            "field_number": 7,
+            "key": "Schema.note",
+            "name": "note",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "utf8"
+              }
+            },
+            "field_number": 1,
+            "key": "Schema.order_id",
+            "name": "order_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "timestamp",
+                "timezone": "UTC",
+                "unit": "MICROSECOND"
+              }
+            },
+            "field_number": 3,
+            "key": "Schema.placed_at",
+            "name": "placed_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "bitWidth": 64,
+                "isSigned": true,
+                "name": "int"
+              }
+            },
+            "field_number": 4,
+            "key": "Schema.total_minor_units",
+            "name": "total_minor_units",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Schema",
+        "key_type": null,
+        "kind": "record",
+        "name": "Schema",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "arrow/02-typical-orders-schema.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "arrow"
+  },
+  "fingerprint": "sha256:63168b087b0ffc22eef6eb40857305005b6f6fe8e3f055957a27c22d79c781e9",
+  "lint": {
+    "findings": 9,
+    "grade": "B",
+    "report_fingerprint": "7c5560d931c17980df1d40e3ef382fdc6dc5623ebb0642708a9e38619835b98d",
+    "score": 88,
+    "severity_counts": {
+      "error": 0,
+      "info": 8,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

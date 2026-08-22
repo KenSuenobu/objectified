@@ -27,7 +27,7 @@
       "marker": "top-level `arazzo: 1.1.x`"
     },
     "arrow": {
-      "label": "Apache Arrow / Flight schema (pending #5438)",
+      "label": "Apache Arrow / Flight schema",
       "category": "data-schema",
       "paradigm": "data_schema",
       "marker": "`schema.fields[].type.name` in the Arrow JSON integration form"
@@ -1760,7 +1760,7 @@
     {
       "path": "arrow/01-minimal-schema.json",
       "format": "arrow",
-      "adapter_key": null,
+      "adapter_key": "arrow",
       "validity_class": "valid",
       "expected_detection": {
         "format": "arrow",
@@ -1768,8 +1768,7 @@
       },
       "features": [
         "json-form",
-        "flat-fields",
-        "pending-adapter"
+        "flat-fields"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -1780,7 +1779,7 @@
     {
       "path": "arrow/02-typical-orders-schema.json",
       "format": "arrow",
-      "adapter_key": null,
+      "adapter_key": "arrow",
       "validity_class": "valid",
       "expected_detection": {
         "format": "arrow",
@@ -1790,8 +1789,7 @@
         "json-form",
         "timestamp-timezone",
         "fixedsizebinary",
-        "schema-metadata",
-        "pending-adapter"
+        "schema-metadata"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -1802,7 +1800,7 @@
     {
       "path": "arrow/03-composition-nested-types.json",
       "format": "arrow",
-      "adapter_key": null,
+      "adapter_key": "arrow",
       "validity_class": "valid",
       "expected_detection": {
         "format": "arrow",
@@ -1812,8 +1810,7 @@
         "struct",
         "list",
         "map",
-        "nested",
-        "pending-adapter"
+        "nested"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -1824,7 +1821,7 @@
     {
       "path": "arrow/04-stress-type-coverage.json",
       "format": "arrow",
-      "adapter_key": null,
+      "adapter_key": "arrow",
       "validity_class": "valid",
       "expected_detection": {
         "format": "arrow",
@@ -1839,8 +1836,7 @@
         "largeutf8",
         "fixedsizelist",
         "extension-type",
-        "all-int-widths",
-        "pending-adapter"
+        "all-int-widths"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -1851,7 +1847,7 @@
     {
       "path": "arrow/05-real-world-trip-records-schema.json",
       "format": "arrow",
-      "adapter_key": null,
+      "adapter_key": "arrow",
       "validity_class": "valid",
       "expected_detection": {
         "format": "arrow",
@@ -1861,8 +1857,7 @@
         "dictionary",
         "decimal",
         "map",
-        "partition-metadata",
-        "pending-adapter"
+        "partition-metadata"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -1873,7 +1868,7 @@
     {
       "path": "arrow/06-typical-flight-getschema-response.json",
       "format": "arrow",
-      "adapter_key": null,
+      "adapter_key": "arrow",
       "validity_class": "valid",
       "expected_detection": {
         "format": "arrow",
@@ -1883,8 +1878,7 @@
         "flight",
         "GetSchema",
         "flight-descriptor",
-        "dictionary",
-        "pending-adapter"
+        "dictionary"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -1895,7 +1889,7 @@
     {
       "path": "arrow/07-flight-set/flight-info.json",
       "format": "arrow",
-      "adapter_key": null,
+      "adapter_key": "arrow",
       "validity_class": "valid",
       "expected_detection": {
         "format": "arrow",
@@ -1905,8 +1899,7 @@
         "multi-file",
         "flight",
         "GetFlightInfo",
-        "endpoints",
-        "pending-adapter"
+        "endpoints"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -1918,7 +1911,7 @@
     {
       "path": "arrow/07-flight-set/inventory-schema.json",
       "format": "arrow",
-      "adapter_key": null,
+      "adapter_key": "arrow",
       "validity_class": "valid",
       "expected_detection": {
         "format": "arrow",
@@ -1927,8 +1920,7 @@
       "features": [
         "multi-file",
         "flight",
-        "json-form",
-        "pending-adapter"
+        "json-form"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -1938,9 +1930,58 @@
       "fileset_role": "member"
     },
     {
+      "path": "arrow/08-composition-nested-types.arrow",
+      "format": "arrow",
+      "adapter_key": "arrow",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "arrow",
+        "min_confidence": 0.85
+      },
+      "features": [
+        "binary-intake",
+        "binary-pair-composition",
+        "ipc",
+        "struct",
+        "list",
+        "map",
+        "nested"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Serialized in-repo from the hand-authored JSON twin beside it (arrow/03-composition-nested-types.json) with pyarrow; no upstream bytes copied.",
+      "notes": "IPC twin of 03-composition-nested-types.json. FMT-4.5 asserts the pair imports to one canonical model, so the two entries share a golden snapshot body.",
+      "rung": "composition"
+    },
+    {
+      "path": "arrow/09-real-world-trip-records.arrow",
+      "format": "arrow",
+      "adapter_key": "arrow",
+      "validity_class": "valid",
+      "expected_detection": {
+        "format": "arrow",
+        "min_confidence": 0.85
+      },
+      "features": [
+        "binary-intake",
+        "binary-pair-real-world",
+        "ipc",
+        "dictionary",
+        "decimal",
+        "map"
+      ],
+      "expected_outcome": "imports",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "Serialized in-repo from the hand-authored JSON twin beside it (arrow/05-real-world-trip-records-schema.json) with pyarrow; no upstream bytes copied.",
+      "notes": "IPC twin of 05-real-world-trip-records-schema.json, carrying the dictionary-encoded and decimal columns the acceptance criteria name.",
+      "rung": "real-world"
+    },
+    {
       "path": "arrow/negative/01-syntactic-trailing-comma.json",
       "format": "arrow",
-      "adapter_key": null,
+      "adapter_key": "arrow",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "arrow",
@@ -1949,8 +1990,7 @@
       "features": [
         "negative",
         "syntactic",
-        "trailing-comma",
-        "pending-adapter"
+        "trailing-comma"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -1962,7 +2002,7 @@
     {
       "path": "arrow/negative/02-semantic-unknown-type-name.json",
       "format": "arrow",
-      "adapter_key": null,
+      "adapter_key": "arrow",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "arrow",
@@ -1971,8 +2011,7 @@
       "features": [
         "negative",
         "semantic",
-        "unknown-type-name",
-        "pending-adapter"
+        "unknown-type-name"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -1984,7 +2023,7 @@
     {
       "path": "arrow/negative/03-truncated-mid-field.json",
       "format": "arrow",
-      "adapter_key": null,
+      "adapter_key": "arrow",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "arrow",
@@ -1993,8 +2032,7 @@
       "features": [
         "negative",
         "truncated",
-        "mid-type",
-        "pending-adapter"
+        "mid-type"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -2006,7 +2044,7 @@
     {
       "path": "arrow/negative/04-wrong-format-avro.avsc",
       "format": "arrow",
-      "adapter_key": null,
+      "adapter_key": "arrow",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "arrow",
@@ -2015,8 +2053,7 @@
       "features": [
         "negative",
         "wrong-format",
-        "avro",
-        "pending-adapter"
+        "avro"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -2028,7 +2065,7 @@
     {
       "path": "arrow/negative/05-encoding-utf16.json",
       "format": "arrow",
-      "adapter_key": null,
+      "adapter_key": "arrow",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "arrow",
@@ -2037,8 +2074,7 @@
       "features": [
         "negative",
         "encoding",
-        "utf-16",
-        "pending-adapter"
+        "utf-16"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -2050,7 +2086,7 @@
     {
       "path": "arrow/negative/06-semantic-struct-without-children.json",
       "format": "arrow",
-      "adapter_key": null,
+      "adapter_key": "arrow",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "arrow",
@@ -2059,8 +2095,7 @@
       "features": [
         "negative",
         "semantic",
-        "nested-without-children",
-        "pending-adapter"
+        "nested-without-children"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -2069,6 +2104,29 @@
       "notes": "Second semantic case: struct and list fields are meaningless with an empty children array, so the schema cannot describe a record batch.",
       "failure_class": "semantic",
       "expected_error_code": "INPUT_SEMANTIC_INVALID"
+    },
+    {
+      "path": "arrow/negative/07-truncated-ipc-schema.arrow",
+      "format": "arrow",
+      "adapter_key": "arrow",
+      "validity_class": "invalid",
+      "expected_detection": {
+        "format": "arrow",
+        "min_confidence": 0.0
+      },
+      "features": [
+        "negative",
+        "truncated",
+        "binary-intake",
+        "ipc"
+      ],
+      "expected_outcome": "rejects",
+      "source": "hand-authored",
+      "license": "Apache-2.0",
+      "provenance": "First half of arrow/08-composition-nested-types.arrow, cut so the stream message delivers less than its declared metadata length.",
+      "notes": "An IPC stream message declares its own metadata length, so a payload that delivers less than it promised is truncation as a framing fact rather than a heuristic.",
+      "failure_class": "truncated",
+      "expected_error_code": "INPUT_TRUNCATED"
     },
     {
       "path": "asn1/01-person.asn1",

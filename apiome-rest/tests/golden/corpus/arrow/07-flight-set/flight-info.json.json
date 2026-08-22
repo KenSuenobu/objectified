@@ -1,0 +1,257 @@
+{
+  "adapter": "arrow",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "arrow": {
+        "capability_limits": [
+          {
+            "construct": "arrow.flight_endpoint",
+            "count": 1,
+            "detail": "A Flight `GetFlightInfo` response carries endpoints — a ticket plus the locations that will honour it — which describe *where the data is*, not what it is. The descriptor names the dataset and becomes the model's identity; the endpoints are recorded in `extras['arrow']['flight']` and become no canonical service or operation, because they expose no callable API surface.",
+            "locations": [
+              "warehouse/public/inventory"
+            ]
+          },
+          {
+            "construct": "arrow.temporal_unit",
+            "count": 1,
+            "detail": "A `date`, `time`, `timestamp` or `duration` declares a resolution (`DAY`, `SECOND`, `MILLISECOND`, `MICROSECOND`, `NANOSECOND`) and a `timestamp` may declare a timezone. The canonical model has a semantic format hint and no resolution facet, so the field carries `date`/`time`/`date-time`/`duration` and the unit and timezone are recorded in `arrow_type`.",
+            "locations": [
+              "counted_at"
+            ]
+          }
+        ],
+        "flight": {
+          "descriptor": {
+            "path": [
+              "warehouse",
+              "public",
+              "inventory"
+            ],
+            "type": "PATH"
+          },
+          "endpoints": [
+            {
+              "locations": [
+                "grpc+tls://flight-a.example.com:443"
+              ],
+              "ticket": "aW52ZW50b3J5LXBhcnQtMA=="
+            },
+            {
+              "locations": [
+                "grpc+tls://flight-b.example.com:443"
+              ],
+              "ticket": "aW52ZW50b3J5LXBhcnQtMQ=="
+            }
+          ],
+          "ordered": false,
+          "total_bytes": -1,
+          "total_records": -1
+        },
+        "root": "warehouse.public.inventory",
+        "schema_metadata": {
+          "source": "warehouse.public.inventory"
+        }
+      }
+    },
+    "format": "arrow",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "inventory",
+      "namespace": "warehouse.public"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "inventory",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "arrow_kind": "schema"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "timestamp",
+                "timezone": "UTC",
+                "unit": "SECOND"
+              }
+            },
+            "field_number": 5,
+            "key": "warehouse.public.inventory.counted_at",
+            "name": "counted_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "bitWidth": 32,
+                "isSigned": true,
+                "name": "int"
+              }
+            },
+            "field_number": 3,
+            "key": "warehouse.public.inventory.on_hand",
+            "name": "on_hand",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "bitWidth": 32,
+                "isSigned": true,
+                "name": "int"
+              }
+            },
+            "field_number": 4,
+            "key": "warehouse.public.inventory.reserved",
+            "name": "reserved",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "utf8"
+              }
+            },
+            "field_number": 1,
+            "key": "warehouse.public.inventory.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 3,
+              "maximum": null,
+              "min_items": null,
+              "min_length": 3,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "byteWidth": 3,
+                "name": "fixedsizebinary"
+              }
+            },
+            "field_number": 2,
+            "key": "warehouse.public.inventory.warehouse",
+            "name": "warehouse",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "warehouse.public.inventory",
+        "key_type": null,
+        "kind": "record",
+        "name": "inventory",
+        "namespace": "warehouse.public",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "arrow/07-flight-set/flight-info.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "arrow"
+  },
+  "fingerprint": "sha256:ffe995d561ed0157bac9b7a4ee0a9897f95a882d1803a502a818574f3c16bb91",
+  "lint": {
+    "findings": 7,
+    "grade": "A",
+    "report_fingerprint": "0fbdff476c9bb4f68d4c1d3fcf49ef3c4a559399681a0f9eefd77811a629047e",
+    "score": 90,
+    "severity_counts": {
+      "error": 0,
+      "info": 6,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

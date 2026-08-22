@@ -1,0 +1,1130 @@
+{
+  "adapter": "arrow",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "arrow": {
+        "capability_limits": [
+          {
+            "construct": "arrow.decimal_width",
+            "count": 2,
+            "detail": "A `decimal` declares a precision, a scale and a storage width (128 or 256 bits). The canonical constraint vocabulary has no precision/scale facet, so the field keeps the `decimal` scalar and all three are recorded in `arrow_decimal` — preserved and reportable, but not enforced.",
+            "locations": [
+              "f_decimal128",
+              "f_decimal256"
+            ]
+          },
+          {
+            "construct": "arrow.dictionary_encoding",
+            "count": 2,
+            "detail": "A dictionary-encoded field stores integer indices into a dictionary of its declared value type. The *values* are what the schema describes, so the field keeps its value type; the index type and whether the dictionary is ordered are recorded in `arrow_dictionary`. The dictionary's numeric id is not carried — it names a message in an IPC stream, not a property of the data.",
+            "locations": [
+              "f_dictionary",
+              "f_ordered_dictionary"
+            ]
+          },
+          {
+            "construct": "arrow.extension_type",
+            "count": 1,
+            "detail": "An `ARROW:extension:name` field names a logical type layered over a storage type (`arrow.uuid` over `fixed_size_binary[16]`). The canonical model has no extension registry, so the storage type is carried and the extension name and its opaque parameters are recorded in `arrow_extension`.",
+            "locations": [
+              "f_extension"
+            ]
+          },
+          {
+            "construct": "arrow.half_precision",
+            "count": 1,
+            "detail": "A `floatingpoint` of `HALF` precision is a 16-bit float. The canonical scalar vocabulary starts at 32 bits, so the field carries `float` — a strictly wider value space than the column holds — and the declared precision is recorded in `arrow_type`.",
+            "locations": [
+              "f_half"
+            ]
+          },
+          {
+            "construct": "arrow.interval",
+            "count": 2,
+            "detail": "An `interval` is a calendar offset (`YEAR_MONTH`, `DAY_TIME`, `MONTH_DAY_NANO`) whose components are not reducible to a fixed amount of time. The canonical model has no calendar-offset scalar, so the field is carried as a `duration`-formatted string and the unit is recorded in `arrow_type` — the nearest analogue, not an equivalent.",
+            "locations": [
+              "f_interval_mdn",
+              "f_interval_ym"
+            ]
+          },
+          {
+            "construct": "arrow.physical_layout",
+            "count": 2,
+            "detail": "The large-offset (`largeutf8`, `largelist`, `largebinary`), view (`utf8view`, `binaryview`, `listview`) and run-end-encoded variants hold exactly the value space of their ordinary counterparts and differ only in memory layout. The canonical type is that counterpart and the declared variant is recorded in `arrow_type`, so nothing about the data is lost and nothing about the layout is claimed.",
+            "locations": [
+              "f_large_list",
+              "f_large_utf8"
+            ]
+          },
+          {
+            "construct": "arrow.temporal_unit",
+            "count": 7,
+            "detail": "A `date`, `time`, `timestamp` or `duration` declares a resolution (`DAY`, `SECOND`, `MILLISECOND`, `MICROSECOND`, `NANOSECOND`) and a `timestamp` may declare a timezone. The canonical model has a semantic format hint and no resolution facet, so the field carries `date`/`time`/`date-time`/`duration` and the unit and timezone are recorded in `arrow_type`.",
+            "locations": [
+              "f_date_day",
+              "f_date_ms",
+              "f_duration",
+              "f_time_ns",
+              "f_time_s",
+              "f_timestamp_naive",
+              "f_timestamp_tz"
+            ]
+          },
+          {
+            "construct": "arrow.union_layout",
+            "count": 2,
+            "detail": "A `union` declares a mode (`DENSE` or `SPARSE`) and the type code each variant is stored under. The variants themselves become a canonical `UNION`; the mode and the type codes are storage, and are recorded in `arrow_union` rather than modelled.",
+            "locations": [
+              "f_dense_union",
+              "f_sparse_union"
+            ]
+          }
+        ],
+        "root": "Schema",
+        "schema_metadata": {
+          "arrow_format_version": "1.4",
+          "purpose": "type coverage"
+        }
+      }
+    },
+    "format": "arrow",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Schema",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Schema",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "arrow_kind": "schema"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "binary"
+              }
+            },
+            "field_number": 11,
+            "key": "Schema.f_binary",
+            "name": "f_binary",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "bool"
+              }
+            },
+            "field_number": 2,
+            "key": "Schema.f_bool",
+            "name": "f_bool",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "date",
+                "unit": "DAY"
+              }
+            },
+            "field_number": 15,
+            "key": "Schema.f_date_day",
+            "name": "f_date_day",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "date",
+                "unit": "MILLISECOND"
+              }
+            },
+            "field_number": 16,
+            "key": "Schema.f_date_ms",
+            "name": "f_date_ms",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_decimal": {
+                "bitWidth": 128,
+                "precision": 38,
+                "scale": 9
+              },
+              "arrow_type": {
+                "bitWidth": 128,
+                "name": "decimal",
+                "precision": 38,
+                "scale": 9
+              }
+            },
+            "field_number": 13,
+            "key": "Schema.f_decimal128",
+            "name": "f_decimal128",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_decimal": {
+                "bitWidth": 256,
+                "precision": 60,
+                "scale": 12
+              },
+              "arrow_type": {
+                "bitWidth": 256,
+                "name": "decimal",
+                "precision": 60,
+                "scale": 12
+              }
+            },
+            "field_number": 14,
+            "key": "Schema.f_decimal256",
+            "name": "f_decimal256",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "mode": "DENSE",
+                "name": "union",
+                "typeIds": [
+                  0,
+                  1,
+                  2
+                ]
+              }
+            },
+            "field_number": 26,
+            "key": "Schema.f_dense_union",
+            "name": "f_dense_union",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "f_dense_union",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_dictionary": {
+                "indexType": {
+                  "bitWidth": 32,
+                  "isSigned": true,
+                  "name": "int"
+                },
+                "isOrdered": false
+              },
+              "arrow_metadata": {
+                "cardinality_hint": "48"
+              },
+              "arrow_type": {
+                "name": "utf8"
+              }
+            },
+            "field_number": 28,
+            "key": "Schema.f_dictionary",
+            "name": "f_dictionary",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "floatingpoint",
+                "precision": "DOUBLE"
+              }
+            },
+            "field_number": 7,
+            "key": "Schema.f_double",
+            "name": "f_double",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "duration",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "duration",
+                "unit": "MICROSECOND"
+              }
+            },
+            "field_number": 23,
+            "key": "Schema.f_duration",
+            "name": "f_duration",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 16,
+              "maximum": null,
+              "min_items": null,
+              "min_length": 16,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_extension": {
+                "metadata": "",
+                "name": "arrow.uuid"
+              },
+              "arrow_type": {
+                "byteWidth": 16,
+                "name": "fixedsizebinary"
+              }
+            },
+            "field_number": 30,
+            "key": "Schema.f_extension",
+            "name": "f_extension",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 16,
+              "maximum": null,
+              "min_items": null,
+              "min_length": 16,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "byteWidth": 16,
+                "name": "fixedsizebinary"
+              }
+            },
+            "field_number": 12,
+            "key": "Schema.f_fixed_binary",
+            "name": "f_fixed_binary",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": 3,
+              "max_length": null,
+              "maximum": null,
+              "min_items": 3,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_item": {
+                "name": "item",
+                "nullable": false,
+                "type": {
+                  "name": "floatingpoint",
+                  "precision": "DOUBLE"
+                }
+              },
+              "arrow_type": {
+                "listSize": 3,
+                "name": "fixedsizelist"
+              }
+            },
+            "field_number": 24,
+            "key": "Schema.f_fixed_size_list",
+            "name": "f_fixed_size_list",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "double",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "floatingpoint",
+                "precision": "SINGLE"
+              }
+            },
+            "field_number": 6,
+            "key": "Schema.f_float",
+            "name": "f_float",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "floatingpoint",
+                "precision": "HALF"
+              }
+            },
+            "field_number": 8,
+            "key": "Schema.f_half",
+            "name": "f_half",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "bitWidth": 64,
+                "isSigned": true,
+                "name": "int"
+              }
+            },
+            "field_number": 5,
+            "key": "Schema.f_int64",
+            "name": "f_int64",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "bitWidth": 8,
+                "isSigned": true,
+                "name": "int"
+              }
+            },
+            "field_number": 3,
+            "key": "Schema.f_int8",
+            "name": "f_int8",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int8",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "duration",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "interval",
+                "unit": "MONTH_DAY_NANO"
+              }
+            },
+            "field_number": 22,
+            "key": "Schema.f_interval_mdn",
+            "name": "f_interval_mdn",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "duration",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "interval",
+                "unit": "YEAR_MONTH"
+              }
+            },
+            "field_number": 21,
+            "key": "Schema.f_interval_ym",
+            "name": "f_interval_ym",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_item": {
+                "name": "item",
+                "nullable": true,
+                "type": {
+                  "bitWidth": 32,
+                  "isSigned": true,
+                  "name": "int"
+                }
+              },
+              "arrow_type": {
+                "name": "largelist"
+              }
+            },
+            "field_number": 25,
+            "key": "Schema.f_large_list",
+            "name": "f_large_list",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "int32",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "largeutf8"
+              }
+            },
+            "field_number": 10,
+            "key": "Schema.f_large_utf8",
+            "name": "f_large_utf8",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "null"
+              }
+            },
+            "field_number": 1,
+            "key": "Schema.f_null",
+            "name": "f_null",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "null",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_dictionary": {
+                "indexType": {
+                  "bitWidth": 8,
+                  "isSigned": false,
+                  "name": "int"
+                },
+                "isOrdered": true
+              },
+              "arrow_type": {
+                "name": "utf8"
+              }
+            },
+            "field_number": 29,
+            "key": "Schema.f_ordered_dictionary",
+            "name": "f_ordered_dictionary",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "mode": "SPARSE",
+                "name": "union",
+                "typeIds": [
+                  0,
+                  1
+                ]
+              }
+            },
+            "field_number": 27,
+            "key": "Schema.f_sparse_union",
+            "name": "f_sparse_union",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "f_sparse_union",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "bitWidth": 64,
+                "name": "time",
+                "unit": "NANOSECOND"
+              }
+            },
+            "field_number": 18,
+            "key": "Schema.f_time_ns",
+            "name": "f_time_ns",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "bitWidth": 32,
+                "name": "time",
+                "unit": "SECOND"
+              }
+            },
+            "field_number": 17,
+            "key": "Schema.f_time_s",
+            "name": "f_time_s",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "timestamp",
+                "unit": "MILLISECOND"
+              }
+            },
+            "field_number": 20,
+            "key": "Schema.f_timestamp_naive",
+            "name": "f_timestamp_naive",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "timestamp",
+                "timezone": "Europe/Amsterdam",
+                "unit": "NANOSECOND"
+              }
+            },
+            "field_number": 19,
+            "key": "Schema.f_timestamp_tz",
+            "name": "f_timestamp_tz",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "bitWidth": 16,
+                "isSigned": false,
+                "name": "int"
+              }
+            },
+            "field_number": 4,
+            "key": "Schema.f_uint16",
+            "name": "f_uint16",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint16",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "utf8"
+              }
+            },
+            "field_number": 9,
+            "key": "Schema.f_utf8",
+            "name": "f_utf8",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Schema",
+        "key_type": null,
+        "kind": "record",
+        "name": "Schema",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "arrow_kind": "union",
+          "arrow_union": {
+            "mode": "DENSE",
+            "variants": [
+              {
+                "member": "int32",
+                "name": "as_int",
+                "type": {
+                  "bitWidth": 32,
+                  "isSigned": true,
+                  "name": "int"
+                },
+                "typeId": 0
+              },
+              {
+                "member": "string",
+                "name": "as_text",
+                "type": {
+                  "name": "utf8"
+                },
+                "typeId": 1
+              },
+              {
+                "member": "bytes",
+                "name": "as_bytes",
+                "type": {
+                  "name": "binary"
+                },
+                "typeId": 2
+              }
+            ]
+          }
+        },
+        "fields": [],
+        "key": "f_dense_union",
+        "key_type": null,
+        "kind": "union",
+        "name": "f_dense_union",
+        "namespace": null,
+        "union_members": [
+          "int32",
+          "string",
+          "bytes"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "arrow_kind": "union",
+          "arrow_union": {
+            "mode": "SPARSE",
+            "variants": [
+              {
+                "member": "bool",
+                "name": "left",
+                "type": {
+                  "name": "bool"
+                },
+                "typeId": 0
+              },
+              {
+                "member": "double",
+                "name": "right",
+                "type": {
+                  "name": "floatingpoint",
+                  "precision": "DOUBLE"
+                },
+                "typeId": 1
+              }
+            ]
+          }
+        },
+        "fields": [],
+        "key": "f_sparse_union",
+        "key_type": null,
+        "kind": "union",
+        "name": "f_sparse_union",
+        "namespace": null,
+        "union_members": [
+          "bool",
+          "double"
+        ],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "arrow/04-stress-type-coverage.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "arrow"
+  },
+  "fingerprint": "sha256:636920d1dae2c60f3f0588aa92f531cd52dadc1b513288dd524d1cd36d6ed35f",
+  "lint": {
+    "findings": 34,
+    "grade": "D",
+    "report_fingerprint": "b9232dcaadd297ea7100d22c31c4869fe99540df3dab16011fa2a8d3ab8695fa",
+    "score": 67,
+    "severity_counts": {
+      "error": 0,
+      "info": 31,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

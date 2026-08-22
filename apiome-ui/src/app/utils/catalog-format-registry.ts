@@ -331,6 +331,7 @@ export const CATALOG_FORMATS: readonly CatalogFormat[] = [
   { id: 'relaxng', label: 'RELAX NG', icon: FileCode, tone: 'amber', dataType: 'schema', origin: 'enterprise', importable: true, aliases: ['rng', 'rnc', 'relaxng-compact'], description: 'RELAX NG grammar — XML (.rng) or compact (.rnc) syntax.' },
   { id: 'asn1', label: 'ASN.1', icon: Binary, tone: 'stone', dataType: 'schema', origin: 'telecom', importable: true, aliases: ['asn'], description: 'ASN.1 data structure definitions.' },
   { id: 'cddl', label: 'CDDL', icon: Binary, tone: 'stone', dataType: 'schema', origin: 'systems', importable: true, aliases: ['rfc8610'], description: 'CDDL (RFC 8610) — the schema language of CBOR, COSE and WebAuthn.' },
+  { id: 'arrow', label: 'Apache Arrow', icon: Binary, tone: 'amber', dataType: 'schema', origin: 'data', importable: true, aliases: ['arrow-ipc', 'flight', 'arrow-flight', 'feather'], description: 'Apache Arrow schema — JSON integration form, IPC bytes, or a live Flight endpoint.' },
   { id: 'cobolcopybook', label: 'COBOL Copybook', icon: FileCode, tone: 'slate', dataType: 'records', origin: 'mainframe', importable: true, aliases: ['copybook', 'cobol', 'cobol-copybook'], description: 'COBOL copybook record layout.' },
 
   // ---- Healthcare ----

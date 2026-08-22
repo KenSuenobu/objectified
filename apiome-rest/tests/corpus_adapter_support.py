@@ -25,6 +25,7 @@ from typing import Any, Dict, List, Optional
 
 from corpus_loader import CorpusEntry, FilesetRole, ValidityClass, load_corpus
 
+from app.arrow_parser import ARROW_IPC_SUFFIXES
 from app.fileset import IntakeFileset
 from app.import_source import (
     DetectionInput,
@@ -36,6 +37,7 @@ from app.proto_descriptor import DESCRIPTOR_SET_SUFFIXES
 from app.toolchain_packaging import probe_tool
 
 __all__ = [
+    "BINARY_ENTRY_SUFFIXES",
     "KNOWN_DETECTION_BUGS",
     "KNOWN_IMPORT_BUGS",
     "adapter_for",
@@ -143,6 +145,13 @@ def valid_entries() -> List[CorpusEntry]:
     ]
 
 
+#: Every corpus suffix that names a *binary* artifact rather than source text. One tuple,
+#: contributed by each adapter that has a binary form (IXH-7.5's protobuf descriptor sets,
+#: FMT-4.5's Arrow IPC payloads), so a new binary format is added in its own module rather
+#: than respelled here.
+BINARY_ENTRY_SUFFIXES: tuple[str, ...] = DESCRIPTOR_SET_SUFFIXES + ARROW_IPC_SUFFIXES
+
+
 def is_binary_entry(entry: CorpusEntry) -> bool:
     """Whether a corpus entry is a *binary* artifact rather than source text (IXH-7.5).
 
@@ -154,9 +163,9 @@ def is_binary_entry(entry: CorpusEntry) -> bool:
         entry: The manifest entry.
 
     Returns:
-        ``True`` when the entry's path carries a conventional descriptor-set suffix.
+        ``True`` when the entry's path carries a conventional binary suffix.
     """
-    return entry.path.lower().endswith(DESCRIPTOR_SET_SUFFIXES)
+    return entry.path.lower().endswith(BINARY_ENTRY_SUFFIXES)
 
 
 def detection_input_for(entry: CorpusEntry) -> DetectionInput:

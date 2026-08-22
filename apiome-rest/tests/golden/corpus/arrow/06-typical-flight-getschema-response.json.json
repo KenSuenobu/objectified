@@ -1,0 +1,300 @@
+{
+  "adapter": "arrow",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "arrow": {
+        "capability_limits": [
+          {
+            "construct": "arrow.dictionary_encoding",
+            "count": 1,
+            "detail": "A dictionary-encoded field stores integer indices into a dictionary of its declared value type. The *values* are what the schema describes, so the field keeps its value type; the index type and whether the dictionary is ordered are recorded in `arrow_dictionary`. The dictionary's numeric id is not carried — it names a message in an IPC stream, not a property of the data.",
+            "locations": [
+              "carrier"
+            ]
+          },
+          {
+            "construct": "arrow.temporal_unit",
+            "count": 1,
+            "detail": "A `date`, `time`, `timestamp` or `duration` declares a resolution (`DAY`, `SECOND`, `MILLISECOND`, `MICROSECOND`, `NANOSECOND`) and a `timestamp` may declare a timezone. The canonical model has a semantic format hint and no resolution facet, so the field carries `date`/`time`/`date-time`/`duration` and the unit and timezone are recorded in `arrow_type`.",
+            "locations": [
+              "shipped_at"
+            ]
+          }
+        ],
+        "flight": {
+          "descriptor": {
+            "path": [
+              "warehouse",
+              "public",
+              "shipments"
+            ],
+            "type": "PATH"
+          }
+        },
+        "root": "warehouse.public.shipments",
+        "schema_metadata": {
+          "flight.endpoint": "grpc+tls://flight.example.com:443"
+        }
+      }
+    },
+    "format": "arrow",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "shipments",
+      "namespace": "warehouse.public"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "shipments",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "arrow_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "bool"
+              }
+            },
+            "field_number": 2,
+            "key": "warehouse.public.parcels_item.fragile",
+            "name": "fragile",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "utf8"
+              }
+            },
+            "field_number": 1,
+            "key": "warehouse.public.parcels_item.parcel_id",
+            "name": "parcel_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "warehouse.public.parcels_item",
+        "key_type": null,
+        "kind": "record",
+        "name": "parcels_item",
+        "namespace": "warehouse.public",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "arrow_kind": "schema"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_dictionary": {
+                "indexType": {
+                  "bitWidth": 8,
+                  "isSigned": true,
+                  "name": "int"
+                },
+                "isOrdered": false
+              },
+              "arrow_type": {
+                "name": "utf8"
+              }
+            },
+            "field_number": 2,
+            "key": "warehouse.public.shipments.carrier",
+            "name": "carrier",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_item": {
+                "name": "item",
+                "nullable": false,
+                "type": {
+                  "name": "struct"
+                }
+              },
+              "arrow_type": {
+                "name": "list"
+              }
+            },
+            "field_number": 5,
+            "key": "warehouse.public.shipments.parcels",
+            "name": "parcels",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "warehouse.public.parcels_item",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "utf8"
+              }
+            },
+            "field_number": 1,
+            "key": "warehouse.public.shipments.shipment_id",
+            "name": "shipment_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "timestamp",
+                "timezone": "UTC",
+                "unit": "MILLISECOND"
+              }
+            },
+            "field_number": 3,
+            "key": "warehouse.public.shipments.shipped_at",
+            "name": "shipped_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "floatingpoint",
+                "precision": "DOUBLE"
+              }
+            },
+            "field_number": 4,
+            "key": "warehouse.public.shipments.weight_kg",
+            "name": "weight_kg",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "warehouse.public.shipments",
+        "key_type": null,
+        "kind": "record",
+        "name": "shipments",
+        "namespace": "warehouse.public",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "arrow/06-typical-flight-getschema-response.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "arrow"
+  },
+  "fingerprint": "sha256:1e94ffe842d0a981adfb6fefd9f9590be21b31a328ecab5339a9ca6c53af30db",
+  "lint": {
+    "findings": 10,
+    "grade": "B",
+    "report_fingerprint": "7ee0287ebf9f7b46cc2db7105a7777ce3eb2ac561ff0d967c54e14d9f5511a87",
+    "score": 84,
+    "severity_counts": {
+      "error": 0,
+      "info": 8,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

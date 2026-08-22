@@ -1,0 +1,447 @@
+{
+  "adapter": "arrow",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "arrow": {
+        "capability_limits": [
+          {
+            "construct": "arrow.decimal_width",
+            "count": 1,
+            "detail": "A `decimal` declares a precision, a scale and a storage width (128 or 256 bits). The canonical constraint vocabulary has no precision/scale facet, so the field keeps the `decimal` scalar and all three are recorded in `arrow_decimal` — preserved and reportable, but not enforced.",
+            "locations": [
+              "lines/item/unit_price"
+            ]
+          }
+        ],
+        "root": "Schema"
+      }
+    },
+    "format": "arrow",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Schema",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Schema",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "arrow_kind": "schema"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "keysSorted": false,
+                "name": "map"
+              }
+            },
+            "field_number": 4,
+            "key": "Schema.attributes",
+            "name": "attributes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "attributes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "struct"
+              }
+            },
+            "field_number": 2,
+            "key": "Schema.customer",
+            "name": "customer",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "customer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_item": {
+                "name": "item",
+                "nullable": false,
+                "type": {
+                  "name": "struct"
+                }
+              },
+              "arrow_type": {
+                "name": "list"
+              }
+            },
+            "field_number": 3,
+            "key": "Schema.lines",
+            "name": "lines",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "lines_item",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "utf8"
+              }
+            },
+            "field_number": 1,
+            "key": "Schema.order_id",
+            "name": "order_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Schema",
+        "key_type": null,
+        "kind": "record",
+        "name": "Schema",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "arrow_keys_sorted": false,
+          "arrow_kind": "map"
+        },
+        "fields": [],
+        "key": "attributes",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": false
+        },
+        "kind": "map",
+        "name": "attributes",
+        "namespace": null,
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "arrow_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "struct"
+              }
+            },
+            "field_number": 2,
+            "key": "customer.address",
+            "name": "address",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "customer_address",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "utf8"
+              }
+            },
+            "field_number": 1,
+            "key": "customer.customer_id",
+            "name": "customer_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "customer",
+        "key_type": null,
+        "kind": "record",
+        "name": "customer",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "arrow_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "utf8"
+              }
+            },
+            "field_number": 2,
+            "key": "customer_address.city",
+            "name": "city",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 2,
+              "maximum": null,
+              "min_items": null,
+              "min_length": 2,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "byteWidth": 2,
+                "name": "fixedsizebinary"
+              }
+            },
+            "field_number": 3,
+            "key": "customer_address.country",
+            "name": "country",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "utf8"
+              }
+            },
+            "field_number": 1,
+            "key": "customer_address.line1",
+            "name": "line1",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "customer_address",
+        "key_type": null,
+        "kind": "record",
+        "name": "customer_address",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "arrow_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "bitWidth": 32,
+                "isSigned": true,
+                "name": "int"
+              }
+            },
+            "field_number": 2,
+            "key": "lines_item.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "utf8"
+              }
+            },
+            "field_number": 1,
+            "key": "lines_item.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_decimal": {
+                "bitWidth": 128,
+                "precision": 18,
+                "scale": 4
+              },
+              "arrow_type": {
+                "bitWidth": 128,
+                "name": "decimal",
+                "precision": 18,
+                "scale": 4
+              }
+            },
+            "field_number": 3,
+            "key": "lines_item.unit_price",
+            "name": "unit_price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "lines_item",
+        "key_type": null,
+        "kind": "record",
+        "name": "lines_item",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "arrow/08-composition-nested-types.arrow",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 5
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "arrow"
+  },
+  "fingerprint": "sha256:415c476653b7296cf3381edd984270b4fb2ff4bee1b389b72f4117c441223f65",
+  "lint": {
+    "findings": 18,
+    "grade": "D",
+    "report_fingerprint": "2913244519b7a6f3b0627725ef400c7e3c53f75b387bb557c85e623bc8a1f72f",
+    "score": 67,
+    "severity_counts": {
+      "error": 0,
+      "info": 13,
+      "warning": 5
+    }
+  },
+  "snapshot_version": 1
+}

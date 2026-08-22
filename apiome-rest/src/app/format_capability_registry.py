@@ -141,7 +141,7 @@ __all__ = [
 #: The registry contract version. Bumped whenever an entry, a reviewed seed, an absence
 #: explanation, or a vocabulary member changes, so a consumer can detect a stale contract and
 #: a cached snapshot can be keyed by it. Mirrored in the committed vocabulary snapshot.
-REGISTRY_VERSION = "8"
+REGISTRY_VERSION = "9"
 
 #: The date the current seeds and absence explanations were last reviewed. Recorded as
 #: provenance on every entry, so a claim about a format carries the date somebody checked it.
@@ -1117,6 +1117,93 @@ _CAPABILITY_SEED: Dict[str, _Seed] = {
             "the absence is the format's, not the reader's.",
             "DTD *output* is not implemented, so a DTD imported here is exported through "
             "another target's emitter and is not written back as a DTD.",
+        ],
+    ),
+    "arrow": _Seed(
+        # Arrow's payload analysis is the format-blind walk, so the first three fields restate
+        # what derivation produces. The reviewed judgement is the projection statement below:
+        # FMT-4.5's acceptance criterion is that nested, dictionary-encoded and decimal types
+        # are *modelled or declared limits*, and this is where a reader is told which of the two
+        # each one is — and what an Arrow schema's encoding, as distinct from its data, costs on
+        # the way into the canonical model.
+        native_hierarchy=NativeHierarchy.GENERIC,
+        native_hierarchy_note=(
+            "The format-blind walk records containers, ordered collections and leaves. Nesting "
+            "and ordering survive; this format's own semantics are not named, and their absence "
+            "from the tree says nothing about the source."
+        ),
+        source_location=SourceLocationSupport(
+            quality=SourceLocationQuality.NONE,
+            note=(
+                "An Arrow schema is read from one of three serializations, and two of them are "
+                "binary — an IPC Flatbuffer and a Flight reply have no lines to point at. Fields "
+                "locate by name and column position only, and they locate the same way in all "
+                "three, which is the property that makes the surfaces interchangeable."
+            ),
+        ),
+        value_visibility=ValueVisibilitySupport(
+            default=ValueVisibility.DEFAULT,
+            maximum=ValueVisibility.NONE,
+            note=(
+                "An Arrow *schema* is metadata about a table, not the table: the analyzer "
+                "observes no column values at any policy level, because the payload imported "
+                "carries none. 'No value here' is the absence of data to observe, not a "
+                "redaction."
+            ),
+        ),
+        canonical_projection=CanonicalProjectionSupport(
+            coverage=ProjectionCoverage.PARTIAL,
+            dropped_constructs=[
+                "arrow.decimal_width",
+                "arrow.dictionary_encoding",
+                "arrow.extension_type",
+                "arrow.flight_endpoint",
+                "arrow.half_precision",
+                "arrow.interval",
+                "arrow.physical_layout",
+                "arrow.temporal_unit",
+                "arrow.union_layout",
+            ],
+            note=(
+                "A schema becomes one canonical `RECORD` — the table — with one field per "
+                "column, keeping the column's position in `field_number` so a key-sorted model "
+                "does not lose it. Nested types are modelled exactly: a `struct` is a `RECORD`, "
+                "a `list`/`fixedsizelist` is a list reference (a fixed size additionally bounds "
+                "it with `min_items`/`max_items`), a `map` is a `MAP` with both its key and "
+                "value types, and a `union` is a `UNION` over its variants. Primitives take the "
+                "canonical scalar of their exact width, a `fixedsizebinary` becomes `bytes` "
+                "bounded by its byte width, and the temporal types become a formatted `string`. "
+                "The listed constructs are *carried but not fully expressible*: a "
+                "dictionary-encoded field keeps its value type and records the index type and "
+                "ordering, a `decimal` keeps the `decimal` scalar and records its precision, "
+                "scale and storage width, an extension type keeps its storage type and records "
+                "its name, a `union` records its mode and type codes, an `interval` and a "
+                "half-precision float take the nearest canonical type, the large-offset, view "
+                "and run-end-encoded variants take their ordinary counterpart, and a Flight "
+                "response's endpoints are recorded rather than becoming operations. Every "
+                "occurrence is counted and located in `extras['arrow']['capability_limits']`."
+            ),
+        ),
+        notes=[
+            "The three surfaces are one reader. The JSON integration form, a binary IPC stream "
+            "or file, and a Flight `GetSchema` reply all parse into the same document type "
+            "before anything is normalized, so an IPC schema and its JSON twin produce the same "
+            "canonical model — the same types, the same keys, the same fingerprint — rather "
+            "than two models that resemble each other.",
+            "The model's identity is derived from the *document*, never from the filename: a "
+            "Flight descriptor's path names the dataset, a `name` in the schema metadata names "
+            "it otherwise, and a schema that names itself nothing is called `Schema`. That is "
+            "what lets the same table imported from two serializations be one API.",
+            "Schema and field metadata are carried verbatim, and the conventional documentation "
+            "keys (`description`, `comment`, `doc`) become descriptions. Arrow defines no "
+            "documentation construct, so a schema whose columns are undocumented imports "
+            "undocumented — the absence is the format's, not the reader's.",
+            "A live Flight endpoint is vetted against the SSRF policy before a client is "
+            "constructed, and its credentials come from the shared credential vault as call "
+            "headers. Nothing else is fetched: a schema names no external references.",
+            "Arrow *output* is not implemented here (#4317 files the Parquet/Arrow emitter), so "
+            "a schema imported through this adapter is exported through another target's "
+            "emitter and is not written back as Arrow.",
         ],
     ),
     "cddl": _Seed(

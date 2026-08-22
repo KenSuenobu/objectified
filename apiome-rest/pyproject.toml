@@ -1,6 +1,6 @@
 [project]
 name = "apiome-rest"
-version = "1.288.0"
+version = "1.289.0"
 description = "REST API for serving OpenAPI specifications from the Apiome database"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -49,6 +49,11 @@ dependencies = [
     # Hardened XML parsing for import intake (IXH-1.4): declared explicitly rather
     # than relied on as a pyx12 transitive dependency.
     "defusedxml>=0.7.1",
+    # Apache Arrow IPC (Flatbuffer) schema reading and Arrow Flight discovery (FMT-4.5).
+    # Imported lazily: the Arrow adapter's JSON integration-form surface works without it,
+    # and detection never needs it, so a runtime missing the native library narrows the
+    # adapter rather than disabling it.
+    "pyarrow>=17.0.0",
 ]
 
 [project.optional-dependencies]
