@@ -1,0 +1,420 @@
+{
+  "adapter": "kafka-connect",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "kafka_connect": {
+        "capability_limits": [
+          {
+            "construct": "kafka-connect.connector_config",
+            "count": 1,
+            "detail": "A connector configuration — `connector.class`, converters, transforms, sink or source settings — describes how a pipeline runs, not what it carries. It is carried verbatim in `extras['kafka_connect_connector']`; the schemas beside it in the file set are what becomes structure.",
+            "locations": []
+          },
+          {
+            "construct": "kafka-connect.decimal_precision",
+            "count": 1,
+            "detail": "A `Decimal`'s `scale` and `connect.decimal.precision` state how many digits the value carries. The canonical constraint vocabulary has no precision facet — `multipleOf` would describe a different thing — so `format: decimal` is set and both numbers are carried in `extras['scale']` and `extras['precision']`, which is the spelling the Avro writer already reads.",
+            "locations": [
+              "logistics.shipments.Value"
+            ]
+          },
+          {
+            "construct": "kafka-connect.schema_version",
+            "count": 4,
+            "detail": "Connect's per-schema integer `version` is the revision a schema registry assigned to that subject. The canonical model versions an *artifact*, not each of its types, so the number is carried verbatim in `extras['connect_version']` on the type or field that declared it.",
+            "locations": [
+              "logistics.shipments.Key",
+              "logistics.shipments.Value"
+            ]
+          }
+        ],
+        "envelope": false,
+        "roots": [
+          "logistics.shipments.Key",
+          "logistics.shipments.Value"
+        ],
+        "source_files": [
+          "key-schema.json",
+          "value-schema.json"
+        ]
+      },
+      "kafka_connect_connector": {
+        "config": {
+          "auto.create": "false",
+          "auto.evolve": "true",
+          "connection.url": "jdbc:postgresql://warehouse.example.com:5432/analytics",
+          "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+          "insert.mode": "upsert",
+          "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+          "key.converter.schemas.enable": "true",
+          "pk.fields": "shipment_id",
+          "pk.mode": "record_key",
+          "tasks.max": "3",
+          "topics": "logistics.shipments",
+          "transforms": "unwrap,route",
+          "transforms.route.regex": "logistics\\.(.*)",
+          "transforms.route.replacement": "$1",
+          "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
+          "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+          "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+          "value.converter.schemas.enable": "true"
+        },
+        "name": "shipments-sink",
+        "source_file": "connector.json"
+      }
+    },
+    "format": "kafka-connect",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "shipments-sink",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "shipments-sink",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "struct",
+          "connect_version": 1
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 1,
+            "key": "logistics.shipments.Key.shipment_id",
+            "name": "shipment_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "logistics.shipments.Key",
+        "key_type": null,
+        "kind": "record",
+        "name": "Key",
+        "namespace": "logistics.shipments",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": false,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "boolean",
+              "has_default": true
+            },
+            "field_number": 3,
+            "key": "logistics.shipments.Parcel.fragile",
+            "name": "fragile",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 1,
+            "key": "logistics.shipments.Parcel.parcel_id",
+            "name": "parcel_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "float64"
+            },
+            "field_number": 2,
+            "key": "logistics.shipments.Parcel.weight_kg",
+            "name": "weight_kg",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "logistics.shipments.Parcel",
+        "key_type": null,
+        "kind": "record",
+        "name": "Parcel",
+        "namespace": "logistics.shipments",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Fileset member: the value schema the pipeline carries. The connector's transforms reshape the envelope, but the field types below are what lands in the sink.",
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "struct",
+          "connect_optional": true,
+          "connect_version": 4
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "map"
+            },
+            "field_number": 6,
+            "key": "logistics.shipments.Value.attributes",
+            "name": "attributes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "logistics.shipments.Value.Map_attributes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 2,
+            "key": "logistics.shipments.Value.carrier",
+            "name": "carrier",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "array"
+            },
+            "field_number": 5,
+            "key": "logistics.shipments.Value.parcels",
+            "name": "parcels",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "logistics.shipments.Parcel",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "decimal",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_logical_type": "org.apache.kafka.connect.data.Decimal",
+              "connect_type": "bytes",
+              "connect_version": 1,
+              "precision": 12,
+              "scale": 2
+            },
+            "field_number": 4,
+            "key": "logistics.shipments.Value.price",
+            "name": "price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 1,
+            "key": "logistics.shipments.Value.shipment_id",
+            "name": "shipment_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_logical_type": "org.apache.kafka.connect.data.Timestamp",
+              "connect_type": "int64",
+              "connect_version": 1
+            },
+            "field_number": 3,
+            "key": "logistics.shipments.Value.shipped_at",
+            "name": "shipped_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "logistics.shipments.Value",
+        "key_type": null,
+        "kind": "record",
+        "name": "Value",
+        "namespace": "logistics.shipments",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "map"
+        },
+        "fields": [],
+        "key": "logistics.shipments.Value.Map_attributes",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": false
+        },
+        "kind": "map",
+        "name": "Map_attributes",
+        "namespace": "logistics.shipments.Value",
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        }
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "kafka-connect/07-pipeline-set/connector.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.9,
+    "format": "kafka-connect"
+  },
+  "fingerprint": "sha256:22c6ca6dfb9750a179a38a7bb5380502845e81375c8297f9fd6fbba498b068cf",
+  "lint": {
+    "findings": 14,
+    "grade": "C",
+    "report_fingerprint": "02a560c098ca761858d9387969614f94cdbc1299ef7f13dc1a011a4a3e0417b6",
+    "score": 77,
+    "severity_counts": {
+      "error": 0,
+      "info": 11,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

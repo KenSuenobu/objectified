@@ -944,6 +944,31 @@ _VERSION_COVERAGE: Dict[str, VersionCoverage] = {
         ],
         default_write="ODCS v3.1.0",
     ),
+    "kafka-connect": VersionCoverage(
+        reads=[
+            FormatVersion(
+                version="Kafka Connect schema form",
+                format_key="kafka-connect",
+                support=VersionSupport.UNGATED,
+                note="Connect's schema form carries no dialect version the reader branches "
+                "on — a schema's integer `version` is the revision a registry assigned to that "
+                "subject, not a spelling of the format — so one grammar is read for every "
+                "Connect release. The `{schema, payload}` converter envelope and a pipeline "
+                "file set are two packagings of the same schema, not two versions of it.",
+            )
+        ],
+        writes=[
+            FormatVersion(
+                version="Kafka Connect schema form",
+                format_key="kafka-connect",
+                support=VersionSupport.UNGATED,
+                note="The writer produces the same one grammar the reader accepts, and every "
+                "emitted document is read back through that reader before it leaves the "
+                "emitter.",
+            )
+        ],
+        default_write="Kafka Connect schema form",
+    ),
     "dtd": VersionCoverage(
         reads=[
             FormatVersion(

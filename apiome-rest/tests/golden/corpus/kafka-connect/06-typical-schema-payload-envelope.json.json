@@ -1,0 +1,281 @@
+{
+  "adapter": "kafka-connect",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "kafka_connect": {
+        "capability_limits": [
+          {
+            "construct": "kafka-connect.envelope_payload",
+            "count": 1,
+            "detail": "The `{schema, payload}` envelope a JSON converter writes with `schemas.enable=true` carries one sample record beside the schema. A record is *data*, not structure: it is carried verbatim in `extras['kafka_connect_payload']` and nothing is inferred from it.",
+            "locations": []
+          },
+          {
+            "construct": "kafka-connect.schema_version",
+            "count": 2,
+            "detail": "Connect's per-schema integer `version` is the revision a schema registry assigned to that subject. The canonical model versions an *artifact*, not each of its types, so the number is carried verbatim in `extras['connect_version']` on the type or field that declared it.",
+            "locations": [
+              "com.example.shipments.Shipment"
+            ]
+          }
+        ],
+        "envelope": true,
+        "roots": [
+          "com.example.shipments.Shipment"
+        ],
+        "source_files": [
+          "kafka-connect/06-typical-schema-payload-envelope.json"
+        ]
+      },
+      "kafka_connect_payload": [
+        {
+          "carrier": "example-express",
+          "parcels": [
+            {
+              "fragile": false,
+              "parcel_id": "PCL-1"
+            },
+            {
+              "fragile": true,
+              "parcel_id": "PCL-2"
+            }
+          ],
+          "shipment_id": "SHP-000412",
+          "shipped_at": 1786060800000,
+          "weight_kg": 12.4
+        }
+      ]
+    },
+    "format": "kafka-connect",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Shipment",
+      "namespace": "com.example.shipments"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Shipment",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": false,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "boolean",
+              "has_default": true
+            },
+            "field_number": 2,
+            "key": "com.example.shipments.Parcel.fragile",
+            "name": "fragile",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 1,
+            "key": "com.example.shipments.Parcel.parcel_id",
+            "name": "parcel_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.shipments.Parcel",
+        "key_type": null,
+        "kind": "record",
+        "name": "Parcel",
+        "namespace": "com.example.shipments",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "struct",
+          "connect_version": 2
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 2,
+            "key": "com.example.shipments.Shipment.carrier",
+            "name": "carrier",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "array"
+            },
+            "field_number": 5,
+            "key": "com.example.shipments.Shipment.parcels",
+            "name": "parcels",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "com.example.shipments.Parcel",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 1,
+            "key": "com.example.shipments.Shipment.shipment_id",
+            "name": "shipment_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_logical_type": "org.apache.kafka.connect.data.Timestamp",
+              "connect_type": "int64",
+              "connect_version": 1
+            },
+            "field_number": 3,
+            "key": "com.example.shipments.Shipment.shipped_at",
+            "name": "shipped_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "float64"
+            },
+            "field_number": 4,
+            "key": "com.example.shipments.Shipment.weight_kg",
+            "name": "weight_kg",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "com.example.shipments.Shipment",
+        "key_type": null,
+        "kind": "record",
+        "name": "Shipment",
+        "namespace": "com.example.shipments",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "kafka-connect/06-typical-schema-payload-envelope.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "kafka-connect"
+  },
+  "fingerprint": "sha256:adb95b049ac0db70296e50a944c846b2516fa9a66c8a6af02b56b74bc0985b14",
+  "lint": {
+    "findings": 10,
+    "grade": "B",
+    "report_fingerprint": "3e9bf662dc40122077907d293120df44687bb405691ee497258b31b1539351aa",
+    "score": 84,
+    "severity_counts": {
+      "error": 0,
+      "info": 8,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}
