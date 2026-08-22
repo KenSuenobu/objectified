@@ -5,7 +5,7 @@
     "description": "Provide point-of-sale and online transaction facts for revenue reporting, fraud analytics and inventory reconciliation.",
     "extras": {
       "odcs": {
-        "api_version": "v3.1.0",
+        "api_version": "v3.0.2",
         "capability_limits": [
           {
             "construct": "odcs.classification",
@@ -244,7 +244,7 @@
           "odcs_position": 0,
           "odcs_quality": [
             {
-              "dimension": "volume",
+              "dimension": "completeness",
               "mustBeGreaterThan": 0,
               "rule": "rowCount"
             },
@@ -554,7 +554,7 @@
     "confidence": 0.95,
     "format": "odcs"
   },
-  "fingerprint": "sha256:8a32503984ddf77df38b62a9732bff2d38828de6742e70f7c592b4f78dc10b26",
+  "fingerprint": "sha256:a6e97d868b96eef7d0061608fd88b323206e0513db549e8ec68c46684737ef37",
   "lint": {
     "findings": 6,
     "grade": "A",

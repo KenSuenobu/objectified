@@ -923,8 +923,26 @@ _VERSION_COVERAGE: Dict[str, VersionCoverage] = {
                 "`FORMAT_VERSION_UNSUPPORTED` with the renames named, rather than parsed.",
             )
         ],
-        writes=[],
-        default_write=None,
+        writes=[
+            FormatVersion(
+                version="ODCS v3.1.0",
+                format_key="odcs",
+                support=VersionSupport.FULL,
+                note="The default. Emitted contracts are validated against the published "
+                "v3.1.0 JSON Schema, which this service ships and runs offline.",
+            ),
+            FormatVersion(
+                version="ODCS v3.0.2",
+                format_key="odcs",
+                support=VersionSupport.FULL,
+                note="Written when the imported contract declared a v3.0.x version, or when "
+                "the caller asks for it. The two lines are *not* interchangeable documents: "
+                "v3.1 turned `team` from an array of members into an object and closed "
+                "`quality` against the v3.0 `rule:` spelling, so a v3.0 contract is written "
+                "back — and validated — as v3.0.",
+            ),
+        ],
+        default_write="ODCS v3.1.0",
     ),
     "dtd": VersionCoverage(
         reads=[

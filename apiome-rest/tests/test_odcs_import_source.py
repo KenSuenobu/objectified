@@ -467,7 +467,9 @@ def test_the_projection_record_carries_status_and_version_as_provenance() -> Non
     """AC: "Record contract status and version in provenance"."""
     model = _model("04-stress-quality-sla-and-custom.yaml")
     record = model.extras[ODCS_EXTRAS_KEY]
-    assert record["api_version"] == "v3.1.0"
+    # The stress fixture is a v3.0.2 document (its quality rules use the v3.0 `rule:`
+    # spelling and its `team` is the v3.0 array), which is what the reader records.
+    assert record["api_version"] == "v3.0.2"
     assert record["status"] == "draft"
     assert record["contract_id"] == "0f6d2f0e-1b2c-4a5e-9f2a-000000000004"
     assert record["domain"] == "platform"
@@ -528,11 +530,19 @@ def test_a_missing_or_unparseable_api_version_is_a_semantic_error(declared: Any)
     assert excinfo.value.code == "INPUT_SEMANTIC_INVALID"
 
 
-def test_version_coverage_declares_one_v3_read_and_no_writes() -> None:
+def test_version_coverage_declares_one_v3_read_and_both_written_lines() -> None:
+    """One read row covers the v3 line; the write rows are per *schema* line.
+
+    The asymmetry is deliberate and is FMT-5.2's finding: the reader does not branch on
+    the minor version because every construct it consumes is common to v3.0 and v3.1,
+    but the two lines validate differently (v3.1 turned `team` into an object and closed
+    `quality` against the v3.0 `rule:` spelling), so a contract is written back — and
+    checked — as the line it declares.
+    """
     coverage = version_coverage_for("odcs")
     assert [version.support for version in coverage.reads] == [VersionSupport.FULL]
-    assert list(coverage.writes) == []
-    assert coverage.default_write is None
+    assert [version.version for version in coverage.writes] == ["ODCS v3.1.0", "ODCS v3.0.2"]
+    assert coverage.default_write == "ODCS v3.1.0"
 
 
 # ===========================================================================

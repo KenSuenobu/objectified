@@ -5,7 +5,7 @@
     "description": "Root of the set. The schema's structural detail is delegated to a sibling JSON Schema through authoritativeDefinitions, and the quality rule pack lives in a second file — so this contract is only complete alongside them.",
     "extras": {
       "odcs": {
-        "api_version": "v3.1.0",
+        "api_version": "v3.0.2",
         "capability_limits": [
           {
             "construct": "odcs.authoritative_definition",
@@ -175,7 +175,7 @@
           "odcs_position": 0,
           "odcs_quality": [
             {
-              "dimension": "volume",
+              "dimension": "completeness",
               "mustBeGreaterThan": 0,
               "rule": "rowCount",
               "severity": "error"
@@ -359,7 +359,7 @@
     "confidence": 0.95,
     "format": "odcs"
   },
-  "fingerprint": "sha256:caa147ee142c3749b13b0ce70491f3283682113e5032372f01a8a90683c920e4",
+  "fingerprint": "sha256:ff8322f92f4ba4ef80aa87bdbb51d3e275530626a0bcf8b84d7a42bec28fc0aa",
   "lint": {
     "findings": 4,
     "grade": "A",

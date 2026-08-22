@@ -141,7 +141,7 @@ __all__ = [
 #: The registry contract version. Bumped whenever an entry, a reviewed seed, an absence
 #: explanation, or a vocabulary member changes, so a consumer can detect a stale contract and
 #: a cached snapshot can be keyed by it. Mirrored in the committed vocabulary snapshot.
-REGISTRY_VERSION = "10"
+REGISTRY_VERSION = "11"
 
 #: The date the current seeds and absence explanations were last reviewed. Recorded as
 #: provenance on every entry, so a claim about a format carries the date somebody checked it.
@@ -1209,10 +1209,20 @@ _CAPABILITY_SEED: Dict[str, _Seed] = {
             "delegates its payload shape to stays a reference, not a set of canonical types.",
             "Quality rules are carried, never executed and never translated into constraints. A "
             "`sql` rule's query, a `custom` rule's engine block and a `text` rule's prose are "
-            "kept exactly as written, which is what lets FMT-5.2 write them back unchanged.",
-            "ODCS *output* is not implemented in this release, so a contract imported here is "
-            "exported through another target's emitter and is not written back as ODCS. FMT-5.2 "
-            "(#5440) adds the emitter, and reuses this reader's extras namespace.",
+            "kept exactly as written, which is what lets the emitter write them back unchanged.",
+            "ODCS *output* is implemented (FMT-5.2), and it is the one target in the fleet whose "
+            "emitted artifacts are checked against the format's **own published JSON Schema**, "
+            "shipped with this service and run offline. The governance half is written back from "
+            "the `odcs_*` extras verbatim, so a contract imported and re-exported is canonically "
+            "identical. The structural half is rebuilt, and the emitter refuses to write a facet "
+            "the standard does not admit beside the column's `logicalType` — a non-standard "
+            "`enum` type option is dropped and reported rather than written illegally.",
+            "Nothing in the governance half is ever invented on export. A contract emitted from a "
+            "schema that carries no ownership, SLA or quality metadata is written *without* those "
+            "blocks, and their absence is reported as a `SYNTH` finding: a fabricated owner or "
+            "service level is a governance claim nobody made. The only values supplied without a "
+            "source are `version` and `status`, which the standard requires for a document to "
+            "exist at all, and both are reported as fabricated.",
         ],
     ),
     "arrow": _Seed(

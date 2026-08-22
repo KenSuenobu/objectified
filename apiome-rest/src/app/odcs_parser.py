@@ -56,6 +56,7 @@ __all__ = [
     "ODCS_SUFFIXES",
     "is_odcs",
     "is_odcs_document",
+    "load_odcs_document",
     "parse_odcs",
     "parse_odcs_fileset",
 ]
@@ -179,6 +180,12 @@ def _load_document(text: str, *, source_label: Optional[str] = None) -> Any:
                 code="INPUT_TRUNCATED",
             ) from exc
         raise OdcsParseError(f"Invalid YAML{where}: {exc}") from exc
+
+
+#: Public name for :func:`_load_document`. FMT-5.2's schema validator loads the same
+#: text the reader would, under the same intake guards, before checking it against the
+#: vendored ODCS JSON Schema — two loaders would be two sets of limits.
+load_odcs_document = _load_document
 
 
 # ---------------------------------------------------------------------------

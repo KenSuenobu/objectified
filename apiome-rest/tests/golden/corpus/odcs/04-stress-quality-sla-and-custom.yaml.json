@@ -5,7 +5,7 @@
     "description": "Exercise every quality rule type, SLA property and custom extension ODCS v3.1 admits.",
     "extras": {
       "odcs": {
-        "api_version": "v3.1.0",
+        "api_version": "v3.0.2",
         "capability_limits": [
           {
             "construct": "odcs.classification",
@@ -168,7 +168,6 @@
       ],
       "odcs_servers": [
         {
-          "delimiter": "none",
           "format": "parquet",
           "location": "s3://example-telemetry/events/",
           "server": "lake",
@@ -293,7 +292,7 @@
           "odcs_position": 0,
           "odcs_quality": [
             {
-              "dimension": "volume",
+              "dimension": "completeness",
               "mustBeBetween": [
                 1,
                 100000000
@@ -603,7 +602,7 @@
     "confidence": 0.95,
     "format": "odcs"
   },
-  "fingerprint": "sha256:64bd167642cc910ea5d76c8d27942b7d9746543ddd9690eb0f7f39f843a69f1d",
+  "fingerprint": "sha256:d5728dbd495b1cf7ad76a8d0f75b1aac7b46dc5e7976d8f7bd96d619aa5a35ab",
   "lint": {
     "findings": 6,
     "grade": "A",
