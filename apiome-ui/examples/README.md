@@ -111,7 +111,7 @@ The corpus holds **1421 files** across **103 format directories**. Every file ha
 | `lwm2m/` | LwM2M / IPSO objects (pending #5472) | data_schema | `<LWM2M>` root with `<Object ObjectType="MODefinition">` and `Resources/Item` | 15 |
 | `matter/` | Matter clusters and device types (pending #5472) | rpc | `<configurator>` root with `<cluster>` (name/code/define) or `<deviceType>` | 15 |
 | `natural-ddm/` | Natural / ADABAS DDM (pending #5486) | data_schema | `DDM Name ......` header + the `T L DB Name … F Leng S D Remark` banner | 14 |
-| `odcs/` | Open Data Contract Standard v3.1 (pending #5439) | data_schema | `apiVersion: v3.x` + `kind: DataContract` + `schema:` | 15 |
+| `odcs/` | Open Data Contract Standard v3.1 | data_schema | `apiVersion: v3.x` + `kind: DataContract` + `schema:` | 15 |
 | `opcua-nodeset/` | OPC UA NodeSet2 (pending #5468) | rpc | `<UANodeSet>` root in the OPC Foundation NodeSet2 namespace | 14 |
 | `owl/` | OWL / RDFS ontologies (pending #5471) | data_schema | `owl:Ontology`/`owl:Class`/`owl:*Property` in the OWL namespace (Turtle or RDF/XML) | 14 |
 | `pkl/` | Pkl (pending #5466) | data_schema | `module …` + `class`/`typealias` with member constraints and `Listing<…>` types | 14 |
@@ -1540,25 +1540,25 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`negative/03-truncated-mid-property.xml`** — Truncation reaches the secure XML parser as a not-well-formed document, so the grounded code is INPUT_MALFORMED rather than INPUT_TRUNCATED - the same reading every XML adapter's truncated fixture gets. The intent stays in failure_class.
 
-### `odcs/` — Open Data Contract Standard v3.1 (pending #5439)
+### `odcs/` — Open Data Contract Standard v3.1
 
 | File | Rung | Expected detection | Class | Features |
 | --- | --- | --- | --- | --- |
-| `01-minimal-contract.yaml` | minimal | `odcs` ≥ 0.9 | valid | `schema`, `properties`, `primaryKey`, `pending-adapter` |
-| `02-typical-orders-contract.yaml` | typical | `odcs` ≥ 0.9 | valid | `quality`, `servers`, `team`, `support`, `slaProperties`, `partitioned`, `classification`, `tags`, `pending-adapter` |
-| `03-composition-nested-schema.yaml` | composition | `odcs` ≥ 0.9 | valid | `nested-object`, `array-of-objects`, `authoritativeDefinitions`, `multiple-schema-objects`, `pending-adapter` |
-| `04-stress-quality-sla-and-custom.yaml` | stress | `odcs` ≥ 0.9 | valid | `quality-sql`, `quality-text`, `quality-custom`, `logicalTypeOptions`, `transformLogic`, `encryptedName`, `roles`, `price`, `customProperties`, `slaProperties`, `pending-adapter` |
-| `05-real-world-transactions-contract.yaml` | real-world | `odcs` ≥ 0.9 | valid | `compound-key`, `partitioned`, `pii`, `roles`, `retention`, `quality-sql`, `pending-adapter` |
-| `06-typical-contract.json` | typical | `odcs` ≥ 0.9 | valid | `json-serialization`, `quality`, `servers`, `slaProperties`, `pending-adapter` |
-| `07-contract-set/contract.yaml` | multi-file (root) | `odcs` ≥ 0.9 | valid | `authoritativeDefinitions`, `delegated-schema`, `slaProperties`, `pending-adapter` |
-| `07-contract-set/quality.yaml` ⚠ | multi-file (member) | `odcs` (no guarantee) | valid | `quality-pack`, `sql-rule`, `freshness`, `pending-adapter` |
-| `07-contract-set/shipment-event.schema.json` ⚠ | multi-file (member) | `odcs` (no guarantee) | valid | `json-schema`, `payload-definition`, `pending-adapter` |
-| `negative/01-syntactic-bad-yaml-indent.yaml` | — | `odcs` (no guarantee) | invalid | `negative`, `syntactic`, `bad-indentation`, `pending-adapter` |
-| `negative/02-semantic-schema-without-properties.yaml` | — | `odcs` (no guarantee) | invalid | `negative`, `semantic`, `no-properties`, `pending-adapter` |
-| `negative/03-truncated-mid-property.yaml` | — | `odcs` (no guarantee) | invalid | `negative`, `truncated`, `mid-quoted-scalar`, `pending-adapter` |
-| `negative/04-wrong-format-dbt-schema.yml` | — | `odcs` (no guarantee) | invalid | `negative`, `wrong-format`, `dbt`, `pending-adapter` |
-| `negative/05-encoding-utf16.yaml` | — | `odcs` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
-| `negative/06-version-out-of-range-v2.yaml` ⚠ | — | `odcs` (no guarantee) | invalid | `negative`, `version-out-of-range`, `odcs-v2.2`, `pending-adapter` |
+| `01-minimal-contract.yaml` | minimal | `odcs` ≥ 0.9 | valid | `schema`, `properties`, `primaryKey` |
+| `02-typical-orders-contract.yaml` | typical | `odcs` ≥ 0.9 | valid | `quality`, `servers`, `team`, `support`, `slaProperties`, `partitioned`, `classification`, `tags` |
+| `03-composition-nested-schema.yaml` | composition | `odcs` ≥ 0.9 | valid | `nested-object`, `array-of-objects`, `authoritativeDefinitions`, `multiple-schema-objects` |
+| `04-stress-quality-sla-and-custom.yaml` | stress | `odcs` ≥ 0.9 | valid | `quality-sql`, `quality-text`, `quality-custom`, `logicalTypeOptions`, `transformLogic`, `encryptedName`, `roles`, `price`, `customProperties`, `slaProperties` |
+| `05-real-world-transactions-contract.yaml` | real-world | `odcs` ≥ 0.9 | valid | `compound-key`, `partitioned`, `pii`, `roles`, `retention`, `quality-sql` |
+| `06-typical-contract.json` | typical | `odcs` ≥ 0.9 | valid | `json-serialization`, `quality`, `servers`, `slaProperties` |
+| `07-contract-set/contract.yaml` | multi-file (root) | `odcs` ≥ 0.9 | valid | `authoritativeDefinitions`, `delegated-schema`, `slaProperties` |
+| `07-contract-set/quality.yaml` ⚠ | multi-file (member) | `odcs` (no guarantee) | valid | `quality-pack`, `sql-rule`, `freshness` |
+| `07-contract-set/shipment-event.schema.json` ⚠ | multi-file (member) | `odcs` (no guarantee) | valid | `json-schema`, `payload-definition` |
+| `negative/01-syntactic-bad-yaml-indent.yaml` | — | `odcs` (no guarantee) | invalid | `negative`, `syntactic`, `bad-indentation` |
+| `negative/02-semantic-schema-without-properties.yaml` | — | `odcs` (no guarantee) | invalid | `negative`, `semantic`, `no-properties` |
+| `negative/03-truncated-mid-property.yaml` | — | `odcs` (no guarantee) | invalid | `negative`, `truncated`, `mid-quoted-scalar` |
+| `negative/04-wrong-format-dbt-schema.yml` | — | `odcs` (no guarantee) | invalid | `negative`, `wrong-format`, `dbt` |
+| `negative/05-encoding-utf16.yaml` | — | `odcs` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+| `negative/06-version-out-of-range-v2.yaml` ⚠ | — | `odcs` (no guarantee) | invalid | `negative`, `version-out-of-range`, `odcs-v2.2` |
 
 > ⚠ **`07-contract-set/quality.yaml`** — Fileset member: the quality rule pack, maintained separately and keyed by contract id.
 

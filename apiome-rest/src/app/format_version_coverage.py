@@ -909,6 +909,23 @@ _VERSION_COVERAGE: Dict[str, VersionCoverage] = {
         writes=[],
         default_write=None,
     ),
+    "odcs": VersionCoverage(
+        reads=[
+            FormatVersion(
+                version="ODCS v3.x (v3.0, v3.1)",
+                format_key="odcs",
+                support=VersionSupport.FULL,
+                note="v3.0 and v3.1 are one document shape — 3.1 widened the quality "
+                "vocabulary and allowed `customProperties` on more nodes, both of which are "
+                "carried verbatim — so one reader covers the line and a 3.0 contract reads "
+                "identically to a 3.1 one. The v2.2.x line is a *different* document (a "
+                "`quantumName` with `dataset[].columns[]`) and is rejected as "
+                "`FORMAT_VERSION_UNSUPPORTED` with the renames named, rather than parsed.",
+            )
+        ],
+        writes=[],
+        default_write=None,
+    ),
     "dtd": VersionCoverage(
         reads=[
             FormatVersion(

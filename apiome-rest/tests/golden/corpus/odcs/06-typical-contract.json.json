@@ -1,0 +1,294 @@
+{
+  "adapter": "odcs",
+  "canonical": {
+    "channels": [],
+    "description": "Daily inventory position by SKU and warehouse.",
+    "extras": {
+      "odcs": {
+        "api_version": "v3.1.0",
+        "capability_limits": [
+          {
+            "construct": "odcs.declaration_order",
+            "count": 1,
+            "detail": "A dataset's column order is physical: it is the order the table, file or topic actually presents. Canonical entities are keyed and sorted by key, so declaration order is not a canonical property; the source index is recorded on every schema object and every property as `extras['odcs_position']` and the canonical ordering does not follow it.",
+            "locations": [
+              "inventory_snapshots"
+            ]
+          },
+          {
+            "construct": "odcs.key_uniqueness",
+            "count": 2,
+            "detail": "`primaryKey`/`primaryKeyPosition` and `unique` declare identity and uniqueness over the *rows* of a dataset. The canonical constraint vocabulary has no identity facet (`unique_items` is about the members of one array), so the declarations are carried on the field in `extras` and are not enforced.",
+            "locations": [
+              "inventory_snapshots"
+            ]
+          },
+          {
+            "construct": "odcs.partitioning",
+            "count": 1,
+            "detail": "`partitioned`/`partitionKeyPosition` describe the physical layout of the dataset in the serving system. The canonical model describes shape, not layout, so the declarations are carried on the field in `extras`.",
+            "locations": [
+              "inventory_snapshots"
+            ]
+          },
+          {
+            "construct": "odcs.physical_type",
+            "count": 6,
+            "detail": "`physicalType` (`varchar(20)`, `numeric(13,2)`, `jsonb`, `array<struct>`) is the storage type in the serving system, and `physicalName` is what the object or column is actually called there. Both describe the *physical* dataset, which the canonical model does not: it names the logical shape. They are carried verbatim in `extras['odcs_physical_type']` and `extras['odcs_physical_name']`, and the type is deliberately not interpreted — `varchar(20)` does **not** become `maxLength: 20`, because the unit differs by dialect and by encoding. Declared lengths and ranges come from `logicalTypeOptions`, which is the portable half.",
+            "locations": [
+              "inventory_snapshots"
+            ]
+          },
+          {
+            "construct": "odcs.quality_rule",
+            "count": 1,
+            "detail": "A quality rule — a library rule (`rowCount`, `nullCount`, `duplicateCount`, `freshness`, …), a `sql` query, a free-text expectation or a `custom` engine block — states an expectation about the *data*, not about the schema. The canonical model constrains shape, so the rule is carried verbatim in `extras['odcs_quality']` on the contract, the type or the field that declared it, and is never executed, translated into a constraint, or checked.",
+            "locations": [
+              "inventory_snapshots"
+            ]
+          },
+          {
+            "construct": "odcs.server",
+            "count": 1,
+            "detail": "A `servers[]` entry describes *serving infrastructure* — a BigQuery dataset, an S3 prefix, a Snowflake warehouse, a Kafka broker — with a different field set per `type`. The canonical `Server` is a URL with variables and cannot hold them without inventing one, so each entry is carried verbatim in `extras['odcs_servers']` and no canonical server is synthesized.",
+            "locations": []
+          },
+          {
+            "construct": "odcs.sla_property",
+            "count": 1,
+            "detail": "`slaProperties` states latency, freshness, retention, frequency and availability windows against a named element. The canonical model has no service-level vocabulary, so the entries are carried verbatim in `extras['odcs_sla_properties']` with `slaDefaultElement` beside them.",
+            "locations": []
+          },
+          {
+            "construct": "odcs.tag",
+            "count": 1,
+            "detail": "`tags[]` labels a contract, a schema object or a property with free-form keywords. The canonical model tags *operations*, not data-schema entities, so the list is carried verbatim in `extras['odcs_tags']` on whichever node declared it.",
+            "locations": []
+          },
+          {
+            "construct": "odcs.team_role",
+            "count": 1,
+            "detail": "`team[]` (who owns the contract, since when, and who replaced whom) and `roles[]` (which access role is granted through which approvers) are ownership and access-governance facts. The canonical model carries neither, so both are carried verbatim in `extras['odcs_team']` and `extras['odcs_roles']`.",
+            "locations": []
+          }
+        ],
+        "contract_id": "0f6d2f0e-1b2c-4a5e-9f2a-000000000006",
+        "domain": "supply-chain",
+        "schema_objects": [
+          "inventory_snapshots"
+        ],
+        "status": "active"
+      },
+      "odcs_description": {
+        "purpose": "Daily inventory position by SKU and warehouse.",
+        "usage": "Feeds replenishment planning."
+      },
+      "odcs_servers": [
+        {
+          "dataset": "inventory",
+          "project": "example-supply",
+          "server": "warehouse",
+          "type": "bigquery"
+        }
+      ],
+      "odcs_sla_properties": [
+        {
+          "element": "inventory_snapshots.snapshot_date",
+          "property": "latency",
+          "unit": "h",
+          "value": 12
+        }
+      ],
+      "odcs_tags": [
+        "supply-chain"
+      ],
+      "odcs_team": [
+        {
+          "dateIn": "2026-04-01",
+          "role": "Data Product Owner",
+          "username": "s.owner"
+        }
+      ]
+    },
+    "format": "odcs",
+    "identity": {
+      "extras": {},
+      "id": "0f6d2f0e-1b2c-4a5e-9f2a-000000000006",
+      "name": "inventory_snapshots",
+      "namespace": "supply-chain"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "inventory_snapshots",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odcs_physical_type": "table",
+          "odcs_position": 0,
+          "odcs_quality": [
+            {
+              "dimension": "completeness",
+              "mustBe": 0,
+              "property": "on_hand",
+              "rule": "nullCount"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "integer",
+              "odcs_physical_type": "integer",
+              "odcs_position": 3
+            },
+            "field_number": null,
+            "key": "inventory_snapshots.on_hand",
+            "name": "on_hand",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "integer",
+              "odcs_physical_type": "integer",
+              "odcs_position": 4
+            },
+            "field_number": null,
+            "key": "inventory_snapshots.reserved",
+            "name": "reserved",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_key": {
+                "primaryKey": true,
+                "primaryKeyPosition": 1
+              },
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "varchar(18)",
+              "odcs_position": 1
+            },
+            "field_number": null,
+            "key": "inventory_snapshots.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "date",
+              "odcs_partition": {
+                "partitioned": true
+              },
+              "odcs_physical_type": "date",
+              "odcs_position": 0
+            },
+            "field_number": null,
+            "key": "inventory_snapshots.snapshot_date",
+            "name": "snapshot_date",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "date",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_key": {
+                "primaryKey": true,
+                "primaryKeyPosition": 2
+              },
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "char(3)",
+              "odcs_position": 2
+            },
+            "field_number": null,
+            "key": "inventory_snapshots.warehouse",
+            "name": "warehouse",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "inventory_snapshots",
+        "key_type": null,
+        "kind": "record",
+        "name": "inventory_snapshots",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.0.1"
+  },
+  "corpus_path": "odcs/06-typical-contract.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "odcs"
+  },
+  "fingerprint": "sha256:b91ae7d459c2ff12a9278d2c57cff5c2bb2a9493409cb05eff1564733b05af21",
+  "lint": {
+    "findings": 6,
+    "grade": "A",
+    "report_fingerprint": "ff9981869c9d068f2eebf2b09aa99e3592dc2cd29a6445ecdc6ea8d45c8ff7eb",
+    "score": 91,
+    "severity_counts": {
+      "error": 0,
+      "info": 5,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

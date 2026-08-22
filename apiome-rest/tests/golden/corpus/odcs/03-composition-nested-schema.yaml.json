@@ -1,0 +1,489 @@
+{
+  "adapter": "odcs",
+  "canonical": {
+    "channels": [],
+    "description": "Nested object and array properties — the composition ODCS expresses inside one schema object.",
+    "extras": {
+      "odcs": {
+        "api_version": "v3.1.0",
+        "capability_limits": [
+          {
+            "construct": "odcs.authoritative_definition",
+            "count": 1,
+            "detail": "`authoritativeDefinitions[]` points at an external business definition, lineage record, or schema document by URL. The URLs are recorded in `extras['odcs_authoritative_definitions']` and **never fetched** during import; a relative URL that names a member of the same imported file set is additionally recorded as resolved, but its content is not expanded into the canonical model.",
+            "locations": [
+              "customers"
+            ]
+          },
+          {
+            "construct": "odcs.classification",
+            "count": 1,
+            "detail": "`classification` (`confidential`, `restricted`, …) and `criticalDataElement` are governance labels on a field. The canonical model has no classification vocabulary, so both are carried on the field in `extras` — which is what keeps a PII marker visible on the catalog detail view without pretending it is a validation constraint.",
+            "locations": [
+              "customers.contact_points.items"
+            ]
+          },
+          {
+            "construct": "odcs.declaration_order",
+            "count": 2,
+            "detail": "A dataset's column order is physical: it is the order the table, file or topic actually presents. Canonical entities are keyed and sorted by key, so declaration order is not a canonical property; the source index is recorded on every schema object and every property as `extras['odcs_position']` and the canonical ordering does not follow it.",
+            "locations": [
+              "customer_consents",
+              "customers"
+            ]
+          },
+          {
+            "construct": "odcs.key_uniqueness",
+            "count": 1,
+            "detail": "`primaryKey`/`primaryKeyPosition` and `unique` declare identity and uniqueness over the *rows* of a dataset. The canonical constraint vocabulary has no identity facet (`unique_items` is about the members of one array), so the declarations are carried on the field in `extras` and are not enforced.",
+            "locations": [
+              "customers"
+            ]
+          },
+          {
+            "construct": "odcs.physical_type",
+            "count": 16,
+            "detail": "`physicalType` (`varchar(20)`, `numeric(13,2)`, `jsonb`, `array<struct>`) is the storage type in the serving system, and `physicalName` is what the object or column is actually called there. Both describe the *physical* dataset, which the canonical model does not: it names the logical shape. They are carried verbatim in `extras['odcs_physical_type']` and `extras['odcs_physical_name']`, and the type is deliberately not interpreted — `varchar(20)` does **not** become `maxLength: 20`, because the unit differs by dialect and by encoding. Declared lengths and ranges come from `logicalTypeOptions`, which is the portable half.",
+            "locations": [
+              "customer_consents",
+              "customers",
+              "customers.address",
+              "customers.contact_points.items"
+            ]
+          }
+        ],
+        "contract_id": "0f6d2f0e-1b2c-4a5e-9f2a-000000000003",
+        "domain": "crm",
+        "schema_objects": [
+          "customers",
+          "customer_consents"
+        ],
+        "status": "active"
+      },
+      "odcs_description": {
+        "purpose": "Nested object and array properties — the composition ODCS expresses inside one schema object."
+      }
+    },
+    "format": "odcs",
+    "identity": {
+      "extras": {},
+      "id": "0f6d2f0e-1b2c-4a5e-9f2a-000000000003",
+      "name": "customer_360",
+      "namespace": "crm"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "customer_360",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A second schema object in the same contract, related by customer_id.",
+        "enum_values": [],
+        "extras": {
+          "odcs_physical_type": "table",
+          "odcs_position": 1
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "varchar(30)",
+              "odcs_position": 1
+            },
+            "field_number": null,
+            "key": "customer_consents.consent_type",
+            "name": "consent_type",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "varchar(20)",
+              "odcs_position": 0
+            },
+            "field_number": null,
+            "key": "customer_consents.customer_id",
+            "name": "customer_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "date",
+              "odcs_physical_type": "timestamp",
+              "odcs_position": 2
+            },
+            "field_number": null,
+            "key": "customer_consents.granted_at",
+            "name": "granted_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "date",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "customer_consents",
+        "key_type": null,
+        "kind": "record",
+        "name": "customer_consents",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odcs_authoritative_defs": [
+            {
+              "type": "businessDefinition",
+              "url": "https://example.com/governance/customer-360"
+            },
+            {
+              "type": "transformationImplementation",
+              "url": "https://example.com/lineage/customer-360"
+            }
+          ],
+          "odcs_physical_type": "table",
+          "odcs_position": 0
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Nested object property.",
+            "extras": {
+              "odcs_logical_type": "object",
+              "odcs_physical_type": "struct",
+              "odcs_position": 1
+            },
+            "field_number": null,
+            "key": "customers.address",
+            "name": "address",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "customers.address",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Repeated nested object.",
+            "extras": {
+              "odcs_logical_type": "array",
+              "odcs_physical_type": "array<struct>",
+              "odcs_position": 2
+            },
+            "field_number": null,
+            "key": "customers.contact_points",
+            "name": "contact_points",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "customers.contact_points.items",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_key": {
+                "primaryKey": true
+              },
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "varchar(20)",
+              "odcs_position": 0
+            },
+            "field_number": null,
+            "key": "customers.customer_id",
+            "name": "customer_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "array",
+              "odcs_physical_type": "array<double>",
+              "odcs_position": 3
+            },
+            "field_number": null,
+            "key": "customers.segment_scores",
+            "name": "segment_scores",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "number",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "customers",
+        "key_type": null,
+        "kind": "record",
+        "name": "customers",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Nested object property.",
+        "enum_values": [],
+        "extras": {
+          "odcs_physical_type": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "varchar(40)",
+              "odcs_position": 2
+            },
+            "field_number": null,
+            "key": "customers.address.city",
+            "name": "city",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "char(2)",
+              "odcs_position": 3
+            },
+            "field_number": null,
+            "key": "customers.address.country_code",
+            "name": "country_code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "varchar(60)",
+              "odcs_position": 0
+            },
+            "field_number": null,
+            "key": "customers.address.line1",
+            "name": "line1",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "varchar(60)",
+              "odcs_position": 1
+            },
+            "field_number": null,
+            "key": "customers.address.line2",
+            "name": "line2",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "customers.address",
+        "key_type": null,
+        "kind": "record",
+        "name": "address",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "varchar(10)",
+              "odcs_position": 0
+            },
+            "field_number": null,
+            "key": "customers.contact_points.items.channel",
+            "name": "channel",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_classification": "restricted",
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "varchar(120)",
+              "odcs_position": 1
+            },
+            "field_number": null,
+            "key": "customers.contact_points.items.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "boolean",
+              "odcs_physical_type": "boolean",
+              "odcs_position": 2
+            },
+            "field_number": null,
+            "key": "customers.contact_points.items.verified",
+            "name": "verified",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "boolean",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "customers.contact_points.items",
+        "key_type": null,
+        "kind": "record",
+        "name": "items",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.4.0"
+  },
+  "corpus_path": "odcs/03-composition-nested-schema.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "odcs"
+  },
+  "fingerprint": "sha256:f78c00e8973c199a88fee8da7d3acf8117a7f4a048a3b525df9d4d2801e6d98b",
+  "lint": {
+    "findings": 14,
+    "grade": "B",
+    "report_fingerprint": "7e13f7bc6ebac228a0120b50e087509a567482d1776ffe103d9a9a1b5fe20f5c",
+    "score": 80,
+    "severity_counts": {
+      "error": 0,
+      "info": 12,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

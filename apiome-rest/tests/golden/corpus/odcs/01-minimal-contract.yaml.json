@@ -1,0 +1,147 @@
+{
+  "adapter": "odcs",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "odcs": {
+        "api_version": "v3.1.0",
+        "capability_limits": [
+          {
+            "construct": "odcs.declaration_order",
+            "count": 1,
+            "detail": "A dataset's column order is physical: it is the order the table, file or topic actually presents. Canonical entities are keyed and sorted by key, so declaration order is not a canonical property; the source index is recorded on every schema object and every property as `extras['odcs_position']` and the canonical ordering does not follow it.",
+            "locations": [
+              "beacon_pings"
+            ]
+          },
+          {
+            "construct": "odcs.key_uniqueness",
+            "count": 1,
+            "detail": "`primaryKey`/`primaryKeyPosition` and `unique` declare identity and uniqueness over the *rows* of a dataset. The canonical constraint vocabulary has no identity facet (`unique_items` is about the members of one array), so the declarations are carried on the field in `extras` and are not enforced.",
+            "locations": [
+              "beacon_pings"
+            ]
+          },
+          {
+            "construct": "odcs.physical_type",
+            "count": 3,
+            "detail": "`physicalType` (`varchar(20)`, `numeric(13,2)`, `jsonb`, `array<struct>`) is the storage type in the serving system, and `physicalName` is what the object or column is actually called there. Both describe the *physical* dataset, which the canonical model does not: it names the logical shape. They are carried verbatim in `extras['odcs_physical_type']` and `extras['odcs_physical_name']`, and the type is deliberately not interpreted — `varchar(20)` does **not** become `maxLength: 20`, because the unit differs by dialect and by encoding. Declared lengths and ranges come from `logicalTypeOptions`, which is the portable half.",
+            "locations": [
+              "beacon_pings"
+            ]
+          }
+        ],
+        "contract_id": "0f6d2f0e-1b2c-4a5e-9f2a-000000000001",
+        "schema_objects": [
+          "beacon_pings"
+        ],
+        "status": "active"
+      }
+    },
+    "format": "odcs",
+    "identity": {
+      "extras": {},
+      "id": "0f6d2f0e-1b2c-4a5e-9f2a-000000000001",
+      "name": "beacon_pings",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "beacon_pings",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "odcs_physical_type": "table",
+          "odcs_position": 0
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_key": {
+                "primaryKey": true
+              },
+              "odcs_logical_type": "string",
+              "odcs_physical_type": "varchar(16)",
+              "odcs_position": 0
+            },
+            "field_number": null,
+            "key": "beacon_pings.beacon_id",
+            "name": "beacon_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "odcs_logical_type": "date",
+              "odcs_physical_type": "timestamp",
+              "odcs_position": 1
+            },
+            "field_number": null,
+            "key": "beacon_pings.seen_at",
+            "name": "seen_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "date",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "beacon_pings",
+        "key_type": null,
+        "kind": "record",
+        "name": "beacon_pings",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "corpus_path": "odcs/01-minimal-contract.yaml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "odcs"
+  },
+  "fingerprint": "sha256:edc9dbcff99ff84afe02491def3a59f5e79fd6e3d4e4f884989abe9797366966",
+  "lint": {
+    "findings": 4,
+    "grade": "A",
+    "report_fingerprint": "ef678688550eca158857a8a50cf834dd210d25d67e3c22c3643c149f3d72a60e",
+    "score": 93,
+    "severity_counts": {
+      "error": 0,
+      "info": 3,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}
