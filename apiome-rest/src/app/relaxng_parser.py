@@ -151,16 +151,27 @@ _COMPACT_PATTERN_RE = re.compile(
     r"(?m)^\s*(?:\w[\w.-]*\s*[|&]?=\s*)?(?:element|attribute)\s+[\\\w*][\w.:*-]*\s*\{"
 )
 
+#: A compact-syntax declaration or keyword no other assignment-shaped schema language
+#: writes. ``start = …`` on its own is *not* one: CDDL (RFC 8610) spells its entry rule the
+#: same way, so a document whose only compact signal is that assignment needs corroboration
+#: before this adapter claims it. See :func:`is_relaxng_compact`.
+_COMPACT_CORROBORATION_RE = re.compile(
+    r"(?m)^\s*(?:default\s+namespace|namespace|datatypes|include|div|grammar\s*\{)\b"
+    r"|\b(?:element|attribute|notAllowed|externalRef|parentRef)\b"
+)
+
 
 def is_relaxng_compact(content: str) -> bool:
     """Return whether ``content`` looks like RELAX NG **compact** syntax.
 
     The compact syntax has no namespace and no root element to key on, so the sniff looks
-    for the two productions no other schema language spells the same way: a ``start``
-    assignment, or an ``element NAME {`` / ``attribute NAME {`` production at the head of a
-    line — the compact syntax lets a whole schema be a single pattern with no ``start``, so
-    requiring the assignment would leave that shape unreadable. Both are looked for outside
-    comments, and any XML markup disqualifies the text outright.
+    for an ``element NAME {`` / ``attribute NAME {`` production at the head of a line — the
+    compact syntax lets a whole schema be a single pattern with no ``start``, so requiring a
+    ``start`` assignment would leave that shape unreadable — or for a ``start`` assignment
+    **together with** a construct only RELAX NG has. That corroboration is what keeps this
+    adapter off a CDDL grammar (FMT-4.4, #5437), which spells its entry rule ``start = name``
+    exactly the same way. Both are looked for outside comments, and any XML markup
+    disqualifies the text outright.
 
     Args:
         content: The candidate text.
@@ -179,7 +190,13 @@ def is_relaxng_compact(content: str) -> bool:
         return False
     if not body.strip():
         return False
-    return bool(_COMPACT_START_RE.search(body) or _COMPACT_PATTERN_RE.search(body))
+    if _COMPACT_PATTERN_RE.search(body):
+        return True
+    if _COMPACT_START_RE.search(body):
+        # `start = name` alone is ambiguous — CDDL spells its entry rule identically — so
+        # the assignment claims a document only alongside a construct only RELAX NG has.
+        return bool(_COMPACT_CORROBORATION_RE.search(body))
+    return False
 
 
 def is_relaxng(content: str) -> bool:

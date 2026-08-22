@@ -1,0 +1,650 @@
+{
+  "adapter": "cddl",
+  "canonical": {
+    "channels": [],
+    "description": "Composition: sockets/plugs ($ and $$) and generic parameters — the two extension mechanisms CDDL offers, and the ones FMT-4.4 must either model or declare as limits.",
+    "extras": {
+      "cddl": {
+        "capability_limits": [
+          {
+            "construct": "cddl.generic_rule",
+            "count": 1,
+            "detail": "A generic rule (`page<T>`) has no canonical type of its own — its parameters are unbound. Every instantiation the document actually uses becomes its own type with the arguments substituted, and the parameterised definition is recorded in `extras['cddl']['generics']`. A generic never instantiated in the document produces no type.",
+            "locations": [
+              "page"
+            ]
+          },
+          {
+            "construct": "cddl.group_choice",
+            "count": 1,
+            "detail": "A group choice (`//`) spliced into a larger group states that one *set* of members applies. A canonical record holds one set of members, so the first alternative is carried and the others are recorded; a group choice that is the whole body of a map or an array is modelled exactly, as a union of one record per alternative.",
+            "locations": [
+              "$$envelope-common"
+            ]
+          },
+          {
+            "construct": "cddl.group_socket",
+            "count": 1,
+            "detail": "A group socket (`$$name`) is spliced from the `//=` plugs the document supplies. The plugs present are resolved, and the socket's open-endedness — that a later file may add another plug — is not expressible.",
+            "locations": [
+              "$$envelope-common"
+            ]
+          },
+          {
+            "construct": "cddl.type_socket",
+            "count": 1,
+            "detail": "A type socket (`$name`) is resolved to a choice over the `/=` plugs the document supplies. The plugs present are modelled as union members, and the socket's open-endedness — that a later file may add another plug — is not expressible.",
+            "locations": [
+              "$message"
+            ]
+          }
+        ],
+        "generics": {
+          "page": [
+            "T"
+          ]
+        },
+        "group_rules": [
+          "$$envelope-common"
+        ],
+        "instantiations": {
+          "page_message": {
+            "arguments": [
+              "$message"
+            ],
+            "rule": "page"
+          },
+          "page_tstr": {
+            "arguments": [
+              "tstr"
+            ],
+            "rule": "page"
+          }
+        },
+        "members": [
+          "cddl/03-composition-sockets-and-generics.cddl"
+        ],
+        "root_rule": "ping-message",
+        "root_type": "ping-message",
+        "sockets": {
+          "$$envelope-common": [
+            "$$envelope-common",
+            "$$envelope-common"
+          ],
+          "$message": [
+            "ping-message",
+            "pong-message"
+          ]
+        }
+      }
+    },
+    "format": "cddl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "ping-message",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "ping-message",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "choice",
+          "cddl_socket": "type"
+        },
+        "fields": [],
+        "key": "$message",
+        "key_type": null,
+        "kind": "union",
+        "name": "$message",
+        "namespace": null,
+        "union_members": [
+          "ping-message",
+          "pong-message"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A group socket: members spliced into every envelope.",
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 3,
+            "key": "envelope.payload",
+            "name": "payload",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "$message",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "uint"
+            },
+            "field_number": 2,
+            "key": "envelope.sent-at",
+            "name": "sent-at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                1
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_literal": true,
+              "cddl_type": "1"
+            },
+            "field_number": 1,
+            "key": "envelope.version",
+            "name": "version",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "envelope",
+        "key_type": null,
+        "kind": "record",
+        "name": "envelope",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": {
+          "extras": {},
+          "item": null,
+          "name": "page_message",
+          "nullable": true
+        },
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "message-page",
+        "key_type": null,
+        "kind": "alias",
+        "name": "message-page",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Generics: a parameterised container reused at two instantiations.",
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_list_occurrence": [
+                "*"
+              ]
+            },
+            "field_number": 1,
+            "key": "page_message.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "$message",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_occurrence": "?",
+              "cddl_type": "tstr"
+            },
+            "field_number": 2,
+            "key": "page_message.next-cursor",
+            "name": "next-cursor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "uint"
+            },
+            "field_number": 3,
+            "key": "page_message.total",
+            "name": "total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "page_message",
+        "key_type": null,
+        "kind": "record",
+        "name": "page_message",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Generics: a parameterised container reused at two instantiations.",
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_list_occurrence": [
+                "*"
+              ],
+              "cddl_type": "tstr"
+            },
+            "field_number": 1,
+            "key": "page_tstr.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_occurrence": "?",
+              "cddl_type": "tstr"
+            },
+            "field_number": 2,
+            "key": "page_tstr.next-cursor",
+            "name": "next-cursor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "uint"
+            },
+            "field_number": 3,
+            "key": "page_tstr.total",
+            "name": "total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "page_tstr",
+        "key_type": null,
+        "kind": "record",
+        "name": "page_tstr",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": [
+                "ping"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_literal": true,
+              "cddl_type": "\"ping\""
+            },
+            "field_number": 1,
+            "key": "ping-message.kind",
+            "name": "kind",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 8,
+              "maximum": null,
+              "min_items": null,
+              "min_length": 8,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_size": "8",
+              "cddl_type": "bstr"
+            },
+            "field_number": 2,
+            "key": "ping-message.nonce",
+            "name": "nonce",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ping-message",
+        "key_type": null,
+        "kind": "record",
+        "name": "ping-message",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": [
+                "pong"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_literal": true,
+              "cddl_type": "\"pong\""
+            },
+            "field_number": 1,
+            "key": "pong-message.kind",
+            "name": "kind",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "uint"
+            },
+            "field_number": 3,
+            "key": "pong-message.latency-ms",
+            "name": "latency-ms",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 8,
+              "maximum": null,
+              "min_items": null,
+              "min_length": 8,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_size": "8",
+              "cddl_type": "bstr"
+            },
+            "field_number": 2,
+            "key": "pong-message.nonce",
+            "name": "nonce",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "pong-message",
+        "key_type": null,
+        "kind": "record",
+        "name": "pong-message",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": {
+          "extras": {},
+          "item": null,
+          "name": "page_tstr",
+          "nullable": true
+        },
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "string-page",
+        "key_type": null,
+        "kind": "alias",
+        "name": "string-page",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "cddl/03-composition-sockets-and-generics.cddl",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 8
+  },
+  "detection": {
+    "confidence": 0.9,
+    "format": "cddl"
+  },
+  "fingerprint": "sha256:e20e57f692016836dd475b857ab6738c9e67d65f7b7f1aa091967ac58e0231a4",
+  "lint": {
+    "findings": 19,
+    "grade": "D",
+    "report_fingerprint": "4446e48d0f3ea6c236f39eff3067d4aacf4e00ae0ebf9a042bc4b646b5d2cc31",
+    "score": 66,
+    "severity_counts": {
+      "error": 0,
+      "info": 14,
+      "warning": 5
+    }
+  },
+  "snapshot_version": 1
+}

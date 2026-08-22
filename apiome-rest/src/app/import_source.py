@@ -1112,6 +1112,11 @@ def load_builtin_import_sources() -> None:
     # normalizer under ``dtd``.
     from . import dtd_import_source as _dtd  # noqa: F401
 
+    # ``cddl_import_source`` (FMT-4.4) self-registers the ``cddl`` adapter — one grammar
+    # or a fileset composed into one namespace — and, via its own imports, the CDDL
+    # normalizer under ``cddl``.
+    from . import cddl_import_source as _cddl  # noqa: F401
+
     from . import postman_import_source as _postman  # noqa: F401
     from . import cloudevents_import_source as _cloudevents  # noqa: F401
     from . import smithy_import_source as _smithy  # noqa: F401

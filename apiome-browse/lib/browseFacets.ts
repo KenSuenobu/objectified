@@ -125,6 +125,7 @@ const FORMAT_LABELS: Readonly<Record<string, string>> = {
   dtd: 'DTD',
   relaxng: 'RELAX NG',
   asn1: 'ASN.1',
+  cddl: 'CDDL',
   cobolcopybook: 'COBOL Copybook',
   fhir: 'FHIR',
   hl7v2: 'HL7 v2',

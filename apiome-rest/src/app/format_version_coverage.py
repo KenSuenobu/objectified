@@ -868,6 +868,29 @@ _VERSION_COVERAGE: Dict[str, VersionCoverage] = {
         ],
         default_write="1.0",
     ),
+    "cddl": VersionCoverage(
+        reads=[
+            FormatVersion(
+                version="RFC 8610 (with RFC 9165 control operators)",
+                format_key="cddl",
+                support=VersionSupport.UNGATED,
+                note="A CDDL grammar states no version of its own — RFC 8610 has had one "
+                "grammar since 2019 and RFC 9165 only added control operators to it — so one "
+                "reader covers every document, and a grammar that uses `.lt`/`.ne` reads "
+                "identically to one that does not.",
+            )
+        ],
+        writes=[
+            FormatVersion(
+                version="RFC 8610 (with RFC 9165 control operators)",
+                format_key="cddl",
+                support=VersionSupport.UNGATED,
+                note="The written grammar states no version either, for the same reason; an "
+                "RFC 9165 operator is written only when the source used one.",
+            )
+        ],
+        default_write="RFC 8610 (with RFC 9165 control operators)",
+    ),
     "dtd": VersionCoverage(
         reads=[
             FormatVersion(

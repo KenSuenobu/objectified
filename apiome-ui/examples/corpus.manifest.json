@@ -75,7 +75,7 @@
       "marker": "`@0x\u2026` file id + `struct`"
     },
     "cddl": {
-      "label": "CDDL (RFC 8610) (pending #5437)",
+      "label": "CDDL (RFC 8610)",
       "category": "data-schema",
       "paradigm": "data_schema",
       "marker": "`name = { \u2026 }` rules with `tstr`/`bstr`/`uint` prelude types"
@@ -4042,7 +4042,7 @@
     {
       "path": "cddl/01-minimal-person.cddl",
       "format": "cddl",
-      "adapter_key": null,
+      "adapter_key": "cddl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "cddl",
@@ -4050,8 +4050,7 @@
       },
       "features": [
         "map",
-        "optional-member",
-        "pending-adapter"
+        "optional-member"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -4062,7 +4061,7 @@
     {
       "path": "cddl/02-typical-order.cddl",
       "format": "cddl",
-      "adapter_key": null,
+      "adapter_key": "cddl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "cddl",
@@ -4073,8 +4072,7 @@
         "array",
         "occurrence",
         "type-choice",
-        "rule-reference",
-        "pending-adapter"
+        "rule-reference"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -4085,7 +4083,7 @@
     {
       "path": "cddl/03-composition-sockets-and-generics.cddl",
       "format": "cddl",
-      "adapter_key": null,
+      "adapter_key": "cddl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "cddl",
@@ -4096,8 +4094,7 @@
         "plug",
         "group-socket",
         "generics",
-        "type-extension",
-        "pending-adapter"
+        "type-extension"
       ],
       "expected_outcome": "imports_with_warnings",
       "source": "hand-authored",
@@ -4109,7 +4106,7 @@
     {
       "path": "cddl/04-stress-control-operators.cddl",
       "format": "cddl",
-      "adapter_key": null,
+      "adapter_key": "cddl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "cddl",
@@ -4127,8 +4124,7 @@
         "tags",
         "unwrap",
         "table",
-        "group-choice",
-        "pending-adapter"
+        "group-choice"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -4139,7 +4135,7 @@
     {
       "path": "cddl/05-real-world-cose-shaped.cddl",
       "format": "cddl",
-      "adapter_key": null,
+      "adapter_key": "cddl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "cddl",
@@ -4150,8 +4146,7 @@
         "header-map",
         "negative-labels",
         "cbor",
-        "cose",
-        "pending-adapter"
+        "cose"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -4162,7 +4157,7 @@
     {
       "path": "cddl/06-real-world-webauthn-shaped.cddl",
       "format": "cddl",
-      "adapter_key": null,
+      "adapter_key": "cddl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "cddl",
@@ -4173,8 +4168,7 @@
         "bits",
         "cbor",
         "webauthn",
-        "type-choice",
-        "pending-adapter"
+        "type-choice"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -4185,7 +4179,7 @@
     {
       "path": "cddl/07-modules-set/api.cddl",
       "format": "cddl",
-      "adapter_key": null,
+      "adapter_key": "cddl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "cddl",
@@ -4193,8 +4187,7 @@
       },
       "features": [
         "multi-file",
-        "cross-file-reference",
-        "pending-adapter"
+        "cross-file-reference"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -4206,7 +4199,7 @@
     {
       "path": "cddl/07-modules-set/common.cddl",
       "format": "cddl",
-      "adapter_key": null,
+      "adapter_key": "cddl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "cddl",
@@ -4214,8 +4207,7 @@
       },
       "features": [
         "multi-file",
-        "shared-types",
-        "pending-adapter"
+        "shared-types"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -4228,7 +4220,7 @@
     {
       "path": "cddl/negative/01-syntactic-unclosed-map.cddl",
       "format": "cddl",
-      "adapter_key": null,
+      "adapter_key": "cddl",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "cddl",
@@ -4237,8 +4229,7 @@
       "features": [
         "negative",
         "syntactic",
-        "unclosed-map",
-        "pending-adapter"
+        "unclosed-map"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -4250,7 +4241,7 @@
     {
       "path": "cddl/negative/02-semantic-duplicate-rule.cddl",
       "format": "cddl",
-      "adapter_key": null,
+      "adapter_key": "cddl",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "cddl",
@@ -4259,8 +4250,7 @@
       "features": [
         "negative",
         "semantic",
-        "duplicate-rule",
-        "pending-adapter"
+        "duplicate-rule"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -4272,7 +4262,7 @@
     {
       "path": "cddl/negative/03-truncated-mid-rule.cddl",
       "format": "cddl",
-      "adapter_key": null,
+      "adapter_key": "cddl",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "cddl",
@@ -4281,8 +4271,7 @@
       "features": [
         "negative",
         "truncated",
-        "mid-rule",
-        "pending-adapter"
+        "mid-rule"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -4294,7 +4283,7 @@
     {
       "path": "cddl/negative/04-wrong-format-json-schema.json",
       "format": "cddl",
-      "adapter_key": null,
+      "adapter_key": "cddl",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "cddl",
@@ -4303,8 +4292,7 @@
       "features": [
         "negative",
         "wrong-format",
-        "json-schema",
-        "pending-adapter"
+        "json-schema"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -4316,7 +4304,7 @@
     {
       "path": "cddl/negative/05-encoding-utf16.cddl",
       "format": "cddl",
-      "adapter_key": null,
+      "adapter_key": "cddl",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "cddl",
@@ -4325,8 +4313,7 @@
       "features": [
         "negative",
         "encoding",
-        "utf-16",
-        "pending-adapter"
+        "utf-16"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -4338,7 +4325,7 @@
     {
       "path": "cddl/negative/06-unresolvable-type-reference.cddl",
       "format": "cddl",
-      "adapter_key": null,
+      "adapter_key": "cddl",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "cddl",
@@ -4347,8 +4334,7 @@
       "features": [
         "negative",
         "unresolvable-ref",
-        "undefined-rule",
-        "pending-adapter"
+        "undefined-rule"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",

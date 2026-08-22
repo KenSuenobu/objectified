@@ -1,0 +1,1324 @@
+{
+  "adapter": "cddl",
+  "canonical": {
+    "channels": [],
+    "description": "Every control operator, tag form and range construct RFC 8610 (plus RFC 9165) defines, in one grammar.",
+    "extras": {
+      "cddl": {
+        "capability_limits": [
+          {
+            "construct": "cddl.control_bits",
+            "count": 1,
+            "detail": "`.bits` reads an integer as a bit set whose positions are named by a group. The canonical constraint vocabulary has no bit-set facet, so the member keeps its integer type and the named group is recorded in `cddl_control`; which bits are legal is not enforced.",
+            "locations": [
+              "corners"
+            ]
+          },
+          {
+            "construct": "cddl.control_cbor",
+            "count": 2,
+            "detail": "`.cbor` and `.cborseq` say a byte string carries a *nested* CBOR encoding of another type. The canonical model has no embedded-encoding facet, so the member stays a byte string and the embedded type is recorded in `cddl_control` — the nesting is described, not modelled.",
+            "locations": [
+              "corners"
+            ]
+          },
+          {
+            "construct": "cddl.control_unmapped",
+            "count": 1,
+            "detail": "A control operator with no canonical analogue — `.ne`, and any operator outside RFC 8610 and RFC 9165 — is recorded on the member in `cddl_control` and is not enforced. The member keeps the type its left operand states.",
+            "locations": [
+              "corners"
+            ]
+          },
+          {
+            "construct": "cddl.control_within",
+            "count": 1,
+            "detail": "`.within` asserts that one type is a subset of another. The canonical model has no subtype assertion, so the narrower (left) type is carried and the wider one is recorded in `cddl_control`; the relationship between them is not checked.",
+            "locations": [
+              "corners"
+            ]
+          },
+          {
+            "construct": "cddl.major_type",
+            "count": 1,
+            "detail": "A bare major-type shorthand (`#2`, `#7.25`) names a CBOR encoding slot rather than a value space. The nearest canonical scalar is used and the shorthand is recorded, so `#2` reads as bytes without claiming to be a declared byte string.",
+            "locations": [
+              "corners"
+            ]
+          },
+          {
+            "construct": "cddl.tag",
+            "count": 3,
+            "detail": "A CBOR tag (`#6.1(number)`) marks a value's semantics in the encoding. The canonical model has no tag facet, so the tagged type is carried and the tag number is recorded in `cddl_tag` — preserved and re-emitted, but not modelled.",
+            "locations": [
+              "corners"
+            ]
+          },
+          {
+            "construct": "cddl.unwrap",
+            "count": 1,
+            "detail": "`~name` strips one layer of the referenced type's map or array so its members appear inline. The canonical model names the referenced type rather than copying it, so the member is typed by that type and the unwrapping is recorded.",
+            "locations": [
+              "corners"
+            ]
+          }
+        ],
+        "members": [
+          "cddl/04-stress-control-operators.cddl"
+        ],
+        "root_rule": "start",
+        "root_type": "start"
+      }
+    },
+    "format": "cddl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "start",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "start",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_scalar": "uint64",
+          "cddl_type": "uint"
+        },
+        "fields": [],
+        "key": "broad",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "broad",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "any"
+            },
+            "field_number": 20,
+            "key": "corners.anything",
+            "name": "anything",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "any",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": 1,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_list_occurrence": [
+                "+"
+              ],
+              "cddl_type": "tstr"
+            },
+            "field_number": 24,
+            "key": "corners.at-least-one",
+            "name": "at-least-one",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": 5,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_list_occurrence": [
+                "0*5"
+              ],
+              "cddl_type": "uint"
+            },
+            "field_number": 25,
+            "key": "corners.at-most-five",
+            "name": "at-most-five",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "uint64",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_tag": 2,
+              "cddl_type": "bstr"
+            },
+            "field_number": 18,
+            "key": "corners.bignum",
+            "name": "bignum",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": 1000.0,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_controls": [
+                {
+                  "operand": "1000",
+                  "operator": ".le"
+                }
+              ],
+              "cddl_key": "bareword",
+              "cddl_type": "int"
+            },
+            "field_number": 13,
+            "key": "corners.capped",
+            "name": "capped",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 27,
+            "key": "corners.either",
+            "name": "either",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "corners-either",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_controls": [
+                {
+                  "operand": "inner",
+                  "operator": ".cbor"
+                }
+              ],
+              "cddl_key": "bareword",
+              "cddl_type": "bstr"
+            },
+            "field_number": 5,
+            "key": "corners.embedded",
+            "name": "embedded",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": 100.0,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 0.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_range": {
+                "from": "0",
+                "operator": "...",
+                "to": "100"
+              }
+            },
+            "field_number": 15,
+            "key": "corners.exclusive",
+            "name": "exclusive",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 32,
+              "maximum": null,
+              "min_items": null,
+              "min_length": 32,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_size": "32",
+              "cddl_type": "bstr"
+            },
+            "field_number": 2,
+            "key": "corners.fixed-bytes",
+            "name": "fixed-bytes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_controls": [
+                {
+                  "operand": "flag-bits",
+                  "operator": ".bits"
+                }
+              ],
+              "cddl_key": "bareword",
+              "cddl_type": "uint"
+            },
+            "field_number": 10,
+            "key": "corners.flags",
+            "name": "flags",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 26,
+            "key": "corners.index",
+            "name": "index",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "corners-index",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": 100.0,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 1.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_controls": [
+                {
+                  "operand": "1..100",
+                  "operator": ".and"
+                }
+              ],
+              "cddl_key": "bareword",
+              "cddl_type": "uint"
+            },
+            "field_number": 8,
+            "key": "corners.intersected",
+            "name": "intersected",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": 3,
+              "max_length": null,
+              "maximum": null,
+              "min_items": 3,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_list_occurrence": [
+                "3*3",
+                "3*3"
+              ],
+              "cddl_type": "number"
+            },
+            "field_number": 23,
+            "key": "corners.matrix",
+            "name": "matrix",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": {
+                  "extras": {},
+                  "item": null,
+                  "name": "number",
+                  "nullable": false
+                },
+                "name": "list",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_controls": [
+                {
+                  "operand": "broad",
+                  "operator": ".within"
+                }
+              ],
+              "cddl_key": "bareword"
+            },
+            "field_number": 7,
+            "key": "corners.narrowed",
+            "name": "narrowed",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "refined",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_controls": [
+                {
+                  "operand": "0",
+                  "operator": ".ne"
+                }
+              ],
+              "cddl_key": "bareword",
+              "cddl_type": "int"
+            },
+            "field_number": 11,
+            "key": "corners.not-zero",
+            "name": "not-zero",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "nil"
+            },
+            "field_number": 21,
+            "key": "corners.nothing",
+            "name": "nothing",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "null",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": 100.0,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 0.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_range": {
+                "from": "0",
+                "operator": "..",
+                "to": "100"
+              }
+            },
+            "field_number": 14,
+            "key": "corners.percent",
+            "name": "percent",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": 0.0,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_controls": [
+                {
+                  "operand": "0",
+                  "operator": ".gt"
+                }
+              ],
+              "cddl_key": "bareword",
+              "cddl_type": "int"
+            },
+            "field_number": 12,
+            "key": "corners.positive",
+            "name": "positive",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_major": true,
+              "cddl_type": "#2"
+            },
+            "field_number": 22,
+            "key": "corners.raw-major-two",
+            "name": "raw-major-two",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": 3,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_default": "3",
+              "cddl_key": "bareword",
+              "cddl_occurrence": "?",
+              "cddl_type": "uint"
+            },
+            "field_number": 9,
+            "key": "corners.retries",
+            "name": "retries",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_controls": [
+                {
+                  "operand": "inner",
+                  "operator": ".cborseq"
+                }
+              ],
+              "cddl_key": "bareword",
+              "cddl_type": "bstr"
+            },
+            "field_number": 6,
+            "key": "corners.sequence",
+            "name": "sequence",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 40,
+              "maximum": null,
+              "min_items": null,
+              "min_length": 1,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_size": "1..40",
+              "cddl_type": "tstr"
+            },
+            "field_number": 1,
+            "key": "corners.short-text",
+            "name": "short-text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": "[A-Z]{3}-[0-9]{4}",
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_controls": [
+                {
+                  "operand": "\"[A-Z]{3}-[0-9]{4}\"",
+                  "operator": ".regexp"
+                }
+              ],
+              "cddl_key": "bareword",
+              "cddl_type": "tstr"
+            },
+            "field_number": 4,
+            "key": "corners.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": 65535.0,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 0.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_size": "2",
+              "cddl_type": "uint"
+            },
+            "field_number": 3,
+            "key": "corners.small-int",
+            "name": "small-int",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_unwrap": "wrapper"
+            },
+            "field_number": 19,
+            "key": "corners.unwrapped",
+            "name": "unwrapped",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "wrapper",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_tag": 32,
+              "cddl_type": "tstr"
+            },
+            "field_number": 17,
+            "key": "corners.uri",
+            "name": "uri",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_tag": 1,
+              "cddl_type": "number"
+            },
+            "field_number": 16,
+            "key": "corners.when",
+            "name": "when",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "number",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "corners",
+        "key_type": null,
+        "kind": "record",
+        "name": "corners",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_group_choice": true,
+          "cddl_shape": "array"
+        },
+        "fields": [],
+        "key": "corners-either",
+        "key_type": null,
+        "kind": "union",
+        "name": "corners-either",
+        "namespace": null,
+        "union_members": [
+          "corners-either-choice1",
+          "corners-either-choice2"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_alternative_of": "corners-either",
+          "cddl_shape": "array"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "uint"
+            },
+            "field_number": 1,
+            "key": "corners-either-choice1.a",
+            "name": "a",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "uint"
+            },
+            "field_number": 2,
+            "key": "corners-either-choice1.b",
+            "name": "b",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "corners-either-choice1",
+        "key_type": null,
+        "kind": "record",
+        "name": "corners-either-choice1",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_alternative_of": "corners-either",
+          "cddl_shape": "array"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "tstr"
+            },
+            "field_number": 1,
+            "key": "corners-either-choice2.c",
+            "name": "c",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "corners-either-choice2",
+        "key_type": null,
+        "kind": "record",
+        "name": "corners-either-choice2",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map",
+          "cddl_table": true
+        },
+        "fields": [],
+        "key": "corners-index",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        },
+        "kind": "map",
+        "name": "corners-index",
+        "namespace": null,
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "uint64",
+          "nullable": true
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_value": "0"
+            },
+            "key": "flag-bits.read",
+            "name": "read",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_value": "1"
+            },
+            "key": "flag-bits.write",
+            "name": "write",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_value": "2"
+            },
+            "key": "flag-bits.execute",
+            "name": "execute",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_value": "7"
+            },
+            "key": "flag-bits.admin",
+            "name": "admin",
+            "value": 7
+          }
+        ],
+        "extras": {
+          "cddl_shape": "enum-group"
+        },
+        "fields": [],
+        "key": "flag-bits",
+        "key_type": null,
+        "kind": "enum",
+        "name": "flag-bits",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "tstr"
+            },
+            "field_number": 1,
+            "key": "inner.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "number"
+            },
+            "field_number": 2,
+            "key": "inner.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "number",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "inner",
+        "key_type": null,
+        "kind": "record",
+        "name": "inner",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": {
+          "enum": null,
+          "exclusive_maximum": null,
+          "exclusive_minimum": null,
+          "extras": {},
+          "format": null,
+          "max_items": null,
+          "max_length": null,
+          "maximum": 10.0,
+          "min_items": null,
+          "min_length": null,
+          "minimum": 1.0,
+          "multiple_of": null,
+          "pattern": null,
+          "unique_items": null
+        },
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_range": {
+            "from": "1",
+            "operator": "..",
+            "to": "10"
+          },
+          "cddl_scalar": "i64"
+        },
+        "fields": [],
+        "key": "refined",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "refined",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": {
+          "extras": {},
+          "item": null,
+          "name": "corners",
+          "nullable": true
+        },
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "start",
+        "key_type": null,
+        "kind": "alias",
+        "name": "start",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "array"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "tstr"
+            },
+            "field_number": 1,
+            "key": "wrapper.wrapped-a",
+            "name": "wrapped-a",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "uint"
+            },
+            "field_number": 2,
+            "key": "wrapper.wrapped-b",
+            "name": "wrapped-b",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "wrapper",
+        "key_type": null,
+        "kind": "record",
+        "name": "wrapper",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "cddl/04-stress-control-operators.cddl",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 11
+  },
+  "detection": {
+    "confidence": 0.9,
+    "format": "cddl"
+  },
+  "fingerprint": "sha256:8b3f80acf1994bdbe6840693a67d5cbcfc2d4603f543ab04983d068ad94f9f3e",
+  "lint": {
+    "findings": 45,
+    "grade": "D",
+    "report_fingerprint": "c12a4c4b9d9104738b87d8fd043dba04b75492f595724bd00da93519ff28d52b",
+    "score": 60,
+    "severity_counts": {
+      "error": 0,
+      "info": 34,
+      "warning": 11
+    }
+  },
+  "snapshot_version": 1
+}

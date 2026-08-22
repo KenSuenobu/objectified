@@ -1,0 +1,1696 @@
+{
+  "adapter": "cddl",
+  "canonical": {
+    "channels": [],
+    "description": "COSE-shaped grammar: the tagged signature and encryption structures, the header maps with their negative-integer labels, and the key structure. Reconstructed from the shape of the COSE structures; no upstream text copied.",
+    "extras": {
+      "cddl": {
+        "capability_limits": [
+          {
+            "construct": "cddl.control_cbor",
+            "count": 1,
+            "detail": "`.cbor` and `.cborseq` say a byte string carries a *nested* CBOR encoding of another type. The canonical model has no embedded-encoding facet, so the member stays a byte string and the embedded type is recorded in `cddl_control` — the nesting is described, not modelled.",
+            "locations": [
+              "empty_or_serialized_map-branch1"
+            ]
+          },
+          {
+            "construct": "cddl.open_map_entry",
+            "count": 2,
+            "detail": "A table entry (`* label => values`) alongside named members admits any number of further entries whose keys are not enumerable. The named members are carried and the table becomes one open-content member named `*`; a map whose *whole* body is a table is modelled exactly, as a canonical `MAP`.",
+            "locations": [
+              "COSE_Key",
+              "header_map"
+            ]
+          },
+          {
+            "construct": "cddl.tag",
+            "count": 5,
+            "detail": "A CBOR tag (`#6.1(number)`) marks a value's semantics in the encoding. The canonical model has no tag facet, so the tagged type is carried and the tag number is recorded in `cddl_tag` — preserved and re-emitted, but not modelled.",
+            "locations": [
+              "COSE_Encrypt0_Tagged",
+              "COSE_Encrypt_Tagged",
+              "COSE_Mac0_Tagged",
+              "COSE_Sign1_Tagged",
+              "COSE_Sign_Tagged"
+            ]
+          }
+        ],
+        "group_rules": [
+          "Headers",
+          "Generic_Headers"
+        ],
+        "members": [
+          "cddl/05-real-world-cose-shaped.cddl"
+        ],
+        "root_rule": "COSE_Messages",
+        "root_type": "COSE_Messages"
+      }
+    },
+    "format": "cddl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "COSE_Messages",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "COSE_Messages",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "array"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 3,
+            "key": "COSE_Encrypt.ciphertext",
+            "name": "ciphertext",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "COSE_Encrypt-ciphertext",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 1,
+            "key": "COSE_Encrypt.protected",
+            "name": "protected",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "empty_or_serialized_map",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": 1,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_list_occurrence": [
+                "+"
+              ]
+            },
+            "field_number": 4,
+            "key": "COSE_Encrypt.recipients",
+            "name": "recipients",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "COSE_Recipient",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 2,
+            "key": "COSE_Encrypt.unprotected",
+            "name": "unprotected",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "header_map",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "COSE_Encrypt",
+        "key_type": null,
+        "kind": "record",
+        "name": "COSE_Encrypt",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "choice"
+        },
+        "fields": [],
+        "key": "COSE_Encrypt-ciphertext",
+        "key_type": null,
+        "kind": "union",
+        "name": "COSE_Encrypt-ciphertext",
+        "namespace": null,
+        "union_members": [
+          "bytes",
+          "null"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "array"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 3,
+            "key": "COSE_Encrypt0.ciphertext",
+            "name": "ciphertext",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "COSE_Encrypt0-ciphertext",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 1,
+            "key": "COSE_Encrypt0.protected",
+            "name": "protected",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "empty_or_serialized_map",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 2,
+            "key": "COSE_Encrypt0.unprotected",
+            "name": "unprotected",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "header_map",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "COSE_Encrypt0",
+        "key_type": null,
+        "kind": "record",
+        "name": "COSE_Encrypt0",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "choice"
+        },
+        "fields": [],
+        "key": "COSE_Encrypt0-ciphertext",
+        "key_type": null,
+        "kind": "union",
+        "name": "COSE_Encrypt0-ciphertext",
+        "namespace": null,
+        "union_members": [
+          "bytes",
+          "null"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": {
+          "extras": {},
+          "item": null,
+          "name": "COSE_Encrypt0",
+          "nullable": true
+        },
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_tag": 16
+        },
+        "fields": [],
+        "key": "COSE_Encrypt0_Tagged",
+        "key_type": null,
+        "kind": "alias",
+        "name": "COSE_Encrypt0_Tagged",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": {
+          "extras": {},
+          "item": null,
+          "name": "COSE_Encrypt",
+          "nullable": true
+        },
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_tag": 96
+        },
+        "fields": [],
+        "key": "COSE_Encrypt_Tagged",
+        "key_type": null,
+        "kind": "alias",
+        "name": "COSE_Encrypt_Tagged",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "table",
+              "cddl_key_type": "label",
+              "cddl_occurrence": "*"
+            },
+            "field_number": 6,
+            "key": "COSE_Key.*",
+            "name": "*",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "values",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "kty",
+            "extras": {
+              "cddl_key": "arrow-literal",
+              "cddl_key_literal": "1"
+            },
+            "field_number": 1,
+            "key": "COSE_Key.1",
+            "name": "1",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "COSE_Key-1",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "kid",
+            "extras": {
+              "cddl_key": "arrow-literal",
+              "cddl_key_literal": "2",
+              "cddl_occurrence": "?",
+              "cddl_type": "bstr"
+            },
+            "field_number": 2,
+            "key": "COSE_Key.2",
+            "name": "2",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "alg",
+            "extras": {
+              "cddl_key": "arrow-literal",
+              "cddl_key_literal": "3",
+              "cddl_occurrence": "?"
+            },
+            "field_number": 3,
+            "key": "COSE_Key.3",
+            "name": "3",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "COSE_Key-3",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": 1,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "key_ops",
+            "extras": {
+              "cddl_key": "arrow-literal",
+              "cddl_key_literal": "4",
+              "cddl_list_occurrence": [
+                "+"
+              ],
+              "cddl_occurrence": "?"
+            },
+            "field_number": 4,
+            "key": "COSE_Key.4",
+            "name": "4",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "COSE_Key-4",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "base IV",
+            "extras": {
+              "cddl_key": "arrow-literal",
+              "cddl_key_literal": "5",
+              "cddl_occurrence": "?",
+              "cddl_type": "bstr"
+            },
+            "field_number": 5,
+            "key": "COSE_Key.5",
+            "name": "5",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "COSE_Key",
+        "key_type": null,
+        "kind": "record",
+        "name": "COSE_Key",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "choice"
+        },
+        "fields": [],
+        "key": "COSE_Key-1",
+        "key_type": null,
+        "kind": "union",
+        "name": "COSE_Key-1",
+        "namespace": null,
+        "union_members": [
+          "string",
+          "i64"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "choice"
+        },
+        "fields": [],
+        "key": "COSE_Key-3",
+        "key_type": null,
+        "kind": "union",
+        "name": "COSE_Key-3",
+        "namespace": null,
+        "union_members": [
+          "string",
+          "i64"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "choice"
+        },
+        "fields": [],
+        "key": "COSE_Key-4",
+        "key_type": null,
+        "kind": "union",
+        "name": "COSE_Key-4",
+        "namespace": null,
+        "union_members": [
+          "string",
+          "i64"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": {
+          "extras": {},
+          "item": {
+            "extras": {},
+            "item": null,
+            "name": "COSE_Key",
+            "nullable": false
+          },
+          "name": "list",
+          "nullable": false
+        },
+        "constraints": {
+          "enum": null,
+          "exclusive_maximum": null,
+          "exclusive_minimum": null,
+          "extras": {},
+          "format": null,
+          "max_items": null,
+          "max_length": null,
+          "maximum": null,
+          "min_items": 1,
+          "min_length": null,
+          "minimum": null,
+          "multiple_of": null,
+          "pattern": null,
+          "unique_items": null
+        },
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_list_occurrence": [
+            "+"
+          ],
+          "cddl_shape": "array-of"
+        },
+        "fields": [],
+        "key": "COSE_KeySet",
+        "key_type": null,
+        "kind": "alias",
+        "name": "COSE_KeySet",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "array"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 3,
+            "key": "COSE_Mac0.payload",
+            "name": "payload",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "COSE_Mac0-payload",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 1,
+            "key": "COSE_Mac0.protected",
+            "name": "protected",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "empty_or_serialized_map",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "bstr"
+            },
+            "field_number": 4,
+            "key": "COSE_Mac0.tag",
+            "name": "tag",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 2,
+            "key": "COSE_Mac0.unprotected",
+            "name": "unprotected",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "header_map",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "COSE_Mac0",
+        "key_type": null,
+        "kind": "record",
+        "name": "COSE_Mac0",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "choice"
+        },
+        "fields": [],
+        "key": "COSE_Mac0-payload",
+        "key_type": null,
+        "kind": "union",
+        "name": "COSE_Mac0-payload",
+        "namespace": null,
+        "union_members": [
+          "bytes",
+          "null"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": {
+          "extras": {},
+          "item": null,
+          "name": "COSE_Mac0",
+          "nullable": true
+        },
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_tag": 17
+        },
+        "fields": [],
+        "key": "COSE_Mac0_Tagged",
+        "key_type": null,
+        "kind": "alias",
+        "name": "COSE_Mac0_Tagged",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "choice"
+        },
+        "fields": [],
+        "key": "COSE_Messages",
+        "key_type": null,
+        "kind": "union",
+        "name": "COSE_Messages",
+        "namespace": null,
+        "union_members": [
+          "COSE_Untagged_Message",
+          "COSE_Tagged_Message"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "array"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 3,
+            "key": "COSE_Recipient.ciphertext",
+            "name": "ciphertext",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "COSE_Recipient-ciphertext",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 1,
+            "key": "COSE_Recipient.protected",
+            "name": "protected",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "empty_or_serialized_map",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": 1,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_list_occurrence": [
+                "+"
+              ],
+              "cddl_occurrence": "?"
+            },
+            "field_number": 4,
+            "key": "COSE_Recipient.recipients",
+            "name": "recipients",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "COSE_Recipient",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 2,
+            "key": "COSE_Recipient.unprotected",
+            "name": "unprotected",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "header_map",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "COSE_Recipient",
+        "key_type": null,
+        "kind": "record",
+        "name": "COSE_Recipient",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "choice"
+        },
+        "fields": [],
+        "key": "COSE_Recipient-ciphertext",
+        "key_type": null,
+        "kind": "union",
+        "name": "COSE_Recipient-ciphertext",
+        "namespace": null,
+        "union_members": [
+          "bytes",
+          "null"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "array"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 3,
+            "key": "COSE_Sign.payload",
+            "name": "payload",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "COSE_Sign-payload",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 1,
+            "key": "COSE_Sign.protected",
+            "name": "protected",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "empty_or_serialized_map",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": 1,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_list_occurrence": [
+                "+"
+              ]
+            },
+            "field_number": 4,
+            "key": "COSE_Sign.signatures",
+            "name": "signatures",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "COSE_Signature",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 2,
+            "key": "COSE_Sign.unprotected",
+            "name": "unprotected",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "header_map",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "COSE_Sign",
+        "key_type": null,
+        "kind": "record",
+        "name": "COSE_Sign",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "choice"
+        },
+        "fields": [],
+        "key": "COSE_Sign-payload",
+        "key_type": null,
+        "kind": "union",
+        "name": "COSE_Sign-payload",
+        "namespace": null,
+        "union_members": [
+          "bytes",
+          "null"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "array"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 3,
+            "key": "COSE_Sign1.payload",
+            "name": "payload",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "COSE_Sign1-payload",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 1,
+            "key": "COSE_Sign1.protected",
+            "name": "protected",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "empty_or_serialized_map",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "bstr"
+            },
+            "field_number": 4,
+            "key": "COSE_Sign1.signature",
+            "name": "signature",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 2,
+            "key": "COSE_Sign1.unprotected",
+            "name": "unprotected",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "header_map",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "COSE_Sign1",
+        "key_type": null,
+        "kind": "record",
+        "name": "COSE_Sign1",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "choice"
+        },
+        "fields": [],
+        "key": "COSE_Sign1-payload",
+        "key_type": null,
+        "kind": "union",
+        "name": "COSE_Sign1-payload",
+        "namespace": null,
+        "union_members": [
+          "bytes",
+          "null"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": {
+          "extras": {},
+          "item": null,
+          "name": "COSE_Sign1",
+          "nullable": true
+        },
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_tag": 18
+        },
+        "fields": [],
+        "key": "COSE_Sign1_Tagged",
+        "key_type": null,
+        "kind": "alias",
+        "name": "COSE_Sign1_Tagged",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": {
+          "extras": {},
+          "item": null,
+          "name": "COSE_Sign",
+          "nullable": true
+        },
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_tag": 98
+        },
+        "fields": [],
+        "key": "COSE_Sign_Tagged",
+        "key_type": null,
+        "kind": "alias",
+        "name": "COSE_Sign_Tagged",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "array"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 1,
+            "key": "COSE_Signature.protected",
+            "name": "protected",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "empty_or_serialized_map",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "bstr"
+            },
+            "field_number": 3,
+            "key": "COSE_Signature.signature",
+            "name": "signature",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 2,
+            "key": "COSE_Signature.unprotected",
+            "name": "unprotected",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "header_map",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "COSE_Signature",
+        "key_type": null,
+        "kind": "record",
+        "name": "COSE_Signature",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "choice"
+        },
+        "fields": [],
+        "key": "COSE_Tagged_Message",
+        "key_type": null,
+        "kind": "union",
+        "name": "COSE_Tagged_Message",
+        "namespace": null,
+        "union_members": [
+          "COSE_Sign_Tagged",
+          "COSE_Sign1_Tagged",
+          "COSE_Encrypt_Tagged",
+          "COSE_Encrypt0_Tagged",
+          "COSE_Mac0_Tagged"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "choice"
+        },
+        "fields": [],
+        "key": "COSE_Untagged_Message",
+        "key_type": null,
+        "kind": "union",
+        "name": "COSE_Untagged_Message",
+        "namespace": null,
+        "union_members": [
+          "COSE_Sign",
+          "COSE_Sign1",
+          "COSE_Encrypt",
+          "COSE_Encrypt0",
+          "COSE_Mac0"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "choice"
+        },
+        "fields": [],
+        "key": "empty_or_serialized_map",
+        "key_type": null,
+        "kind": "union",
+        "name": "empty_or_serialized_map",
+        "namespace": null,
+        "union_members": [
+          "empty_or_serialized_map-branch1",
+          "empty_or_serialized_map-branch2"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_controls": [
+            {
+              "operand": "header_map",
+              "operator": ".cbor"
+            }
+          ],
+          "cddl_scalar": "bytes",
+          "cddl_type": "bstr"
+        },
+        "fields": [],
+        "key": "empty_or_serialized_map-branch1",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "empty_or_serialized_map-branch1",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": {
+          "enum": null,
+          "exclusive_maximum": null,
+          "exclusive_minimum": null,
+          "extras": {},
+          "format": null,
+          "max_items": null,
+          "max_length": 0,
+          "maximum": null,
+          "min_items": null,
+          "min_length": 0,
+          "minimum": null,
+          "multiple_of": null,
+          "pattern": null,
+          "unique_items": null
+        },
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_scalar": "bytes",
+          "cddl_size": "0",
+          "cddl_type": "bstr"
+        },
+        "fields": [],
+        "key": "empty_or_serialized_map-branch2",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "empty_or_serialized_map-branch2",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "table",
+              "cddl_key_type": "label",
+              "cddl_occurrence": "*"
+            },
+            "field_number": 7,
+            "key": "header_map.*",
+            "name": "*",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "values",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "alg",
+            "extras": {
+              "cddl_key": "arrow-literal",
+              "cddl_key_literal": "1",
+              "cddl_occurrence": "?"
+            },
+            "field_number": 1,
+            "key": "header_map.1",
+            "name": "1",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "header_map-1",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": 1,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "crit",
+            "extras": {
+              "cddl_key": "arrow-literal",
+              "cddl_key_literal": "2",
+              "cddl_list_occurrence": [
+                "+"
+              ],
+              "cddl_occurrence": "?"
+            },
+            "field_number": 2,
+            "key": "header_map.2",
+            "name": "2",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "label",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "content type",
+            "extras": {
+              "cddl_key": "arrow-literal",
+              "cddl_key_literal": "3",
+              "cddl_occurrence": "?"
+            },
+            "field_number": 3,
+            "key": "header_map.3",
+            "name": "3",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "header_map-3",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "kid",
+            "extras": {
+              "cddl_key": "arrow-literal",
+              "cddl_key_literal": "4",
+              "cddl_occurrence": "?",
+              "cddl_type": "bstr"
+            },
+            "field_number": 4,
+            "key": "header_map.4",
+            "name": "4",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "IV",
+            "extras": {
+              "cddl_key": "arrow-literal",
+              "cddl_key_literal": "5",
+              "cddl_occurrence": "?",
+              "cddl_type": "bstr"
+            },
+            "field_number": 5,
+            "key": "header_map.5",
+            "name": "5",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Partial IV",
+            "extras": {
+              "cddl_key": "arrow-literal",
+              "cddl_key_literal": "6",
+              "cddl_occurrence": "?",
+              "cddl_type": "bstr"
+            },
+            "field_number": 6,
+            "key": "header_map.6",
+            "name": "6",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "header_map",
+        "key_type": null,
+        "kind": "record",
+        "name": "header_map",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "choice"
+        },
+        "fields": [],
+        "key": "header_map-1",
+        "key_type": null,
+        "kind": "union",
+        "name": "header_map-1",
+        "namespace": null,
+        "union_members": [
+          "i64",
+          "string"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "choice"
+        },
+        "fields": [],
+        "key": "header_map-3",
+        "key_type": null,
+        "kind": "union",
+        "name": "header_map-3",
+        "namespace": null,
+        "union_members": [
+          "string",
+          "i64"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "choice"
+        },
+        "fields": [],
+        "key": "label",
+        "key_type": null,
+        "kind": "union",
+        "name": "label",
+        "namespace": null,
+        "union_members": [
+          "i64",
+          "string"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_scalar": "any",
+          "cddl_type": "any"
+        },
+        "fields": [],
+        "key": "values",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "values",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "cddl/05-real-world-cose-shaped.cddl",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 34
+  },
+  "detection": {
+    "confidence": 0.9,
+    "format": "cddl"
+  },
+  "fingerprint": "sha256:9f5e979b64edf381d34cf60ec40b871f3f4111163410fe77d5e742404747f865",
+  "lint": {
+    "findings": 73,
+    "grade": "F",
+    "report_fingerprint": "730415e1799a66a56de464f9a84c75e2c0b7e7837fff0512821ea00b924714df",
+    "score": 40,
+    "severity_counts": {
+      "error": 0,
+      "info": 28,
+      "warning": 45
+    }
+  },
+  "snapshot_version": 1
+}
