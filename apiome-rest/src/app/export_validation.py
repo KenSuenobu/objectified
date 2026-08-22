@@ -36,6 +36,9 @@ check. This module is the thin dispatcher that picks the matching validator per 
   plus the provider tool-schema rules for the dialect the artifact declares);
 * ``wit`` — :func:`app.wit_emitter.validate_wit_document` (a WIT parse through the ``wit``
   adapter);
+* ``odcs`` — :func:`app.odcs_schema.validate_odcs_document` (a re-parse through the ``odcs``
+  adapter **plus** the published ODCS JSON Schema for the version the contract declares —
+  the standard's own authority, vendored and run offline);
 * ``sample-noop`` and any unregistered format — *not applicable* (the sample emitter is an
   internal no-op with no importable artifact).
 
@@ -800,6 +803,21 @@ async def _validate_cddl(
     return await _run_text_validator(target, emit_result, validate_cddl_document)
 
 
+async def _validate_odcs(
+    target: str, emit_result: EmitResult, api: CanonicalApi
+) -> EmittedArtifactValidation:
+    """Re-validate an emitted data contract (re-import **plus** the published schema).
+
+    The strongest checker in this table, because ODCS's authority ships as a JSON
+    Schema and this service can run it offline (FMT-5.2): the artifact must both
+    re-import through the ``odcs`` adapter and satisfy the vendored schema for the
+    version it declares.
+    """
+    from .odcs_schema import validate_odcs_document
+
+    return await _run_text_validator(target, emit_result, validate_odcs_document)
+
+
 _VALIDATORS: Dict[str, _Validator] = {
     "openapi-3.1": _validate_openapi,
     "graphql": _validate_graphql,
@@ -831,6 +849,8 @@ _VALIDATORS: Dict[str, _Validator] = {
     "wit": _validate_wit,
     # FMT-4.4 (#5437)
     "cddl": _validate_cddl,
+    # FMT-5.2 (#5440)
+    "odcs": _validate_odcs,
 }
 
 

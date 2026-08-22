@@ -5,7 +5,7 @@
     "description": "Daily inventory position by SKU and warehouse.",
     "extras": {
       "odcs": {
-        "api_version": "v3.1.0",
+        "api_version": "v3.0.2",
         "capability_limits": [
           {
             "construct": "odcs.declaration_order",
@@ -278,7 +278,7 @@
     "confidence": 0.95,
     "format": "odcs"
   },
-  "fingerprint": "sha256:b91ae7d459c2ff12a9278d2c57cff5c2bb2a9493409cb05eff1564733b05af21",
+  "fingerprint": "sha256:21b77eeffec67e2131e4bfcf96246c8c771d9cb8b5a8a30d2dcf9612d4fadbe8",
   "lint": {
     "findings": 6,
     "grade": "A",

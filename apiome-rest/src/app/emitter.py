@@ -669,6 +669,7 @@ def load_builtin_emitters() -> None:
     from . import llm_tools_emitter as _llm_tools_emitter  # noqa: F401
     from . import wit_emitter as _wit_emitter  # noqa: F401
     from . import cddl_emitter as _cddl_emitter  # noqa: F401
+    from . import odcs_emitter as _odcs_emitter  # noqa: F401
 
 
 def get_emitter(format_key: str) -> Optional[type[Emitter]]:

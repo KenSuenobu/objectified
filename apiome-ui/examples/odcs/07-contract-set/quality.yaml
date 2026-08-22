@@ -6,7 +6,7 @@ schema: shipment_events
 quality:
   - rule: rowCount
     mustBeGreaterThan: 0
-    dimension: volume
+    dimension: completeness
     severity: error
 
   - rule: nullCount

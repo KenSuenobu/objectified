@@ -1650,9 +1650,16 @@
       "golden_directories": [
         "odcs"
       ],
-      "emit_key": null,
+      "emit_key": "odcs",
       "roundtrip_row": true,
-      "roundtrip_cells": [],
+      "roundtrip_cells": [
+        {
+          "source_format": "odcs",
+          "emit_key": "odcs",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
       "capability_provenance": "reviewed",
       "requirements": {
         "valid-examples": "satisfied",

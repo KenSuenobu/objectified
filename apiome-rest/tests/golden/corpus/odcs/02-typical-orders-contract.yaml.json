@@ -5,7 +5,7 @@
     "description": "Serve settled order facts to finance and merchandising.",
     "extras": {
       "odcs": {
-        "api_version": "v3.1.0",
+        "api_version": "v3.0.2",
         "capability_limits": [
           {
             "construct": "odcs.classification",
@@ -353,7 +353,7 @@
     "confidence": 0.95,
     "format": "odcs"
   },
-  "fingerprint": "sha256:2a2b46308c5bfcb77589512559b70a22af6ee65be71b957cbbd604b2ee0beb73",
+  "fingerprint": "sha256:c201908e7bc3aad6acd3ec828cbb0c029351381c5fe4999ffc351b8e8e4b28de",
   "lint": {
     "findings": 5,
     "grade": "A",

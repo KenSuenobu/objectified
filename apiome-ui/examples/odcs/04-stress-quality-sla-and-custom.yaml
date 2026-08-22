@@ -1,4 +1,4 @@
-apiVersion: v3.1.0
+apiVersion: v3.0.2
 kind: DataContract
 id: 0f6d2f0e-1b2c-4a5e-9f2a-000000000004
 name: telemetry_events
@@ -103,7 +103,7 @@ schema:
     quality:
       - rule: rowCount
         mustBeBetween: [1, 100000000]
-        dimension: volume
+        dimension: completeness
         severity: warning
       - rule: freshness
         property: emitted_at
@@ -120,7 +120,6 @@ servers:
     type: s3
     location: s3://example-telemetry/events/
     format: parquet
-    delimiter: none
   - server: warehouse
     type: snowflake
     account: example-account

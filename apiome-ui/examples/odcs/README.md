@@ -1,10 +1,19 @@
-# Open Data Contract Standard (ODCS v3.1) — `odcs`
+# Open Data Contract Standard (ODCS v3.x) — `odcs`
 
 Fixtures for **FMT-5.1 / 5.2** ([#5439](https://github.com/apiome/apiome/issues/5439),
 [#5440](https://github.com/apiome/apiome/issues/5440)) — the Linux Foundation (Bitol) data-contract
 YAML. ODCS is the data-side twin of everything Apiome does for APIs: structure, ownership, quality,
-SLAs, versioning, diff, lint, score. **Live** — the `odcs` adapter reads a contract, or a contract
-set, and every entry here is exercised by the corpus suites. Emit lands with FMT-5.2.
+SLAs, versioning, diff, lint, score. **Live in both directions** — the `odcs` adapter reads a
+contract, or a contract set, and the `odcs` emitter writes one; every entry here is exercised by the
+corpus suites, and each is re-emitted and checked against the standard's **own published JSON
+Schema**, which this repository ships (`apiome-rest/src/app/data/odcs_3_*_schema.json`).
+
+**Both v3 lines are represented, because they are not the same document.** `01`, `03` and the
+JSON-Schema member of `07` are v3.1.0; `02`, `04`, `05`, `06` and `07`'s contract are v3.0.2. The
+reader does not branch on the minor version — every construct it consumes is common to the line —
+but v3.1 turned `team` from an array of members into an object with a `members` list and closed
+`quality` against the v3.0 `rule:` spelling, so a document is *validated* against the schema for the
+version it declares, and is written back declaring the same one.
 
 **Detection marker.** `kind: DataContract` with an `apiVersion` — deliberately the ODCS *envelope*
 and nothing else. The structural half (`schema:` with named things and their columns) is shared with
@@ -40,8 +49,9 @@ because the unit differs by dialect and by encoding. It is carried instead.
 ## What is carried but not modelled — the `odcs_*` extras namespace
 
 The governance half of a data contract has no canonical home, so it survives **verbatim** in
-`extras` under a documented key namespace, on whichever node declared it. FMT-5.2 writes the same
-keys back; that is the `extras` ↔ emitter symmetry rule, and it is why nothing here is re-spelled.
+`extras` under a documented key namespace, on whichever node declared it. The emitter writes the same
+keys back; that is the `extras` ↔ emitter symmetry rule, and it is why nothing here is re-spelled —
+a contract imported and re-exported comes back canonically identical.
 
 | Key | Node | Carries |
 | --- | --- | --- |
@@ -87,4 +97,20 @@ v2 → v3 renames named in the message.
 
 `negative/02` is the other: a schema object with **no `properties`** is refused rather than imported.
 An empty canonical type reads as "this dataset has no columns", which is a claim the document never
-made.
+made. The emitter applies the same rule in reverse: a record whose members were never modelled is
+left out of `schema[]` and reported, rather than written as a table with no columns.
+
+## The one deliberately non-standard thing here
+
+`04` and `05` each carry an **`enum` inside `logicalTypeOptions`** — a column whose permitted values
+are stated inline. No ODCS version admits it: the standard states allowed values through a quality
+rule, not through a type option. It is here on purpose, because real catalog tools write it and the
+two halves of the pipeline treat it differently, which is the property worth fixing in place:
+
+* the **reader is lenient** — it accepts the extension and projects it onto the canonical
+  `enum` constraint, which is what makes those values visible to diff and lint;
+* the **emitter is strict** — it refuses to write a facet the standard does not admit beside the
+  column's `logicalType`, drops it, and reports it as a fidelity loss. Every contract this service
+  writes validates against the published schema, including these two.
+
+Everything else in this directory is valid ODCS as published.
