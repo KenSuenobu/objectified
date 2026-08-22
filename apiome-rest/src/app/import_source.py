@@ -1117,6 +1117,11 @@ def load_builtin_import_sources() -> None:
     # normalizer under ``cddl``.
     from . import cddl_import_source as _cddl  # noqa: F401
 
+    # ``arrow_import_source`` (FMT-4.5) self-registers the ``arrow`` adapter — the JSON
+    # integration form, a binary IPC payload, a captured Flight fileset and a live Flight
+    # endpoint — and, via its own imports, the Arrow normalizer under ``arrow``.
+    from . import arrow_import_source as _arrow  # noqa: F401
+
     from . import postman_import_source as _postman  # noqa: F401
     from . import cloudevents_import_source as _cloudevents  # noqa: F401
     from . import smithy_import_source as _smithy  # noqa: F401

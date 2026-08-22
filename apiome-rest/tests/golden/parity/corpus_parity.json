@@ -105,6 +105,49 @@
       "waivers": {}
     },
     {
+      "format_key": "arrow",
+      "label": "Apache Arrow",
+      "paradigm": "data_schema",
+      "corpus_formats": [
+        "arrow"
+      ],
+      "corpus_directories": [
+        "arrow"
+      ],
+      "fixtures": {
+        "valid": 10,
+        "negative": 7,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 17
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "multi-file",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [],
+      "goldens": 9,
+      "golden_directories": [
+        "arrow"
+      ],
+      "emit_key": null,
+      "roundtrip_row": true,
+      "roundtrip_cells": [],
+      "capability_provenance": "reviewed",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
       "format_key": "asn1",
       "label": "ASN.1",
       "paradigm": "data_schema",
@@ -2376,7 +2419,6 @@
   "export_only_destinations": [],
   "pending_corpus_directories": [
     "apigee",
-    "arrow",
     "aws-apigateway",
     "azure-apim",
     "cics-bms",

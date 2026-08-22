@@ -116,6 +116,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from . import __version__
 from .breaking_change import classify_models, get_breaking_change_classifier
 from .canonical_model import CanonicalApi
+from .arrow_normalizer import ARROW_EXTRAS_KEY
 from .cddl_normalizer import CDDL_EXTRAS_KEY
 from .dtd_normalizer import DTD_EXTRAS_KEY
 from .export_projection import (
@@ -220,6 +221,10 @@ PROVENANCE_EXTRA_KEYS = frozenset(SOURCE_LOCATION_EXTRA_KEYS) | frozenset(NATIVE
         # generics and group rules composition resolved). Our own bookkeeping about the
         # read — the grammar's own constructs are the rules it declares.
         CDDL_EXTRAS_KEY,
+        # FMT-4.5: the Arrow projection record (root type, declared limits, the schema
+        # metadata carried through, the Flight envelope). Our own bookkeeping about the
+        # read — the schema's own constructs are the fields it declares.
+        ARROW_EXTRAS_KEY,
         # FMT-3.6: derived version/provenance labels, not source constructs — the
         # source's own `info.schema` is still reported (as `postman_schema_url`).
         "swagger_1_2",
@@ -1059,6 +1064,7 @@ def _document_scope_rows(
     ledger.extend(_relaxng_capability_rows(api))
     ledger.extend(_dtd_capability_rows(api))
     ledger.extend(_cddl_capability_rows(api))
+    ledger.extend(_arrow_capability_rows(api))
 
     return nodes, edges, ledger
 
@@ -1436,6 +1442,53 @@ def _cddl_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
                 detail=(
                     f"{limit.get('detail')} ({count} occurrence(s); a capability limit of the "
                     f"canonical model, not a drop — the rule itself is normalized.)"
+                    f"{where}"
+                ),
+                document_scoped=True,
+            )
+        )
+    return rows
+
+
+def _arrow_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
+    """Render the FMT-4.5 Arrow declared limits as document-scoped ledger rows.
+
+    Arrow constructs the canonical model cannot fully hold — a dictionary encoding, a
+    decimal's precision and scale, an extension type's name, a union's mode and type codes,
+    an interval, a half-precision float, the large-offset/view/run-end-encoded layout
+    variants, a temporal resolution, and a Flight response's endpoints — are stated as
+    ``partially-mapped``: the construct itself is normalized (the dictionary-encoded field
+    keeps its value type, the decimal keeps the `decimal` scalar, the union keeps its
+    variants) and only the part with no canonical analogue is lost. A **capability limit,
+    never a silent omission**, which is what the ticket's "nested, dictionary-encoded and
+    decimal types are modelled or declared limits" criterion asks the registry to carry.
+
+    Args:
+        api: The normalized model.
+
+    Returns:
+        One ledger row per declared limit, or an empty list for a schema that met none.
+    """
+    report = api.extras.get(ARROW_EXTRAS_KEY) if isinstance(api.extras, dict) else None
+    if not isinstance(report, dict):
+        return []
+    rows: List[CoverageEntry] = []
+    partial_status, partial_reason = STATUS_FOR_COVERAGE[CoverageClass.PARTIALLY_MAPPED]
+    for limit in report.get("capability_limits") or []:
+        if not isinstance(limit, dict) or not limit.get("construct"):
+            continue
+        count = int(limit.get("count") or 1)
+        locations = [str(name) for name in (limit.get("locations") or [])]
+        where = f" Field(s): {', '.join(locations)}." if locations else ""
+        rows.append(
+            CoverageEntry(
+                source_construct=str(limit.get("construct")),
+                coverage=CoverageClass.PARTIALLY_MAPPED,
+                status=partial_status,
+                reason=partial_reason,
+                detail=(
+                    f"{limit.get('detail')} ({count} occurrence(s); a capability limit of the "
+                    f"canonical model, not a drop — the field itself is normalized.)"
                     f"{where}"
                 ),
                 document_scoped=True,

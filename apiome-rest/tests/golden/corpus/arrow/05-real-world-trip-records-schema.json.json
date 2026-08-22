@@ -1,0 +1,566 @@
+{
+  "adapter": "arrow",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "arrow": {
+        "capability_limits": [
+          {
+            "construct": "arrow.decimal_width",
+            "count": 6,
+            "detail": "A `decimal` declares a precision, a scale and a storage width (128 or 256 bits). The canonical constraint vocabulary has no precision/scale facet, so the field keeps the `decimal` scalar and all three are recorded in `arrow_decimal` — preserved and reportable, but not enforced.",
+            "locations": [
+              "extra",
+              "fare_amount",
+              "surcharges/value",
+              "tip_amount",
+              "tolls_amount",
+              "total_amount"
+            ]
+          },
+          {
+            "construct": "arrow.dictionary_encoding",
+            "count": 3,
+            "detail": "A dictionary-encoded field stores integer indices into a dictionary of its declared value type. The *values* are what the schema describes, so the field keeps its value type; the index type and whether the dictionary is ordered are recorded in `arrow_dictionary`. The dictionary's numeric id is not carried — it names a message in an IPC stream, not a property of the data.",
+            "locations": [
+              "payment_type",
+              "rate_code",
+              "vendor_id"
+            ]
+          },
+          {
+            "construct": "arrow.temporal_unit",
+            "count": 2,
+            "detail": "A `date`, `time`, `timestamp` or `duration` declares a resolution (`DAY`, `SECOND`, `MILLISECOND`, `MICROSECOND`, `NANOSECOND`) and a `timestamp` may declare a timezone. The canonical model has a semantic format hint and no resolution facet, so the field carries `date`/`time`/`date-time`/`duration` and the unit and timezone are recorded in `arrow_type`.",
+            "locations": [
+              "dropoff_datetime",
+              "pickup_datetime"
+            ]
+          }
+        ],
+        "root": "Schema",
+        "schema_metadata": {
+          "dataset": "trip_records",
+          "partitioning": "year/month",
+          "row_group_size": "1048576"
+        }
+      }
+    },
+    "format": "arrow",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Schema",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Schema",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "arrow_kind": "schema"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "timestamp",
+                "timezone": "America/New_York",
+                "unit": "MICROSECOND"
+              }
+            },
+            "field_number": 3,
+            "key": "Schema.dropoff_datetime",
+            "name": "dropoff_datetime",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "bitWidth": 16,
+                "isSigned": true,
+                "name": "int"
+              }
+            },
+            "field_number": 9,
+            "key": "Schema.dropoff_location_id",
+            "name": "dropoff_location_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int16",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_decimal": {
+                "bitWidth": 128,
+                "precision": 12,
+                "scale": 2
+              },
+              "arrow_type": {
+                "bitWidth": 128,
+                "name": "decimal",
+                "precision": 12,
+                "scale": 2
+              }
+            },
+            "field_number": 12,
+            "key": "Schema.extra",
+            "name": "extra",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_decimal": {
+                "bitWidth": 128,
+                "precision": 12,
+                "scale": 2
+              },
+              "arrow_type": {
+                "bitWidth": 128,
+                "name": "decimal",
+                "precision": 12,
+                "scale": 2
+              }
+            },
+            "field_number": 11,
+            "key": "Schema.fare_amount",
+            "name": "fare_amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "bitWidth": 8,
+                "isSigned": false,
+                "name": "int"
+              }
+            },
+            "field_number": 4,
+            "key": "Schema.passenger_count",
+            "name": "passenger_count",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint8",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_dictionary": {
+                "indexType": {
+                  "bitWidth": 8,
+                  "isSigned": true,
+                  "name": "int"
+                },
+                "isOrdered": false
+              },
+              "arrow_type": {
+                "name": "utf8"
+              }
+            },
+            "field_number": 10,
+            "key": "Schema.payment_type",
+            "name": "payment_type",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "timestamp",
+                "timezone": "America/New_York",
+                "unit": "MICROSECOND"
+              }
+            },
+            "field_number": 2,
+            "key": "Schema.pickup_datetime",
+            "name": "pickup_datetime",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "bitWidth": 16,
+                "isSigned": true,
+                "name": "int"
+              }
+            },
+            "field_number": 8,
+            "key": "Schema.pickup_location_id",
+            "name": "pickup_location_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int16",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_dictionary": {
+                "indexType": {
+                  "bitWidth": 8,
+                  "isSigned": true,
+                  "name": "int"
+                },
+                "isOrdered": false
+              },
+              "arrow_type": {
+                "name": "utf8"
+              }
+            },
+            "field_number": 6,
+            "key": "Schema.rate_code",
+            "name": "rate_code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "bool"
+              }
+            },
+            "field_number": 7,
+            "key": "Schema.store_and_fwd_flag",
+            "name": "store_and_fwd_flag",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "keysSorted": false,
+                "name": "map"
+              }
+            },
+            "field_number": 16,
+            "key": "Schema.surcharges",
+            "name": "surcharges",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "surcharges",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_decimal": {
+                "bitWidth": 128,
+                "precision": 12,
+                "scale": 2
+              },
+              "arrow_type": {
+                "bitWidth": 128,
+                "name": "decimal",
+                "precision": 12,
+                "scale": 2
+              }
+            },
+            "field_number": 13,
+            "key": "Schema.tip_amount",
+            "name": "tip_amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_decimal": {
+                "bitWidth": 128,
+                "precision": 12,
+                "scale": 2
+              },
+              "arrow_type": {
+                "bitWidth": 128,
+                "name": "decimal",
+                "precision": 12,
+                "scale": 2
+              }
+            },
+            "field_number": 14,
+            "key": "Schema.tolls_amount",
+            "name": "tolls_amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_decimal": {
+                "bitWidth": 128,
+                "precision": 12,
+                "scale": 2
+              },
+              "arrow_type": {
+                "bitWidth": 128,
+                "name": "decimal",
+                "precision": 12,
+                "scale": 2
+              }
+            },
+            "field_number": 15,
+            "key": "Schema.total_amount",
+            "name": "total_amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "floatingpoint",
+                "precision": "DOUBLE"
+              }
+            },
+            "field_number": 5,
+            "key": "Schema.trip_distance_miles",
+            "name": "trip_distance_miles",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_dictionary": {
+                "indexType": {
+                  "bitWidth": 8,
+                  "isSigned": true,
+                  "name": "int"
+                },
+                "isOrdered": false
+              },
+              "arrow_type": {
+                "name": "utf8"
+              }
+            },
+            "field_number": 1,
+            "key": "Schema.vendor_id",
+            "name": "vendor_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Schema",
+        "key_type": null,
+        "kind": "record",
+        "name": "Schema",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "arrow_keys_sorted": false,
+          "arrow_kind": "map"
+        },
+        "fields": [],
+        "key": "surcharges",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": false
+        },
+        "kind": "map",
+        "name": "surcharges",
+        "namespace": null,
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "decimal",
+          "nullable": true
+        }
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "arrow/05-real-world-trip-records-schema.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "arrow"
+  },
+  "fingerprint": "sha256:b390e594ac84068dee743779aa4e532d79cbc92b196547d53cfc55e9c9548439",
+  "lint": {
+    "findings": 19,
+    "grade": "C",
+    "report_fingerprint": "5b13c3f0f4af097239a8f203070ffacd00102c49f432bc52b7bc94392d7d99ea",
+    "score": 75,
+    "severity_counts": {
+      "error": 0,
+      "info": 17,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

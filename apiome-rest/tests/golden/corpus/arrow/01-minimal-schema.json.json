@@ -1,0 +1,115 @@
+{
+  "adapter": "arrow",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "arrow": {
+        "capability_limits": [],
+        "root": "Schema"
+      }
+    },
+    "format": "arrow",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Schema",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Schema",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "arrow_kind": "schema"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "bitWidth": 64,
+                "isSigned": true,
+                "name": "int"
+              }
+            },
+            "field_number": 1,
+            "key": "Schema.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "arrow_type": {
+                "name": "utf8"
+              }
+            },
+            "field_number": 2,
+            "key": "Schema.label",
+            "name": "label",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Schema",
+        "key_type": null,
+        "kind": "record",
+        "name": "Schema",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "arrow/01-minimal-schema.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "arrow"
+  },
+  "fingerprint": "sha256:d90cc6d8ac92f29a833d81703b50cbf594ee13a739ce89b146ee9660ceeeec93",
+  "lint": {
+    "findings": 4,
+    "grade": "A",
+    "report_fingerprint": "005dcdb4c609ce46a524d23e131341a72241002e162abc75cab4d26fe8fec343",
+    "score": 93,
+    "severity_counts": {
+      "error": 0,
+      "info": 3,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

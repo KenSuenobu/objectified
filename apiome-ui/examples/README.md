@@ -6,7 +6,7 @@ Sample source documents for exercising the catalog **Import** flow (the ImportDi
 
 > **Adding an example?** Read the [corpus contributor guide](../../docs/CORPUS_CONTRIBUTOR_GUIDE.md) first — it covers the ladder, every manifest field, the licensing rules for documents derived from third-party specs, the anonymization rule for captured payloads, and the review checklist. `python3 scripts/check_corpus_provenance.py` enforces the provenance rules in CI.
 
-The corpus holds **1418 files** across **103 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
+The corpus holds **1421 files** across **103 format directories**. Every file has a manifest entry declaring its format family, the adapter that must claim it, its validity class, the detection contract (format key + minimum confidence), feature tags, and the expected import outcome.
 
 ## How the corpus is used
 
@@ -89,7 +89,7 @@ The corpus holds **1418 files** across **103 format directories**. Every file ha
 
 | Directory | Format | Paradigm | Marker / shape | Files |
 | --- | --- | --- | --- | --- |
-| `arrow/` | Apache Arrow / Flight schema (pending #5438) | data_schema | `schema.fields[].type.name` in the Arrow JSON integration form | 14 |
+| `arrow/` | Apache Arrow / Flight schema | data_schema | `schema.fields[].type.name` in the Arrow JSON integration form | 17 |
 | `asn1/` | ASN.1 | data_schema | `DEFINITIONS ::= BEGIN … END` | 12 |
 | `avro/` | Avro schema | data_schema | `type: record` + `fields` | 11 |
 | `avro-idl/` | Avro IDL | data_schema / rpc | `protocol … {` or `namespace …;` + `record` declarations in `.avdl` | 14 |
@@ -255,26 +255,35 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`negative/04-wrong-format-asyncapi.yaml`** — An AsyncAPI 3 document — plausible neighbour now that 1.1 reads AsyncAPI sources, and exactly the confusion detection must not make.
 
-### `arrow/` — Apache Arrow / Flight schema (pending #5438)
+### `arrow/` — Apache Arrow / Flight schema
 
 | File | Rung | Expected detection | Class | Features |
 | --- | --- | --- | --- | --- |
-| `01-minimal-schema.json` | minimal | `arrow` ≥ 0.85 | valid | `json-form`, `flat-fields`, `pending-adapter` |
-| `02-typical-orders-schema.json` | typical | `arrow` ≥ 0.85 | valid | `json-form`, `timestamp-timezone`, `fixedsizebinary`, `schema-metadata`, `pending-adapter` |
-| `03-composition-nested-types.json` | composition | `arrow` ≥ 0.85 | valid | `struct`, `list`, `map`, `nested`, `pending-adapter` |
-| `04-stress-type-coverage.json` | stress | `arrow` ≥ 0.85 | valid | `decimal`, `union`, `dictionary`, `interval`, `duration`, `largeutf8`, `fixedsizelist`, `extension-type`, `all-int-widths`, `pending-adapter` |
-| `05-real-world-trip-records-schema.json` | real-world | `arrow` ≥ 0.85 | valid | `dictionary`, `decimal`, `map`, `partition-metadata`, `pending-adapter` |
-| `06-typical-flight-getschema-response.json` | typical | `arrow` ≥ 0.85 | valid | `flight`, `GetSchema`, `flight-descriptor`, `dictionary`, `pending-adapter` |
-| `07-flight-set/flight-info.json` | multi-file (root) | `arrow` ≥ 0.85 | valid | `multi-file`, `flight`, `GetFlightInfo`, `endpoints`, `pending-adapter` |
-| `07-flight-set/inventory-schema.json` | multi-file (member) | `arrow` (no guarantee) | valid | `multi-file`, `flight`, `json-form`, `pending-adapter` |
-| `negative/01-syntactic-trailing-comma.json` | — | `arrow` (no guarantee) | invalid | `negative`, `syntactic`, `trailing-comma`, `pending-adapter` |
-| `negative/02-semantic-unknown-type-name.json` | — | `arrow` (no guarantee) | invalid | `negative`, `semantic`, `unknown-type-name`, `pending-adapter` |
-| `negative/03-truncated-mid-field.json` | — | `arrow` (no guarantee) | invalid | `negative`, `truncated`, `mid-type`, `pending-adapter` |
-| `negative/04-wrong-format-avro.avsc` | — | `arrow` (no guarantee) | invalid | `negative`, `wrong-format`, `avro`, `pending-adapter` |
-| `negative/05-encoding-utf16.json` | — | `arrow` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
-| `negative/06-semantic-struct-without-children.json` ⚠ | — | `arrow` (no guarantee) | invalid | `negative`, `semantic`, `nested-without-children`, `pending-adapter` |
+| `01-minimal-schema.json` | minimal | `arrow` ≥ 0.85 | valid | `json-form`, `flat-fields` |
+| `02-typical-orders-schema.json` | typical | `arrow` ≥ 0.85 | valid | `json-form`, `timestamp-timezone`, `fixedsizebinary`, `schema-metadata` |
+| `03-composition-nested-types.json` | composition | `arrow` ≥ 0.85 | valid | `struct`, `list`, `map`, `nested` |
+| `04-stress-type-coverage.json` | stress | `arrow` ≥ 0.85 | valid | `decimal`, `union`, `dictionary`, `interval`, `duration`, `largeutf8`, `fixedsizelist`, `extension-type`, `all-int-widths` |
+| `05-real-world-trip-records-schema.json` | real-world | `arrow` ≥ 0.85 | valid | `dictionary`, `decimal`, `map`, `partition-metadata` |
+| `06-typical-flight-getschema-response.json` | typical | `arrow` ≥ 0.85 | valid | `flight`, `GetSchema`, `flight-descriptor`, `dictionary` |
+| `07-flight-set/flight-info.json` | multi-file (root) | `arrow` ≥ 0.85 | valid | `multi-file`, `flight`, `GetFlightInfo`, `endpoints` |
+| `07-flight-set/inventory-schema.json` | multi-file (member) | `arrow` (no guarantee) | valid | `multi-file`, `flight`, `json-form` |
+| `08-composition-nested-types.arrow` ⚠ | composition | `arrow` ≥ 0.85 | valid | `binary-intake`, `binary-pair-composition`, `ipc`, `struct`, `list`, `map`, `nested` |
+| `09-real-world-trip-records.arrow` ⚠ | real-world | `arrow` ≥ 0.85 | valid | `binary-intake`, `binary-pair-real-world`, `ipc`, `dictionary`, `decimal`, `map` |
+| `negative/01-syntactic-trailing-comma.json` | — | `arrow` (no guarantee) | invalid | `negative`, `syntactic`, `trailing-comma` |
+| `negative/02-semantic-unknown-type-name.json` | — | `arrow` (no guarantee) | invalid | `negative`, `semantic`, `unknown-type-name` |
+| `negative/03-truncated-mid-field.json` | — | `arrow` (no guarantee) | invalid | `negative`, `truncated`, `mid-type` |
+| `negative/04-wrong-format-avro.avsc` | — | `arrow` (no guarantee) | invalid | `negative`, `wrong-format`, `avro` |
+| `negative/05-encoding-utf16.json` | — | `arrow` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+| `negative/06-semantic-struct-without-children.json` ⚠ | — | `arrow` (no guarantee) | invalid | `negative`, `semantic`, `nested-without-children` |
+| `negative/07-truncated-ipc-schema.arrow` ⚠ | — | `arrow` (no guarantee) | invalid | `negative`, `truncated`, `binary-intake`, `ipc` |
+
+> ⚠ **`08-composition-nested-types.arrow`** — IPC twin of 03-composition-nested-types.json. FMT-4.5 asserts the pair imports to one canonical model, so the two entries share a golden snapshot body.
+
+> ⚠ **`09-real-world-trip-records.arrow`** — IPC twin of 05-real-world-trip-records-schema.json, carrying the dictionary-encoded and decimal columns the acceptance criteria name.
 
 > ⚠ **`negative/06-semantic-struct-without-children.json`** — Second semantic case: struct and list fields are meaningless with an empty children array, so the schema cannot describe a record batch.
+
+> ⚠ **`negative/07-truncated-ipc-schema.arrow`** — An IPC stream message declares its own metadata length, so a payload that delivers less than it promised is truncation as a framing fact rather than a heuristic.
 
 ### `asn1/` — ASN.1
 
@@ -2614,7 +2623,7 @@ Every entry declares where its bytes came from (`origin`), under what license, a
 
 | Origin | Files | Licenses |
 | --- | --- | --- |
-| `hand-authored` | 1418 | `Apache-2.0` |
+| `hand-authored` | 1421 | `Apache-2.0` |
 
 ## Trying an import
 

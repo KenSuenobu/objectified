@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.153.0",
+    "version": "1.154.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -77800,7 +77800,7 @@
             "type": "string",
             "title": "Operation Uuid",
             "description": "The apiome.path_operation UUID.",
-            "example": "8a251491-17df-4db4-8811-3bf74a140860"
+            "example": "862bf760-2f16-49b7-90cc-1abf3ba0b980"
           },
           "method": {
             "type": "string",
@@ -80164,7 +80164,7 @@
             "type": "string",
             "title": "Generated At",
             "description": "Statement timestamp (ISO-8601, UTC).",
-            "example": "2026-08-22T17:51:04Z"
+            "example": "2026-08-22T18:50:39Z"
           },
           "envelope": {
             "additionalProperties": true,
@@ -115737,7 +115737,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-22T17:51:04Z"
+            "example": "2026-08-22T18:50:39Z"
           }
         },
         "additionalProperties": false,
@@ -130765,14 +130765,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-22T17:51:04Z"
+            "example": "2026-08-22T18:50:39Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-22T17:51:04Z"
+            "example": "2026-08-22T18:50:39Z"
           },
           "outcome": {
             "anyOf": [

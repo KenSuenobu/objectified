@@ -891,6 +891,24 @@ _VERSION_COVERAGE: Dict[str, VersionCoverage] = {
         ],
         default_write="RFC 8610 (with RFC 9165 control operators)",
     ),
+    "arrow": VersionCoverage(
+        reads=[
+            FormatVersion(
+                version="Arrow columnar format 1.x (IPC metadata V4/V5)",
+                format_key="arrow",
+                support=VersionSupport.UNGATED,
+                note="An Arrow schema carries no version the reader branches on. The columnar "
+                "format's releases add *types*, not a schema dialect — a field naming a type "
+                "this reader does not know is rejected as a semantic error rather than routed "
+                "to a second grammar — and the IPC metadata version is resolved inside the "
+                "Flatbuffer reader. The JSON integration form, a binary IPC stream or file, and "
+                "a Flight `GetSchema` reply are three serializations of one schema, not three "
+                "versions of it.",
+            )
+        ],
+        writes=[],
+        default_write=None,
+    ),
     "dtd": VersionCoverage(
         reads=[
             FormatVersion(
