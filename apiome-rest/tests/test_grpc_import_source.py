@@ -17,7 +17,11 @@ from google.protobuf import descriptor_pb2
 
 from app import grpc_import_source as grpc_src
 from app.canonical_model import ApiParadigm, CanonicalApi
-from app.grpc_import_source import GrpcImportSource
+from app.grpc_import_source import (
+    EDITIONS_FORMAT_KEY,
+    GrpcImportSource,
+    _compile_error,
+)
 from app.grpc_reflection import GrpcReflectionError, GrpcReflectionResult
 from app.import_source import (
     DetectionInput,
@@ -95,7 +99,9 @@ def test_descriptor_shape() -> None:
     assert desc.key == "grpc"
     assert desc.paradigm is ApiParadigm.RPC
     assert desc.supports_live_discovery is True
-    assert desc.formats == ["protobuf"]
+    # FMT-3.7 added the version-scoped Editions detection key; ``protobuf`` stays first
+    # because it is the canonical model format the adapter normalizes to.
+    assert desc.formats == ["protobuf", "protobuf-editions"]
     assert set(desc.input_kinds) == {
         InputKind.FILE,
         InputKind.URL,
@@ -145,10 +151,13 @@ def test_detect_proto3_syntax_marker_high_confidence() -> None:
 
 
 def test_detect_editions_marker() -> None:
+    # FMT-3.7: an ``edition = `` document is claimed under the version-scoped key so the
+    # wizard can name the dialect; it still normalizes through the one protobuf normalizer.
     text = 'edition = "2023";\npackage acme.v1;\nservice Foo { }\n'
     result = GrpcImportSource().detect(DetectionInput(text=text))
     assert result.matched
-    assert result.format == "protobuf"
+    assert result.format == EDITIONS_FORMAT_KEY
+    assert result.confidence >= 0.9
 
 
 def test_detect_keyword_only_is_weaker() -> None:
@@ -366,3 +375,57 @@ def test_end_to_end_compile_normalize_lint_over_fixture() -> None:
     assert any(s.key == "echo.v1.EchoService" for s in api.services)
     report = adapter.lint(api)
     assert report.score is not None
+
+
+# ---------------------------------------------------------------------------
+# Compile-failure classification — FMT-3.7 (#5432)
+# ---------------------------------------------------------------------------
+
+
+def test_edition_version_diagnostic_is_classified_as_an_unsupported_version() -> None:
+    """A rejected `edition` value is a version problem, not a malformed document.
+
+    The two wordings buf uses for it are the ones asserted here. Getting this wrong tells the
+    user to fix a file that is fine and hides that the *server* needs a newer compiler.
+    """
+    for diagnostics in (
+        'api.proto:1:11:unrecognized `edition` declaration value',
+        'api.proto:1:11:edition value "2024" not recognized; should be one of ["2023"]',
+    ):
+        error = _compile_error(ProtoCompileError("buf build failed", diagnostics=diagnostics))
+        assert error.code == "FORMAT_VERSION_UNSUPPORTED", diagnostics
+        # The compiler's own text is still surfaced verbatim.
+        assert diagnostics in str(error)
+
+
+def test_an_ordinary_compile_failure_keeps_the_default_classification() -> None:
+    """Only the edition wording is classified; everything else stays generic."""
+    error = _compile_error(
+        ProtoCompileError(
+            "buf build failed",
+            diagnostics="api.proto:6:3:field User.id: unknown type .integer",
+        )
+    )
+    assert error.code is None
+
+
+def test_a_later_edition_mention_does_not_reclassify_a_syntax_error() -> None:
+    """A rejected edition cascades into junk diagnostics; the *first* one decides.
+
+    A file whose real fault is a missing brace can still mention an edition further down, and
+    reporting that as an unsupported version would send the user to the wrong fix.
+    """
+    error = _compile_error(
+        ProtoCompileError(
+            "buf build failed",
+            diagnostics=(
+                "api.proto:7:15:encountered unmatched `{` delimiter\n"
+                "api.proto:9:1:the edition of this file could not be determined"
+            ),
+        )
+    )
+    assert error.code is None
+
+
+def test_no_diagnostics_is_never_classified() -> None:
+    assert _compile_error(ProtoCompileError("buf is not installed")).code is None

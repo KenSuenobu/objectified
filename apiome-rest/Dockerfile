@@ -40,7 +40,7 @@ COPY apiome-ui/ ./apiome-ui/
 FROM debian:bookworm-slim AS tools
 
 # Pinned versions (mirror src/app/toolchain_packaging.py:BUNDLED_TOOLS).
-ARG BUF_VERSION=1.50.0
+ARG BUF_VERSION=1.72.0
 ARG TSP_VERSION=0.65.0
 ARG SMITHY_VERSION=1.53.0
 ARG DRAFTER_VERSION=4.0.0

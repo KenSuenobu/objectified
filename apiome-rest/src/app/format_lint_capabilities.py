@@ -130,7 +130,10 @@ def normalize_format_key(format_key: Optional[str]) -> str:
         # Lint capability is stated per *format*, not per grammar, so it folds onto the
         # family key rather than adding a row nothing declares rules for.
         return "wsdl"
-    if key in ("grpc",):
+    if key in ("grpc",) or key.startswith("protobuf-"):
+        # FMT-3.7 gave the gRPC adapter a version-scoped detection key
+        # (``protobuf-editions``). Lint capability is stated per *format*, not per dialect, so
+        # it folds onto the family key rather than adding a row nothing declares rules for.
         return "protobuf"
     if key == "postman-2.0":
         # FMT-3.6 gave the Postman adapter a version-scoped detection key. Lint

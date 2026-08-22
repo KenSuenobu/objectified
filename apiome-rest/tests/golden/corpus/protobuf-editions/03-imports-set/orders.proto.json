@@ -1,0 +1,420 @@
+{
+  "adapter": "grpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "protobuf_editions": {
+        "editions": [
+          "2023"
+        ],
+        "files": [
+          {
+            "edition": "2023",
+            "features": {
+              "enum_type": "OPEN",
+              "field_presence": "IMPLICIT",
+              "json_format": "ALLOW",
+              "message_encoding": "LENGTH_PREFIXED",
+              "repeated_field_encoding": "PACKED",
+              "utf8_validation": "VERIFY"
+            },
+            "file": "common.proto",
+            "syntax": "editions"
+          },
+          {
+            "edition": "2023",
+            "features": {
+              "enum_type": "OPEN",
+              "field_presence": "EXPLICIT",
+              "json_format": "ALLOW",
+              "message_encoding": "LENGTH_PREFIXED",
+              "repeated_field_encoding": "PACKED",
+              "utf8_validation": "VERIFY"
+            },
+            "file": "orders.proto",
+            "syntax": "editions"
+          }
+        ],
+        "modelled_features": [
+          "field_presence",
+          "enum_type",
+          "repeated_field_encoding",
+          "utf8_validation",
+          "message_encoding",
+          "json_format"
+        ],
+        "syntaxes": [
+          "editions"
+        ],
+        "unmodelled_features": []
+      }
+    },
+    "format": "protobuf",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "example.common.v1",
+      "namespace": "example.common.v1"
+    },
+    "paradigm": "rpc",
+    "protocol": "grpc",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "example.shipping.v1.ShippingService",
+        "name": "ShippingService",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example.shipping.v1.ShippingService.CreateShipment",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.shipping.v1.ShippingService.CreateShipment#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.shipping.v1.Shipment",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.shipping.v1.ShippingService.CreateShipment#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.shipping.v1.Shipment",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "CreateShipment",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "IMPLICIT",
+              "label": "optional"
+            },
+            "field_number": 3,
+            "key": "example.common.v1.Address.city",
+            "name": "city",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "IMPLICIT",
+              "label": "optional"
+            },
+            "field_number": 5,
+            "key": "example.common.v1.Address.country_code",
+            "name": "country_code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "IMPLICIT",
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.common.v1.Address.line1",
+            "name": "line1",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "IMPLICIT",
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.common.v1.Address.line2",
+            "name": "line2",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "IMPLICIT",
+              "label": "optional"
+            },
+            "field_number": 4,
+            "key": "example.common.v1.Address.postal_code",
+            "name": "postal_code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.common.v1.Address",
+        "key_type": null,
+        "kind": "record",
+        "name": "Address",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "IMPLICIT",
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.common.v1.Money.currency_code",
+            "name": "currency_code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "IMPLICIT",
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.common.v1.Money.minor_units",
+            "name": "minor_units",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.common.v1.Money",
+        "key_type": null,
+        "kind": "record",
+        "name": "Money",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.shipping.v1.Shipment.destination",
+            "name": "destination",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.common.v1.Address",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 4,
+            "key": "example.shipping.v1.Shipment.parcel_ids",
+            "name": "parcel_ids",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 3,
+            "key": "example.shipping.v1.Shipment.price",
+            "name": "price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.common.v1.Money",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.shipping.v1.Shipment.shipment_id",
+            "name": "shipment_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.shipping.v1.Shipment",
+        "key_type": null,
+        "kind": "record",
+        "name": "Shipment",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "protobuf-editions/03-imports-set/orders.proto",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "protobuf-editions"
+  },
+  "fingerprint": "sha256:84b86228ef7f1ef44aaee10962fe83d425bb3d5c7a81dca5003f4f6119872333",
+  "lint": {
+    "findings": 18,
+    "grade": "C",
+    "report_fingerprint": "5465d8a5be12a8bb4c8128b64abf6c055df1cfddf521064bee4c46d637d605f9",
+    "score": 70,
+    "severity_counts": {
+      "error": 0,
+      "info": 14,
+      "warning": 4
+    }
+  },
+  "snapshot_version": 1
+}

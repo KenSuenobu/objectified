@@ -122,11 +122,11 @@ __all__ = [
 #: The registry contract version. Bumped whenever an entry, a reviewed seed, an absence
 #: explanation, or a vocabulary member changes, so a consumer can detect a stale contract and
 #: a cached snapshot can be keyed by it. Mirrored in the committed vocabulary snapshot.
-REGISTRY_VERSION = "3"
+REGISTRY_VERSION = "4"
 
 #: The date the current seeds and absence explanations were last reviewed. Recorded as
 #: provenance on every entry, so a claim about a format carries the date somebody checked it.
-REVIEW_DATE = "2026-07-28"
+REVIEW_DATE = "2026-08-21"
 
 #: Accepted shape of a format key. The registry resolves an *arbitrary caller-supplied* string
 #: (a stored ``source_format`` whose adapter may have been retired), so the key is constrained
@@ -787,8 +787,80 @@ class _Seed(BaseModel):
 
 # EDI X12 and COBOL copybook are seeded explicitly because they are the two formats whose
 # boundaries the ticket requires to be stated rather than inferred — and the two where the gap
-# between "the analysis holds it" and "the canonical model holds it" is widest.
+# between "the analysis holds it" and "the canonical model holds it" is widest. gRPC joined them
+# in FMT-3.7 (#5432), which needed the registry to say which Protobuf **Editions** features the
+# canonical model carries and which it does not.
 _CAPABILITY_SEED: Dict[str, _Seed] = {
+    "grpc": _Seed(
+        # gRPC's payload analysis is still the format-blind walk, so these three fields restate
+        # what derivation produces rather than claiming more. Only the projection statement and
+        # the notes below are reviewed judgements — which is exactly what FMT-3.7 needed a seed
+        # for: what a compiled descriptor set loses on its way into the canonical model.
+        native_hierarchy=NativeHierarchy.GENERIC,
+        native_hierarchy_note=(
+            "The format-blind walk records containers, ordered collections and leaves. Nesting "
+            "and ordering survive; this format's own semantics are not named, and their absence "
+            "from the tree says nothing about the source."
+        ),
+        source_location=SourceLocationSupport(
+            quality=SourceLocationQuality.PATH_ONLY,
+            note=(
+                "Nodes locate by structural path and sibling ordinal only. A UI can identify the "
+                "construct but cannot point at a line or byte range in the raw source. A "
+                "descriptor set is a compiled artifact and carries no source spans, so a line "
+                "number could only ever be guessed from the uploaded text."
+            ),
+        ),
+        value_visibility=ValueVisibilitySupport(
+            default=ValueVisibility.DEFAULT,
+            maximum=ValueVisibility.FULL,
+            note=(
+                "Leaf values are observed, so the stored record carries whatever the "
+                "value-visibility policy in force allows — the default keeps only presence and "
+                "length."
+            ),
+        ),
+        canonical_projection=CanonicalProjectionSupport(
+            coverage=ProjectionCoverage.PARTIAL,
+            dropped_constructs=[
+                "protobuf.custom_options",
+                "protobuf.extension_ranges",
+                "protobuf.features.default_symbol_visibility",
+                "protobuf.features.enforce_naming_style",
+            ],
+            note=(
+                "Services, methods with their streaming modes, messages, fields with their "
+                "numbers, enums with their value numbers, oneofs and reserved ranges all "
+                "survive. **Protobuf Editions** (2023/2024) features are resolved down the "
+                "lexical scope chain and six of the eight are modelled: `field_presence` "
+                "becomes canonical nullability (an EXPLICIT field is nullable, its IMPLICIT "
+                "twin is not, and LEGACY_REQUIRED is neither), `enum_type` becomes the enum's "
+                "`enum_closed` flag, and `repeated_field_encoding`, `utf8_validation`, "
+                "`message_encoding` and `json_format` are recorded on the construct that sets "
+                "them. The two listed above are not modelled: they govern generated-code "
+                "naming and symbol visibility — compiler behaviour with no wire or JSON "
+                "meaning — so the canonical model has nothing for them to become. Every file's "
+                "edition, syntax and fully resolved feature set is recorded in provenance "
+                "whether or not each feature is modelled."
+            ),
+        ),
+        notes=[
+            "The compiled descriptor set is the artifact of record, not the .proto text: "
+            "imports, option inheritance and Editions feature resolution are the compiler's "
+            "answers, never a re-parse here. A document that does not compile has no analysis "
+            "at all, which is reported as a compile failure rather than as an empty source.",
+            "Editions feature resolution is ours, not the compiler's: `buf build` writes each "
+            "scope's raw `features` override into the descriptor and leaves the merge to the "
+            "reader, so the resolved values reported here are computed from the edition's own "
+            "defaults table as published in descriptor.proto.",
+            "A type a target file references but an *import* declares (google.protobuf."
+            "Timestamp, a sibling module's message) is carried as a reference with no local "
+            "definition. That is the shape a protobuf `import` has, not a resolution failure.",
+            "Custom options and extension declarations are preserved in the descriptor set and "
+            "in the retained source, and only there — the canonical model has no vocabulary for "
+            "a user-defined option, so it is neither named nor counted.",
+        ],
+    ),
     "edix12": _Seed(
         native_hierarchy=NativeHierarchy.NATIVE,
         native_hierarchy_note=(

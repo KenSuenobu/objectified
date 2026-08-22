@@ -40,10 +40,14 @@ message LogRecord {
   Severity severity = 1;
   string body = 2;
   google.protobuf.Timestamp observed_at = 3;
-  // Trace ids are raw bytes and must not be UTF-8 validated.
-  bytes trace_id = 4 [features.utf8_validation = NONE];
-  bytes span_id = 5 [features.utf8_validation = NONE];
-  map<string, string> attributes = 6;
+  bytes trace_id = 4;
+  bytes span_id = 5;
+  // Agent-supplied text that is forwarded verbatim: it is carried as a string but is
+  // not known to be valid UTF-8, so validation is turned off for this field alone.
+  // `utf8_validation` is only meaningful on string fields — a bytes field is never
+  // validated, so setting it there is a compile error, not a stronger statement.
+  string raw_agent_line = 6 [features.utf8_validation = NONE];
+  map<string, string> attributes = 7;
 }
 
 message ExportRequest {

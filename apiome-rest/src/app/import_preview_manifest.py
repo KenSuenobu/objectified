@@ -115,6 +115,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from . import __version__
 from .canonical_model import CanonicalApi
+from .proto_editions import (
+    EDITIONS_PROVENANCE_EXTRA_KEY as PROTO_EDITIONS_EXTRA_KEY,
+)
 from .export_projection import (
     NATIVE_ID_EXTRA_KEYS,
     SOURCE_LOCATION_EXTRA_KEYS,
@@ -207,6 +210,10 @@ PROVENANCE_EXTRA_KEYS = frozenset(SOURCE_LOCATION_EXTRA_KEYS) | frozenset(NATIVE
         # source's own `info.schema` is still reported (as `postman_schema_url`).
         "swagger_1_2",
         "postman_collection_version",
+        # FMT-3.7: the resolved Protobuf Editions record (per-file edition, syntax and feature
+        # set). It is our own resolution of the document, not a construct the document names.
+        # Spelled by its owning module rather than repeated as a literal.
+        PROTO_EDITIONS_EXTRA_KEY,
     }
 )
 
@@ -348,6 +355,21 @@ KNOWN_PARSER_LIMITS: Dict[str, Tuple[ParserLimit, ...]] = {
             detail="HTTPRoute ExtensionRef filters and external policy attachments "
             "(for example auth policies) reference resources outside the manifest; "
             "they are preserved verbatim in extras, not resolved.",
+        ),
+    ),
+    "grpc": (
+        ParserLimit(
+            construct="Editions `enforce_naming_style` / `default_symbol_visibility`",
+            detail="These two Edition 2024 features are resolved and reported in provenance "
+            "but not modelled: they govern generated-code naming and symbol visibility — "
+            "compiler behaviour with no wire or JSON meaning — so no canonical construct "
+            "carries them.",
+        ),
+        ParserLimit(
+            construct="custom options and extension declarations",
+            detail="A user-defined `option` and an `extend` block are preserved in the "
+            "compiled descriptor set and the retained source, but the canonical model has no "
+            "vocabulary for them, so they are neither named nor counted.",
         ),
     ),
     "wit": (

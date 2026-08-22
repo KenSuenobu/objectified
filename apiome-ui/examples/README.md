@@ -63,7 +63,7 @@ The corpus holds **1418 files** across **103 format directories**. Every file ha
 | `onc-rpc/` | ONC RPC / XDR | rpc | `program {} = N` + XDR types | 11 |
 | `openrpc/` | OpenRPC (JSON-RPC) | rpc | top-level `openrpc:` version | 11 |
 | `protobuf/` | Protobuf / gRPC | rpc | `syntax = "proto3"` | 17 |
-| `protobuf-editions/` | Protobuf editions (pending #5432) | rpc | `edition = "2023"` / `"2024"` in place of `syntax` | 14 |
+| `protobuf-editions/` | Protobuf editions (2023/2024) | rpc | `edition = "2023"` / `"2024"` in place of `syntax` | 14 |
 | `ros2/` | ROS 2 interfaces (pending #5470) | rpc | `.msg`/`.srv`/`.action` field lines with ROS primitive types and `---` separators | 16 |
 | `smithy/` | Smithy 2.0 | rpc | `$version` + Smithy shapes | 11 |
 | `thrift/` | Apache Thrift | rpc | `service` / `struct` shapes | 11 |
@@ -1843,26 +1843,30 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`09-inventory-buf-image.binpb`** — Paired fixture (IXH-7.5): must import to the same canonical model as protobuf/07-inventory-source.proto.
 
-### `protobuf-editions/` — Protobuf editions (pending #5432)
+### `protobuf-editions/` — Protobuf editions (2023/2024)
 
 | File | Rung | Expected detection | Class | Features |
 | --- | --- | --- | --- | --- |
-| `01-minimal-edition-2023.proto` | minimal | `protobuf-editions` ≥ 0.9 | valid | `edition-2023`, `defaults-only`, `pending-adapter` |
-| `02-typical-orders-edition-2023.proto` | typical | `protobuf-editions` ≥ 0.9 | valid | `edition-2023`, `field-presence`, `EXPLICIT`, `IMPLICIT`, `service`, `pending-adapter` |
-| `03-imports-set/common.proto` ⚠ | multi-file (member) | `protobuf-editions` (no guarantee) | valid | `multi-file`, `edition-2023`, `IMPLICIT`, `pending-adapter` |
-| `03-imports-set/orders.proto` | multi-file (root) | `protobuf-editions` ≥ 0.9 | valid | `multi-file`, `import`, `edition-2023`, `feature-scope`, `pending-adapter` |
-| `04-stress-feature-overrides.proto` | stress | `protobuf-editions` ≥ 0.9 | valid | `field-presence`, `enum-type`, `repeated-field-encoding`, `utf8-validation`, `message-encoding`, `json-format`, `LEGACY-REQUIRED`, `DELIMITED`, `oneof`, `map`, `extension`, `pending-adapter` |
-| `05-real-world-telemetry-edition-2023.proto` | real-world | `protobuf-editions` ≥ 0.9 | valid | `edition-2023`, `LEGACY-REQUIRED`, `utf8-validation`, `streaming`, `well-known-types`, `pending-adapter` |
-| `06-typical-edition-2024.proto` | typical | `protobuf-editions` ≥ 0.9 | valid | `edition-2024`, `enum-type`, `IMPLICIT`, `pending-adapter` |
-| `07-composition-nested-and-extended.proto` | composition | `protobuf-editions` ≥ 0.9 | valid | `nested-message`, `nested-enum`, `message-reuse`, `extensions`, `feature-scope`, `pending-adapter` |
-| `negative/01-syntactic-missing-semicolon.proto` | — | `protobuf-editions` (no guarantee) | invalid | `negative`, `syntactic`, `missing-semicolon`, `pending-adapter` |
-| `negative/02-semantic-unknown-feature-value.proto` | — | `protobuf-editions` (no guarantee) | invalid | `negative`, `semantic`, `unknown-feature-value`, `pending-adapter` |
-| `negative/03-truncated-mid-message.proto` | — | `protobuf-editions` (no guarantee) | invalid | `negative`, `truncated`, `mid-field-option`, `pending-adapter` |
-| `negative/04-wrong-format-flatbuffers.fbs` | — | `protobuf-editions` (no guarantee) | invalid | `negative`, `wrong-format`, `flatbuffers`, `pending-adapter` |
-| `negative/05-encoding-utf16.proto` | — | `protobuf-editions` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
-| `negative/06-version-out-of-range-edition-2099.proto` | — | `protobuf-editions` (no guarantee) | invalid | `negative`, `version-out-of-range`, `edition-2099`, `pending-adapter` |
+| `01-minimal-edition-2023.proto` | minimal | `protobuf-editions` ≥ 0.9 | valid | `edition-2023`, `defaults-only` |
+| `02-typical-orders-edition-2023.proto` | typical | `protobuf-editions` ≥ 0.9 | valid | `edition-2023`, `field-presence`, `EXPLICIT`, `IMPLICIT`, `service` |
+| `03-imports-set/common.proto` ⚠ | multi-file (member) | `protobuf-editions` (no guarantee) | valid | `multi-file`, `edition-2023`, `IMPLICIT` |
+| `03-imports-set/orders.proto` | multi-file (root) | `protobuf-editions` ≥ 0.9 | valid | `multi-file`, `import`, `edition-2023`, `feature-scope` |
+| `04-stress-feature-overrides.proto` | stress | `protobuf-editions` ≥ 0.9 | valid | `field-presence`, `enum-type`, `repeated-field-encoding`, `utf8-validation`, `message-encoding`, `json-format`, `LEGACY-REQUIRED`, `DELIMITED`, `oneof`, `map`, `extension` |
+| `05-real-world-telemetry-edition-2023.proto` | real-world | `protobuf-editions` ≥ 0.9 | valid | `edition-2023`, `LEGACY-REQUIRED`, `utf8-validation`, `streaming`, `well-known-types` |
+| `06-typical-edition-2024.proto` | typical | `protobuf-editions` ≥ 0.9 | valid | `edition-2024`, `enum-type`, `IMPLICIT` |
+| `07-composition-nested-and-extended.proto` | composition | `protobuf-editions` ≥ 0.9 | valid | `nested-message`, `nested-enum`, `message-reuse`, `extensions`, `feature-scope` |
+| `negative/01-syntactic-missing-semicolon.proto` | — | `protobuf-editions` (no guarantee) | invalid | `negative`, `syntactic`, `missing-semicolon` |
+| `negative/02-semantic-unknown-feature-value.proto` ⚠ | — | `protobuf-editions` (no guarantee) | invalid | `negative`, `semantic`, `unknown-feature-value` |
+| `negative/03-truncated-mid-message.proto` ⚠ | — | `protobuf-editions` (no guarantee) | invalid | `negative`, `truncated`, `mid-field-option` |
+| `negative/04-wrong-format-flatbuffers.fbs` | — | `protobuf-editions` (no guarantee) | invalid | `negative`, `wrong-format`, `flatbuffers` |
+| `negative/05-encoding-utf16.proto` | — | `protobuf-editions` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+| `negative/06-version-out-of-range-edition-2099.proto` | — | `protobuf-editions` (no guarantee) | invalid | `negative`, `version-out-of-range`, `edition-2099` |
 
 > ⚠ **`03-imports-set/common.proto`** — Fileset member with the opposite file-level presence default from its importer — the leak test.
+
+> ⚠ **`negative/02-semantic-unknown-feature-value.proto`** — Grounded on current behaviour: `buf build` reports an unknown feature enum value as an ordinary name-resolution fault ("cannot find `SOMETIMES` in this scope"), and every compile failure the adapter surfaces carries the parse phase's default INPUT_MALFORMED. The intent that this is a *semantic* fault is recorded in failure_class.
+
+> ⚠ **`negative/03-truncated-mid-message.proto`** — Grounded on current behaviour: a .proto cut off mid-message reaches the compiler as unbalanced delimiters, so it is reported as INPUT_MALFORMED rather than INPUT_TRUNCATED (the same re-grounding FMT-3.3/3.4/3.5/3.6 made for truncated text inputs). Only the binary descriptor-set path can tell truncation from corruption, and it does — see protobuf/negative.
 
 ### `pydantic/` — Pydantic models (pending #5465)
 

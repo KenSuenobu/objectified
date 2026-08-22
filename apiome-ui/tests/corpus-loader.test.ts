@@ -90,7 +90,11 @@ describe('corpus manifest loader', () => {
     expect(entries.length).toBeGreaterThan(0);
     for (const entry of entries) {
       expect(entry.adapter_key).toBe('grpc');
-      expect(entry.path.startsWith('protobuf/')).toBe(true);
+      // FMT-3.7 activated the Editions directory against the same adapter: one adapter key
+      // can own more than one corpus directory when a directory holds a dialect of its format.
+      expect(entry.path.startsWith('protobuf/') || entry.path.startsWith('protobuf-editions/')).toBe(
+        true,
+      );
     }
   });
 

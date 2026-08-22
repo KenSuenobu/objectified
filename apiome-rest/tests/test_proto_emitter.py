@@ -690,6 +690,175 @@ def test_event_operation_without_response_uses_empty_and_records_losses() -> Non
 # ---------------------------------------------------------------------------
 # Real buf: compile + round-trip (gated)
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Protobuf Editions downgrade — FMT-3.7 (#5432)
+# ---------------------------------------------------------------------------
+# This emitter targets proto3, which has no `edition` and no way to say `required`. FMT-3.7
+# asks it either to grow an edition mode or to declare the loss explicitly; it declares it —
+# and, where proto3 *can* express the same thing, preserves rather than drops.
+
+
+def _editions_api() -> CanonicalApi:
+    """A model shaped like one the FMT-3.7 normalizer produces from an Editions document."""
+    order = Type(
+        key="acme.order.Order",
+        name="Order",
+        kind=TypeKind.RECORD,
+        extras={"proto_features": {"json_format": "LEGACY_BEST_EFFORT"}},
+        fields=[
+            CanonicalField(
+                key="acme.order.Order.explicit_id",
+                name="explicit_id",
+                type=TypeRef(name="string", nullable=True),
+                field_number=1,
+                extras={"label": "optional", "field_presence": "EXPLICIT"},
+            ),
+            CanonicalField(
+                key="acme.order.Order.implicit_count",
+                name="implicit_count",
+                type=TypeRef(name="int64", nullable=False),
+                field_number=2,
+                extras={"label": "optional", "field_presence": "IMPLICIT"},
+            ),
+            CanonicalField(
+                key="acme.order.Order.legacy_required_sku",
+                name="legacy_required_sku",
+                type=TypeRef(name="string", nullable=False),
+                field_number=3,
+                extras={"label": "optional", "field_presence": "LEGACY_REQUIRED"},
+            ),
+            CanonicalField(
+                key="acme.order.Order.grouped",
+                name="grouped",
+                type=TypeRef(name="acme.order.Order", nullable=True),
+                field_number=4,
+                extras={
+                    "label": "optional",
+                    "field_presence": "EXPLICIT",
+                    "proto_features": {"message_encoding": "DELIMITED"},
+                },
+            ),
+        ],
+    )
+    status = Type(
+        key="acme.order.Status",
+        name="Status",
+        kind=TypeKind.ENUM,
+        extras={"enum_closed": True},
+        enum_values=[
+            EnumValue(key="acme.order.Status.STATUS_UNSPECIFIED", name="STATUS_UNSPECIFIED", value=0),
+            EnumValue(key="acme.order.Status.STATUS_OPEN", name="STATUS_OPEN", value=1),
+        ],
+    )
+    return CanonicalApi(
+        paradigm=ApiParadigm.RPC,
+        format="protobuf",
+        protocol="grpc",
+        identity=ApiIdentity(name="acme.order", namespace="acme.order"),
+        types=[order, status],
+        extras={
+            "protobuf_editions": {
+                "editions": ["2023"],
+                "syntaxes": ["editions"],
+                "files": [
+                    {
+                        "file": "order/order.proto",
+                        "syntax": "editions",
+                        "edition": "2023",
+                        "features": {
+                            "field_presence": "EXPLICIT",
+                            "enum_type": "CLOSED",
+                            "repeated_field_encoding": "EXPANDED",
+                            "utf8_validation": "VERIFY",
+                            "message_encoding": "LENGTH_PREFIXED",
+                            "json_format": "LEGACY_BEST_EFFORT",
+                        },
+                    }
+                ],
+                "modelled_features": [],
+                "unmodelled_features": [],
+            }
+        },
+    )
+
+
+def _loss_subjects(api: CanonicalApi) -> set[str]:
+    return {loss.subject for loss in ProtoEmitter().emit(api).losses}
+
+
+def test_editions_explicit_presence_survives_as_proto3_optional() -> None:
+    """proto3 *can* express explicit presence, so this is preserved rather than lost."""
+    text = _emit(_editions_api())
+    assert "optional string explicit_id = 1;" in text
+    # An implicit-presence field is written bare — the same semantics, the other way.
+    assert "int64 implicit_count = 2;" in text
+    assert "optional int64 implicit_count" not in text
+
+
+def test_editions_legacy_required_is_emitted_bare_and_declared_as_a_loss() -> None:
+    """proto3 removed `required`, so labelling it `optional` would state the opposite."""
+    text = _emit(_editions_api())
+    assert "string legacy_required_sku = 3;" in text
+    assert "optional string legacy_required_sku" not in text
+    assert "editions-legacy-required" in _loss_subjects(_editions_api())
+
+
+def test_editions_dialect_loss_names_the_edition() -> None:
+    losses = ProtoEmitter().emit(_editions_api()).losses
+    dialect = next(loss for loss in losses if loss.subject == "editions-dialect")
+    assert "2023" in dialect.detail
+    assert "proto3" in dialect.detail
+
+
+def test_editions_feature_losses_are_recorded_at_the_scope_that_set_them() -> None:
+    """A file-level choice is stated once; a message's or a field's rides that construct."""
+    subjects = _loss_subjects(_editions_api())
+    # File level: proto3 forces PACKED and OPEN, so EXPANDED/CLOSED are gone.
+    assert "editions-feature-repeated-field-encoding" in subjects
+    assert "editions-feature-enum-type" in subjects
+    assert "editions-feature-json-format" in subjects
+    # Field level: DELIMITED was set on one field, not on the file.
+    assert "editions-feature-message-encoding" in subjects
+
+    losses = ProtoEmitter().emit(_editions_api()).losses
+    delimited = next(
+        loss
+        for loss in losses
+        if loss.subject == "editions-feature-message-encoding"
+    )
+    assert delimited.pointer == "acme.order.Order.grouped"
+
+
+def test_editions_features_that_match_proto3_are_not_reported_as_losses() -> None:
+    """Only a choice proto3 cannot carry is a loss; agreeing with proto3 is not."""
+    api = _editions_api()
+    api.extras["protobuf_editions"]["files"][0]["features"].update(
+        {
+            "enum_type": "OPEN",
+            "repeated_field_encoding": "PACKED",
+            "utf8_validation": "VERIFY",
+            "json_format": "ALLOW",
+        }
+    )
+    api.types[1].extras["enum_closed"] = False
+    # ...including the one the *message* narrowed, which is reported at message scope.
+    api.types[0].extras.pop("proto_features")
+    subjects = _loss_subjects(api)
+    assert "editions-feature-enum-type" not in subjects
+    assert "editions-feature-repeated-field-encoding" not in subjects
+    assert "editions-feature-json-format" not in subjects
+    # The dialect itself is still gone, and the required field is still unrepresentable.
+    assert "editions-dialect" in subjects
+    assert "editions-legacy-required" in subjects
+
+
+def test_a_proto3_model_records_no_editions_losses() -> None:
+    """The gate: a model with no Editions provenance must emit exactly as it did before."""
+    subjects = _loss_subjects(_rpc_api())
+    assert not {subject for subject in subjects if subject.startswith("editions-")}
+
+
 @pytest.mark.skipif(
     not _BUF_AVAILABLE,
     reason="buf tool is not resolvable in this environment "

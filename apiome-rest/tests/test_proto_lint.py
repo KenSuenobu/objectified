@@ -232,6 +232,150 @@ def test_findings_are_deterministic() -> None:
 
 
 # ===========================================================================
+# Editions feature rules — FMT-3.7 (#5432)
+# ===========================================================================
+#
+# These rules read the resolved feature values only an Editions model carries, so a
+# proto2/proto3 artifact is silent under all of them — asserted directly below, because the
+# alternative (new findings on every shipped protobuf golden) is the failure mode that matters.
+
+
+def _editions_file(fds: descriptor_pb2.FileDescriptorSet, name: str, package: str):
+    """Add an Editions 2023 file to ``fds`` and return it."""
+    f = fds.file.add()
+    f.name = name
+    f.package = package
+    f.syntax = "editions"
+    f.edition = descriptor_pb2.Edition.EDITION_2023
+    return f
+
+
+def _editions_descriptor_set() -> descriptor_pb2.FileDescriptorSet:
+    """A clean-but-for-features Editions set: versioned package, no gaps, no ``required``."""
+    fds = descriptor_pb2.FileDescriptorSet()
+    f = _editions_file(fds, "order/order.proto", "acme.order.v1")
+    order = f.message_type.add()
+    order.name = "Order"
+    _scalar(order, "id", 1)
+    _scalar(order, "sku", 2)
+    status = f.enum_type.add()
+    status.name = "Status"
+    status.value.add(name="STATUS_UNSPECIFIED", number=0)
+    status.value.add(name="STATUS_OPEN", number=1)
+    return fds
+
+
+def test_editions_model_with_default_features_fires_no_editions_rule() -> None:
+    """An Editions document that took every default is as clean as a tidy proto3 one."""
+    result = lint_canonical_model(_model(_editions_descriptor_set()))
+    assert not {rule for rule in _native_rules(result) if ".editions." in rule}
+
+
+def test_editions_legacy_required_fires_the_no_required_rule() -> None:
+    """The rule read ``extras['label']`` only, so it passed every Editions document."""
+    fds = _editions_descriptor_set()
+    order = fds.file[0].message_type[0]
+    order.field[0].options.features.field_presence = (
+        descriptor_pb2.FeatureSet.LEGACY_REQUIRED
+    )
+    result = lint_canonical_model(_model(fds))
+    assert "protobuf.field-no-required" in _native_rules(result)
+    # The descriptor label is still `optional`; only the resolved feature says otherwise.
+    assert order.field[0].label == _FD.LABEL_OPTIONAL
+
+
+def test_editions_delimited_encoding_is_flagged() -> None:
+    fds = _editions_descriptor_set()
+    order = fds.file[0].message_type[0]
+    nested = order.field.add()
+    nested.name = "grouped"
+    nested.number = 3
+    nested.type = _FD.TYPE_MESSAGE
+    nested.type_name = ".acme.order.v1.Order"
+    nested.label = _FD.LABEL_OPTIONAL
+    nested.options.features.message_encoding = descriptor_pb2.FeatureSet.DELIMITED
+
+    result = lint_canonical_model(_model(fds))
+    assert "protobuf.editions.delimited-encoding" in _native_rules(result)
+    finding = next(
+        f for f in result.findings if f.rule == "protobuf.editions.delimited-encoding"
+    )
+    assert "grouped" in finding.message
+    assert finding.severity == "warning"
+
+
+def test_editions_utf8_validation_off_is_flagged() -> None:
+    fds = _editions_descriptor_set()
+    order = fds.file[0].message_type[0]
+    order.field[1].options.features.utf8_validation = descriptor_pb2.FeatureSet.NONE
+
+    result = lint_canonical_model(_model(fds))
+    assert "protobuf.editions.utf8-validation-off" in _native_rules(result)
+
+
+def test_editions_legacy_json_format_is_flagged_at_file_and_message_scope() -> None:
+    """A file-wide opt-out is reported once at the artifact; a message's on the message."""
+    file_scope = _editions_descriptor_set()
+    file_scope.file[0].options.features.json_format = (
+        descriptor_pb2.FeatureSet.LEGACY_BEST_EFFORT
+    )
+    result = lint_canonical_model(_model(file_scope))
+    findings = [
+        f for f in result.findings if f.rule == "protobuf.editions.legacy-json-format"
+    ]
+    assert [f.path for f in findings] == ["package"]
+
+    message_scope = _editions_descriptor_set()
+    message_scope.file[0].message_type[0].options.features.json_format = (
+        descriptor_pb2.FeatureSet.LEGACY_BEST_EFFORT
+    )
+    result = lint_canonical_model(_model(message_scope))
+    findings = [
+        f for f in result.findings if f.rule == "protobuf.editions.legacy-json-format"
+    ]
+    assert [f.path for f in findings] == ["types.acme.order.v1.Order"]
+
+
+def test_editions_closed_enum_is_flagged() -> None:
+    fds = _editions_descriptor_set()
+    fds.file[0].enum_type[0].options.features.enum_type = descriptor_pb2.FeatureSet.CLOSED
+    result = lint_canonical_model(_model(fds))
+    assert "protobuf.editions.closed-enum" in _native_rules(result)
+
+
+def test_editions_rules_are_silent_on_proto3_and_proto2_models() -> None:
+    """The gate that keeps every shipped protobuf golden's lint roll-up unchanged."""
+    proto3 = lint_canonical_model(_model(_clean_descriptor_set()))
+    assert not {rule for rule in _native_rules(proto3) if ".editions." in rule}
+
+    fds = descriptor_pb2.FileDescriptorSet()
+    f = _file(fds, "legacy/legacy.proto", "acme.legacy.v1")
+    f.ClearField("syntax")  # proto2: closed enums, required fields, no JSON guarantee
+    legacy = f.message_type.add()
+    legacy.name = "Legacy"
+    _scalar(legacy, "id", 1, label=_FD.LABEL_REQUIRED)
+    enum = f.enum_type.add()
+    enum.name = "Kind"
+    enum.value.add(name="KIND_UNSPECIFIED", number=0)
+
+    proto2 = lint_canonical_model(_model(fds))
+    # proto2 resolves CLOSED enums and LEGACY_BEST_EFFORT JSON, but says so through its
+    # syntax rather than through features — the editions rules must not start firing on it.
+    assert not {rule for rule in _native_rules(proto2) if ".editions." in rule}
+    # ...while the label-based required rule still fires, exactly as it did before FMT-3.7.
+    assert "protobuf.field-no-required" in _native_rules(proto2)
+
+
+def test_editions_findings_are_scored_like_any_other() -> None:
+    """MFI-9.4's acceptance carried forward: a new finding moves the score."""
+    clean = lint_protobuf_result(_model(_editions_descriptor_set()))
+    fds = _editions_descriptor_set()
+    fds.file[0].enum_type[0].options.features.enum_type = descriptor_pb2.FeatureSet.CLOSED
+    flagged = lint_protobuf_result(_model(fds))
+    assert flagged.score < clean.score
+
+
+# ===========================================================================
 # Registry
 # ===========================================================================
 

@@ -67,8 +67,26 @@ wanted() {
 
 mkdir -p "$TOOLS_BIN"
 
+# Pinned version — read from BUNDLED_TOOLS (single source of truth; no uv/python needed).
+pinned_buf_version() {
+  grep -E '^\s+key="buf"' -A8 src/app/toolchain_packaging.py \
+    | grep -E 'version=' | head -1 \
+    | sed -E 's/.*version="([^"]+)".*/\1/'
+}
+
+# A pre-existing binary counts only when it is the *pinned* version. Checking merely that it
+# runs would pin the version in name only: an older buf installed before a pin bump would sit
+# there forever and quietly fail the features that bump was for (FMT-3.7 raised the pin to
+# 1.72.0 for Protobuf Edition 2024, which 1.50.0 refuses to compile).
 buf_ok() {
-  [[ -x "$BUF_BIN" ]] && "$BUF_BIN" --version >/dev/null 2>&1
+  [[ -x "$BUF_BIN" ]] || return 1
+  local installed wanted
+  installed="$("$BUF_BIN" --version 2>/dev/null | head -1 | tr -d '[:space:]')" || return 1
+  [[ -n "$installed" ]] || return 1
+  wanted="$(pinned_buf_version)"
+  # With no pin readable, fall back to "it runs" rather than reinstalling on every invocation.
+  [[ -z "$wanted" ]] && return 0
+  [[ "$installed" == "$wanted" ]]
 }
 
 install_buf() {
@@ -83,12 +101,7 @@ install_buf() {
     exit 1
   fi
 
-  # Pinned version — read from BUNDLED_TOOLS (single source of truth; no uv/python needed).
-  BUF_VERSION="$(
-    grep -E '^\s+key="buf"' -A5 src/app/toolchain_packaging.py \
-      | grep -E 'version=' | head -1 \
-      | sed -E 's/.*version="([^"]+)".*/\1/'
-  )"
+  BUF_VERSION="$(pinned_buf_version)"
   if [[ -z "$BUF_VERSION" ]]; then
     echo "install_dev_toolchain: could not read buf version from src/app/toolchain_packaging.py" >&2
     exit 1

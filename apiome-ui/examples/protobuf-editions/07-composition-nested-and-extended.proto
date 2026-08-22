@@ -29,13 +29,12 @@ message Party {
     KIND_ORGANISATION = 2;
   }
 
-  // Nested message, scoped to this message and reused by its own fields.
+  // Nested message, scoped to this message and reused by its own fields. `field_presence`
+  // may only be set at file or field scope, so the nested message states it per field.
   message ContactPoint {
-    option features.field_presence = IMPLICIT;
-
-    string channel = 1;
-    string value = 2;
-    bool verified = 3;
+    string channel = 1 [features.field_presence = IMPLICIT];
+    string value = 2 [features.field_presence = IMPLICIT];
+    bool verified = 3 [features.field_presence = IMPLICIT];
   }
 
   string party_id = 1;

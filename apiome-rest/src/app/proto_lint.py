@@ -44,7 +44,7 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from .canonical_model import (
     CanonicalApi,
@@ -57,6 +57,16 @@ from .lint_engine import (
     LintRule,
     RulePack,
     lint_canonical_model,
+)
+from .proto_editions import (
+    EDITIONS_PROVENANCE_EXTRA_KEY,
+    ENUM_CLOSED_EXTRA_KEY,
+    FEATURES_EXTRA_KEY,
+    FIELD_PRESENCE_EXTRA_KEY,
+    FIELD_PRESENCE_LEGACY_REQUIRED,
+    JSON_FORMAT_LEGACY_BEST_EFFORT,
+    MESSAGE_ENCODING_DELIMITED,
+    UTF8_VALIDATION_NONE,
 )
 from .schema_lint import LintFinding, LintResult, Severity
 
@@ -139,18 +149,33 @@ def _check_package_version_suffix(api: CanonicalApi) -> Iterable[Tuple[str, str]
         )
 
 
+def _is_required_field(field: CanonicalField) -> bool:
+    """Whether a field is required, in either of the two spellings the normalizer emits.
+
+    proto2 says so in the descriptor's ``label``, which the normalizer keeps as
+    ``extras['label'] == 'required'``. An Editions file says the same thing as a *feature*,
+    ``field_presence = LEGACY_REQUIRED``, and its descriptor label stays ``optional`` — so a
+    label-only check silently passed every Editions document that carried the construct
+    (FMT-3.7). Both spellings mean the identical wire contract, so both are read here.
+    """
+    return (
+        field.extras.get("label") == "required"
+        or field.extras.get(FIELD_PRESENCE_EXTRA_KEY) == FIELD_PRESENCE_LEGACY_REQUIRED
+    )
+
+
 def _check_field_no_required(api: CanonicalApi) -> Iterable[Tuple[str, str]]:
     """No field should be ``required`` (a proto2 / Editions one-way door).
 
-    The MFI-9.2 normalizer keeps a field's source label in ``extras['label']``; a ``required``
-    field can never be removed without breaking the wire contract, so each is flagged. proto3
-    has no ``required``, so this only ever fires on proto2 / Editions LEGACY_REQUIRED inputs.
+    A ``required`` field can never be removed without breaking the wire contract, so each is
+    flagged. proto3 has no ``required``, so this only ever fires on proto2 inputs and on
+    Editions inputs that resolve a field to ``LEGACY_REQUIRED``.
     """
     for api_type in _types_sorted(api):
         if api_type.kind is not TypeKind.RECORD:
             continue
         for field in _fields_sorted(api_type):
-            if field.extras.get("label") == "required":
+            if _is_required_field(field):
                 yield (
                     f"types.{api_type.key}.fields.{field.key}",
                     f"Field '{field.name}' is 'required'; required fields cannot be removed "
@@ -243,6 +268,161 @@ def _check_reserved_on_deletion(api: CanonicalApi) -> Iterable[Tuple[str, str]]:
 
 
 # ===========================================================================
+# Editions feature checks (FMT-3.7) — wire and JSON compatibility hazards
+# ===========================================================================
+#
+# Every rule below reads the *resolved* feature values the FMT-3.7 normalizer records
+# (``extras['field_presence']`` / ``extras['enum_closed']`` / ``extras['proto_features']``),
+# which only an Editions document carries. A proto2/proto3 artifact has none of them, so these
+# rules are silent on one — the pack's findings for the syntaxes that shipped before Editions
+# are unchanged. They flag settings that are *legal* but change what a peer on the other end of
+# the wire, or a JSON client, will do with the document.
+
+
+def _entity_feature(extras: Mapping[str, Any], name: str) -> Optional[str]:
+    """Return an entity's resolved value for one Editions feature, or ``None`` when unrecorded.
+
+    Serves fields, messages and enums alike — the normalizer writes the same bag on all three.
+    The normalizer records a feature at the scope that owns it and only where the value
+    deviates from its file's, so an unrecorded feature means "this entity agrees with its file",
+    which is not a hazard worth a finding on its own. Every read is defensive because ``extras``
+    is an open bag: a model round-tripped through JSONB can hold anything under this key.
+    """
+    features = extras.get(FEATURES_EXTRA_KEY)
+    if isinstance(features, dict):
+        value = features.get(name)
+        if isinstance(value, str):
+            return value
+    return None
+
+
+def _is_editions(api: CanonicalApi) -> bool:
+    """Whether this artifact carries the FMT-3.7 Editions provenance record."""
+    return isinstance(api.extras.get(EDITIONS_PROVENANCE_EXTRA_KEY), dict)
+
+
+def _file_feature(api: CanonicalApi, name: str) -> Optional[str]:
+    """Return the value ``name`` resolves to for **every** target file, or ``None``.
+
+    A document whose files disagree has no single answer, so a file-scoped rule stays silent
+    rather than picking one file's setting and reporting it as the document's.
+    """
+    record = api.extras.get(EDITIONS_PROVENANCE_EXTRA_KEY)
+    if not isinstance(record, dict):
+        return None
+    files = record.get("files")
+    if not isinstance(files, list) or not files:
+        return None
+    values = set()
+    for entry in files:
+        if not isinstance(entry, dict):
+            return None
+        features = entry.get("features")
+        if not isinstance(features, dict):
+            return None
+        value = features.get(name)
+        # A non-string means the bag was written by something other than the normalizer; a
+        # lint rule reads ``extras`` defensively rather than trusting its shape.
+        if not isinstance(value, str):
+            return None
+        values.add(value)
+    return values.pop() if len(values) == 1 else None
+
+
+def _check_editions_delimited_encoding(api: CanonicalApi) -> Iterable[Tuple[str, str]]:
+    """``message_encoding = DELIMITED`` is the proto2 group wire format.
+
+    A delimited field is written as a start/end group pair rather than a length-prefixed
+    submessage. It is a different encoding on the wire — a peer that resolves the field to
+    ``LENGTH_PREFIXED`` cannot read it — and several runtimes and JSON mappers have only
+    partial support for it, so it is flagged wherever a field opts into it.
+    """
+    if not _is_editions(api):
+        return
+    for api_type in _types_sorted(api):
+        if api_type.kind is not TypeKind.RECORD:
+            continue
+        for field in _fields_sorted(api_type):
+            if _entity_feature(field.extras, "message_encoding") == MESSAGE_ENCODING_DELIMITED:
+                yield (
+                    f"types.{api_type.key}.fields.{field.key}",
+                    f"Field '{field.name}' uses 'message_encoding = DELIMITED' (the proto2 "
+                    "group encoding); it is a different wire format from the "
+                    "length-prefixed default and is not portable across runtimes.",
+                )
+
+
+def _check_editions_utf8_validation(api: CanonicalApi) -> Iterable[Tuple[str, str]]:
+    """``utf8_validation = NONE`` lets invalid UTF-8 into a ``string`` field.
+
+    Turning validation off means the field can carry bytes that are not valid UTF-8. Those
+    bytes have no JSON representation and will fail — or be silently mangled by — a
+    JSON-mapping client, and a peer that resolves the field to ``VERIFY`` rejects the message
+    outright. It is occasionally the right call for opaque pass-through text, which is why the
+    finding is informational rather than an error.
+    """
+    if not _is_editions(api):
+        return
+    for api_type in _types_sorted(api):
+        if api_type.kind is not TypeKind.RECORD:
+            continue
+        for field in _fields_sorted(api_type):
+            if _entity_feature(field.extras, "utf8_validation") == UTF8_VALIDATION_NONE:
+                yield (
+                    f"types.{api_type.key}.fields.{field.key}",
+                    f"Field '{field.name}' sets 'utf8_validation = NONE'; it may carry bytes "
+                    "that are not valid UTF-8, which have no JSON representation and are "
+                    "rejected by a peer that validates.",
+                )
+
+
+def _check_editions_json_format(api: CanonicalApi) -> Iterable[Tuple[str, str]]:
+    """``json_format = LEGACY_BEST_EFFORT`` gives up the guaranteed JSON mapping.
+
+    ``ALLOW`` is the guarantee that the message has a well-defined, round-trippable JSON
+    encoding — the compiler enforces it by rejecting the shapes that break it (a duplicate
+    JSON name, for instance). ``LEGACY_BEST_EFFORT`` lifts that check, so what a JSON client
+    receives becomes implementation-defined. Reported once per scope that opts out, plus once
+    at the artifact when every file does.
+    """
+    if not _is_editions(api):
+        return
+    if _file_feature(api, "json_format") == JSON_FORMAT_LEGACY_BEST_EFFORT:
+        yield (
+            "package",
+            "Every file sets 'json_format = LEGACY_BEST_EFFORT'; the JSON encoding of these "
+            "messages is implementation-defined rather than guaranteed round-trippable.",
+        )
+    for api_type in _types_sorted(api):
+        if _entity_feature(api_type.extras, "json_format") == JSON_FORMAT_LEGACY_BEST_EFFORT:
+            yield (
+                f"types.{api_type.key}",
+                f"Type '{api_type.name}' sets 'json_format = LEGACY_BEST_EFFORT'; its JSON "
+                "encoding is implementation-defined rather than guaranteed round-trippable.",
+            )
+
+
+def _check_editions_closed_enum(api: CanonicalApi) -> Iterable[Tuple[str, str]]:
+    """A closed enum cannot receive a value a newer peer added.
+
+    ``enum_type = CLOSED`` (proto2's behaviour) makes an unrecognised number fail to parse into
+    the field — it lands in the unknown-field set, and a required-style reader sees the field as
+    absent. An ``OPEN`` enum keeps the number, so a peer can add values without breaking older
+    readers. Closed is a deliberate choice when migrating from proto2, so the finding is a
+    warning about the forward-compatibility cost rather than a defect claim.
+    """
+    if not _is_editions(api):
+        return
+    for api_type in _types_sorted(api):
+        if api_type.kind is TypeKind.ENUM and api_type.extras.get(ENUM_CLOSED_EXTRA_KEY) is True:
+            yield (
+                f"types.{api_type.key}",
+                f"Enum '{api_type.name}' is closed ('enum_type = CLOSED'); a value added by a "
+                "newer peer will not parse into it, so it cannot be extended compatibly.",
+            )
+
+
+# ===========================================================================
 # The Protobuf native rule pack
 # ===========================================================================
 
@@ -283,6 +463,34 @@ class ProtobufRulePack(RulePack, register=True):
             severity="info",
             description="Removed field/value numbers should be reserved, not left as gaps.",
             check=_check_reserved_on_deletion,
+        ),
+        LintRule(
+            rule_id="protobuf.editions.delimited-encoding",
+            category="structure",
+            severity="warning",
+            description="Editions 'message_encoding = DELIMITED' is the proto2 group wire format.",
+            check=_check_editions_delimited_encoding,
+        ),
+        LintRule(
+            rule_id="protobuf.editions.utf8-validation-off",
+            category="structure",
+            severity="info",
+            description="Editions 'utf8_validation = NONE' admits strings with no JSON encoding.",
+            check=_check_editions_utf8_validation,
+        ),
+        LintRule(
+            rule_id="protobuf.editions.legacy-json-format",
+            category="structure",
+            severity="warning",
+            description="Editions 'json_format = LEGACY_BEST_EFFORT' gives up the JSON guarantee.",
+            check=_check_editions_json_format,
+        ),
+        LintRule(
+            rule_id="protobuf.editions.closed-enum",
+            category="structure",
+            severity="warning",
+            description="A closed enum cannot receive a value a newer peer added.",
+            check=_check_editions_closed_enum,
         ),
     )
 

@@ -625,6 +625,291 @@ def test_fingerprint_stable_against_description_only_change() -> None:
 
 
 # ===========================================================================
+# Protobuf Editions — FMT-3.7 (#5432)
+# ===========================================================================
+#
+# The synthetic tier again: an Editions ``FileDescriptorProto`` needs no compiler, and these
+# assert the three acceptance criteria that live in the normalizer — presence drives
+# nullability, the resolved feature set is recorded in provenance, and proto2/proto3 models
+# are untouched.
+
+
+def _editions_descriptor_set(
+    *, edition: int = descriptor_pb2.Edition.EDITION_2023
+) -> descriptor_pb2.FileDescriptorSet:
+    """Build an Editions file whose fields differ only in resolved ``field_presence``.
+
+    ``Order.explicit_id`` and ``Order.implicit_count`` are the pair the acceptance criterion
+    compares: same descriptor label (the compiler writes ``LABEL_OPTIONAL`` for both), different
+    presence, and therefore different canonical nullability.
+    """
+    fds = descriptor_pb2.FileDescriptorSet()
+    f = fds.file.add()
+    f.name = "orders/orders.proto"
+    f.package = "acme.orders"
+    f.syntax = "editions"
+    f.edition = edition
+    f.options.features.field_presence = descriptor_pb2.FeatureSet.EXPLICIT
+
+    order = f.message_type.add()
+    order.name = "Order"
+    _scalar_field(order, "explicit_id", 1)
+    implicit = _scalar_field(order, "implicit_count", 2, type_=_FD.TYPE_INT64)
+    implicit.options.features.field_presence = descriptor_pb2.FeatureSet.IMPLICIT
+    required = _scalar_field(order, "legacy_required_sku", 3)
+    required.options.features.field_presence = descriptor_pb2.FeatureSet.LEGACY_REQUIRED
+    delimited = _message_field(order, "grouped", 4, ".acme.orders.Order")
+    delimited.options.features.message_encoding = descriptor_pb2.FeatureSet.DELIMITED
+
+    status = f.enum_type.add()
+    status.name = "Status"
+    status.value.add(name="STATUS_UNSPECIFIED", number=0)
+    status.options.features.enum_type = descriptor_pb2.FeatureSet.CLOSED
+
+    open_status = f.enum_type.add()
+    open_status.name = "OpenStatus"
+    open_status.value.add(name="OPEN_STATUS_UNSPECIFIED", number=0)
+    return fds
+
+
+def test_editions_presence_drives_nullability() -> None:
+    """FMT-3.7 acceptance: explicit and implicit presence normalize to different nullability."""
+    api = ProtoNormalizer().normalize(_editions_descriptor_set(), include_raw=False)
+    order = api.type_by_key("acme.orders.Order")
+    assert order is not None
+    by_name = {field.name: field for field in order.fields}
+
+    # The descriptor cannot tell these apart — both are LABEL_OPTIONAL strings/ints.
+    assert by_name["explicit_id"].extras["label"] == "optional"
+    assert by_name["implicit_count"].extras["label"] == "optional"
+    # ...but their resolved presence does, and that is what nullability follows.
+    assert by_name["explicit_id"].type.nullable is True
+    assert by_name["implicit_count"].type.nullable is False
+
+
+def test_editions_legacy_required_is_not_nullable() -> None:
+    """LEGACY_REQUIRED tracks presence yet may never be absent — the one case they differ."""
+    api = ProtoNormalizer().normalize(_editions_descriptor_set(), include_raw=False)
+    order = api.type_by_key("acme.orders.Order")
+    assert order is not None
+    field = {f.name: f for f in order.fields}["legacy_required_sku"]
+    assert field.extras["field_presence"] == "LEGACY_REQUIRED"
+    assert field.type.nullable is False
+
+
+def test_editions_records_resolved_features_on_the_scope_that_set_them() -> None:
+    """Only a scope's own narrowing is recorded; what it inherits is stated once in provenance."""
+    api = ProtoNormalizer().normalize(_editions_descriptor_set(), include_raw=False)
+    order = api.type_by_key("acme.orders.Order")
+    assert order is not None
+    by_name = {field.name: field for field in order.fields}
+
+    # A field that agrees with its file records no feature bag at all.
+    assert "proto_features" not in by_name["explicit_id"].extras
+    # A field that narrows one records exactly that one.
+    assert by_name["grouped"].extras["proto_features"] == {"message_encoding": "DELIMITED"}
+
+    assert api.type_by_key("acme.orders.Status").extras["enum_closed"] is True
+    assert api.type_by_key("acme.orders.OpenStatus").extras["enum_closed"] is False
+
+
+def test_editions_provenance_records_edition_syntax_and_feature_set() -> None:
+    """FMT-3.7 acceptance: edition, syntax and the resolved feature set reach provenance."""
+    api = ProtoNormalizer().normalize(_editions_descriptor_set(), include_raw=False)
+    record = api.extras["protobuf_editions"]
+
+    assert record["editions"] == ["2023"]
+    assert record["syntaxes"] == ["editions"]
+    assert record["unmodelled_features"] == []  # 2024 introduced them; a 2023 file has none
+    (entry,) = record["files"]
+    assert entry["file"] == "orders/orders.proto"
+    assert entry["syntax"] == "editions"
+    assert entry["edition"] == "2023"
+    assert entry["features"] == {
+        "field_presence": "EXPLICIT",
+        "enum_type": "OPEN",
+        "repeated_field_encoding": "PACKED",
+        "utf8_validation": "VERIFY",
+        "message_encoding": "LENGTH_PREFIXED",
+        "json_format": "ALLOW",
+    }
+
+
+def test_edition_2024_reports_the_features_it_does_not_model() -> None:
+    """The two Edition 2024 additions are reported as unmodelled rather than silently dropped."""
+    fds = _editions_descriptor_set(edition=descriptor_pb2.Edition.EDITION_2024)
+    api = ProtoNormalizer().normalize(fds, include_raw=False)
+    record = api.extras["protobuf_editions"]
+    assert record["editions"] == ["2024"]
+    assert record["unmodelled_features"] == [
+        "default_symbol_visibility",
+        "enforce_naming_style",
+    ]
+    # ...and they are reported in the file's resolved feature set too, at their 2024 defaults.
+    features = record["files"][0]["features"]
+    assert features["enforce_naming_style"] == "STYLE2024"
+    assert features["default_symbol_visibility"] == "EXPORT_TOP_LEVEL"
+
+
+def test_editions_presence_change_flips_the_fingerprint() -> None:
+    """A presence change is a contract change, so it must not hash the same."""
+    baseline = ProtoNormalizer().normalize(_editions_descriptor_set(), include_raw=False)
+
+    flipped = _editions_descriptor_set()
+    order = flipped.file[0].message_type[0]
+    order.field[0].options.features.field_presence = descriptor_pb2.FeatureSet.IMPLICIT
+    changed = ProtoNormalizer().normalize(flipped, include_raw=False)
+
+    assert canonical_fingerprint(baseline) != canonical_fingerprint(changed)
+
+
+def test_proto3_models_carry_no_editions_extras() -> None:
+    """FMT-3.7 acceptance: proto2/proto3 normalization is untouched.
+
+    The shipped goldens are the end-to-end form of this; this is the direct statement, so a
+    future change that starts recording features for every syntax fails here first.
+    """
+    api = ProtoNormalizer().normalize(_sample_descriptor_set(), include_raw=False)
+    assert "protobuf_editions" not in api.extras
+    for type_ in api.types:
+        assert "enum_closed" not in type_.extras
+        assert "proto_features" not in type_.extras
+        for field in type_.fields:
+            assert "field_presence" not in field.extras
+            assert "proto_features" not in field.extras
+
+
+def test_repeated_fields_model_identically_in_editions_and_proto3() -> None:
+    """A list element is never absent, so presence must not touch a repeated field.
+
+    ``field_has_presence`` is correctly ``False`` for every repeated field, but that answers
+    "does this field track presence", not "can an element be null". Letting it drive the
+    override marked Editions list items non-nullable while the byte-identical proto3 document
+    marked them nullable — so every repeated field read as *changed* when a service migrated
+    syntax, which is exactly the false positive the canonical model exists to avoid.
+    """
+
+    def _build(syntax: str) -> descriptor_pb2.FileDescriptorSet:
+        fds = descriptor_pb2.FileDescriptorSet()
+        f = fds.file.add()
+        f.name = "x/x.proto"
+        f.package = "p"
+        if syntax == "editions":
+            f.syntax = "editions"
+            f.edition = descriptor_pb2.Edition.EDITION_2023
+        else:
+            f.syntax = syntax
+        m = f.message_type.add()
+        m.name = "M"
+        _scalar_field(m, "tags", 1, label=_FD.LABEL_REPEATED)
+        return fds
+
+    proto3 = ProtoNormalizer().normalize(_build("proto3"), include_raw=False)
+    editions = ProtoNormalizer().normalize(_build("editions"), include_raw=False)
+    proto3_tags = proto3.type_by_key("p.M").fields[0]
+    editions_tags = editions.type_by_key("p.M").fields[0]
+
+    assert editions_tags.type.item.nullable == proto3_tags.type.item.nullable
+    assert editions_tags.type.nullable == proto3_tags.type.nullable
+    # ...and the feature is not recorded on it either — a repeated field says nothing about
+    # presence, so it inherits no claim about it.
+    assert "field_presence" not in editions_tags.extras
+
+
+def test_feature_sets_do_not_leak_from_an_importing_file() -> None:
+    """Two target files with opposite presence defaults keep their own answers.
+
+    The corpus fileset (protobuf-editions/03-imports-set) makes the same point through the
+    adapter; this is the normalizer-level statement.
+    """
+    fds = descriptor_pb2.FileDescriptorSet()
+
+    common = fds.file.add()
+    common.name = "common/common.proto"
+    common.package = "acme.common"
+    common.syntax = "editions"
+    common.edition = descriptor_pb2.Edition.EDITION_2023
+    common.options.features.field_presence = descriptor_pb2.FeatureSet.IMPLICIT
+    address = common.message_type.add()
+    address.name = "Address"
+    _scalar_field(address, "city", 1)
+
+    shipping = fds.file.add()
+    shipping.name = "shipping/shipping.proto"
+    shipping.package = "acme.shipping"
+    shipping.syntax = "editions"
+    shipping.edition = descriptor_pb2.Edition.EDITION_2023
+    shipping.dependency.append("common/common.proto")
+    shipping.options.features.field_presence = descriptor_pb2.FeatureSet.EXPLICIT
+    shipment = shipping.message_type.add()
+    shipment.name = "Shipment"
+    _scalar_field(shipment, "shipment_id", 1)
+
+    api = ProtoNormalizer().normalize(fds, include_raw=False)
+    assert api.type_by_key("acme.common.Address").fields[0].type.nullable is False
+    assert api.type_by_key("acme.shipping.Shipment").fields[0].type.nullable is True
+    # Provenance names both files, each with its own resolution.
+    files = {entry["file"]: entry for entry in api.extras["protobuf_editions"]["files"]}
+    assert files["common/common.proto"]["features"]["field_presence"] == "IMPLICIT"
+    assert files["shipping/shipping.proto"]["features"]["field_presence"] == "EXPLICIT"
+
+
+def test_editions_provenance_files_are_sorted_by_path() -> None:
+    """The record must not depend on the order files arrived in.
+
+    A fileset's member order comes from the uploaded archive, so leaving the record in
+    descriptor order would make two uploads of the same set fingerprint differently — the one
+    thing :func:`app.normalizer.normalize_ordering` exists to prevent.
+    """
+    forward = descriptor_pb2.FileDescriptorSet()
+    reversed_ = descriptor_pb2.FileDescriptorSet()
+    # One package across both files, so the comparison isolates member *order*: the artifact
+    # identity is derived from the first file that declares a package, which is its own
+    # order-dependence and not what this test is about.
+    for order, fds in ((("a", "z"), forward), (("z", "a"), reversed_)):
+        for name in order:
+            f = fds.file.add()
+            f.name = f"{name}/{name}.proto"
+            f.package = "acme.shared"
+            f.syntax = "editions"
+            f.edition = descriptor_pb2.Edition.EDITION_2023
+            message = f.message_type.add()
+            message.name = name.upper()
+            _scalar_field(message, "id", 1)
+
+    forward_api = ProtoNormalizer().normalize(forward, include_raw=False)
+    reversed_api = ProtoNormalizer().normalize(reversed_, include_raw=False)
+    files = [entry["file"] for entry in forward_api.extras["protobuf_editions"]["files"]]
+    assert files == ["a/a.proto", "z/z.proto"]
+    assert forward_api.extras == reversed_api.extras
+    assert canonical_fingerprint(forward_api) == canonical_fingerprint(reversed_api)
+
+
+def test_a_mixed_set_records_each_file_and_still_leaves_proto3_fields_alone() -> None:
+    """One Editions file in a set does not turn its proto3 sibling into an Editions model."""
+    fds = _editions_descriptor_set()
+    legacy = fds.file.add()
+    legacy.name = "legacy/legacy.proto"
+    legacy.package = "acme.legacy"
+    legacy.syntax = "proto3"
+    old = legacy.message_type.add()
+    old.name = "Old"
+    _scalar_field(old, "id", 1)
+
+    api = ProtoNormalizer().normalize(fds, include_raw=False)
+    record = api.extras["protobuf_editions"]
+    assert record["syntaxes"] == ["editions", "proto3"]
+    assert {entry["file"]: entry["edition"] for entry in record["files"]} == {
+        "orders/orders.proto": "2023",
+        "legacy/legacy.proto": None,
+    }
+    # The proto3 file's field keeps the label-derived nullability and gains no feature extras.
+    old_field = api.type_by_key("acme.legacy.Old").fields[0]
+    assert old_field.type.nullable is True
+    assert "field_presence" not in old_field.extras
+
+
+# ===========================================================================
 # End-to-end: real bundled buf over the committed fixtures (gated)
 # ===========================================================================
 
@@ -681,3 +966,35 @@ class TestRealBuf:
             MessageRole.REQUEST,
             MessageRole.RESPONSE,
         }
+
+    async def test_editions_resolution_survives_the_real_compiler(self) -> None:
+        """FMT-3.7: `buf build` leaves features raw, so the resolution must be ours.
+
+        The synthetic tests build the descriptor by hand; this one proves the *compiler*
+        produces the shape those tests assume — an editions file whose fields carry no
+        presence in their labels and whose ``features`` options are unmerged.
+        """
+        compiled = await compile_proto_descriptor_set(
+            _load_fixture_files("common/types.proto", "editions/catalog.proto")
+        )
+        target = next(
+            f for f in compiled.proto.file if f.name == "editions/catalog.proto"
+        )
+        assert target.syntax == "editions"
+        # Every singular field is LABEL_OPTIONAL regardless of presence — the reason a
+        # label-only reading mis-modelled these documents.
+        product = next(m for m in target.message_type if m.name == "Product")
+        assert {f.label for f in product.field} == {_FD.LABEL_OPTIONAL}
+
+        api = ProtoNormalizer().normalize(compiled, include_raw=False)
+        record = api.extras["protobuf_editions"]
+        assert record["editions"] == ["2023"]
+        catalog = next(
+            entry for entry in record["files"] if entry["file"] == "editions/catalog.proto"
+        )
+        # Edition 2023 defaults to EXPLICIT presence, so every scalar here is nullable.
+        assert catalog["features"]["field_presence"] == "EXPLICIT"
+        product_type = api.type_by_key("acme.catalog.Product")
+        assert product_type is not None
+        assert all(field.type.nullable for field in product_type.fields)
+        assert {f.extras["field_presence"] for f in product_type.fields} == {"EXPLICIT"}

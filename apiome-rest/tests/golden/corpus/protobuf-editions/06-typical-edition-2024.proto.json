@@ -1,0 +1,397 @@
+{
+  "adapter": "grpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "protobuf_editions": {
+        "editions": [
+          "2024"
+        ],
+        "files": [
+          {
+            "edition": "2024",
+            "features": {
+              "default_symbol_visibility": "EXPORT_TOP_LEVEL",
+              "enforce_naming_style": "STYLE2024",
+              "enum_type": "OPEN",
+              "field_presence": "EXPLICIT",
+              "json_format": "ALLOW",
+              "message_encoding": "LENGTH_PREFIXED",
+              "repeated_field_encoding": "PACKED",
+              "utf8_validation": "VERIFY"
+            },
+            "file": "06-typical-edition-2024.proto",
+            "syntax": "editions"
+          }
+        ],
+        "modelled_features": [
+          "field_presence",
+          "enum_type",
+          "repeated_field_encoding",
+          "utf8_validation",
+          "message_encoding",
+          "json_format"
+        ],
+        "syntaxes": [
+          "editions"
+        ],
+        "unmodelled_features": [
+          "default_symbol_visibility",
+          "enforce_naming_style"
+        ]
+      }
+    },
+    "format": "protobuf",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "example.catalogue.v2",
+      "namespace": "example.catalogue.v2"
+    },
+    "paradigm": "rpc",
+    "protocol": "grpc",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "example.catalogue.v2.CatalogueService",
+        "name": "CatalogueService",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example.catalogue.v2.CatalogueService.ListProducts",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.catalogue.v2.CatalogueService.ListProducts#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.catalogue.v2.ListProductsRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.catalogue.v2.CatalogueService.ListProducts#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.catalogue.v2.ListProductsResponse",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "ListProducts",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.catalogue.v2.ListProductsRequest.category",
+            "name": "category",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "IMPLICIT",
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.catalogue.v2.ListProductsRequest.page_size",
+            "name": "page_size",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 3,
+            "key": "example.catalogue.v2.ListProductsRequest.page_token",
+            "name": "page_token",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.catalogue.v2.ListProductsRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "ListProductsRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.catalogue.v2.ListProductsResponse.next_page_token",
+            "name": "next_page_token",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 1,
+            "key": "example.catalogue.v2.ListProductsResponse.products",
+            "name": "products",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "example.catalogue.v2.Product",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.catalogue.v2.ListProductsResponse",
+        "key_type": null,
+        "kind": "record",
+        "name": "ListProductsResponse",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "IMPLICIT",
+              "label": "optional"
+            },
+            "field_number": 4,
+            "key": "example.catalogue.v2.Product.discontinued",
+            "name": "discontinued",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.catalogue.v2.Product.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 3,
+            "key": "example.catalogue.v2.Product.price",
+            "name": "price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.catalogue.v2.Product.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 5,
+            "key": "example.catalogue.v2.Product.tags",
+            "name": "tags",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.catalogue.v2.Product",
+        "key_type": null,
+        "kind": "record",
+        "name": "Product",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "protobuf-editions/06-typical-edition-2024.proto",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 0,
+    "services": 1,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "protobuf-editions"
+  },
+  "fingerprint": "sha256:817001105523e4ef18c6bed7b91af392ed659b2cde3cee286c2b2cee01f57d38",
+  "lint": {
+    "findings": 17,
+    "grade": "C",
+    "report_fingerprint": "84cf0f2e9101c2edc5cc3f657e8c5192598606a0812b3129cf18230104abe28f",
+    "score": 71,
+    "severity_counts": {
+      "error": 0,
+      "info": 13,
+      "warning": 4
+    }
+  },
+  "snapshot_version": 1
+}

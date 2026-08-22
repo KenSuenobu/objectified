@@ -1,0 +1,870 @@
+{
+  "adapter": "grpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "protobuf_editions": {
+        "editions": [
+          "2023"
+        ],
+        "files": [
+          {
+            "edition": "2023",
+            "features": {
+              "enum_type": "OPEN",
+              "field_presence": "EXPLICIT",
+              "json_format": "ALLOW",
+              "message_encoding": "LENGTH_PREFIXED",
+              "repeated_field_encoding": "PACKED",
+              "utf8_validation": "VERIFY"
+            },
+            "file": "05-real-world-telemetry-edition-2023.proto",
+            "syntax": "editions"
+          }
+        ],
+        "modelled_features": [
+          "field_presence",
+          "enum_type",
+          "repeated_field_encoding",
+          "utf8_validation",
+          "message_encoding",
+          "json_format"
+        ],
+        "syntaxes": [
+          "editions"
+        ],
+        "unmodelled_features": []
+      }
+    },
+    "format": "protobuf",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "example.telemetry.v1",
+      "namespace": "example.telemetry.v1"
+    },
+    "paradigm": "rpc",
+    "protocol": "grpc",
+    "schema_version": 1,
+    "servers": [],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "example.telemetry.v1.TelemetryService",
+        "name": "TelemetryService",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example.telemetry.v1.TelemetryService.Export",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.telemetry.v1.TelemetryService.Export#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.telemetry.v1.ExportRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.telemetry.v1.TelemetryService.Export#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.telemetry.v1.ExportResponse",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "Export",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "http_method": null,
+            "http_path": null,
+            "key": "example.telemetry.v1.TelemetryService.ExportStream",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.telemetry.v1.TelemetryService.ExportStream#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.telemetry.v1.ExportRequest",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "example.telemetry.v1.TelemetryService.ExportStream#response",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "example.telemetry.v1.ExportResponse",
+                  "nullable": true
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
+            "name": "ExportStream",
+            "parameters": [],
+            "streaming": "client",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 4,
+            "key": "example.telemetry.v1.ExportRequest.collection_window",
+            "name": "collection_window",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "google.protobuf.Duration",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 3,
+            "key": "example.telemetry.v1.ExportRequest.logs",
+            "name": "logs",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "example.telemetry.v1.LogRecord",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 2,
+            "key": "example.telemetry.v1.ExportRequest.metrics",
+            "name": "metrics",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "example.telemetry.v1.Metric",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "LEGACY_REQUIRED",
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.telemetry.v1.ExportRequest.resource",
+            "name": "resource",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.telemetry.v1.Resource",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.telemetry.v1.ExportRequest",
+        "key_type": null,
+        "kind": "record",
+        "name": "ExportRequest",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "IMPLICIT",
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.telemetry.v1.ExportResponse.accepted",
+            "name": "accepted",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "IMPLICIT",
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.telemetry.v1.ExportResponse.rejected",
+            "name": "rejected",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 3,
+            "key": "example.telemetry.v1.ExportResponse.rejection_reasons",
+            "name": "rejection_reasons",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.telemetry.v1.ExportResponse",
+        "key_type": null,
+        "kind": "record",
+        "name": "ExportResponse",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 7,
+            "key": "example.telemetry.v1.LogRecord.attributes",
+            "name": "attributes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.telemetry.v1.LogRecord.AttributesEntry",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.telemetry.v1.LogRecord.body",
+            "name": "body",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 3,
+            "key": "example.telemetry.v1.LogRecord.observed_at",
+            "name": "observed_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "google.protobuf.Timestamp",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional",
+              "proto_features": {
+                "utf8_validation": "NONE"
+              }
+            },
+            "field_number": 6,
+            "key": "example.telemetry.v1.LogRecord.raw_agent_line",
+            "name": "raw_agent_line",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.telemetry.v1.LogRecord.severity",
+            "name": "severity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.telemetry.v1.Severity",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 5,
+            "key": "example.telemetry.v1.LogRecord.span_id",
+            "name": "span_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 4,
+            "key": "example.telemetry.v1.LogRecord.trace_id",
+            "name": "trace_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.telemetry.v1.LogRecord",
+        "key_type": null,
+        "kind": "record",
+        "name": "LogRecord",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "example.telemetry.v1.LogRecord.AttributesEntry",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        },
+        "kind": "map",
+        "name": "AttributesEntry",
+        "namespace": null,
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 5,
+            "key": "example.telemetry.v1.Metric.labels",
+            "name": "labels",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.telemetry.v1.Metric.LabelsEntry",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "LEGACY_REQUIRED",
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.telemetry.v1.Metric.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 4,
+            "key": "example.telemetry.v1.Metric.observed_at",
+            "name": "observed_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "google.protobuf.Timestamp",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.telemetry.v1.Metric.unit",
+            "name": "unit",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 3,
+            "key": "example.telemetry.v1.Metric.values",
+            "name": "values",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "double",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.telemetry.v1.Metric",
+        "key_type": null,
+        "kind": "record",
+        "name": "Metric",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "example.telemetry.v1.Metric.LabelsEntry",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        },
+        "kind": "map",
+        "name": "LabelsEntry",
+        "namespace": null,
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 4,
+            "key": "example.telemetry.v1.Resource.attributes",
+            "name": "attributes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.telemetry.v1.Resource.AttributesEntry",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 3,
+            "key": "example.telemetry.v1.Resource.host",
+            "name": "host",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "LEGACY_REQUIRED",
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.telemetry.v1.Resource.service_name",
+            "name": "service_name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.telemetry.v1.Resource.service_version",
+            "name": "service_version",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.telemetry.v1.Resource",
+        "key_type": null,
+        "kind": "record",
+        "name": "Resource",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "example.telemetry.v1.Resource.AttributesEntry",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        },
+        "kind": "map",
+        "name": "AttributesEntry",
+        "namespace": null,
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.telemetry.v1.Severity.SEVERITY_DEBUG",
+            "name": "SEVERITY_DEBUG",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.telemetry.v1.Severity.SEVERITY_INFO",
+            "name": "SEVERITY_INFO",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.telemetry.v1.Severity.SEVERITY_WARN",
+            "name": "SEVERITY_WARN",
+            "value": 3
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.telemetry.v1.Severity.SEVERITY_ERROR",
+            "name": "SEVERITY_ERROR",
+            "value": 4
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.telemetry.v1.Severity.SEVERITY_FATAL",
+            "name": "SEVERITY_FATAL",
+            "value": 5
+          }
+        ],
+        "extras": {
+          "enum_closed": true
+        },
+        "fields": [],
+        "key": "example.telemetry.v1.Severity",
+        "key_type": null,
+        "kind": "enum",
+        "name": "Severity",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "protobuf-editions/05-real-world-telemetry-edition-2023.proto",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 0,
+    "services": 1,
+    "types": 9
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "protobuf-editions"
+  },
+  "fingerprint": "sha256:cd991c727fc67f4e2e724a6f9412d9904b57a68e2d0ac5e696e5b16e4513f307",
+  "lint": {
+    "findings": 44,
+    "grade": "F",
+    "report_fingerprint": "fd358ac2f77215ee152559ca97735997bdf1d8d7cdfaf9cb8a76841c1374f01b",
+    "score": 30,
+    "severity_counts": {
+      "error": 0,
+      "info": 29,
+      "warning": 15
+    }
+  },
+  "snapshot_version": 1
+}

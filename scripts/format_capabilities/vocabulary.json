@@ -1,7 +1,7 @@
 {
   "_comment": "Canonical source-format capability vocabulary (CPDO-2.4, #4796) — the single source of truth the Python registry (apiome-rest/src/app/format_capability_registry.py) and its TypeScript mirror (apiome-ui/src/app/components/ade/dashboard/catalog/formatCapabilityRegistry.ts) are both asserted against, so the two cannot silently drift. Mirror tests: apiome-rest/tests/test_format_capability_registry.py and apiome-ui/tests/format-capability-registry.test.ts. `source_missing` must stay true on exactly one absence — a parser, capability, policy or content cause is never a missing source. Bump `registry_version` and `review_date` together with any change here.",
-  "registry_version": "3",
-  "review_date": "2026-07-28",
+  "registry_version": "4",
+  "review_date": "2026-08-21",
   "analysis_schema_version": "1.1.0",
   "vocabularies": {
     "capability_provenance": [
