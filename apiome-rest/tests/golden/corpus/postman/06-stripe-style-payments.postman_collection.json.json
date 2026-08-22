@@ -4,6 +4,7 @@
     "channels": [],
     "description": "Real-world shaped Postman Collection v2.1 example: a hand-authored reconstruction of the shape of the Stripe API (customers and charges under /v1, form-urlencoded write requests, bearer-key auth header). No third-party text copied.",
     "extras": {
+      "postman_collection_version": "2.1",
       "postman_schema_url": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
       "postman_variables": [
         {
@@ -285,7 +286,7 @@
     "confidence": 0.98,
     "format": "postman"
   },
-  "fingerprint": "sha256:e356c98ab1040ff2020929ee66ee421839421946415e451ceaa761036820aa99",
+  "fingerprint": "sha256:b6c0aef052157b9fa55d58e7623bea44a91c421e6eefd4a3fa83d92415ca75ad",
   "lint": {
     "findings": 1,
     "grade": "A",

@@ -4,6 +4,7 @@
     "channels": [],
     "description": "Stress Postman Collection v2.1 example covering less common corners: disabled query parameters and headers, colon-style path variables, urlencoded and GraphQL body modes, saved response examples with status codes, an unnamed folder passthrough, and HEAD/OPTIONS requests.",
     "extras": {
+      "postman_collection_version": "2.1",
       "postman_schema_url": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
       "postman_variables": [
         {
@@ -275,7 +276,7 @@
     "confidence": 0.98,
     "format": "postman"
   },
-  "fingerprint": "sha256:f9e057ec9480758972afb209bd23851c80417cdddf4c57776960b48cf1851d52",
+  "fingerprint": "sha256:35c9896c9411a62095eda6df49c5f15855f3ffc22bee7fd4ac905e27f5c62f13",
   "lint": {
     "findings": 3,
     "grade": "A",

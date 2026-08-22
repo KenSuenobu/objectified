@@ -417,7 +417,7 @@
       "marker": "collection `info.schema` URL"
     },
     "postman-v2": {
-      "label": "Postman Collection v2.0 (pending #5431)",
+      "label": "Postman Collection v2.0",
       "category": "rest-http",
       "paradigm": "rest",
       "marker": "`info.schema` ending `/collection/v2.0.0/collection.json`"
@@ -507,7 +507,7 @@
       "marker": "`swagger: \"2.0\"`"
     },
     "swagger-1.2": {
-      "label": "Swagger 1.2 (pending #5431)",
+      "label": "Swagger 1.2",
       "category": "rest-http",
       "paradigm": "rest",
       "marker": "`\"swaggerVersion\": \"1.2\"`"
@@ -21645,7 +21645,7 @@
     {
       "path": "postman-v2/01-minimal-single-request.json",
       "format": "postman-v2",
-      "adapter_key": null,
+      "adapter_key": "postman",
       "validity_class": "valid",
       "expected_detection": {
         "format": "postman-2.0",
@@ -21653,8 +21653,7 @@
       },
       "features": [
         "string-url",
-        "single-request",
-        "pending-adapter"
+        "single-request"
       ],
       "expected_outcome": "imports_with_warnings",
       "source": "hand-authored",
@@ -21665,7 +21664,7 @@
     {
       "path": "postman-v2/02-typical-crud-collection.json",
       "format": "postman-v2",
-      "adapter_key": null,
+      "adapter_key": "postman",
       "validity_class": "valid",
       "expected_detection": {
         "format": "postman-2.0",
@@ -21675,8 +21674,7 @@
         "string-url",
         "collection-variables",
         "path-variables",
-        "saved-response",
-        "pending-adapter"
+        "saved-response"
       ],
       "expected_outcome": "imports_with_warnings",
       "source": "hand-authored",
@@ -21687,7 +21685,7 @@
     {
       "path": "postman-v2/03-composition-nested-folders.json",
       "format": "postman-v2",
-      "adapter_key": null,
+      "adapter_key": "postman",
       "validity_class": "valid",
       "expected_detection": {
         "format": "postman-2.0",
@@ -21695,8 +21693,7 @@
       },
       "features": [
         "nested-folders",
-        "operation-groups",
-        "pending-adapter"
+        "operation-groups"
       ],
       "expected_outcome": "imports_with_warnings",
       "source": "hand-authored",
@@ -21707,7 +21704,7 @@
     {
       "path": "postman-v2/04-stress-auth-bodies-and-scripts.json",
       "format": "postman-v2",
-      "adapter_key": null,
+      "adapter_key": "postman",
       "validity_class": "valid",
       "expected_detection": {
         "format": "postman-2.0",
@@ -21720,8 +21717,7 @@
         "graphql-body",
         "v2.0-auth-shape",
         "scripts",
-        "disabled-entries",
-        "pending-adapter"
+        "disabled-entries"
       ],
       "expected_outcome": "imports_with_warnings",
       "source": "hand-authored",
@@ -21732,7 +21728,7 @@
     {
       "path": "postman-v2/05-real-world-payments-collection.json",
       "format": "postman-v2",
-      "adapter_key": null,
+      "adapter_key": "postman",
       "validity_class": "valid",
       "expected_detection": {
         "format": "postman-2.0",
@@ -21742,8 +21738,7 @@
         "oauth-token-capture",
         "idempotency-key",
         "saved-response",
-        "nested-folders",
-        "pending-adapter"
+        "nested-folders"
       ],
       "expected_outcome": "imports_with_warnings",
       "source": "hand-authored",
@@ -21754,7 +21749,7 @@
     {
       "path": "postman-v2/06-environment-set/collection.json",
       "format": "postman-v2",
-      "adapter_key": null,
+      "adapter_key": "postman",
       "validity_class": "valid",
       "expected_detection": {
         "format": "postman-2.0",
@@ -21762,8 +21757,7 @@
       },
       "features": [
         "multi-file",
-        "environment-variables",
-        "pending-adapter"
+        "environment-variables"
       ],
       "expected_outcome": "imports_with_warnings",
       "source": "hand-authored",
@@ -21775,7 +21769,7 @@
     {
       "path": "postman-v2/06-environment-set/environment.json",
       "format": "postman-v2",
-      "adapter_key": null,
+      "adapter_key": "postman",
       "validity_class": "valid",
       "expected_detection": {
         "format": "postman-2.0",
@@ -21783,8 +21777,7 @@
       },
       "features": [
         "multi-file",
-        "environment-file",
-        "pending-adapter"
+        "environment-file"
       ],
       "expected_outcome": "imports_with_warnings",
       "source": "hand-authored",
@@ -21797,7 +21790,7 @@
     {
       "path": "postman-v2/negative/01-syntactic-unterminated-string.json",
       "format": "postman-v2",
-      "adapter_key": null,
+      "adapter_key": "postman",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "postman-2.0",
@@ -21806,8 +21799,7 @@
       "features": [
         "negative",
         "syntactic",
-        "unterminated-string",
-        "pending-adapter"
+        "unterminated-string"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -21819,7 +21811,7 @@
     {
       "path": "postman-v2/negative/02-semantic-no-items.json",
       "format": "postman-v2",
-      "adapter_key": null,
+      "adapter_key": "postman",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "postman-2.0",
@@ -21828,8 +21820,7 @@
       "features": [
         "negative",
         "semantic",
-        "no-items",
-        "pending-adapter"
+        "no-items"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -21841,7 +21832,7 @@
     {
       "path": "postman-v2/negative/03-truncated-mid-item.json",
       "format": "postman-v2",
-      "adapter_key": null,
+      "adapter_key": "postman",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "postman-2.0",
@@ -21850,20 +21841,20 @@
       "features": [
         "negative",
         "truncated",
-        "mid-url",
-        "pending-adapter"
+        "mid-url"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
       "failure_class": "truncated",
-      "expected_error_code": "INPUT_TRUNCATED"
+      "expected_error_code": "INPUT_MALFORMED",
+      "notes": "JSON truncation surfaces as a parse error indistinguishable from any other malformed document, so the pipeline reports INPUT_MALFORMED \u2014 the same code the shipped postman/ truncation fixture carries."
     },
     {
       "path": "postman-v2/negative/04-wrong-format-openapi.json",
       "format": "postman-v2",
-      "adapter_key": null,
+      "adapter_key": "postman",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "postman-2.0",
@@ -21872,8 +21863,7 @@
       "features": [
         "negative",
         "wrong-format",
-        "openapi",
-        "pending-adapter"
+        "openapi"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -21885,7 +21875,7 @@
     {
       "path": "postman-v2/negative/05-encoding-utf16.json",
       "format": "postman-v2",
-      "adapter_key": null,
+      "adapter_key": "postman",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "postman-2.0",
@@ -21894,8 +21884,7 @@
       "features": [
         "negative",
         "encoding",
-        "utf-16",
-        "pending-adapter"
+        "utf-16"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -21907,7 +21896,7 @@
     {
       "path": "postman-v2/negative/06-version-out-of-range-v1.json",
       "format": "postman-v2",
-      "adapter_key": null,
+      "adapter_key": "postman",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "postman-2.0",
@@ -21916,8 +21905,7 @@
       "features": [
         "negative",
         "version-out-of-range",
-        "collection-v1",
-        "pending-adapter"
+        "collection-v1"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -22092,7 +22080,7 @@
       "license": "Apache-2.0",
       "provenance": "Well-formed Postman v2.1 collection, hand-authored, whose item array is empty so no requests exist to import.",
       "failure_class": "semantic",
-      "expected_error_code": "INPUT_MALFORMED"
+      "expected_error_code": "INPUT_SEMANTIC_INVALID"
     },
     {
       "path": "postman/negative/03-truncated-mid-token.postman_collection.json",
@@ -26338,7 +26326,7 @@
     {
       "path": "swagger-1.2/01-minimal-declaration.json",
       "format": "swagger-1.2",
-      "adapter_key": null,
+      "adapter_key": "openapi",
       "validity_class": "valid",
       "expected_detection": {
         "format": "swagger-1.2",
@@ -26346,8 +26334,7 @@
       },
       "features": [
         "api-declaration",
-        "operations",
-        "pending-adapter"
+        "operations"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -26358,7 +26345,7 @@
     {
       "path": "swagger-1.2/02-typical-orders-declaration.json",
       "format": "swagger-1.2",
-      "adapter_key": null,
+      "adapter_key": "openapi",
       "validity_class": "valid",
       "expected_detection": {
         "format": "swagger-1.2",
@@ -26369,8 +26356,7 @@
         "models",
         "responseMessages",
         "body-parameter",
-        "enum",
-        "pending-adapter"
+        "enum"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -26381,7 +26367,7 @@
     {
       "path": "swagger-1.2/03-composition-model-subtypes.json",
       "format": "swagger-1.2",
-      "adapter_key": null,
+      "adapter_key": "openapi",
       "validity_class": "valid",
       "expected_detection": {
         "format": "swagger-1.2",
@@ -26390,8 +26376,7 @@
       "features": [
         "subTypes",
         "discriminator",
-        "inheritance",
-        "pending-adapter"
+        "inheritance"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -26402,7 +26387,7 @@
     {
       "path": "swagger-1.2/04-stress-parameter-and-auth-forms.json",
       "format": "swagger-1.2",
-      "adapter_key": null,
+      "adapter_key": "openapi",
       "validity_class": "valid",
       "expected_detection": {
         "format": "swagger-1.2",
@@ -26415,8 +26400,7 @@
         "File",
         "oauth2",
         "apiKey",
-        "grantTypes",
-        "pending-adapter"
+        "grantTypes"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -26427,7 +26411,7 @@
     {
       "path": "swagger-1.2/05-petstore-set/api-docs.json",
       "format": "swagger-1.2",
-      "adapter_key": null,
+      "adapter_key": "openapi",
       "validity_class": "valid",
       "expected_detection": {
         "format": "swagger-1.2",
@@ -26436,8 +26420,7 @@
       "features": [
         "multi-file",
         "resource-listing",
-        "authorizations",
-        "pending-adapter"
+        "authorizations"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -26449,7 +26432,7 @@
     {
       "path": "swagger-1.2/05-petstore-set/carts.json",
       "format": "swagger-1.2",
-      "adapter_key": null,
+      "adapter_key": "openapi",
       "validity_class": "valid",
       "expected_detection": {
         "format": "swagger-1.2",
@@ -26457,8 +26440,7 @@
       },
       "features": [
         "multi-file",
-        "api-declaration",
-        "pending-adapter"
+        "api-declaration"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -26470,7 +26452,7 @@
     {
       "path": "swagger-1.2/05-petstore-set/products.json",
       "format": "swagger-1.2",
-      "adapter_key": null,
+      "adapter_key": "openapi",
       "validity_class": "valid",
       "expected_detection": {
         "format": "swagger-1.2",
@@ -26478,8 +26460,7 @@
       },
       "features": [
         "multi-file",
-        "api-declaration",
-        "pending-adapter"
+        "api-declaration"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -26491,7 +26472,7 @@
     {
       "path": "swagger-1.2/06-real-world-user-directory.json",
       "format": "swagger-1.2",
-      "adapter_key": null,
+      "adapter_key": "openapi",
       "validity_class": "valid",
       "expected_detection": {
         "format": "swagger-1.2",
@@ -26501,8 +26482,7 @@
         "api-declaration",
         "models",
         "apiKey",
-        "cursor-paging",
-        "pending-adapter"
+        "cursor-paging"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -26511,9 +26491,9 @@
       "rung": "real-world"
     },
     {
-      "path": "swagger-1.2/negative/01-syntactic-unquoted-key.json",
+      "path": "swagger-1.2/negative/01-syntactic-unclosed-apis-array.json",
       "format": "swagger-1.2",
-      "adapter_key": null,
+      "adapter_key": "openapi",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "swagger-1.2",
@@ -26522,20 +26502,20 @@
       "features": [
         "negative",
         "syntactic",
-        "unquoted-key",
-        "pending-adapter"
+        "unclosed-array"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
       "failure_class": "syntactic",
-      "expected_error_code": "INPUT_MALFORMED"
+      "expected_error_code": "INPUT_MALFORMED",
+      "notes": "An unquoted JSON key is valid YAML, and the intake loader falls back to YAML, so \"unquoted key\" is not a syntactic failure here; the fixture leaves the `apis` array unclosed instead, which neither parser accepts."
     },
     {
       "path": "swagger-1.2/negative/02-semantic-empty-resource-listing.json",
       "format": "swagger-1.2",
-      "adapter_key": null,
+      "adapter_key": "openapi",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "swagger-1.2",
@@ -26544,8 +26524,7 @@
       "features": [
         "negative",
         "semantic",
-        "empty-listing",
-        "pending-adapter"
+        "empty-listing"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -26557,7 +26536,7 @@
     {
       "path": "swagger-1.2/negative/03-truncated-mid-model.json",
       "format": "swagger-1.2",
-      "adapter_key": null,
+      "adapter_key": "openapi",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "swagger-1.2",
@@ -26566,20 +26545,20 @@
       "features": [
         "negative",
         "truncated",
-        "mid-model",
-        "pending-adapter"
+        "mid-model"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
       "failure_class": "truncated",
-      "expected_error_code": "INPUT_TRUNCATED"
+      "expected_error_code": "INPUT_MALFORMED",
+      "notes": "JSON/YAML truncation surfaces as a parse error the loader cannot distinguish from any other malformed document, so the pipeline reports INPUT_MALFORMED \u2014 the same code the shipped openapi/ truncation fixture carries."
     },
     {
-      "path": "swagger-1.2/negative/04-wrong-format-swagger-2.0.json",
+      "path": "swagger-1.2/negative/04-wrong-format-wsdl.wsdl",
       "format": "swagger-1.2",
-      "adapter_key": null,
+      "adapter_key": "openapi",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "swagger-1.2",
@@ -26588,21 +26567,20 @@
       "features": [
         "negative",
         "wrong-format",
-        "swagger-2.0",
-        "pending-adapter"
+        "wsdl"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
-      "notes": "The neighbouring version the shipped adapter already claims; a 1.2 reader must not take it, and detection must route it to the Swagger 2.0 path.",
+      "notes": "A Swagger 2.0 document cannot serve as this directory's wrong-format negative: the same adapter reads 1.2 and 2.0, so a 2.0 upload imports rather than failing. That routing is asserted directly in tests/test_swagger_1_2_import.py; this entry carries a SOAP description, which the openapi adapter never claims.",
       "failure_class": "wrong-format",
       "expected_error_code": "FORMAT_MISMATCH"
     },
     {
       "path": "swagger-1.2/negative/05-encoding-utf16.json",
       "format": "swagger-1.2",
-      "adapter_key": null,
+      "adapter_key": "openapi",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "swagger-1.2",
@@ -26611,8 +26589,7 @@
       "features": [
         "negative",
         "encoding",
-        "utf-16",
-        "pending-adapter"
+        "utf-16"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -26624,7 +26601,7 @@
     {
       "path": "swagger-1.2/negative/06-unresolvable-declaration-ref.json",
       "format": "swagger-1.2",
-      "adapter_key": null,
+      "adapter_key": "openapi",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "swagger-1.2",
@@ -26633,8 +26610,7 @@
       "features": [
         "negative",
         "unresolvable-ref",
-        "missing-declaration",
-        "pending-adapter"
+        "missing-declaration"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -32158,9 +32134,6 @@
     },
     "openrpc": {
       "multi-file": "The openrpc adapter's parse_fileset only parses the root member and does not resolve external $ref targets in other members, so a multi-file set exercises nothing."
-    },
-    "postman": {
-      "multi-file": "The Postman adapter's parse_fileset only parses the root collection and never resolves references across fileset members, so a multi-file set would exercise nothing beyond a single file."
     },
     "raml": {
       "multi-file": "The RAML adapter's parse_fileset only parses the root document and never resolves !include or library references across fileset members, so a multi-file set would exercise nothing beyond a single file."

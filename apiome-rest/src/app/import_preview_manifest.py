@@ -203,6 +203,10 @@ PROVENANCE_EXTRA_KEYS = frozenset(SOURCE_LOCATION_EXTRA_KEYS) | frozenset(NATIVE
         "overlay",
         "gateway",
         "wit",
+        # FMT-3.6: derived version/provenance labels, not source constructs — the
+        # source's own `info.schema` is still reported (as `postman_schema_url`).
+        "swagger_1_2",
+        "postman_collection_version",
     }
 )
 

@@ -1,0 +1,115 @@
+{
+  "adapter": "openapi",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "swagger_1_2": {
+        "api_version": "1.0.0",
+        "declarations": [
+          "/ping"
+        ],
+        "source_version": "1.2"
+      }
+    },
+    "format": "swagger-2.0",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Ping",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": null,
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com/",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "ping",
+        "name": "ping",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Liveness probe",
+            "extras": {
+              "operationId": "ping",
+              "summary": "Liveness probe"
+            },
+            "http_method": "GET",
+            "http_path": "/ping",
+            "key": "GET /ping",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "Successful response",
+                "extras": {},
+                "headers": [],
+                "key": "GET /ping#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "ping",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "ping"
+            ]
+          }
+        ]
+      }
+    ],
+    "title": "Ping",
+    "types": [],
+    "version": "1.0.0"
+  },
+  "corpus_path": "swagger-1.2/01-minimal-declaration.json",
+  "counts": {
+    "channels": 0,
+    "operations": 1,
+    "servers": 1,
+    "services": 1,
+    "types": 0
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "swagger-1.2"
+  },
+  "fingerprint": "sha256:fae0478ab76a0b1f0ebd8e9922d7687236ad40c8051d5112cff7e96f183ab13d",
+  "lint": {
+    "findings": 1,
+    "grade": "A",
+    "report_fingerprint": "ef9ce0cb9d20810133933dee66a928cc15ef170064cb0e12706367b1f4f335d0",
+    "score": 99,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

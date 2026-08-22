@@ -16,6 +16,8 @@ We continue to improve the platform based on your feedback with improvements and
     - OData v2/v3 import and export
     - WSDL 2.0 import and export
     - Avro IDL (`.avdl`) import and export
+    - Swagger 1.2 import
+    - Postman Collection v2.0 import
   - Added pills to supported format list to show the source and type that the API format provides
 
 ## Bug Fixes

@@ -1,0 +1,586 @@
+{
+  "adapter": "openapi",
+  "canonical": {
+    "channels": [],
+    "description": "The resource listing: the root a 1.2 import starts from.",
+    "extras": {
+      "swagger_1_2": {
+        "api_version": "1.0.0",
+        "declarations": [
+          "/carts",
+          "/products"
+        ],
+        "resource_listing": "api-docs.json",
+        "source_version": "1.2"
+      }
+    },
+    "format": "swagger-2.0",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Storefront API",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": null,
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com/store",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": "Operations about carts",
+        "extras": {},
+        "key": "carts",
+        "name": "carts",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Open a cart",
+            "extras": {
+              "operationId": "createCart",
+              "summary": "Open a cart"
+            },
+            "http_method": "POST",
+            "http_path": "/carts",
+            "key": "POST /carts",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "Cart created",
+                "extras": {},
+                "headers": [],
+                "key": "POST /carts#response.201",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Cart",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              }
+            ],
+            "name": "createCart",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "carts"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Add an item to a cart",
+            "extras": {
+              "operationId": "addCartItem",
+              "summary": "Add an item to a cart"
+            },
+            "http_method": "POST",
+            "http_path": "/carts/{cartId}/items",
+            "key": "POST /carts/{cartId}/items",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /carts/{cartId}/items#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "CartItem",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "Successful response",
+                "extras": {},
+                "headers": [],
+                "key": "POST /carts/{cartId}/items#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Cart",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "addCartItem",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "POST /carts/{cartId}/items#path.cartId",
+                "location": "path",
+                "name": "cartId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": [
+              "carts"
+            ]
+          }
+        ]
+      },
+      {
+        "description": "Operations about products",
+        "extras": {},
+        "key": "products",
+        "name": "products",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "List products",
+            "extras": {
+              "operationId": "listProducts",
+              "summary": "List products"
+            },
+            "http_method": "GET",
+            "http_path": "/products",
+            "key": "GET /products",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "Successful response",
+                "extras": {},
+                "headers": [],
+                "key": "GET /products#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Product",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              }
+            ],
+            "name": "listProducts",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /products#query.category",
+                "location": "query",
+                "name": "category",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": [
+              "products"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Fetch a product",
+            "extras": {
+              "operationId": "getProduct",
+              "summary": "Fetch a product"
+            },
+            "http_method": "GET",
+            "http_path": "/products/{sku}",
+            "key": "GET /products/{sku}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "Successful response",
+                "extras": {},
+                "headers": [],
+                "key": "GET /products/{sku}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Product",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              },
+              {
+                "content_types": [],
+                "description": "No such product",
+                "extras": {},
+                "headers": [],
+                "key": "GET /products/{sku}#response.404",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": "404"
+              }
+            ],
+            "name": "getProduct",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /products/{sku}#path.sku",
+                "location": "path",
+                "name": "sku",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": [
+              "products"
+            ]
+          }
+        ]
+      }
+    ],
+    "title": "Storefront API",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Cart.cartId",
+            "name": "cartId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Cart.items",
+            "name": "items",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "CartItem",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "double",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Cart.total",
+            "name": "total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "number",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Cart",
+        "key_type": null,
+        "kind": "record",
+        "name": "Cart",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "int32",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 1.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CartItem.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "CartItem.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "CartItem",
+        "key_type": null,
+        "kind": "record",
+        "name": "CartItem",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.category",
+            "name": "category",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "double",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.price",
+            "name": "price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "number",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Product.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Product",
+        "key_type": null,
+        "kind": "record",
+        "name": "Product",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.0.0"
+  },
+  "corpus_path": "swagger-1.2/05-petstore-set/api-docs.json",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 1,
+    "services": 2,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "swagger-1.2"
+  },
+  "fingerprint": "sha256:44a54be9847645676d412d6978291ec7ada26bbbc32ea3f9387f459eb7bbb971",
+  "lint": {
+    "findings": 13,
+    "grade": "C",
+    "report_fingerprint": "4f4f3441a9707011e9acf76d9f170d775b113286b8c6862bd8a6147deebf9d82",
+    "score": 78,
+    "severity_counts": {
+      "error": 0,
+      "info": 10,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

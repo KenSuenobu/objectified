@@ -132,6 +132,15 @@ def normalize_format_key(format_key: Optional[str]) -> str:
         return "wsdl"
     if key in ("grpc",):
         return "protobuf"
+    if key == "postman-2.0":
+        # FMT-3.6 gave the Postman adapter a version-scoped detection key. Lint
+        # capability is stated per *format*, not per collection minor, so it folds
+        # onto the family key rather than adding a row nothing declares rules for.
+        return "postman"
+    if key == "swagger-1.2":
+        # FMT-3.6 reads Swagger 1.2 by projecting it onto the Swagger 2.0 canonical
+        # path, so the rules that apply to it are exactly the 2.0 rules.
+        return "swagger-2.0"
     if key.startswith("openapi") or key.startswith("swagger"):
         return key if key in PUBLISHABLE_FORMATS else (
             key if key == "openapi" else key

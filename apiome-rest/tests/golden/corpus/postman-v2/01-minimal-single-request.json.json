@@ -2,10 +2,10 @@
   "adapter": "postman",
   "canonical": {
     "channels": [],
-    "description": "Minimal Postman Collection v2.1 example: the smallest canonical collection, an info block plus a single GET request with a plain string URL.",
+    "description": null,
     "extras": {
-      "postman_collection_version": "2.1",
-      "postman_schema_url": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      "postman_collection_version": "2.0",
+      "postman_schema_url": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
       "postman_variables": []
     },
     "format": "postman",
@@ -29,7 +29,7 @@
           {
             "channel_ref": null,
             "deprecated": false,
-            "description": "Liveness probe.",
+            "description": null,
             "extras": {
               "postman_folder_path": [],
               "postman_headers": []
@@ -51,7 +51,7 @@
     "types": [],
     "version": null
   },
-  "corpus_path": "postman/02-minimal-ping.postman_collection.json",
+  "corpus_path": "postman-v2/01-minimal-single-request.json",
   "counts": {
     "channels": 0,
     "operations": 1,
@@ -61,18 +61,18 @@
   },
   "detection": {
     "confidence": 0.98,
-    "format": "postman"
+    "format": "postman-2.0"
   },
-  "fingerprint": "sha256:259477a205c9236702fffa8815f91ef423b96d22949fff0b54bf35aa46822c95",
+  "fingerprint": "sha256:5d013d6b5facdb92e98ed0a9ff3f47c6e42ec3e53ea4cf720f9de771be2ef40c",
   "lint": {
-    "findings": 0,
+    "findings": 2,
     "grade": "A",
-    "report_fingerprint": "49f00aff0ad03525a1e73592c60211f9f8572853ba37d488054fdb78f1f77bd1",
-    "score": 100,
+    "report_fingerprint": "d28b18c5f7d8949b9b969a83081e88f8e3f52d0d0e276a94473452697e9f72e5",
+    "score": 95,
     "severity_counts": {
       "error": 0,
-      "info": 0,
-      "warning": 0
+      "info": 1,
+      "warning": 1
     }
   },
   "snapshot_version": 1
