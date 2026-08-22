@@ -56,6 +56,7 @@ export const CATALOG_FORMAT_DOCUMENTATION_URL: Readonly<Record<string, string>> 
   avro: 'https://avro.apache.org/docs/current/specification/',
   jtd: 'https://www.rfc-editor.org/rfc/rfc8927',
   xsd: 'https://www.w3.org/TR/xmlschema11-1/',
+  relaxng: 'https://relaxng.org/spec-20011203.html',
   asn1: 'https://www.itu.int/rec/T-REC-X.680',
   cobolcopybook: 'https://www.ibm.com/docs/en/cobol-zos/latest?topic=programs-copybook',
 

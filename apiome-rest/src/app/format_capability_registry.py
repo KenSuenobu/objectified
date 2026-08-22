@@ -141,7 +141,7 @@ __all__ = [
 #: The registry contract version. Bumped whenever an entry, a reviewed seed, an absence
 #: explanation, or a vocabulary member changes, so a consumer can detect a stale contract and
 #: a cached snapshot can be keyed by it. Mirrored in the committed vocabulary snapshot.
-REGISTRY_VERSION = "5"
+REGISTRY_VERSION = "6"
 
 #: The date the current seeds and absence explanations were last reviewed. Recorded as
 #: provenance on every entry, so a claim about a format carries the date somebody checked it.
@@ -950,6 +950,79 @@ _CAPABILITY_SEED: Dict[str, _Seed] = {
             "No 4010/5010 implementation-guide conformance is evaluated — a structurally valid "
             "interchange is not claimed to be a conformant one, and an ST03 implementation "
             "convention reference is recorded as the sender's claim rather than as a checked fact.",
+        ],
+    ),
+    "relaxng": _Seed(
+        # RELAX NG's payload analysis is still the format-blind walk, so the first three
+        # fields restate what derivation produces. The reviewed judgement is the projection
+        # statement below: FMT-4.1's acceptance criterion is that `interleave` and the
+        # datatype-library constructs are *declared*, and this is where a reader is told what
+        # a RELAX NG grammar loses on its way into the canonical model.
+        native_hierarchy=NativeHierarchy.GENERIC,
+        native_hierarchy_note=(
+            "The format-blind walk records containers, ordered collections and leaves. Nesting "
+            "and ordering survive; this format's own semantics are not named, and their absence "
+            "from the tree says nothing about the source."
+        ),
+        source_location=SourceLocationSupport(
+            quality=SourceLocationQuality.PATH_ONLY,
+            note=(
+                "Patterns locate by structural path and sibling ordinal only. The hardened XML "
+                "reader exposes no positions, and the compact syntax is read by a separate "
+                "tokenizer, so a line number would have to be guessed differently for each of "
+                "the two spellings of one grammar."
+            ),
+        ),
+        value_visibility=ValueVisibilitySupport(
+            default=ValueVisibility.DEFAULT,
+            maximum=ValueVisibility.NONE,
+            note=(
+                "A grammar is a schema, not data: the analyzer observes no runtime values at any "
+                "policy level. 'No value here' is the absence of data to observe, not a "
+                "redaction."
+            ),
+        ),
+        canonical_projection=CanonicalProjectionSupport(
+            coverage=ProjectionCoverage.PARTIAL,
+            dropped_constructs=[
+                "relaxng.datatype_except",
+                "relaxng.external_datatype_library",
+                "relaxng.interleave",
+                "relaxng.list",
+                "relaxng.mixed",
+                "relaxng.name_class_wildcard",
+                "relaxng.remote_href",
+            ],
+            note=(
+                "Named patterns become canonical types, `element`/`attribute` patterns become "
+                "fields, `choice` becomes a union (or an `enum` constraint when its branches are "
+                "literal values), `optional`/`zeroOrMore`/`oneOrMore` become nullability and "
+                "lists, and `data` parameters become canonical constraints. Composition is "
+                "resolved before normalization, so `include` (with its overrides) and "
+                "`externalRef` leave no trace to lose. The listed constructs are *carried but "
+                "not fully expressible*: `interleave`'s branches all survive as members and only "
+                "their order-independence is lost (each such member is tagged "
+                "`relaxng_interleaved`), an `anyName`/`nsName` wildcard becomes a single "
+                "open-content member named `*`, a `data` `except` clause keeps the base datatype "
+                "and records the exclusion without enforcing it, `list` becomes a list of its "
+                "item type without the single-text-node encoding, `mixed` keeps the character "
+                "content as an extra member, and a datatype library other than the W3C XML "
+                "Schema datatypes is carried verbatim rather than interpreted. Every occurrence "
+                "is counted and located in `extras['relaxng']['capability_limits']`."
+            ),
+        ),
+        notes=[
+            "The XML syntax (`.rng`) and the compact syntax (`.rnc`) are two spellings of one "
+            "language and are read by two front-ends onto one pattern algebra, so the same "
+            "grammar written either way produces the same canonical model — the syntax is "
+            "deliberately not part of the model, and survives only on the retained raw source.",
+            "An `include`/`externalRef` naming an absolute URL is never fetched. Its shape is "
+            "vetted against the SSRF policy — a `file:`/`data:` href, or one carrying "
+            "credentials, fails the import as an unsafe construct — and a policy-legal http(s) "
+            "href is recorded as a declared limit whose definitions are absent, which then "
+            "surfaces as an unresolved reference rather than as a silently smaller grammar.",
+            "RELAX NG *output* is not implemented (#4134), so a grammar imported here is "
+            "exported through another target's emitter and is not written back as RELAX NG.",
         ],
     ),
     "cobolcopybook": _Seed(

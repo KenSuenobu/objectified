@@ -1,0 +1,602 @@
+{
+  "adapter": "relaxng",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "relaxng": {
+        "capability_limits": [
+          {
+            "construct": "relaxng.mixed",
+            "count": 1,
+            "detail": "`mixed` interleaves text with element content. The canonical model has no mixed-content record, so the text half is carried as an open-content member alongside the element members.",
+            "locations": [
+              "inline"
+            ]
+          }
+        ],
+        "datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+        "root_type": "document"
+      }
+    },
+    "format": "relaxng",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "document",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "document",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_pattern": "choice"
+        },
+        "fields": [],
+        "key": "block",
+        "key_type": null,
+        "kind": "union",
+        "name": "block",
+        "namespace": null,
+        "union_members": [
+          "blockPara",
+          "blockQuote"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "para",
+          "relaxng_pattern": "inline"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "group",
+              "relaxng_ref": "commonAttributes"
+            },
+            "field_number": 1,
+            "key": "blockPara.commonAttributes",
+            "name": "commonAttributes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "commonAttributes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "group",
+              "relaxng_ref": "inline"
+            },
+            "field_number": 2,
+            "key": "blockPara.inline",
+            "name": "inline",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "inline",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "blockPara",
+        "key_type": null,
+        "kind": "record",
+        "name": "blockPara",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "quote",
+          "relaxng_pattern": "inline"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "group",
+              "relaxng_ref": "block"
+            },
+            "field_number": 2,
+            "key": "blockQuote.block",
+            "name": "block",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "block",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "group",
+              "relaxng_ref": "commonAttributes"
+            },
+            "field_number": 1,
+            "key": "blockQuote.commonAttributes",
+            "name": "commonAttributes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "commonAttributes",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "blockQuote",
+        "key_type": null,
+        "kind": "record",
+        "name": "blockQuote",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_pattern": "define"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "ID",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "commonAttributes.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "language",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 2,
+            "key": "commonAttributes.lang",
+            "name": "lang",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "commonAttributes",
+        "key_type": null,
+        "kind": "record",
+        "name": "commonAttributes",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "document",
+          "relaxng_pattern": "define"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "group",
+              "relaxng_ref": "block"
+            },
+            "field_number": 3,
+            "key": "document.block",
+            "name": "block",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "block",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "group",
+              "relaxng_ref": "commonAttributes"
+            },
+            "field_number": 1,
+            "key": "document.commonAttributes",
+            "name": "commonAttributes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "commonAttributes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element",
+              "relaxng_ref": "inline"
+            },
+            "field_number": 2,
+            "key": "document.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "inline",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "document",
+        "key_type": null,
+        "kind": "record",
+        "name": "document",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_pattern": "define"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "group",
+              "relaxng_ref": "inlineElement"
+            },
+            "field_number": 1,
+            "key": "inline.inlineElement",
+            "name": "inlineElement",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "inlineElement",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "text",
+              "relaxng_mixed": true
+            },
+            "field_number": 2,
+            "key": "inline.text",
+            "name": "text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "inline",
+        "key_type": null,
+        "kind": "record",
+        "name": "inline",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_combine": "choice",
+          "relaxng_pattern": "choice"
+        },
+        "fields": [],
+        "key": "inlineElement",
+        "key_type": null,
+        "kind": "union",
+        "name": "inlineElement",
+        "namespace": null,
+        "union_members": [
+          "inlineElementEmphasis",
+          "inlineElementCode",
+          "inlineElementLink"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "code",
+          "relaxng_pattern": "inline"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "text"
+            },
+            "field_number": 1,
+            "key": "inlineElementCode.text",
+            "name": "text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "inlineElementCode",
+        "key_type": null,
+        "kind": "record",
+        "name": "inlineElementCode",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "emphasis",
+          "relaxng_pattern": "inline"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "group",
+              "relaxng_ref": "inline"
+            },
+            "field_number": 1,
+            "key": "inlineElementEmphasis.inline",
+            "name": "inline",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "inline",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "inlineElementEmphasis",
+        "key_type": null,
+        "kind": "record",
+        "name": "inlineElementEmphasis",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "link",
+          "relaxng_pattern": "inline"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "group",
+              "relaxng_ref": "commonAttributes"
+            },
+            "field_number": 1,
+            "key": "inlineElementLink.commonAttributes",
+            "name": "commonAttributes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "commonAttributes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "uri",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "anyURI",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 2,
+            "key": "inlineElementLink.href",
+            "name": "href",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "group",
+              "relaxng_ref": "inline"
+            },
+            "field_number": 3,
+            "key": "inlineElementLink.inline",
+            "name": "inline",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "inline",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "inlineElementLink",
+        "key_type": null,
+        "kind": "record",
+        "name": "inlineElementLink",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "relaxng/07-composition-named-pattern-reuse.rng",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 10
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "relaxng"
+  },
+  "fingerprint": "sha256:cf35d80f9b75dde9c2e4b4954ba66303a5553b1e5c8855c8bd209d6eb6dc1dac",
+  "lint": {
+    "findings": 31,
+    "grade": "F",
+    "report_fingerprint": "317ed42c323bd461855ed5c26d9193f199c9f3f1c17313b687774254761f8a4a",
+    "score": 47,
+    "severity_counts": {
+      "error": 0,
+      "info": 17,
+      "warning": 14
+    }
+  },
+  "snapshot_version": 1
+}

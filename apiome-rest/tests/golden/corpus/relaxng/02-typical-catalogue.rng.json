@@ -1,0 +1,348 @@
+{
+  "adapter": "relaxng",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "relaxng": {
+        "capability_limits": [],
+        "datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+        "root_type": "catalogue"
+      }
+    },
+    "format": "relaxng",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "catalogue",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "catalogue",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "catalogue",
+          "relaxng_pattern": "define"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element",
+              "relaxng_ref": "product"
+            },
+            "field_number": 2,
+            "key": "catalogue.product",
+            "name": "product",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "product",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "string",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "catalogue.version",
+            "name": "version",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "catalogue",
+        "key_type": null,
+        "kind": "record",
+        "name": "catalogue",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_pattern": "define"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": [
+                "EUR",
+                "GBP",
+                "USD"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "money.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "decimal",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "data"
+            },
+            "field_number": 2,
+            "key": "money.value",
+            "name": "value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "money",
+        "key_type": null,
+        "kind": "record",
+        "name": "money",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "relaxng_element": "product",
+          "relaxng_pattern": "define"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element"
+            },
+            "field_number": 4,
+            "key": "product.description",
+            "name": "description",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "boolean",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 2,
+            "key": "product.discontinued",
+            "name": "discontinued",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element"
+            },
+            "field_number": 3,
+            "key": "product.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element",
+              "relaxng_ref": "money"
+            },
+            "field_number": 5,
+            "key": "product.price",
+            "name": "price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "money",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": "[A-Z]{3}-[0-9]{4}",
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_datatype": "string",
+              "relaxng_datatype_library": "http://www.w3.org/2001/XMLSchema-datatypes",
+              "relaxng_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "product.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "relaxng_kind": "element"
+            },
+            "field_number": 6,
+            "key": "product.tag",
+            "name": "tag",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          }
+        ],
+        "key": "product",
+        "key_type": null,
+        "kind": "record",
+        "name": "product",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "relaxng/02-typical-catalogue.rng",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "relaxng"
+  },
+  "fingerprint": "sha256:9949de376c3d8c5028960c976b0cfa9a31fd8dfb6d35a2856524a845e535c56a",
+  "lint": {
+    "findings": 14,
+    "grade": "C",
+    "report_fingerprint": "c6276ab85488dbd2253d8c85cae958a17a2e385c8e56e6f93582fc29d349b80b",
+    "score": 77,
+    "severity_counts": {
+      "error": 0,
+      "info": 11,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

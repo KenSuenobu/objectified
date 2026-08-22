@@ -114,10 +114,8 @@ from typing import Any, Dict, List, Optional, Tuple
 from pydantic import BaseModel, ConfigDict, Field
 
 from . import __version__
+from .breaking_change import classify_models, get_breaking_change_classifier
 from .canonical_model import CanonicalApi
-from .proto_editions import (
-    EDITIONS_PROVENANCE_EXTRA_KEY as PROTO_EDITIONS_EXTRA_KEY,
-)
 from .export_projection import (
     NATIVE_ID_EXTRA_KEYS,
     SOURCE_LOCATION_EXTRA_KEYS,
@@ -130,7 +128,6 @@ from .export_projection import (
     encode_page_cursor,
     first_extra,
 )
-from .breaking_change import classify_models, get_breaking_change_classifier
 from .format_lint_capabilities import FormatLintCapability, capability_for_format
 from .import_preflight import run_import_preflight
 from .import_source import (
@@ -143,6 +140,10 @@ from .import_source import (
 from .import_source_pipeline import ImportRunArtifacts, _normalize_import_project_slug
 from .models import ImportPreflightCounts, ImportPreflightReport, ImportPreflightRequest
 from .projection_taxonomy import ProjectionReason, ProjectionStatus
+from .proto_editions import (
+    EDITIONS_PROVENANCE_EXTRA_KEY as PROTO_EDITIONS_EXTRA_KEY,
+)
+from .relaxng_normalizer import RELAXNG_EXTRAS_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -206,6 +207,9 @@ PROVENANCE_EXTRA_KEYS = frozenset(SOURCE_LOCATION_EXTRA_KEYS) | frozenset(NATIVE
         "overlay",
         "gateway",
         "wit",
+        # FMT-4.1: the RELAX NG projection record (root type, declared limits, composition
+        # hrefs). It is our own bookkeeping about the read, not a construct the grammar names.
+        RELAXNG_EXTRAS_KEY,
         # FMT-3.6: derived version/provenance labels, not source constructs — the
         # source's own `info.schema` is still reported (as `postman_schema_url`).
         "swagger_1_2",
@@ -1042,6 +1046,7 @@ def _document_scope_rows(
     ledger.extend(_overlay_provenance_rows(api))
     ledger.extend(_gateway_capability_rows(api))
     ledger.extend(_wit_capability_rows(api))
+    ledger.extend(_relaxng_capability_rows(api))
 
     return nodes, edges, ledger
 
@@ -1280,6 +1285,51 @@ def _wit_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
                     f"`use {use}` resolves outside the supplied package; the "
                     "imported names are referenced by name only. Supply the "
                     "package's dependencies as a fileset to resolve them."
+                ),
+                document_scoped=True,
+            )
+        )
+    return rows
+
+
+def _relaxng_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
+    """Render the FMT-4.1 RELAX NG declared limits as document-scoped ledger rows.
+
+    RELAX NG constructs the canonical model cannot fully hold — ``interleave``'s
+    order-independence, ``anyName``/``nsName`` wildcards, a ``data`` ``except`` clause,
+    ``list`` tokenization, ``mixed`` content, an uninterpreted datatype library, and an
+    ``href`` that names a URL import will not fetch — are stated as ``partially-mapped``:
+    the construct itself is normalized (the interleaved members exist, the wildcard becomes
+    an open-content member, the base datatype survives) and only the part with no canonical
+    analogue is lost. A **capability limit, never a silent omission**, which is exactly what
+    the ticket's third acceptance criterion asks the registry to carry.
+
+    Args:
+        api: The normalized model.
+
+    Returns:
+        One ledger row per declared limit, or an empty list for a grammar that met none.
+    """
+    report = api.extras.get(RELAXNG_EXTRAS_KEY) if isinstance(api.extras, dict) else None
+    if not isinstance(report, dict):
+        return []
+    rows: List[CoverageEntry] = []
+    partial_status, partial_reason = STATUS_FOR_COVERAGE[CoverageClass.PARTIALLY_MAPPED]
+    for limit in report.get("capability_limits") or []:
+        if not isinstance(limit, dict) or not limit.get("construct"):
+            continue
+        count = int(limit.get("count") or 1)
+        locations = [str(name) for name in (limit.get("locations") or [])]
+        where = f" Named pattern(s): {', '.join(locations)}." if locations else ""
+        rows.append(
+            CoverageEntry(
+                source_construct=str(limit.get("construct")),
+                coverage=CoverageClass.PARTIALLY_MAPPED,
+                status=partial_status,
+                reason=partial_reason,
+                detail=(
+                    f"{limit.get('detail')} ({count} occurrence(s); a capability limit of the "
+                    f"canonical model, not a drop — the pattern itself is normalized.){where}"
                 ),
                 document_scoped=True,
             )

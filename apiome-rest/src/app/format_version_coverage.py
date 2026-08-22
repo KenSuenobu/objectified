@@ -868,6 +868,27 @@ _VERSION_COVERAGE: Dict[str, VersionCoverage] = {
         ],
         default_write="1.0",
     ),
+    "relaxng": VersionCoverage(
+        reads=[
+            FormatVersion(
+                version="RELAX NG XML syntax (.rng)",
+                format_key="relaxng",
+                support=VersionSupport.UNGATED,
+                note="RELAX NG has had one specification since 2001 and a grammar carries no "
+                "release marker, so one reader covers every document.",
+            ),
+            FormatVersion(
+                version="RELAX NG compact syntax (.rnc)",
+                format_key="relaxng-compact",
+                support=VersionSupport.UNGATED,
+                note="The compact syntax is a second spelling of the same language, read by a "
+                "second front-end onto the same pattern algebra, so a grammar reads identically "
+                "in either spelling.",
+            ),
+        ],
+        writes=[],
+        default_write=None,
+    ),
     "smithy": VersionCoverage(
         reads=[FormatVersion(version="2.0", format_key="smithy", support=VersionSupport.FULL)],
         writes=[

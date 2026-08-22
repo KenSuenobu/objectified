@@ -4,7 +4,7 @@ Importing turns an existing API description into something Apiome can search, di
 convert. Import is **asynchronous**: you create a job, it runs in the background, and you poll it
 to completion.
 
-**Apiome imports 43<!--format-count:importable--> formats**, spanning all
+**Apiome imports 44<!--format-count:importable--> formats**, spanning all
 6<!--format-count:paradigms--> canonical paradigms, and exports 41<!--format-count:exportable-->
 of them again. The full list — with each format's registry key, input kinds, version coverage,
 file extensions and export support — is generated from the running registries at
