@@ -23,10 +23,7 @@ We continue to improve the platform based on your feedback with improvements and
     - DTD import
     - Schematron import
   - Added pills to supported format list to show the source and type that the API format provides
-  - Every format now declares which versions it reads and writes, and which version an export
-    produces by default — published on the format capability endpoint, the format matrix and the
-    supported-formats page, and checked against the example corpus so a version is never claimed
-    without a fixture that demonstrates it
+  - Every format now declares which versions it reads and writes, and which version an export produces by default
 
 ## Bug Fixes
 
