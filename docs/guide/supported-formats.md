@@ -30,7 +30,7 @@ The **Direction** column below says whether a format can be imported, exported, 
 | **Publishable** | `Project` mints a publishable project; `Catalog` stores a catalog item. Routing branches on the format a document *normalizes to*, not the tool that read it — so a format that converts to OpenAPI first (TypeSpec, say) produces a Project on that path. |
 | **Input kinds** | How a document can reach the adapter: uploaded `file`, `url`, pasted `paste`, live `discovery`, or a multi-file `fileset` (an archive or repository). |
 | **Live discovery** | The adapter can introspect a running endpoint instead of reading a document. |
-| **Format keys** | The version coverage — every format string the adapter emits, so a specific version can be requested. |
+| **Format keys** | Every format string the adapter declares, so a specific version can be requested. A mix of version keys and detection aliases — see [Version coverage](#version-coverage) for which of them are versions. |
 | **File extensions** | What the file pickers offer for this format. Advisory: content sniffing decides, so an unlisted extension is still accepted. |
 | **Analysis** | `Format-native` keeps the format's own vocabulary (an X12 envelope stays an envelope); `Generic` uses the format-blind walk. Reviewed entries link to their boundary notes. |
 | **Runtime** | `Ready`, or the toolchain this deployment is missing. An unavailable format is still *supported* — this deployment just cannot run it. |
@@ -107,6 +107,207 @@ The **Direction** column below says whether a format can be imported, exported, 
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | LLM Tools | `llm-tools` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `llm-tools` | `.tools.json`, `.llm-tools.json`, `.json`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 | MCP Server Manifest | `mcp` | Import only | Catalog | `file`, `url`, `paste`, `fileset` | — | `mcp` | `.mcp.json`, `.json`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
+
+## Version coverage
+
+Which **versions** of each format Apiome reads and writes, from the source-format capability registry (`GET /v1/import/format-capabilities` → `version_coverage`, also on every matrix row under `capability.version_coverage`).
+
+This table is **evidence, not intent**: a conformance suite requires a corpus example that detects at every listed read version and a round-trip matrix row for every listed write version, so a version cannot be claimed here without a fixture that demonstrates it.
+
+A version marked * is qualified — reached through a projection or a downgrade, or not gated on a version marker at all because the format carries none. Every qualified version's reason is listed under the table. How completely a format's *constructs* are modelled is a different question, answered by [Format boundaries](#format-boundaries) below.
+
+| Format | Key | Reads | Writes | Default export |
+| --- | --- | --- | --- | --- |
+| API Blueprint | `apiblueprint` | 1A | 1A | 1A |
+| Arazzo | `arazzo` | 1.1.x, 1.0.x | 1.1.0*, 1.0.1 | 1.0.1 |
+| ASN.1 | `asn1` | X.680 module syntax* | X.680 module syntax* | X.680 module syntax |
+| AsyncAPI | `asyncapi` | 3.1.0, 3.0.0, 2.6.0 | 3.1.0, 2.6.0* | 3.1.0 |
+| Avro | `avro` | Avro schema declaration (.avsc)*, Avro IDL (.avdl)* | Avro schema declaration (.avsc)* | Avro schema declaration (.avsc) |
+| Cap'n Proto | `capnproto` | Cap'n Proto schema language* | Cap'n Proto schema language* | Cap'n Proto schema language |
+| CloudEvents | `cloudevents` | 1.0 | 1.0 | 1.0 |
+| COBOL Copybook | `cobolcopybook` | COBOL data-division record layout* | COBOL data-division record layout* | COBOL data-division record layout |
+| Connect RPC | `connectrpc` | proto2 / proto3 (.proto)* | proto3 (.proto)* | proto3 (.proto) |
+| CORBA IDL | `corbaidl` | OMG IDL* | OMG IDL* | OMG IDL |
+| EDI X12 | `edix12` | X12 interchange (004010, 005010, …)* | X12 interchange (004010, 005010, …)* | X12 interchange (004010, 005010, …) |
+| FHIR | `fhir` | R4 | R4 | R4 |
+| FIX | `fix` | tag=value message (any BeginString)* | tag=value message (any BeginString)* | tag=value message (any BeginString) |
+| FlatBuffers | `flatbuffers` | FlatBuffers schema (.fbs)* | FlatBuffers schema (.fbs)* | FlatBuffers schema (.fbs) |
+| Gateway API HTTPRoute | `gateway-api` | v1, v1beta1 | v1, v1beta1* | v1 |
+| Google API Discovery | `discovery` | Discovery Document v1 (`rest`) | — | — |
+| GraphQL | `graphql` | SDL (October 2021)* | SDL (October 2021)* | SDL (October 2021) |
+| gRPC / Protobuf | `grpc` | Editions 2023 / 2024, proto2 / proto3 (.proto) | proto3 (.proto) | proto3 (.proto) |
+| HL7 v2 | `hl7v2` | 2.x message (any MSH-12)* | 2.x message (any MSH-12)* | 2.x message (any MSH-12) |
+| HTTP Request File | `http-file` | `.http` / `.rest` request file and cURL snippet* | `.http` / `.rest` request file and cURL snippet* | `.http` / `.rest` request file and cURL snippet |
+| ISO 20022 | `iso20022` | message XML (any message definition)* | message XML (any message definition)* | message XML (any message definition) |
+| ISO 8583 | `iso8583` | MTI + data-element field map (any release)* | MTI + data-element field map (any release)* | MTI + data-element field map (any release) |
+| JSON Schema | `json-schema` | 2020-12, other `$schema` dialects (draft-07, 2019-09, …)* | 2020-12 | 2020-12 |
+| JSON Type Definition | `jtd` | RFC 8927 | RFC 8927 | RFC 8927 |
+| Kong Declarative Config | `kong` | deck `_format_version` 3.0, deck `_format_version` 2.1, deck `_format_version` 1.1 | deck `_format_version` 3.0, deck `_format_version` 2.1*, deck `_format_version` 1.1* | deck `_format_version` 3.0 |
+| Kubernetes CRD | `k8s-crd` | apiextensions.k8s.io/v1, apiextensions.k8s.io/v1beta1* | apiextensions.k8s.io/v1 | apiextensions.k8s.io/v1 |
+| LLM Tools | `llm-tools` | OpenAI / Anthropic / bare tool array* | OpenAI / Anthropic / bare tool array* | OpenAI / Anthropic / bare tool array |
+| MCP Server Manifest | `mcp` | server manifest (any `protocolVersion`)* | — | — |
+| OData | `odata` | 4.0, 3.0*, 2.0* | 4.0 | 4.0 |
+| ONC RPC | `oncrpc` | rpcgen (RPCL) definition* | rpcgen (RPCL) definition* | rpcgen (RPCL) definition |
+| OpenAPI / Swagger | `openapi` | 3.2, 3.1, 3.0, 2.0, 1.2* | 3.1.0, 3.0.3*, 2.0* | 3.1.0 |
+| OpenRPC | `openrpc` | 1.x* | 1.x* | 1.x |
+| Postman | `postman` | Collection v2.1, Collection v2.0 | Collection v2.1 | Collection v2.1 |
+| RAML | `raml` | 1.0 | 1.0 | 1.0 |
+| Smithy | `smithy` | 2.0 | 2.0 | 2.0 |
+| Thrift | `thrift` | Thrift IDL* | Thrift IDL* | Thrift IDL |
+| TypeSpec | `typespec` | TypeSpec (.tsp)* | TypeSpec (.tsp)* | TypeSpec (.tsp) |
+| WADL | `wadl` | 2009-02-09 | 2009-02-09 | 2009-02-09 |
+| WIT (WebAssembly) | `wit` | Component Model WIT (0.2 surface) | Component Model WIT (0.2 surface) | Component Model WIT (0.2 surface) |
+| WSDL | `wsdl` | 1.1, 2.0 | 1.1 | 1.1 |
+| XML-RPC | `xmlrpc` | 1.0 | 1.0 | 1.0 |
+| XSD | `xsd` | 1.0 / 1.1* | 1.0 | 1.0 |
+| z/OS Connect | `zosconnect` | API requester / provider descriptor* | API requester / provider descriptor* | API requester / provider descriptor |
+
+### Where support is qualified (*)
+
+**Arazzo**
+
+- Writes **1.1.0** (partial) — Written only when the model carries an asynchronous source description, which 1.0 cannot express; every other model is written as 1.0.1.
+
+**ASN.1**
+
+- Reads **X.680 module syntax** (ungated) — An ASN.1 module states no standard edition, so one module grammar is read and no X.680 revision is branched on.
+- Writes **X.680 module syntax** (ungated) — The written module states no standard edition either, for the same reason.
+
+**AsyncAPI**
+
+- Writes **2.6.0** (partial) — Written by downgrading the 3.1 document (`asyncapi_version='2.6'`); 2.6 is the last and most capable 2.x minor, so it is the only 2.x target offered.
+
+**Avro**
+
+- Reads **Avro schema declaration (.avsc)** (ungated) — An Avro schema declaration carries no Avro release marker, so one grammar is read for every release.
+- Reads **Avro IDL (.avdl)** (ungated) — The IDL surface carries no version marker either; both surfaces build the same AST, so a protocol reads identically in either spelling.
+- Writes **Avro schema declaration (.avsc)** (ungated) — The `.avdl` spelling is produced by the same writer through the `output_syntax` emit option, so the two cannot disagree about meaning.
+
+**Cap'n Proto**
+
+- Reads **Cap'n Proto schema language** (ungated) — A `.capnp` schema declares no language version, so one grammar is read.
+- Writes **Cap'n Proto schema language** (ungated) — The written schema declares no language version either.
+
+**COBOL Copybook**
+
+- Reads **COBOL data-division record layout** (ungated) — A copybook names no COBOL standard, so level numbers, PICTURE and USAGE are read without branching on a dialect.
+- Writes **COBOL data-division record layout** (ungated) — The written layout names no COBOL standard either.
+
+**Connect RPC**
+
+- Reads **proto2 / proto3 (.proto)** (ungated) — Connect reuses the Protocol Buffers contract, so the readable surface is the `.proto` grammar rather than a Connect protocol version.
+- Writes **proto3 (.proto)** (ungated) — Written as a standard proto3 bundle labelled for Connect; the Connect protocol version is a runtime concern the contract does not state.
+
+**CORBA IDL**
+
+- Reads **OMG IDL** (ungated) — An `.idl` file declares no OMG IDL revision, so one grammar is read.
+- Writes **OMG IDL** (ungated) — The written definition declares no OMG IDL revision either.
+
+**EDI X12**
+
+- Reads **X12 interchange (004010, 005010, …)** (ungated) — The control version the interchange declares (ISA12, GS08) is recorded, but the segment grammar read is the same for every release and no implementation-guide conformance is evaluated.
+- Writes **X12 interchange (004010, 005010, …)** (ungated) — The written interchange carries whatever control version the model records; the emitter does not target a release of its own.
+
+**FIX**
+
+- Reads **tag=value message (any BeginString)** (ungated) — The session version the message declares (tag 8, `FIX.4.4`…) is recorded, but the tag=value grammar read is the same for every version and no data dictionary is applied.
+- Writes **tag=value message (any BeginString)** (ungated) — The written message carries whatever BeginString the model records.
+
+**FlatBuffers**
+
+- Reads **FlatBuffers schema (.fbs)** (ungated) — An `.fbs` schema declares no language version, so one grammar is read.
+- Writes **FlatBuffers schema (.fbs)** (ungated) — The written schema declares no language version either.
+
+**Gateway API HTTPRoute**
+
+- Writes **v1beta1** (partial) — Targeted with the `api_version` emit option; the document is otherwise identical to the v1 output, since HTTPRoute is unchanged between the two.
+
+**GraphQL**
+
+- Reads **SDL (October 2021)** (ungated) — A GraphQL document carries no specification-edition marker; schemas written against earlier editions parse identically.
+- Writes **SDL (October 2021)** (ungated) — The written SDL carries no specification-edition marker either.
+
+**HL7 v2**
+
+- Reads **2.x message (any MSH-12)** (ungated) — The version the message declares (MSH-12) is recorded, but the segment / field grammar read is the same for every 2.x release and no message-profile conformance is evaluated.
+- Writes **2.x message (any MSH-12)** (ungated) — The written message carries whatever version the model records.
+
+**HTTP Request File**
+
+- Reads **`.http` / `.rest` request file and cURL snippet** (ungated) — Neither the VS Code nor the JetBrains request-file dialect is versioned; both are read by one grammar and every construct is recorded as inferred.
+- Writes **`.http` / `.rest` request file and cURL snippet** (ungated) — The `dialect` emit option chooses the VS Code or JetBrains spelling and `output='curl'` writes a shell script instead; none of the three is a version.
+
+**ISO 20022**
+
+- Reads **message XML (any message definition)** (ungated) — The message-definition identifier the document declares (`pain.001.001.09`) is recorded, but the reader does not branch on it and no message-definition schema is applied.
+- Writes **message XML (any message definition)** (ungated) — The written message carries whatever message-definition identifier the model records.
+
+**ISO 8583**
+
+- Reads **MTI + data-element field map (any release)** (ungated) — The release an MTI implies (1987, 1993, 2003) is not branched on; one field-map grammar is read and no institution's dialect is applied.
+- Writes **MTI + data-element field map (any release)** (ungated) — The written field map carries whatever MTI the model records.
+
+**JSON Schema**
+
+- Reads **other `$schema` dialects (draft-07, 2019-09, …)** (partial) — Accepted and kept verbatim for later conversion; the canonical projection reads `$defs`/`definitions` and the root schema, so dialect-specific keywords survive in the retained source and nowhere else.
+
+**Kong Declarative Config**
+
+- Writes **deck `_format_version` 2.1** (partial) — Targeted with the `format_version` emit option; only the declared `_format_version` changes, since deck's document shape is the same across the three.
+- Writes **deck `_format_version` 1.1** (partial) — Targeted with the `format_version` emit option, on the same terms as 2.1.
+
+**Kubernetes CRD**
+
+- Reads **apiextensions.k8s.io/v1beta1** (partial) — Claimed by detection — every `apiextensions.k8s.io/*` group version is — and read through the v1 structural-schema path, which the deprecated v1beta1 `validation` block does not populate.
+
+**LLM Tools**
+
+- Reads **OpenAI / Anthropic / bare tool array** (ungated) — A tool array carries no version; the dialect is detected per tool and a mixed array is accepted, each tool recording the dialect it was read as.
+- Writes **OpenAI / Anthropic / bare tool array** (ungated) — The `mode` emit option chooses the openai, anthropic or bare spelling; none of the three is a version.
+
+**MCP Server Manifest**
+
+- Reads **server manifest (any `protocolVersion`)** (ungated) — The protocol version the manifest declares is recorded, but detection and normalization do not branch on it; the conformance pack states which specification revision its rules were written against.
+
+**OData**
+
+- Reads **3.0** (partial) — Read by projecting the v3 CSDL onto the v4 model (FMT-3.4): associations become navigation properties, and constructs v4 dropped survive only in the retained source.
+- Reads **2.0** (partial) — Read by projecting the v2 CSDL onto the v4 model, on the same terms as v3.
+
+**ONC RPC**
+
+- Reads **rpcgen (RPCL) definition** (ungated) — A `.x` file declares no RPCL revision, so one grammar is read; the program and procedure version numbers it declares are data, not a format version.
+- Writes **rpcgen (RPCL) definition** (ungated) — The written definition declares no RPCL revision either.
+
+**OpenAPI / Swagger**
+
+- Reads **1.2** (partial) — Read by projecting the resource listing and its API declarations onto the 2.0 path (FMT-3.6). Swagger 1.0 and 1.1 share the `swaggerVersion` marker but not the grammar, and are rejected as `FORMAT_VERSION_UNSUPPORTED` rather than mis-read as 1.2.
+- Writes **3.0.3** (partial) — Written by downgrading the 3.1 document (`openapi_version='3.0'`); what the 3.0 dialect cannot carry is reported as a loss rather than dropped silently.
+- Writes **2.0** (partial) — Swagger 2.0, written by downgrading the 3.1 document (`openapi_version='2.0'`), on the same terms as 3.0.
+
+**OpenRPC**
+
+- Reads **1.x** (ungated) — The `openrpc` version marker is recorded and re-emitted, but detection and normalization read one document grammar and do not branch on the minor.
+- Writes **1.x** (ungated) — The written document declares the version the model records, defaulting to 1.2.6 when it records none.
+
+**Thrift**
+
+- Reads **Thrift IDL** (ungated) — A `.thrift` file declares no compiler release, so one grammar is read.
+- Writes **Thrift IDL** (ungated) — The written document declares no compiler release either.
+
+**TypeSpec**
+
+- Reads **TypeSpec (.tsp)** (ungated) — A `.tsp` file declares no language version, so one grammar is read and no compiler release is targeted.
+- Writes **TypeSpec (.tsp)** (ungated) — The written definition declares no language version either.
+
+**XSD**
+
+- Reads **1.0 / 1.1** (ungated) — Both XSD versions share one namespace and no `vc:minVersion` gate is read, so a 1.1 document is accepted; its 1.1-only constructs (assertions, conditional type assignment) are not modelled.
+
+**z/OS Connect**
+
+- Reads **API requester / provider descriptor** (ungated) — A z/OS Connect descriptor states no product version, so one document shape is read for both the requester and the provider flavour.
+- Writes **API requester / provider descriptor** (ungated) — The written descriptor states no product version either.
 
 ## Format boundaries
 
