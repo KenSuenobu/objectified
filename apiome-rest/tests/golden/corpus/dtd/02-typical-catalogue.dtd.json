@@ -1,0 +1,582 @@
+{
+  "adapter": "dtd",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "dtd": {
+        "capability_limits": [
+          {
+            "construct": "dtd.id_uniqueness",
+            "count": 1,
+            "detail": "`ID`, `IDREF` and `IDREFS` declare document-wide uniqueness and referential integrity. The canonical constraint vocabulary has no identity facet, so the declared type is recorded on the member and the constraint is not enforced.",
+            "locations": [
+              "product"
+            ]
+          }
+        ],
+        "entity_expansions": 0,
+        "root_element": "catalogue",
+        "root_type": "catalogue"
+      }
+    },
+    "format": "dtd",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "catalogue",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "catalogue",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "sequence",
+          "dtd_element": "catalogue"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "generator",
+              "dtd_attribute_type": "CDATA",
+              "dtd_default": "#IMPLIED",
+              "dtd_kind": "attribute"
+            },
+            "field_number": 2,
+            "key": "catalogue.@generator",
+            "name": "@generator",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "version",
+              "dtd_attribute_type": "CDATA",
+              "dtd_default": "#REQUIRED",
+              "dtd_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "catalogue.@version",
+            "name": "@version",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "+"
+            },
+            "field_number": 3,
+            "key": "catalogue.product",
+            "name": "product",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "product",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "catalogue",
+        "key_type": null,
+        "kind": "record",
+        "name": "catalogue",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "pcdata",
+          "dtd_element": "description",
+          "dtd_type": "string"
+        },
+        "fields": [],
+        "key": "description",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "description",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "pcdata",
+          "dtd_element": "name",
+          "dtd_type": "string"
+        },
+        "fields": [],
+        "key": "name",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "name",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "pcdata",
+          "dtd_element": "price"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "text"
+            },
+            "field_number": 3,
+            "key": "price.#text",
+            "name": "#text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "EUR",
+                "GBP",
+                "USD"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "currency",
+              "dtd_attribute_type": "ENUMERATION",
+              "dtd_default": "#REQUIRED",
+              "dtd_enumeration": [
+                "EUR",
+                "GBP",
+                "USD"
+              ],
+              "dtd_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "price.@currency",
+            "name": "@currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "iso-4217"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": "iso-4217",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "scheme",
+              "dtd_attribute_type": "CDATA",
+              "dtd_default": "#FIXED",
+              "dtd_kind": "attribute"
+            },
+            "field_number": 2,
+            "key": "price.@scheme",
+            "name": "@scheme",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "price",
+        "key_type": null,
+        "kind": "record",
+        "name": "price",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "sequence",
+          "dtd_element": "product"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": [
+                "yes",
+                "no"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": "no",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "discontinued",
+              "dtd_attribute_type": "ENUMERATION",
+              "dtd_default": "default",
+              "dtd_enumeration": [
+                "yes",
+                "no"
+              ],
+              "dtd_kind": "attribute"
+            },
+            "field_number": 2,
+            "key": "product.@discontinued",
+            "name": "@discontinued",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "physical",
+                "digital",
+                "service"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "kind",
+              "dtd_attribute_type": "ENUMERATION",
+              "dtd_default": "#REQUIRED",
+              "dtd_enumeration": [
+                "physical",
+                "digital",
+                "service"
+              ],
+              "dtd_kind": "attribute"
+            },
+            "field_number": 3,
+            "key": "product.@kind",
+            "name": "@kind",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "sku",
+              "dtd_attribute_type": "ID",
+              "dtd_default": "#REQUIRED",
+              "dtd_identity": true,
+              "dtd_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "product.@sku",
+            "name": "@sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "?"
+            },
+            "field_number": 5,
+            "key": "product.description",
+            "name": "description",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "description",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "1"
+            },
+            "field_number": 4,
+            "key": "product.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "name",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "1"
+            },
+            "field_number": 6,
+            "key": "product.price",
+            "name": "price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "price",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "*"
+            },
+            "field_number": 7,
+            "key": "product.tag",
+            "name": "tag",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "tag",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "product",
+        "key_type": null,
+        "kind": "record",
+        "name": "product",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "pcdata",
+          "dtd_element": "tag"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "text"
+            },
+            "field_number": 2,
+            "key": "tag.#text",
+            "name": "#text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "lang",
+              "dtd_attribute_type": "NMTOKEN",
+              "dtd_default": "#IMPLIED",
+              "dtd_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "tag.@lang",
+            "name": "@lang",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "tag",
+        "key_type": null,
+        "kind": "record",
+        "name": "tag",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "dtd/02-typical-catalogue.dtd",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 6
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "dtd"
+  },
+  "fingerprint": "sha256:704fed212ad6f22289a2d0c9fb94cd3db53f5a2221ebaa2c268cd21925db02fc",
+  "lint": {
+    "findings": 22,
+    "grade": "D",
+    "report_fingerprint": "a93f4f2e4fc33f328168e90966e1537c3455ee7b80d2e787d519c6709c8c04ec",
+    "score": 64,
+    "severity_counts": {
+      "error": 0,
+      "info": 16,
+      "warning": 6
+    }
+  },
+  "snapshot_version": 1
+}

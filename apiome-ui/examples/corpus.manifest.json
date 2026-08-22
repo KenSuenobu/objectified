@@ -147,7 +147,7 @@
       "marker": "`kind: discovery#restDescription` / `discoveryVersion`"
     },
     "dtd": {
-      "label": "DTD (pending #5435)",
+      "label": "DTD",
       "category": "data-schema",
       "paradigm": "data_schema",
       "marker": "`<!ELEMENT>`/`<!ATTLIST>` declarations, or a `<!DOCTYPE \u2026[\u2026]>` internal subset"
@@ -7627,7 +7627,7 @@
     {
       "path": "dtd/01-minimal-note.dtd",
       "format": "dtd",
-      "adapter_key": null,
+      "adapter_key": "dtd",
       "validity_class": "valid",
       "expected_detection": {
         "format": "dtd",
@@ -7636,8 +7636,7 @@
       "features": [
         "ELEMENT",
         "ATTLIST",
-        "PCDATA",
-        "pending-adapter"
+        "PCDATA"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -7648,7 +7647,7 @@
     {
       "path": "dtd/02-typical-catalogue.dtd",
       "format": "dtd",
-      "adapter_key": null,
+      "adapter_key": "dtd",
       "validity_class": "valid",
       "expected_detection": {
         "format": "dtd",
@@ -7661,8 +7660,7 @@
         "REQUIRED",
         "IMPLIED",
         "FIXED",
-        "default-value",
-        "pending-adapter"
+        "default-value"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -7673,7 +7671,7 @@
     {
       "path": "dtd/03-modular-set/common.dtd",
       "format": "dtd",
-      "adapter_key": null,
+      "adapter_key": "dtd",
       "validity_class": "valid",
       "expected_detection": {
         "format": "dtd",
@@ -7682,8 +7680,7 @@
       "features": [
         "multi-file",
         "parameter-entity",
-        "shared-attributes",
-        "pending-adapter"
+        "shared-attributes"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -7695,7 +7692,7 @@
     {
       "path": "dtd/03-modular-set/document.dtd",
       "format": "dtd",
-      "adapter_key": null,
+      "adapter_key": "dtd",
       "validity_class": "valid",
       "expected_detection": {
         "format": "dtd",
@@ -7704,8 +7701,7 @@
       "features": [
         "multi-file",
         "parameter-entity",
-        "external-subset",
-        "pending-adapter"
+        "external-subset"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -7717,7 +7713,7 @@
     {
       "path": "dtd/03-modular-set/table.dtd",
       "format": "dtd",
-      "adapter_key": null,
+      "adapter_key": "dtd",
       "validity_class": "valid",
       "expected_detection": {
         "format": "dtd",
@@ -7725,8 +7721,7 @@
       },
       "features": [
         "multi-file",
-        "parameter-entity",
-        "pending-adapter"
+        "parameter-entity"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -7738,7 +7733,7 @@
     {
       "path": "dtd/04-stress-content-models-and-entities.dtd",
       "format": "dtd",
-      "adapter_key": null,
+      "adapter_key": "dtd",
       "validity_class": "valid",
       "expected_detection": {
         "format": "dtd",
@@ -7753,8 +7748,7 @@
         "general-entity",
         "NOTATION",
         "unparsed-entity",
-        "NMTOKENS",
-        "pending-adapter"
+        "NMTOKENS"
       ],
       "expected_outcome": "imports_with_warnings",
       "source": "hand-authored",
@@ -7766,7 +7760,7 @@
     {
       "path": "dtd/05-real-world-rss-2.0-subset.dtd",
       "format": "dtd",
-      "adapter_key": null,
+      "adapter_key": "dtd",
       "validity_class": "valid",
       "expected_detection": {
         "format": "dtd",
@@ -7775,8 +7769,7 @@
       "features": [
         "optional-heavy",
         "repeated-elements",
-        "FIXED",
-        "pending-adapter"
+        "FIXED"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -7787,7 +7780,7 @@
     {
       "path": "dtd/06-internal-subset-invoice.xml",
       "format": "dtd",
-      "adapter_key": null,
+      "adapter_key": "dtd",
       "validity_class": "valid",
       "expected_detection": {
         "format": "dtd",
@@ -7797,8 +7790,7 @@
         "internal-subset",
         "DOCTYPE",
         "general-entity",
-        "instance-document",
-        "pending-adapter"
+        "instance-document"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -7809,7 +7801,7 @@
     {
       "path": "dtd/07-composition-parameter-entities.dtd",
       "format": "dtd",
-      "adapter_key": null,
+      "adapter_key": "dtd",
       "validity_class": "valid",
       "expected_detection": {
         "format": "dtd",
@@ -7819,8 +7811,7 @@
         "parameter-entity",
         "attribute-set",
         "content-model-fragment",
-        "nested-fragments",
-        "pending-adapter"
+        "nested-fragments"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -7831,7 +7822,7 @@
     {
       "path": "dtd/negative/01-syntactic-unterminated-declaration.dtd",
       "format": "dtd",
-      "adapter_key": null,
+      "adapter_key": "dtd",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "dtd",
@@ -7840,8 +7831,7 @@
       "features": [
         "negative",
         "syntactic",
-        "unterminated-declaration",
-        "pending-adapter"
+        "unterminated-declaration"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -7853,7 +7843,7 @@
     {
       "path": "dtd/negative/02-semantic-undeclared-element-in-model.dtd",
       "format": "dtd",
-      "adapter_key": null,
+      "adapter_key": "dtd",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "dtd",
@@ -7862,8 +7852,7 @@
       "features": [
         "negative",
         "semantic",
-        "undeclared-element",
-        "pending-adapter"
+        "undeclared-element"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -7875,7 +7864,7 @@
     {
       "path": "dtd/negative/03-truncated-mid-attlist.dtd",
       "format": "dtd",
-      "adapter_key": null,
+      "adapter_key": "dtd",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "dtd",
@@ -7884,8 +7873,7 @@
       "features": [
         "negative",
         "truncated",
-        "mid-attlist",
-        "pending-adapter"
+        "mid-attlist"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -7897,7 +7885,7 @@
     {
       "path": "dtd/negative/04-wrong-format-relaxng.rng",
       "format": "dtd",
-      "adapter_key": null,
+      "adapter_key": "dtd",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "dtd",
@@ -7906,8 +7894,7 @@
       "features": [
         "negative",
         "wrong-format",
-        "relaxng",
-        "pending-adapter"
+        "relaxng"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -7919,7 +7906,7 @@
     {
       "path": "dtd/negative/05-encoding-utf16.dtd",
       "format": "dtd",
-      "adapter_key": null,
+      "adapter_key": "dtd",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "dtd",
@@ -7928,8 +7915,7 @@
       "features": [
         "negative",
         "encoding",
-        "utf-16",
-        "pending-adapter"
+        "utf-16"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -7941,7 +7927,7 @@
     {
       "path": "dtd/negative/06-unresolvable-parameter-entity.dtd",
       "format": "dtd",
-      "adapter_key": null,
+      "adapter_key": "dtd",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "dtd",
@@ -7950,8 +7936,7 @@
       "features": [
         "negative",
         "unresolvable-ref",
-        "missing-parameter-entity",
-        "pending-adapter"
+        "missing-parameter-entity"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",

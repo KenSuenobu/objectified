@@ -1,0 +1,715 @@
+{
+  "adapter": "dtd",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "dtd": {
+        "capability_limits": [
+          {
+            "construct": "dtd.id_uniqueness",
+            "count": 3,
+            "detail": "`ID`, `IDREF` and `IDREFS` declare document-wide uniqueness and referential integrity. The canonical constraint vocabulary has no identity facet, so the declared type is recorded on the member and the constraint is not enforced.",
+            "locations": [
+              "report",
+              "section",
+              "table"
+            ]
+          },
+          {
+            "construct": "dtd.mixed_content",
+            "count": 1,
+            "detail": "Mixed content interleaves character data with child elements. The canonical model has no mixed-content record, so the child elements are carried as ordinary repeated members alongside a `#text` member, and the interleaving — text before, between and after the children — is not expressible.",
+            "locations": [
+              "para"
+            ]
+          },
+          {
+            "construct": "dtd.repeated_group",
+            "count": 1,
+            "detail": "An occurrence indicator on a *group* — `(a, b)+` — repeats the group as a unit. The canonical model repeats members, not groups, so the indicator is distributed onto the group's members and the fact that they repeat together is lost.",
+            "locations": [
+              "section"
+            ]
+          }
+        ],
+        "entity_expansions": 5,
+        "external_subsets": [
+          "common.dtd",
+          "table.dtd"
+        ],
+        "parameter_entities": [
+          {
+            "name": "commonModule",
+            "system_id": "common.dtd"
+          },
+          {
+            "name": "commonAtts",
+            "value": "id ID #IMPLIED\n                       lang NMTOKEN #IMPLIED"
+          },
+          {
+            "name": "tableModule",
+            "system_id": "table.dtd"
+          }
+        ],
+        "root_element": "report",
+        "root_type": "report"
+      }
+    },
+    "format": "dtd",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "report",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "report",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "pcdata",
+          "dtd_element": "cell"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "text"
+            },
+            "field_number": 3,
+            "key": "cell.#text",
+            "name": "#text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "left",
+                "center",
+                "right"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": "left",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "align",
+              "dtd_attribute_type": "ENUMERATION",
+              "dtd_default": "default",
+              "dtd_enumeration": [
+                "left",
+                "center",
+                "right"
+              ],
+              "dtd_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "cell.@align",
+            "name": "@align",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "span",
+              "dtd_attribute_type": "NMTOKEN",
+              "dtd_default": "default",
+              "dtd_kind": "attribute"
+            },
+            "field_number": 2,
+            "key": "cell.@span",
+            "name": "@span",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "cell",
+        "key_type": null,
+        "kind": "record",
+        "name": "cell",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "pcdata",
+          "dtd_element": "emphasis",
+          "dtd_type": "string"
+        },
+        "fields": [],
+        "key": "emphasis",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "emphasis",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "mixed",
+          "dtd_element": "para"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "text",
+              "dtd_mixed": true
+            },
+            "field_number": 2,
+            "key": "para.#text",
+            "name": "#text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 1,
+            "key": "para.emphasis",
+            "name": "emphasis",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "emphasis",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "para",
+        "key_type": null,
+        "kind": "record",
+        "name": "para",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "sequence",
+          "dtd_element": "report"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "id",
+              "dtd_attribute_type": "ID",
+              "dtd_default": "#IMPLIED",
+              "dtd_identity": true,
+              "dtd_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "report.@id",
+            "name": "@id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "lang",
+              "dtd_attribute_type": "NMTOKEN",
+              "dtd_default": "#IMPLIED",
+              "dtd_kind": "attribute"
+            },
+            "field_number": 2,
+            "key": "report.@lang",
+            "name": "@lang",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "+"
+            },
+            "field_number": 4,
+            "key": "report.section",
+            "name": "section",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "section",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "1"
+            },
+            "field_number": 3,
+            "key": "report.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "title",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "report",
+        "key_type": null,
+        "kind": "record",
+        "name": "report",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "sequence",
+          "dtd_element": "row"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "+"
+            },
+            "field_number": 1,
+            "key": "row.cell",
+            "name": "cell",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "cell",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "row",
+        "key_type": null,
+        "kind": "record",
+        "name": "row",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "sequence",
+          "dtd_element": "section"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "id",
+              "dtd_attribute_type": "ID",
+              "dtd_default": "#IMPLIED",
+              "dtd_identity": true,
+              "dtd_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "section.@id",
+            "name": "@id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "lang",
+              "dtd_attribute_type": "NMTOKEN",
+              "dtd_default": "#IMPLIED",
+              "dtd_kind": "attribute"
+            },
+            "field_number": 2,
+            "key": "section.@lang",
+            "name": "@lang",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "choice"
+            },
+            "field_number": 4,
+            "key": "section.sectionChoice",
+            "name": "sectionChoice",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "sectionChoice",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "1"
+            },
+            "field_number": 3,
+            "key": "section.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "title",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "section",
+        "key_type": null,
+        "kind": "record",
+        "name": "section",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "choice",
+          "dtd_owner": "section"
+        },
+        "fields": [],
+        "key": "sectionChoice",
+        "key_type": null,
+        "kind": "union",
+        "name": "sectionChoice",
+        "namespace": null,
+        "union_members": [
+          "para",
+          "table"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "sequence",
+          "dtd_element": "table"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": [
+                "yes",
+                "no"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": "no",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "border",
+              "dtd_attribute_type": "ENUMERATION",
+              "dtd_default": "default",
+              "dtd_enumeration": [
+                "yes",
+                "no"
+              ],
+              "dtd_kind": "attribute"
+            },
+            "field_number": 3,
+            "key": "table.@border",
+            "name": "@border",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "id",
+              "dtd_attribute_type": "ID",
+              "dtd_default": "#IMPLIED",
+              "dtd_identity": true,
+              "dtd_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "table.@id",
+            "name": "@id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "lang",
+              "dtd_attribute_type": "NMTOKEN",
+              "dtd_default": "#IMPLIED",
+              "dtd_kind": "attribute"
+            },
+            "field_number": 2,
+            "key": "table.@lang",
+            "name": "@lang",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "+"
+            },
+            "field_number": 4,
+            "key": "table.row",
+            "name": "row",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "row",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "table",
+        "key_type": null,
+        "kind": "record",
+        "name": "table",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "pcdata",
+          "dtd_element": "title",
+          "dtd_type": "string"
+        },
+        "fields": [],
+        "key": "title",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "title",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "dtd/03-modular-set/document.dtd",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 9
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "dtd"
+  },
+  "fingerprint": "sha256:998ae597b4f2b245981810a4914161563a85f9a0cfdf66854859d39316f33d06",
+  "lint": {
+    "findings": 28,
+    "grade": "D",
+    "report_fingerprint": "14d0c7fa4bb4e12e2075be43ced9b098a87bf03b8c1613ecf228c8516ea9a91c",
+    "score": 61,
+    "severity_counts": {
+      "error": 0,
+      "info": 19,
+      "warning": 9
+    }
+  },
+  "snapshot_version": 1
+}

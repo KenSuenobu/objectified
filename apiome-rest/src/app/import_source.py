@@ -1107,6 +1107,11 @@ def load_builtin_import_sources() -> None:
     # RELAX NG normalizer under ``relaxng``.
     from . import relaxng_import_source as _relaxng  # noqa: F401
 
+    # ``dtd_import_source`` (FMT-4.2) self-registers the ``dtd`` adapter — external
+    # subsets, internal subsets and modular sets — and, via its own imports, the DTD
+    # normalizer under ``dtd``.
+    from . import dtd_import_source as _dtd  # noqa: F401
+
     from . import postman_import_source as _postman  # noqa: F401
     from . import cloudevents_import_source as _cloudevents  # noqa: F401
     from . import smithy_import_source as _smithy  # noqa: F401

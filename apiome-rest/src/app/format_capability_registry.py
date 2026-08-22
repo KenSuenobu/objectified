@@ -141,7 +141,7 @@ __all__ = [
 #: The registry contract version. Bumped whenever an entry, a reviewed seed, an absence
 #: explanation, or a vocabulary member changes, so a consumer can detect a stale contract and
 #: a cached snapshot can be keyed by it. Mirrored in the committed vocabulary snapshot.
-REGISTRY_VERSION = "6"
+REGISTRY_VERSION = "7"
 
 #: The date the current seeds and absence explanations were last reviewed. Recorded as
 #: provenance on every entry, so a claim about a format carries the date somebody checked it.
@@ -1023,6 +1023,100 @@ _CAPABILITY_SEED: Dict[str, _Seed] = {
             "surfaces as an unresolved reference rather than as a silently smaller grammar.",
             "RELAX NG *output* is not implemented (#4134), so a grammar imported here is "
             "exported through another target's emitter and is not written back as RELAX NG.",
+        ],
+    ),
+    "dtd": _Seed(
+        # A DTD's payload analysis is the format-blind walk, so the first three fields
+        # restate what derivation produces. The reviewed judgement is the projection
+        # statement below: FMT-4.2's acceptance criterion is that mixed content is modelled
+        # *or* declared a limit **explicitly**, and this is where a reader is told which —
+        # both, as it turns out — and what else a DTD loses on its way into the model.
+        native_hierarchy=NativeHierarchy.GENERIC,
+        native_hierarchy_note=(
+            "The format-blind walk records containers, ordered collections and leaves. Nesting "
+            "and ordering survive; this format's own semantics are not named, and their absence "
+            "from the tree says nothing about the source."
+        ),
+        source_location=SourceLocationSupport(
+            quality=SourceLocationQuality.PATH_ONLY,
+            note=(
+                "Declarations locate by structural path and sibling ordinal only. A DTD is read "
+                "by a scanner over an entity input stack, so a byte offset in the composed text "
+                "does not correspond to a position in any file a user uploaded — a declaration "
+                "pulled in through a parameter entity lives in a different file from the "
+                "reference that pulled it."
+            ),
+        ),
+        value_visibility=ValueVisibilitySupport(
+            default=ValueVisibility.DEFAULT,
+            maximum=ValueVisibility.NONE,
+            note=(
+                "A DTD is a schema, not data: the analyzer observes no runtime values at any "
+                "policy level. 'No value here' is the absence of data to observe, not a "
+                "redaction. An internal subset arrives inside an instance document, and the "
+                "instance's content is not read at all."
+            ),
+        ),
+        canonical_projection=CanonicalProjectionSupport(
+            coverage=ProjectionCoverage.PARTIAL,
+            dropped_constructs=[
+                "dtd.any_content",
+                "dtd.id_uniqueness",
+                "dtd.mixed_content",
+                "dtd.orphan_attlist",
+                "dtd.remote_system_id",
+                "dtd.repeated_group",
+                "dtd.tokenized_attribute",
+                "dtd.unparsed_entity",
+            ],
+            note=(
+                "Each `<!ELEMENT>` becomes one canonical type — a `(#PCDATA)` element with no "
+                "attributes is a `SCALAR`, everything else a `RECORD` — and a name in a content "
+                "model becomes a member typed by that element's type, never a copy of it. "
+                "Occurrence indicators become nullability and lists (`?` nullable, `*` a "
+                "nullable list, `+` a required list), a `choice` becomes a `UNION` referenced by "
+                "one member, and an element named twice in one model folds into one member "
+                "bounded by `min_items`/`max_items`. `<!ATTLIST>` definitions become members "
+                "carrying the XPath `@` sigil, and the whole default vocabulary becomes "
+                "canonical constraints: an enumeration and a `#FIXED` value become `enum`, a "
+                "bare literal becomes `default`, `#REQUIRED` a non-nullable member and "
+                "`#IMPLIED` a nullable one. Entities are expanded before normalization, so "
+                "their uses leave no trace to lose, and the declarations are carried in "
+                "`extras['dtd']`. The listed constructs are *carried but not fully "
+                "expressible*: mixed content keeps its child elements as repeated members "
+                "beside a `#text` member and loses only the interleaving, `ANY` becomes one "
+                "open-content member, an occurrence indicator on a group distributes onto the "
+                "group's members, `IDREFS`/`ENTITIES`/`NMTOKENS` become lists of strings, "
+                "`ID`/`IDREF` record their declared type without enforcing uniqueness or "
+                "referential integrity, an unparsed entity and its notation are recorded rather "
+                "than modelled, an `<!ATTLIST>` for an element that is never declared is "
+                "recorded rather than failed, and an absolute system identifier is recorded "
+                "rather than fetched. Every occurrence is counted and located in "
+                "`extras['dtd']['capability_limits']`."
+            ),
+        ),
+        notes=[
+            "A DTD is not XML and is not read by an XML parser: `<!ELEMENT>`/`<!ATTLIST>` are "
+            "markup declarations, and the shared hardened XML reader refuses a `DOCTYPE` "
+            "outright. The reader is a scanner with its own byte, nesting and entity-expansion "
+            "ceilings, and it reads an external subset, an internal subset, and a modular set "
+            "composed through parameter entities by the same path.",
+            "Entity expansion is bounded in three dimensions at once — how many references are "
+            "expanded, how many bytes they produce, and how deep the expansion nests — and "
+            "every reference is charged against one budget, so a document cannot move work "
+            "between the parameter-entity and general-entity mechanisms to spend past a guard. "
+            "An entity that re-enters its own expansion chain is refused as an unsafe "
+            "construct rather than unrolled until a budget stops it.",
+            "Nothing external is fetched. A relative system identifier resolves against the "
+            "uploaded set; an absolute one is vetted against the SSRF policy — a `file:`/`data:` "
+            "identifier, or one carrying credentials, fails the import — and a policy-legal "
+            "http(s) identifier is recorded as a declared limit whose declarations are absent. "
+            "This is the XXE and blind-XXE shape, and it fails closed.",
+            "A DTD has no documentation construct: comments are not attached to the "
+            "declarations they precede, so imported types and members carry no description and "
+            "the absence is the format's, not the reader's.",
+            "DTD *output* is not implemented, so a DTD imported here is exported through "
+            "another target's emitter and is not written back as a DTD.",
         ],
     ),
     "cobolcopybook": _Seed(

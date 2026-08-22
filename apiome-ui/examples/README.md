@@ -100,7 +100,7 @@ The corpus holds **1418 files** across **103 format directories**. Every file ha
 | `cue/` | CUE (pending #5466) | data_schema | `package …` + `#Definition: {…}` with `&`/`\|`/`=~` constraints | 15 |
 | `dbt/` | dbt models and manifests (pending #5442) | data_schema | `version: 2` + `models:`/`sources:`, or `metadata.dbt_schema_version` in a manifest | 16 |
 | `dhall/` | Dhall (pending #5466) | data_schema | `let … in …` with type annotations, union types and `::` completion | 14 |
-| `dtd/` | DTD (pending #5435) | data_schema | `<!ELEMENT>`/`<!ATTLIST>` declarations, or a `<!DOCTYPE …[…]>` internal subset | 15 |
+| `dtd/` | DTD | data_schema | `<!ELEMENT>`/`<!ATTLIST>` declarations, or a `<!DOCTYPE …[…]>` internal subset | 15 |
 | `flatbuffers/` | FlatBuffers | data_schema | `table`/`struct` + `root_type` | 11 |
 | `ims/` | IMS DBD and PSB (pending #5482) | data_schema | `DBD NAME=…,ACCESS=(…)` with `SEGM`/`FIELD`, or `PCB TYPE=DB` with `SENSEG` | 14 |
 | `json-schema/` | JSON Schema | data_schema | `$schema` / `type` + `properties` | 17 |
@@ -695,25 +695,25 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/04-wrong-format-protobuf.proto` | — | `discovery` (no guarantee) | invalid | `negative`, `wrong-format`, `protobuf-idl` |
 | `negative/05-encoding-utf16.json` | — | `discovery` (no guarantee) | invalid | `negative`, `encoding`, `utf16` |
 
-### `dtd/` — DTD (pending #5435)
+### `dtd/` — DTD
 
 | File | Rung | Expected detection | Class | Features |
 | --- | --- | --- | --- | --- |
-| `01-minimal-note.dtd` | minimal | `dtd` ≥ 0.85 | valid | `ELEMENT`, `ATTLIST`, `PCDATA`, `pending-adapter` |
-| `02-typical-catalogue.dtd` | typical | `dtd` ≥ 0.85 | valid | `sequence`, `occurrence-indicators`, `enumerated-attribute`, `REQUIRED`, `IMPLIED`, `FIXED`, `default-value`, `pending-adapter` |
-| `03-modular-set/common.dtd` | multi-file (member) | `dtd` (no guarantee) | valid | `multi-file`, `parameter-entity`, `shared-attributes`, `pending-adapter` |
-| `03-modular-set/document.dtd` | multi-file (root) | `dtd` ≥ 0.85 | valid | `multi-file`, `parameter-entity`, `external-subset`, `pending-adapter` |
-| `03-modular-set/table.dtd` | multi-file (member) | `dtd` (no guarantee) | valid | `multi-file`, `parameter-entity`, `pending-adapter` |
-| `04-stress-content-models-and-entities.dtd` ⚠ | stress | `dtd` ≥ 0.85 | valid | `ANY`, `EMPTY`, `mixed-content`, `choice`, `parameter-entity`, `general-entity`, `NOTATION`, `unparsed-entity`, `NMTOKENS`, `pending-adapter` |
-| `05-real-world-rss-2.0-subset.dtd` | real-world | `dtd` ≥ 0.85 | valid | `optional-heavy`, `repeated-elements`, `FIXED`, `pending-adapter` |
-| `06-internal-subset-invoice.xml` | typical | `dtd` ≥ 0.85 | valid | `internal-subset`, `DOCTYPE`, `general-entity`, `instance-document`, `pending-adapter` |
-| `07-composition-parameter-entities.dtd` | composition | `dtd` ≥ 0.85 | valid | `parameter-entity`, `attribute-set`, `content-model-fragment`, `nested-fragments`, `pending-adapter` |
-| `negative/01-syntactic-unterminated-declaration.dtd` | — | `dtd` (no guarantee) | invalid | `negative`, `syntactic`, `unterminated-declaration`, `pending-adapter` |
-| `negative/02-semantic-undeclared-element-in-model.dtd` | — | `dtd` (no guarantee) | invalid | `negative`, `semantic`, `undeclared-element`, `pending-adapter` |
-| `negative/03-truncated-mid-attlist.dtd` | — | `dtd` (no guarantee) | invalid | `negative`, `truncated`, `mid-attlist`, `pending-adapter` |
-| `negative/04-wrong-format-relaxng.rng` | — | `dtd` (no guarantee) | invalid | `negative`, `wrong-format`, `relaxng`, `pending-adapter` |
-| `negative/05-encoding-utf16.dtd` | — | `dtd` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
-| `negative/06-unresolvable-parameter-entity.dtd` | — | `dtd` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-parameter-entity`, `pending-adapter` |
+| `01-minimal-note.dtd` | minimal | `dtd` ≥ 0.85 | valid | `ELEMENT`, `ATTLIST`, `PCDATA` |
+| `02-typical-catalogue.dtd` | typical | `dtd` ≥ 0.85 | valid | `sequence`, `occurrence-indicators`, `enumerated-attribute`, `REQUIRED`, `IMPLIED`, `FIXED`, `default-value` |
+| `03-modular-set/common.dtd` | multi-file (member) | `dtd` (no guarantee) | valid | `multi-file`, `parameter-entity`, `shared-attributes` |
+| `03-modular-set/document.dtd` | multi-file (root) | `dtd` ≥ 0.85 | valid | `multi-file`, `parameter-entity`, `external-subset` |
+| `03-modular-set/table.dtd` | multi-file (member) | `dtd` (no guarantee) | valid | `multi-file`, `parameter-entity` |
+| `04-stress-content-models-and-entities.dtd` ⚠ | stress | `dtd` ≥ 0.85 | valid | `ANY`, `EMPTY`, `mixed-content`, `choice`, `parameter-entity`, `general-entity`, `NOTATION`, `unparsed-entity`, `NMTOKENS` |
+| `05-real-world-rss-2.0-subset.dtd` | real-world | `dtd` ≥ 0.85 | valid | `optional-heavy`, `repeated-elements`, `FIXED` |
+| `06-internal-subset-invoice.xml` | typical | `dtd` ≥ 0.85 | valid | `internal-subset`, `DOCTYPE`, `general-entity`, `instance-document` |
+| `07-composition-parameter-entities.dtd` | composition | `dtd` ≥ 0.85 | valid | `parameter-entity`, `attribute-set`, `content-model-fragment`, `nested-fragments` |
+| `negative/01-syntactic-unterminated-declaration.dtd` | — | `dtd` (no guarantee) | invalid | `negative`, `syntactic`, `unterminated-declaration` |
+| `negative/02-semantic-undeclared-element-in-model.dtd` | — | `dtd` (no guarantee) | invalid | `negative`, `semantic`, `undeclared-element` |
+| `negative/03-truncated-mid-attlist.dtd` | — | `dtd` (no guarantee) | invalid | `negative`, `truncated`, `mid-attlist` |
+| `negative/04-wrong-format-relaxng.rng` | — | `dtd` (no guarantee) | invalid | `negative`, `wrong-format`, `relaxng` |
+| `negative/05-encoding-utf16.dtd` | — | `dtd` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+| `negative/06-unresolvable-parameter-entity.dtd` | — | `dtd` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-parameter-entity` |
 
 > ⚠ **`04-stress-content-models-and-entities.dtd`** — Bounded, non-recursive three-level entity chain — exercises expansion accounting without being an expansion bomb; mixed content is a declared limit.
 

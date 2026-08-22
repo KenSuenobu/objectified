@@ -1,0 +1,618 @@
+{
+  "adapter": "dtd",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "dtd": {
+        "capability_limits": [
+          {
+            "construct": "dtd.id_uniqueness",
+            "count": 1,
+            "detail": "`ID`, `IDREF` and `IDREFS` declare document-wide uniqueness and referential integrity. The canonical constraint vocabulary has no identity facet, so the declared type is recorded on the member and the constraint is not enforced.",
+            "locations": [
+              "invoice"
+            ]
+          }
+        ],
+        "doctype": "invoice",
+        "entities": [
+          {
+            "name": "seller",
+            "value": "Example Corporation"
+          }
+        ],
+        "entity_expansions": 0,
+        "root_element": "invoice",
+        "root_type": "invoice"
+      }
+    },
+    "format": "dtd",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "invoice",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "invoice",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "pcdata",
+          "dtd_element": "city",
+          "dtd_type": "string"
+        },
+        "fields": [],
+        "key": "city",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "city",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "pcdata",
+          "dtd_element": "country",
+          "dtd_type": "string"
+        },
+        "fields": [],
+        "key": "country",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "country",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "sequence",
+          "dtd_element": "invoice"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "issued",
+              "dtd_attribute_type": "CDATA",
+              "dtd_default": "#REQUIRED",
+              "dtd_kind": "attribute"
+            },
+            "field_number": 2,
+            "key": "invoice.@issued",
+            "name": "@issued",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "number",
+              "dtd_attribute_type": "ID",
+              "dtd_default": "#REQUIRED",
+              "dtd_identity": true,
+              "dtd_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "invoice.@number",
+            "name": "@number",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "+"
+            },
+            "field_number": 4,
+            "key": "invoice.line",
+            "name": "line",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "line",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": 2,
+              "max_length": null,
+              "maximum": null,
+              "min_items": 2,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "1",
+              "dtd_particles": 2
+            },
+            "field_number": 3,
+            "key": "invoice.party",
+            "name": "party",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "party",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "1"
+            },
+            "field_number": 5,
+            "key": "invoice.total",
+            "name": "total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "total",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "invoice",
+        "key_type": null,
+        "kind": "record",
+        "name": "invoice",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "sequence",
+          "dtd_element": "line"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "1"
+            },
+            "field_number": 2,
+            "key": "line.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "quantity",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "1"
+            },
+            "field_number": 1,
+            "key": "line.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "sku",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "1"
+            },
+            "field_number": 3,
+            "key": "line.unitPrice",
+            "name": "unitPrice",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "unitPrice",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "line",
+        "key_type": null,
+        "kind": "record",
+        "name": "line",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "pcdata",
+          "dtd_element": "name",
+          "dtd_type": "string"
+        },
+        "fields": [],
+        "key": "name",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "name",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "sequence",
+          "dtd_element": "party"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": [
+                "seller",
+                "buyer"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "role",
+              "dtd_attribute_type": "ENUMERATION",
+              "dtd_default": "#REQUIRED",
+              "dtd_enumeration": [
+                "seller",
+                "buyer"
+              ],
+              "dtd_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "party.@role",
+            "name": "@role",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "1"
+            },
+            "field_number": 3,
+            "key": "party.city",
+            "name": "city",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "city",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "1"
+            },
+            "field_number": 4,
+            "key": "party.country",
+            "name": "country",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "country",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "1"
+            },
+            "field_number": 2,
+            "key": "party.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "name",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "party",
+        "key_type": null,
+        "kind": "record",
+        "name": "party",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "pcdata",
+          "dtd_element": "quantity",
+          "dtd_type": "string"
+        },
+        "fields": [],
+        "key": "quantity",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "quantity",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "pcdata",
+          "dtd_element": "sku",
+          "dtd_type": "string"
+        },
+        "fields": [],
+        "key": "sku",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "sku",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "pcdata",
+          "dtd_element": "total"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "text"
+            },
+            "field_number": 2,
+            "key": "total.#text",
+            "name": "#text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "EUR",
+                "GBP",
+                "USD"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": "EUR",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "currency",
+              "dtd_attribute_type": "ENUMERATION",
+              "dtd_default": "default",
+              "dtd_enumeration": [
+                "EUR",
+                "GBP",
+                "USD"
+              ],
+              "dtd_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "total.@currency",
+            "name": "@currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "total",
+        "key_type": null,
+        "kind": "record",
+        "name": "total",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "pcdata",
+          "dtd_element": "unitPrice",
+          "dtd_type": "string"
+        },
+        "fields": [],
+        "key": "unitPrice",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "unitPrice",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "dtd/06-internal-subset-invoice.xml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 10
+  },
+  "detection": {
+    "confidence": 0.9,
+    "format": "dtd"
+  },
+  "fingerprint": "sha256:cbac208f87abe574de43c8d5866fcb13160c78fbe3a6a8e5b6bcad9e7d0c9d1d",
+  "lint": {
+    "findings": 25,
+    "grade": "D",
+    "report_fingerprint": "52c423c0f397654bf124d997f8f1ae8626a130bf73c8db9d4bc53d0f4cb5a423",
+    "score": 65,
+    "severity_counts": {
+      "error": 0,
+      "info": 15,
+      "warning": 10
+    }
+  },
+  "snapshot_version": 1
+}

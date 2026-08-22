@@ -18,7 +18,7 @@ project in ~10 minutes") and the [Golden Path](../GOLDEN_PATH.md) (the executabl
 | Capability | Guide | UI | REST |
 |---|---|---|---|
 | **See every supported format** (generated from the registries) | [supported-formats.md](supported-formats.md) | `/ade/dashboard/catalog` | `GET /v1/formats/matrix` |
-| Import a spec (44<!--format-count:importable--> formats; Projects vs Catalog) | [import-a-spec.md](import-a-spec.md) | `/ade/studio` | `POST /v1/tenants/{tenant}/imports` |
+| Import a spec (45<!--format-count:importable--> formats; Projects vs Catalog) | [import-a-spec.md](import-a-spec.md) | `/ade/studio` | `POST /v1/tenants/{tenant}/imports` |
 | Edit classes & properties | [edit-classes-and-properties.md](edit-classes-and-properties.md) | `/ade/studio` | `PUT /v1/classes/{tenant}/{class_id}` |
 | Edit paths & operations | [edit-paths.md](edit-paths.md) | `/ade/studio/paths` | `PUT /v1/paths/{tenant}/{version}/{path_id}` |
 | Lint & quality scoring | [lint-and-quality.md](lint-and-quality.md) | `/ade/studio` | `GET /v1/versions/{tenant}/{project}/{version}/lint` |

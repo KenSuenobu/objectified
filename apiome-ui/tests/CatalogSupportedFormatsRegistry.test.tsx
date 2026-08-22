@@ -153,7 +153,7 @@ describe('CatalogSupportedFormats reads the registry', () => {
       'wsdl', 'raml', 'wadl', 'discovery', 'openrpc', 'avro', 'xmlrpc', 'xsd', 'postman',
       'cloudevents', 'smithy', 'apiblueprint', 'arazzo', 'asn1', 'edix12', 'oncrpc', 'corbaidl',
       'odata', 'kong', 'gateway-api', 'fhir', 'hl7v2', 'iso20022', 'iso8583', 'cobolcopybook',
-      'relaxng',
+      'relaxng', 'dtd',
       'fix', 'zosconnect', 'json-schema', 'k8s-crd', 'llm-tools', 'mcp', 'jtd', 'typespec',
       'http-file',
     ].map((key) => source(key));
