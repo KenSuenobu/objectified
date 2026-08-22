@@ -27,6 +27,24 @@ Supported surface (everything else is rejected by strict validation):
 
 JS-function custom rules are explicitly **out of scope** (v2, per the governance roadmap).
 
+Two additive keys beyond the Spectral subset (FMT-4.3, #5436)
+------------------------------------------------------------
+
+Spectral rules are always written against a *source document*. Schematron is a rule language
+over XML instances, so importing one (:mod:`app.schematron_import`) produces rules that read
+the **canonical model** instead — and assertions whose XPath has no canonical analogue at all,
+which must stay visible rather than be dropped. Two optional keys express exactly that, and
+nothing else:
+
+* ``scope`` — ``document`` (the default, and what every Spectral-imported and hand-written rule
+  keeps), ``canonical``, or ``declared``. :func:`evaluate_custom_rules` evaluates one scope per
+  call, so adding canonical-scoped rules to a guide cannot change what a document-scoped lint
+  run reports.
+* ``unevaluable`` — ``{reason, detail}``, required on (and only on) a ``declared`` rule.
+
+Both are omitted from a rule's serialized ``custom_def`` when they carry no information, so a
+stored guide's content fingerprint is unchanged by this addition.
+
 Strict validation
 -----------------
 
@@ -79,13 +97,19 @@ __all__ = [
     "CustomRuleEvaluation",
     "CustomRuleSet",
     "CustomRuleThen",
+    "CustomRuleUnevaluable",
     "CustomRuleValidationError",
     "JSONPATH_NODE_BUDGET",
     "JsonPathBudgetExceededError",
     "MAX_GIVEN_PER_RULE",
     "MAX_RULES_PER_GUIDE",
     "MAX_THEN_PER_RULE",
+    "MAX_UNEVALUABLE_DETAIL_LENGTH",
     "REGEX_MATCH_TIMEOUT_SECONDS",
+    "RULE_SCOPES",
+    "SCOPE_CANONICAL",
+    "SCOPE_DECLARED",
+    "SCOPE_DOCUMENT",
     "EMPTY_STYLE_GUIDE_YAML",
     "evaluate_custom_rules",
     "parse_jsonpath_expression",
@@ -106,6 +130,28 @@ CUSTOM_RULE_CATEGORY = "custom"
 #: Severities a rule may declare — matches the linter's ``Severity`` type and the
 #: ``style_guide_rules_severity_ck`` check constraint (V159).
 VALID_SEVERITIES = frozenset({"error", "warning", "info"})
+
+#: **Which model a rule reads** (FMT-4.3, #5436). Spectral rules are written against a source
+#: document, so ``document`` is the default and every pre-existing rule keeps it — the key is
+#: additive and absent from a rule's ``custom_def`` unless it is non-default, which is what
+#: keeps stored-guide fingerprints (:func:`app.style_guide_engine.rules_content_fingerprint`)
+#: byte-identical across the upgrade.
+#:
+#: * ``document`` — the reconstructed source document (an OpenAPI/JSON-Schema mapping). What
+#:   every GOV-1.3 / GOV-1.5 rule targets.
+#: * ``canonical`` — the canonical-model governance projection
+#:   (:func:`app.schematron_projection.canonical_governance_document`), which is what a rule
+#:   imported from a *schema-agnostic* rule language such as Schematron can actually read.
+#: * ``declared`` — the rule is recorded but never evaluated. It carries a mandatory
+#:   ``unevaluable`` reason, so an assertion Apiome cannot project is visible in the guide
+#:   instead of being dropped on import.
+SCOPE_DOCUMENT = "document"
+SCOPE_CANONICAL = "canonical"
+SCOPE_DECLARED = "declared"
+RULE_SCOPES = frozenset({SCOPE_DOCUMENT, SCOPE_CANONICAL, SCOPE_DECLARED})
+
+#: Maximum length of a declared rule's ``unevaluable.detail`` explanation.
+MAX_UNEVALUABLE_DETAIL_LENGTH = 1024
 
 #: The Spectral-compatible core functions supported by this subset (GOV-1.3).
 CORE_FUNCTIONS = frozenset(
@@ -143,6 +189,10 @@ REGEX_MATCH_TIMEOUT_SECONDS = 0.1
 
 #: Rule ids: dotted kebab/snake segments, starting alphanumeric (``my-org.headers-train-case``).
 _RULE_ID_RE = _regex.compile(r"^[a-z0-9][a-z0-9_-]*(?:\.[a-z0-9][a-z0-9_-]*)*$")
+
+#: Reason codes on a ``declared`` rule: lowercase snake_case, machine-readable and stable
+#: (the same shape :mod:`app.spectral_import` uses for its unsupported-entry reasons).
+_REASON_CODE_RE = _regex.compile(r"^[a-z][a-z0-9_]*$")
 
 #: How many characters of an offending value are echoed into a finding message.
 _MESSAGE_VALUE_MAX = 60
@@ -191,6 +241,28 @@ class CustomRuleThen:
 
 
 @dataclass(frozen=True)
+class CustomRuleUnevaluable:
+    """Why a ``declared`` rule is recorded but never evaluated (FMT-4.3, #5436).
+
+    Attributes:
+        reason: Stable, machine-readable snake_case code (``context_predicate``,
+            ``unsupported_xpath_function``, ``inactive_phase``, …). The UI keys guidance off
+            this rather than parsing ``detail``.
+        detail: Human explanation naming the construct that could not be projected.
+    """
+
+    reason: str
+    detail: Optional[str] = None
+
+    def as_dict(self) -> Dict[str, Any]:
+        """Return the JSON-serializable ``unevaluable`` mapping."""
+        body: Dict[str, Any] = {"reason": self.reason}
+        if self.detail:
+            body["detail"] = self.detail
+        return body
+
+
+@dataclass(frozen=True)
 class CustomRule:
     """One validated custom rule from the DSL.
 
@@ -201,7 +273,13 @@ class CustomRule:
         description: Required human description; used as the base finding message.
         severity: ``error`` | ``warning`` | ``info`` (default ``warning``).
         given: One or more JSONPath expressions selecting the values the rule applies to.
-        then: One or more clauses applied to every ``given`` match.
+            Empty only for a ``declared`` rule that could not be projected at all.
+        then: One or more clauses applied to every ``given`` match. Empty only for a
+            ``declared`` rule that could not be projected at all.
+        scope: Which model the rule reads — one of :data:`RULE_SCOPES`. Defaults to
+            :data:`SCOPE_DOCUMENT`, so every pre-FMT-4.3 rule is unchanged.
+        unevaluable: Present exactly when ``scope`` is :data:`SCOPE_DECLARED`: why the rule is
+            recorded but never evaluated.
     """
 
     rule_id: str
@@ -209,22 +287,44 @@ class CustomRule:
     severity: str
     given: Tuple[str, ...]
     then: Tuple[CustomRuleThen, ...]
+    scope: str = SCOPE_DOCUMENT
+    unevaluable: Optional[CustomRuleUnevaluable] = None
 
     def as_dict(self) -> Dict[str, Any]:
-        """Return the rule as a plain JSON-serializable dict (the ``custom_def`` shape)."""
-        return {
+        """Return the rule as a plain JSON-serializable dict (the ``custom_def`` shape).
+
+        ``scope`` and ``unevaluable`` are emitted only when they carry information, so a
+        document-scoped rule serializes exactly as it did before FMT-4.3 — which is what keeps
+        stored guides' content fingerprints stable across the upgrade.
+        """
+        body: Dict[str, Any] = {
             "description": self.description,
             "severity": self.severity,
-            "given": list(self.given),
-            "then": [
+        }
+        if self.scope != SCOPE_DOCUMENT:
+            body["scope"] = self.scope
+        if self.given:
+            body["given"] = list(self.given)
+        if self.then:
+            body["then"] = [
                 {
                     **({"field": t.field} if t.field is not None else {}),
                     "function": t.function,
                     **({"functionOptions": dict(t.function_options)} if t.function_options else {}),
                 }
                 for t in self.then
-            ],
-        }
+            ]
+        if self.unevaluable is not None:
+            body["unevaluable"] = self.unevaluable.as_dict()
+        return body
+
+    def is_evaluable(self) -> bool:
+        """Return whether this rule can produce findings at all.
+
+        A ``declared`` rule never can (it is a record of an assertion Apiome could not
+        project), and neither can a rule left without a ``given`` or a ``then``.
+        """
+        return self.scope != SCOPE_DECLARED and bool(self.given) and bool(self.then)
 
 
 @dataclass(frozen=True)
@@ -508,7 +608,9 @@ def validate_custom_definition(
         )
 
     definition = _require_mapping(definition, pointer, "rule definition")
-    _reject_unknown_keys(definition, ("description", "severity", "given", "then"), pointer)
+    _reject_unknown_keys(
+        definition, ("description", "severity", "given", "then", "scope", "unevaluable"), pointer
+    )
 
     description = definition.get("description")
     if not isinstance(description, str) or not description.strip():
@@ -523,35 +625,48 @@ def validate_custom_definition(
             f"{pointer}.severity",
         )
 
-    raw_given = definition.get("given")
-    if raw_given is None:
-        raise CustomRuleValidationError("'given' is required", f"{pointer}.given")
-    given_list = raw_given if isinstance(raw_given, list) else [raw_given]
-    if not given_list:
-        raise CustomRuleValidationError("'given' must not be an empty list", f"{pointer}.given")
-    if len(given_list) > MAX_GIVEN_PER_RULE:
+    scope = definition.get("scope", SCOPE_DOCUMENT)
+    if scope not in RULE_SCOPES:
         raise CustomRuleValidationError(
-            f"'given' exceeds {MAX_GIVEN_PER_RULE} expressions", f"{pointer}.given"
+            f"'scope' must be one of: {', '.join(sorted(RULE_SCOPES))}", f"{pointer}.scope"
         )
+    declared = scope == SCOPE_DECLARED
+    unevaluable = _validate_unevaluable(definition.get("unevaluable"), declared, pointer)
+
+    # A ``declared`` rule is a record, not a check: it may carry the projection that *would*
+    # have run (so re-enabling it is a scope flip) or nothing at all. Every other scope keeps
+    # the original contract — both halves are required.
+    raw_given = definition.get("given")
+    if raw_given is None and not declared:
+        raise CustomRuleValidationError("'given' is required", f"{pointer}.given")
     given: List[str] = []
-    for index, expr in enumerate(given_list):
-        suffix = f"[{index}]" if isinstance(raw_given, list) else ""
-        given.append(_validate_given_expression(expr, f"{pointer}.given{suffix}"))
+    if raw_given is not None:
+        given_list = raw_given if isinstance(raw_given, list) else [raw_given]
+        if not given_list:
+            raise CustomRuleValidationError("'given' must not be an empty list", f"{pointer}.given")
+        if len(given_list) > MAX_GIVEN_PER_RULE:
+            raise CustomRuleValidationError(
+                f"'given' exceeds {MAX_GIVEN_PER_RULE} expressions", f"{pointer}.given"
+            )
+        for index, expr in enumerate(given_list):
+            suffix = f"[{index}]" if isinstance(raw_given, list) else ""
+            given.append(_validate_given_expression(expr, f"{pointer}.given{suffix}"))
 
     raw_then = definition.get("then")
-    if raw_then is None:
+    if raw_then is None and not declared:
         raise CustomRuleValidationError("'then' is required", f"{pointer}.then")
-    then_list = raw_then if isinstance(raw_then, list) else [raw_then]
-    if not then_list:
-        raise CustomRuleValidationError("'then' must not be an empty list", f"{pointer}.then")
-    if len(then_list) > MAX_THEN_PER_RULE:
-        raise CustomRuleValidationError(
-            f"'then' exceeds {MAX_THEN_PER_RULE} clauses", f"{pointer}.then"
-        )
     then: List[CustomRuleThen] = []
-    for index, clause in enumerate(then_list):
-        suffix = f"[{index}]" if isinstance(raw_then, list) else ""
-        then.append(_validate_then_clause(clause, f"{pointer}.then{suffix}"))
+    if raw_then is not None:
+        then_list = raw_then if isinstance(raw_then, list) else [raw_then]
+        if not then_list:
+            raise CustomRuleValidationError("'then' must not be an empty list", f"{pointer}.then")
+        if len(then_list) > MAX_THEN_PER_RULE:
+            raise CustomRuleValidationError(
+                f"'then' exceeds {MAX_THEN_PER_RULE} clauses", f"{pointer}.then"
+            )
+        for index, clause in enumerate(then_list):
+            suffix = f"[{index}]" if isinstance(raw_then, list) else ""
+            then.append(_validate_then_clause(clause, f"{pointer}.then{suffix}"))
 
     return CustomRule(
         rule_id=rule_id,
@@ -559,7 +674,66 @@ def validate_custom_definition(
         severity=severity,
         given=tuple(given),
         then=tuple(then),
+        scope=scope,
+        unevaluable=unevaluable,
     )
+
+
+def _validate_unevaluable(
+    raw: Any, declared: bool, pointer: str
+) -> Optional[CustomRuleUnevaluable]:
+    """Validate a rule's ``unevaluable`` block against its scope.
+
+    Args:
+        raw: The ``unevaluable`` node as written, or ``None`` when absent.
+        declared: Whether the rule declares :data:`SCOPE_DECLARED`.
+        pointer: Pointer prefix of the owning rule (``rules.my-rule``).
+
+    Returns:
+        The validated block, or ``None`` for a rule that is not ``declared``.
+
+    Raises:
+        CustomRuleValidationError: When the block is missing on a ``declared`` rule, present on
+            any other scope, or malformed.
+    """
+    node_pointer = f"{pointer}.unevaluable"
+    if not declared:
+        if raw is not None:
+            raise CustomRuleValidationError(
+                f"'unevaluable' is only allowed on a rule with scope '{SCOPE_DECLARED}'",
+                node_pointer,
+            )
+        return None
+    if raw is None:
+        raise CustomRuleValidationError(
+            f"a rule with scope '{SCOPE_DECLARED}' must say why: "
+            "'unevaluable' with a 'reason' is required",
+            node_pointer,
+        )
+    block = _require_mapping(raw, node_pointer, "'unevaluable'")
+    _reject_unknown_keys(block, ("reason", "detail"), node_pointer)
+
+    reason = block.get("reason")
+    if not isinstance(reason, str) or not _REASON_CODE_RE.match(reason or ""):
+        raise CustomRuleValidationError(
+            "'reason' is required and must be a lowercase snake_case code "
+            "(e.g. 'unsupported_xpath_function')",
+            f"{node_pointer}.reason",
+        )
+
+    detail = block.get("detail")
+    if detail is not None:
+        if not isinstance(detail, str) or not detail.strip():
+            raise CustomRuleValidationError(
+                "'detail' must be a non-empty string", f"{node_pointer}.detail"
+            )
+        if len(detail) > MAX_UNEVALUABLE_DETAIL_LENGTH:
+            raise CustomRuleValidationError(
+                f"'detail' exceeds {MAX_UNEVALUABLE_DETAIL_LENGTH} characters",
+                f"{node_pointer}.detail",
+            )
+        detail = detail.strip()
+    return CustomRuleUnevaluable(reason=reason, detail=detail)
 
 
 def parse_style_guide_yaml(
@@ -1024,6 +1198,7 @@ def evaluate_custom_rules(
     ruleset: CustomRuleSet,
     document: Mapping[str, Any],
     node_budget: int = JSONPATH_NODE_BUDGET,
+    scope: str = SCOPE_DOCUMENT,
 ) -> CustomRuleEvaluation:
     """Evaluate every rule of a validated rule set against one document, sandboxed.
 
@@ -1035,10 +1210,16 @@ def evaluate_custom_rules(
     Args:
         ruleset: A rule set from :func:`parse_style_guide_yaml` /
             :func:`validate_custom_definition` (already strictly validated).
-        document: The document to lint (e.g. a reconstructed OpenAPI spec), as plain
-            dicts/lists — it is never mutated.
+        document: The document to lint, as plain dicts/lists — it is never mutated. Which
+            document that is follows ``scope``: a reconstructed source document for
+            :data:`SCOPE_DOCUMENT`, the canonical-model governance projection for
+            :data:`SCOPE_CANONICAL`.
         node_budget: Container-access budget per rule (default
             :data:`JSONPATH_NODE_BUDGET`); tests lower it to exercise the sandbox.
+        scope: Only rules declaring this scope are evaluated. Defaults to
+            :data:`SCOPE_DOCUMENT`, so every caller that predates FMT-4.3 evaluates exactly
+            the rules it always did. :data:`SCOPE_DECLARED` rules are never evaluated by any
+            scope — passing it evaluates nothing.
 
     Returns:
         The :class:`CustomRuleEvaluation` with sorted findings and per-rule sandbox errors.
@@ -1047,6 +1228,8 @@ def evaluate_custom_rules(
     rule_errors: Dict[str, str] = {}
 
     for rule in ruleset.rules:
+        if rule.scope != scope or not rule.is_evaluable():
+            continue
         budget = _EvalBudget(node_budget)
         rule_findings: List[LintFinding] = []
         try:

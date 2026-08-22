@@ -74,7 +74,12 @@ from .models import (
     ImportPreflightStyleGuide,
 )
 from .quality_rank_telemetry import observe_export_preflight
-from .style_guide_engine import FALLBACK_GUIDE_SOURCE, CompiledStyleGuide, resolve_style_guide
+from .style_guide_engine import (
+    FALLBACK_GUIDE_SOURCE,
+    CompiledStyleGuide,
+    apply_style_guide_to_canonical_result,
+    resolve_style_guide,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -500,7 +505,7 @@ def lint_export_source(
     try:
         guide = resolve_style_guide(tenant_id, project_id)
         if result.score is not None and guide.source != FALLBACK_GUIDE_SOURCE:
-            result = guide.apply(result)
+            result = apply_style_guide_to_canonical_result(result, guide, api)
     except Exception:  # noqa: BLE001 - a guide fault must never fail a pre-flight
         logger.warning(
             "Style-guide application failed for export pre-flight (tenant %s); keeping default score",

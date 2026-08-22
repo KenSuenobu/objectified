@@ -22,6 +22,8 @@ __all__ = [
     "spectral_ruleset_path",
     "redocly_config_path",
     "render_tenant_guide_spectral_ruleset",
+    "custom_rules_from_guide_rows",
+    "is_spectral_exportable",
 ]
 
 PROFILE_BASELINE = "baseline"
@@ -88,10 +90,17 @@ def render_tenant_guide_spectral_ruleset(
         if isinstance(loaded, dict):
             maybe = loaded.get("rules")
             if isinstance(maybe, dict):
-                rules.update(maybe)
+                rules.update(
+                    {
+                        str(rule_id): dict(definition)
+                        for rule_id, definition in maybe.items()
+                        if isinstance(definition, Mapping)
+                        and is_spectral_exportable(definition)
+                    }
+                )
     if custom_rules:
         for rule_id, definition in custom_rules.items():
-            if isinstance(definition, Mapping):
+            if isinstance(definition, Mapping) and is_spectral_exportable(definition):
                 rules[str(rule_id)] = dict(definition)
 
     document: Dict[str, Any] = {
@@ -101,22 +110,41 @@ def render_tenant_guide_spectral_ruleset(
     return yaml.dump(document, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
 
+def is_spectral_exportable(definition: Mapping[str, Any]) -> bool:
+    """Return whether a stored custom rule can be handed to the real Spectral binary.
+
+    The Apiome DSL is a Spectral *subset* plus one addition (FMT-4.3, #5436): a rule declares
+    the ``scope`` it reads. Only a ``document``-scoped rule is a Spectral rule — a ``canonical``
+    one is written against Apiome's own model, and a ``declared`` one carries no ``given``/
+    ``then`` at all. Emitting either into a generated ``.spectral.yaml`` would hand the external
+    linter a ruleset it cannot load, so they are filtered here rather than at each call site.
+
+    Args:
+        definition: A stored ``custom_def`` mapping.
+
+    Returns:
+        ``True`` for a document-scoped rule (the default when ``scope`` is absent).
+    """
+    return definition.get("scope", "document") == "document"
+
+
 def custom_rules_from_guide_rows(
     rows: Sequence[Mapping[str, Any]],
 ) -> Dict[str, Any]:
-    """Extract enabled custom rule definitions from ``style_guide_rules`` rows.
+    """Extract enabled, Spectral-exportable custom rule definitions from guide rows.
 
     Args:
         rows: Guide rule rows with ``rule_id``, ``enabled``, and optional ``custom_def``.
 
     Returns:
-        Mapping of rule id → definition for Spectral overlay generation.
+        Mapping of rule id → definition for Spectral overlay generation. Rules the external
+        linter cannot evaluate (:func:`is_spectral_exportable`) are left out.
     """
     out: Dict[str, Any] = {}
     for row in rows:
         if not row.get("enabled", True):
             continue
         custom = row.get("custom_def")
-        if isinstance(custom, Mapping) and custom:
+        if isinstance(custom, Mapping) and custom and is_spectral_exportable(custom):
             out[str(row["rule_id"])] = dict(custom)
     return out

@@ -118,7 +118,7 @@ The corpus holds **1418 files** across **103 format directories**. Every file ha
 | `pli/` | PL/I structures (pending #5480) | data_schema | `DCL`/`DECLARE` level-numbered structures with PL/I attributes and `%INCLUDE` | 15 |
 | `pydantic/` | Pydantic models (pending #5465) | data_schema | `from pydantic import BaseModel` + `class X(BaseModel):` definitions | 15 |
 | `relaxng/` | RELAX NG (pending #5434) | data_schema | `grammar`/`element` root in the RELAX NG namespace, or a `.rnc` compact grammar | 15 |
-| `schematron/` | Schematron rules (pending #5436) | data_schema | `schema`/`pattern` root in `http://purl.oclc.org/dsdl/schematron` | 13 |
+| `schematron/` | Schematron rules | data_schema | `schema`/`pattern` root in `http://purl.oclc.org/dsdl/schematron` | 13 |
 | `shacl/` | SHACL shapes (pending #5471) | data_schema | `sh:NodeShape`/`sh:property` in the SHACL namespace (Turtle or JSON-LD) | 15 |
 | `sql-ddl/` | SQL DDL (pending #5444) | data_schema | `CREATE TABLE`/`CREATE VIEW`/`ALTER TABLE … ADD CONSTRAINT` | 15 |
 | `typescript-types/` | TypeScript type declarations (pending #5462) | data_schema | `export interface`/`export type`/`export enum` declarations in `.ts`/`.d.ts` | 15 |
@@ -1959,23 +1959,23 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`negative/06-unresolvable-type-reference.msg`** — The FMT-9.3 acceptance case: cross-package references resolve within a fileset and are declared unresolved otherwise.
 
-### `schematron/` — Schematron rules (pending #5436)
+### `schematron/` — Schematron rules
 
 | File | Rung | Expected detection | Class | Features |
 | --- | --- | --- | --- | --- |
-| `01-minimal-single-assert.sch` | minimal | `schematron` ≥ 0.9 | valid | `pattern`, `rule`, `assert`, `pending-adapter` |
-| `02-typical-invoice-rules.sch` | typical | `schematron` ≥ 0.9 | valid | `pattern`, `rule`, `assert`, `report`, `let`, `ns`, `role`, `rule-ids`, `pending-adapter` |
-| `03-composition-abstract-patterns.sch` | composition | `schematron` ≥ 0.9 | valid | `abstract-pattern`, `is-a`, `param`, `abstract-rule`, `extends`, `pending-adapter` |
-| `04-stress-phases-and-diagnostics.sch` ⚠ | stress | `schematron` ≥ 0.9 | valid | `phase`, `active`, `defaultPhase`, `diagnostics`, `flag`, `unevaluable-xpath`, `pending-adapter` |
-| `05-real-world-billing-bis-rules.sch` | real-world | `schematron` ≥ 0.9 | valid | `business-rules`, `calculation-rules`, `vat-rules`, `role`, `rule-ids`, `pending-adapter` |
-| `06-include-set/main.sch` | multi-file (root) | `schematron` ≥ 0.9 | valid | `multi-file`, `include`, `pattern`, `pending-adapter` |
-| `06-include-set/structure-rules.sch` ⚠ | multi-file (member) | `schematron` (no guarantee) | valid | `multi-file`, `include`, `pattern-module`, `pending-adapter` |
-| `negative/01-syntactic-unclosed-rule.sch` | — | `schematron` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `pending-adapter` |
-| `negative/02-semantic-pattern-without-rules.sch` | — | `schematron` (no guarantee) | invalid | `negative`, `semantic`, `no-assertions`, `pending-adapter` |
-| `negative/03-truncated-mid-assert.sch` | — | `schematron` (no guarantee) | invalid | `negative`, `truncated`, `mid-attribute`, `pending-adapter` |
-| `negative/04-wrong-format-xslt.xsl` ⚠ | — | `schematron` (no guarantee) | invalid | `negative`, `wrong-format`, `xslt`, `pending-adapter` |
-| `negative/05-encoding-utf16.sch` | — | `schematron` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
-| `negative/06-unresolvable-is-a-reference.sch` | — | `schematron` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-abstract-pattern`, `pending-adapter` |
+| `01-minimal-single-assert.sch` | minimal | `schematron` ≥ 0.9 | valid | `pattern`, `rule`, `assert`, `style-guide-import` |
+| `02-typical-invoice-rules.sch` | typical | `schematron` ≥ 0.9 | valid | `pattern`, `rule`, `assert`, `report`, `let`, `ns`, `role`, `rule-ids`, `style-guide-import` |
+| `03-composition-abstract-patterns.sch` | composition | `schematron` ≥ 0.9 | valid | `abstract-pattern`, `is-a`, `param`, `abstract-rule`, `extends`, `style-guide-import` |
+| `04-stress-phases-and-diagnostics.sch` ⚠ | stress | `schematron` ≥ 0.9 | valid | `phase`, `active`, `defaultPhase`, `diagnostics`, `flag`, `unevaluable-xpath`, `style-guide-import` |
+| `05-real-world-billing-bis-rules.sch` | real-world | `schematron` ≥ 0.9 | valid | `business-rules`, `calculation-rules`, `vat-rules`, `role`, `rule-ids`, `style-guide-import` |
+| `06-include-set/main.sch` | multi-file (root) | `schematron` ≥ 0.9 | valid | `multi-file`, `include`, `pattern`, `style-guide-import` |
+| `06-include-set/structure-rules.sch` ⚠ | multi-file (member) | `schematron` (no guarantee) | valid | `multi-file`, `include`, `pattern-module`, `style-guide-import` |
+| `negative/01-syntactic-unclosed-rule.sch` | — | `schematron` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-element`, `style-guide-import` |
+| `negative/02-semantic-pattern-without-rules.sch` | — | `schematron` (no guarantee) | invalid | `negative`, `semantic`, `no-assertions`, `style-guide-import` |
+| `negative/03-truncated-mid-assert.sch` | — | `schematron` (no guarantee) | invalid | `negative`, `truncated`, `mid-attribute`, `style-guide-import` |
+| `negative/04-wrong-format-xslt.xsl` ⚠ | — | `schematron` (no guarantee) | invalid | `negative`, `wrong-format`, `xslt`, `style-guide-import` |
+| `negative/05-encoding-utf16.sch` | — | `schematron` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `style-guide-import` |
+| `negative/06-unresolvable-is-a-reference.sch` | — | `schematron` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-abstract-pattern`, `style-guide-import` |
 
 > ⚠ **`04-stress-phases-and-diagnostics.sch`** — Carries one deliberately unevaluable XPath (doc:resolve-external) so the declared-but-unevaluable path is exercised; import succeeds with that rule flagged.
 

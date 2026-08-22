@@ -459,7 +459,7 @@
       "marker": "`.msg`/`.srv`/`.action` field lines with ROS primitive types and `---` separators"
     },
     "schematron": {
-      "label": "Schematron rules (pending #5436)",
+      "label": "Schematron rules",
       "category": "data-schema",
       "paradigm": "data_schema",
       "marker": "`schema`/`pattern` root in `http://purl.oclc.org/dsdl/schematron`"
@@ -24089,7 +24089,7 @@
         "pattern",
         "rule",
         "assert",
-        "pending-adapter"
+        "style-guide-import"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -24115,7 +24115,7 @@
         "ns",
         "role",
         "rule-ids",
-        "pending-adapter"
+        "style-guide-import"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -24138,7 +24138,7 @@
         "param",
         "abstract-rule",
         "extends",
-        "pending-adapter"
+        "style-guide-import"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -24162,7 +24162,7 @@
         "diagnostics",
         "flag",
         "unevaluable-xpath",
-        "pending-adapter"
+        "style-guide-import"
       ],
       "expected_outcome": "imports_with_warnings",
       "source": "hand-authored",
@@ -24186,7 +24186,7 @@
         "vat-rules",
         "role",
         "rule-ids",
-        "pending-adapter"
+        "style-guide-import"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -24207,7 +24207,7 @@
         "multi-file",
         "include",
         "pattern",
-        "pending-adapter"
+        "style-guide-import"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -24229,7 +24229,7 @@
         "multi-file",
         "include",
         "pattern-module",
-        "pending-adapter"
+        "style-guide-import"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -24252,7 +24252,7 @@
         "negative",
         "syntactic",
         "unclosed-element",
-        "pending-adapter"
+        "style-guide-import"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -24274,7 +24274,7 @@
         "negative",
         "semantic",
         "no-assertions",
-        "pending-adapter"
+        "style-guide-import"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -24296,7 +24296,7 @@
         "negative",
         "truncated",
         "mid-attribute",
-        "pending-adapter"
+        "style-guide-import"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -24318,7 +24318,7 @@
         "negative",
         "wrong-format",
         "xslt",
-        "pending-adapter"
+        "style-guide-import"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -24341,7 +24341,7 @@
         "negative",
         "encoding",
         "utf-16",
-        "pending-adapter"
+        "style-guide-import"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -24363,7 +24363,7 @@
         "negative",
         "unresolvable-ref",
         "missing-abstract-pattern",
-        "pending-adapter"
+        "style-guide-import"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",

@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.151.0
+  version: 1.152.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -8117,6 +8117,102 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for import spectral ruleset documentresponse422.
+  /v1/lint/schematron/import:
+    post:
+      tags:
+      - lint
+      summary: Import Schematron Document
+      description: 'Import a Schematron rule set as a style guide (FMT-4.3, #5436).
+
+
+        Schematron is a rule language, not a schema language, so it lands on the governance
+        engine
+
+        rather than the canonical schema model: every `assert`/`report` becomes one
+        rule, its `@id`
+
+        the rule id, its `@role` the severity, its text the message, and its `@context`
+        the target.
+
+
+        Assertions about *shape* — a child or attribute must (or must not) be declared,
+        a value must
+
+        come from a fixed set — are imported as evaluable rules scored against the
+        canonical model,
+
+        so an imported Peppol-shaped profile re-scores any XSD- or UBL-derived catalog
+        item.
+
+        Assertions that need a document in hand (arithmetic, computed variables, string
+        lengths, an
+
+        instance-selecting context predicate) are imported as **declared-but-unevaluable**
+        rules
+
+        carrying a machine-readable `reason` — they are never dropped, and `entries`
+        says exactly
+
+        what happened to each one.
+
+
+        Nothing is persisted: `yaml` is ready for
+
+        `PUT /v1/style-guides/{tenantSlug}/{guideId}/custom-rules`.'
+      operationId: import_schematron_document_v1_lint_schematron_import_post
+      parameters:
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Import Schematron Documentauthorization schema.
+          - type: 'null'
+            description: Import Schematron Documentauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Import Schematron Document Xapikey schema.
+          - type: 'null'
+            description: Import Schematron Document Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchematronImportRequest'
+              description: Request body for import schematron documentrequest.
+        description: Request body for import schematron document.
+      responses:
+        '200':
+          description: Successful response for import schematron document.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchematronImportResponse'
+                description: Response payload for import schematron documentresponse200.
+        '400':
+          description: 'The rule set could not be read: not XML, not Schematron, truncated,
+            not UTF-8, an unresolvable `include`/`is-a`, or no assertion at all. `detail.code`
+            carries the intake taxonomy code.'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for import schematron documentresponse422.
   /v1/lint/decisions:
     get:
       tags:
@@ -57317,7 +57413,7 @@ components:
           type: string
           title: Operation Uuid
           description: The apiome.path_operation UUID.
-          example: f35cfbc1-2d16-45a1-bf68-19c2a9e919e8
+          example: 6ba0f4db-a202-4991-b1ab-c6da05ac4f68
         method:
           type: string
           title: Method
@@ -59309,7 +59405,7 @@ components:
           type: string
           title: Generated At
           description: Statement timestamp (ISO-8601, UTC).
-          example: '2026-08-22T05:45:07Z'
+          example: '2026-08-22T16:07:50Z'
         envelope:
           additionalProperties: true
           type: object
@@ -87538,7 +87634,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-22T05:45:07Z'
+          example: '2026-08-22T16:07:50Z'
       additionalProperties: false
       type: object
       required:
@@ -88556,6 +88652,289 @@ components:
       - modified
       title: SchemasChangeSection
       description: Component schema name changes (``components.schemas``).
+    SchematronImportEntryOut:
+      properties:
+        assertionId:
+          type: string
+          title: Assertionid
+          description: The assertion's `@id` as written, or the coordinate derived
+            for it.
+          example: example
+        kind:
+          type: string
+          title: Kind
+          description: '`assert` (the test must hold) or `report` (it must not).'
+          example: example
+        outcome:
+          type: string
+          title: Outcome
+          description: projected (an evaluable rule scored against the canonical model)
+            | declared (recorded with a reason, never evaluated).
+          example: example
+        ruleId:
+          type: string
+          title: Ruleid
+          description: The Apiome rule id the assertion imported as (`schematron.<id>`).
+          example: documentation.schema-missing-description
+        severity:
+          type: string
+          title: Severity
+          description: 'Lint severity the `@role` maps onto: error|warning|info.'
+          example: warning
+        role:
+          anyOf:
+          - type: string
+            description: Response payload for schematron import entry.
+          - type: 'null'
+            description: Response payload for schematron import entry.
+          title: Role
+          description: The `@role` as written (fatal, error, warning, info, ...).
+        context:
+          type: string
+          title: Context
+          description: The rule's `@context` XPath, recorded as the rule's target.
+          example: example
+        test:
+          type: string
+          title: Test
+          description: The assertion's `@test` XPath, recorded verbatim.
+          example: example
+        target:
+          anyOf:
+          - type: string
+            description: Response payload for schematron import entry.
+          - type: 'null'
+            description: Response payload for schematron import entry.
+          title: Target
+          description: Canonical element the rule scores, when the context named a
+            single one.
+        patternId:
+          type: string
+          title: Patternid
+          description: The enclosing pattern's id.
+          default: ''
+          example: example
+        phases:
+          items:
+            type: string
+          type: array
+          title: Phases
+          description: Phases whose `active` list names the pattern (empty when none
+            declared).
+          maxItems: 1000
+        active:
+          type: boolean
+          title: Active
+          description: Whether the pattern is active in the resolved phase.
+          default: true
+          example: false
+        reason:
+          anyOf:
+          - type: string
+            description: Response payload for schematron import entry.
+          - type: 'null'
+            description: Response payload for schematron import entry.
+          title: Reason
+          description: 'Why the rule is declared rather than evaluable: context_predicate
+            | context_not_projectable | variable_reference | unsupported_xpath_function
+            | unsupported_xpath_operator | unsupported_xpath_path | instance_value_assertion
+            | unsupported_report_inversion | no_test | inactive_phase | rule_limit.'
+        detail:
+          anyOf:
+          - type: string
+            description: Response payload for schematron import entry.
+          - type: 'null'
+            description: Response payload for schematron import entry.
+          title: Detail
+          description: Human explanation of `reason` (declared outcome only).
+        notes:
+          items:
+            type: string
+          type: array
+          title: Notes
+          description: What a successful projection narrowed (dropped prefix, unfollowed
+            steps).
+          maxItems: 1000
+        stored:
+          type: boolean
+          title: Stored
+          description: False only when the guide's rule ceiling excluded the rule.
+          default: true
+          example: false
+      type: object
+      required:
+      - assertionId
+      - kind
+      - outcome
+      - ruleId
+      - severity
+      - context
+      - test
+      title: SchematronImportEntryOut
+      description: What became of one `assert` / `report` of an imported Schematron
+        rule set (FMT-4.3).
+    SchematronImportRequest:
+      properties:
+        content:
+          type: string
+          maxLength: 262144
+          minLength: 1
+          title: Content
+          description: The Schematron document text (paste or uploaded `.sch` file).
+          example: example
+        sourceLabel:
+          anyOf:
+          - type: string
+            maxLength: 255
+            description: Request body for schematron import.
+          - type: 'null'
+            description: Request body for schematron import.
+          title: Sourcelabel
+          description: Path of `content` within the uploaded set (e.g. `main.sch`),
+            echoed back and used to resolve a relative `include` href.
+        members:
+          anyOf:
+          - additionalProperties:
+              type: string
+            type: object
+            description: Request body for schematron import.
+          - type: 'null'
+            description: Request body for schematron import.
+          title: Members
+          description: Other files of a multi-file rule set, keyed by path relative
+            to the set root. Only consulted by `include`.
+      type: object
+      required:
+      - content
+      title: SchematronImportRequest
+      description: 'Import a Schematron rule set as a style guide (FMT-4.3, #5436).
+
+
+        ``content`` is the rule set''s text — the root document of the set. A rule
+        set assembled from
+
+        modules by ``include`` additionally supplies ``members``: the other files
+        of the upload,
+
+        keyed by their path relative to the set root. Nothing is fetched, so an ``include``
+        naming a
+
+        file that is not a member fails with an unresolved-reference error.'
+    SchematronImportResponse:
+      properties:
+        sourceLabel:
+          anyOf:
+          - type: string
+            description: Response payload for schematron import.
+          - type: 'null'
+            description: Response payload for schematron import.
+          title: Sourcelabel
+          description: Label of the imported source.
+        guideName:
+          type: string
+          title: Guidename
+          description: 'Suggested guide name: the rule set''s `title`, else the source
+            label.'
+          example: Example
+        description:
+          anyOf:
+          - type: string
+            description: Response payload for schematron import.
+          - type: 'null'
+            description: Response payload for schematron import.
+          title: Description
+          description: The rule set's prose, for the guide's description.
+        assertionCount:
+          type: integer
+          title: Assertioncount
+          description: Assertions the rule set declared.
+          example: 1
+        projectedCount:
+          type: integer
+          title: Projectedcount
+          description: Assertions that became evaluable canonical-model rules.
+          example: 1
+        declaredCount:
+          type: integer
+          title: Declaredcount
+          description: Assertions recorded as declared-but-unevaluable, each with
+            a reason.
+          example: 1
+        coverage:
+          type: number
+          title: Coverage
+          description: projectedCount / assertionCount, 0.0-1.0. Reported, never gated
+            on.
+          example: 1.0
+        yaml:
+          type: string
+          title: Yaml
+          description: The imported rules as a style-guide YAML document.
+          example: example
+        resolvedPhase:
+          type: string
+          title: Resolvedphase
+          description: The phase whose patterns are active (`#ALL` when none was selected).
+          example: example
+        phases:
+          items:
+            type: string
+          type: array
+          title: Phases
+          description: Every phase the rule set declares, in document order.
+          maxItems: 1000
+        namespaces:
+          additionalProperties:
+            type: string
+          type: object
+          title: Namespaces
+          description: The `ns` prefix bindings the rule set declares.
+        modules:
+          items:
+            type: string
+          type: array
+          title: Modules
+          description: Modules spliced in by `include`, in resolution order.
+          maxItems: 1000
+        entries:
+          items:
+            $ref: '#/components/schemas/SchematronImportEntryOut'
+          type: array
+          title: Entries
+          description: One entry per assertion, in document order.
+          maxItems: 100
+        notes:
+          items:
+            type: string
+          type: array
+          title: Notes
+          description: Document-level notes (rule ceiling reached, assembled modules,
+            ...).
+          maxItems: 1000
+      type: object
+      required:
+      - guideName
+      - assertionCount
+      - projectedCount
+      - declaredCount
+      - coverage
+      - yaml
+      - resolvedPhase
+      - entries
+      title: SchematronImportResponse
+      description: 'A Schematron rule set translated into style-guide state (FMT-4.3,
+        #5436).
+
+
+        `yaml` is the ready-to-store custom-rules document — the exact body
+
+        `PUT /v1/style-guides/{tenantSlug}/{guideId}/custom-rules` accepts. Nothing
+        is persisted by
+
+        the import call itself. Every assertion appears in `entries` *and* in `yaml`:
+        one that could
+
+        not be projected is stored as a declared rule carrying its reason, never dropped.'
     ScopedCatalogPage:
       properties:
         items:
@@ -98952,13 +99331,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-22T05:45:07Z'
+          example: '2026-08-22T16:07:50Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-22T05:45:07Z'
+          example: '2026-08-22T16:07:50Z'
         outcome:
           anyOf:
           - type: string

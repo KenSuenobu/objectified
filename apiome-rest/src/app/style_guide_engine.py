@@ -40,6 +40,8 @@ from functools import lru_cache
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .custom_rule_dsl import (
+    SCOPE_CANONICAL,
+    SCOPE_DOCUMENT,
     CustomRule,
     CustomRuleSet,
     CustomRuleValidationError,
@@ -59,6 +61,7 @@ __all__ = [
     "resolve_style_guide",
     "rules_content_fingerprint",
     "guided_lint_openapi_spec",
+    "apply_style_guide_to_canonical_result",
     "apply_style_guide_to_lint_report",
 ]
 
@@ -113,10 +116,22 @@ class CompiledStyleGuide:
         """Return the severity this guide assigns ``rule_id``, or ``None`` when disabled."""
         return self.rule_severities.get(rule_id)
 
+    def has_rules_in_scope(self, scope: str) -> bool:
+        """Return whether this guide carries any evaluable custom rule declaring ``scope``.
+
+        Lets a caller skip building the document a scope needs when no rule would read it — a
+        canonical import pays nothing for FMT-4.3 unless its guide actually holds Schematron-
+        derived rules.
+        """
+        return any(
+            rule.scope == scope and rule.is_evaluable() for rule in self.custom_rules.rules
+        )
+
     def apply(
         self,
         result: LintResult,
         document: Optional[Mapping[str, Any]] = None,
+        scope: str = SCOPE_DOCUMENT,
     ) -> LintResult:
         """Re-score an engine result under this guide.
 
@@ -133,8 +148,13 @@ class CompiledStyleGuide:
             result: The engine output (:func:`~app.schema_lint.lint_openapi_spec` or
                 :func:`~app.lint_engine.lint_canonical_model`).
             document: The raw JSON document the result was computed from, for custom-rule
-                (JSONPath) evaluation. ``None`` skips custom rules — canonical-model lint
-                paths without a JSON document still get enable/disable + severity overrides.
+                (JSONPath) evaluation. ``None`` skips custom rules — a lint path with no
+                document still gets enable/disable + severity overrides.
+            scope: Which custom-rule scope ``document`` is. Defaults to
+                :data:`~app.custom_rule_dsl.SCOPE_DOCUMENT` (a reconstructed source document);
+                canonical-model paths pass :data:`~app.custom_rule_dsl.SCOPE_CANONICAL` with the
+                governance projection. Rules of any other scope are left untouched, so adding
+                canonical rules to a guide cannot change what an OpenAPI lint reports.
 
         Returns:
             A new :class:`~app.schema_lint.LintResult` scored under this guide.
@@ -153,7 +173,7 @@ class CompiledStyleGuide:
                 findings.append(replace(finding, severity=severity))
 
         if document is not None and self.custom_rules.rules:
-            evaluation = evaluate_custom_rules(self.custom_rules, document)
+            evaluation = evaluate_custom_rules(self.custom_rules, document, scope=scope)
             findings.extend(evaluation.findings)
             for rule_id, reason in evaluation.rule_errors.items():
                 logger.warning(
@@ -382,21 +402,58 @@ def guided_lint_openapi_spec(
     return guide.apply(result, document=spec), guide
 
 
-def apply_style_guide_to_lint_report(report: Any, guide: CompiledStyleGuide) -> Any:
+def apply_style_guide_to_canonical_result(
+    result: LintResult, guide: CompiledStyleGuide, api: Any
+) -> LintResult:
+    """Re-score a canonical-model lint result under a guide, including canonical custom rules.
+
+    The canonical lint paths (import scoring, export pre-flight) have a
+    :class:`~app.canonical_model.CanonicalApi` rather than a JSON document, so before FMT-4.3
+    they could apply a guide's enable/disable and severity overrides but never its custom rules.
+    Rules imported from a schema-agnostic rule language — a Schematron profile
+    (:mod:`app.schematron_import`) — are written against the canonical model precisely so they
+    *can* run here, so this builds the governance projection and evaluates exactly those rules.
+
+    The projection is built only when the guide actually holds canonical-scoped rules, and
+    document-scoped rules are never evaluated against it, so a guide that predates FMT-4.3
+    scores identically to before.
+
+    Args:
+        result: The engine output from :func:`~app.lint_engine.lint_canonical_model`.
+        guide: The compiled guide to score under.
+        api: The canonical artifact the result was computed from (typed ``Any`` so this module
+            stays importable without the model layer).
+
+    Returns:
+        A new :class:`~app.schema_lint.LintResult` scored under the guide.
+    """
+    document = None
+    if api is not None and guide.has_rules_in_scope(SCOPE_CANONICAL):
+        from .schematron_projection import canonical_governance_document  # Lazy: hot path.
+
+        document = canonical_governance_document(api)
+    return guide.apply(result, document=document, scope=SCOPE_CANONICAL)
+
+
+def apply_style_guide_to_lint_report(
+    report: Any, guide: CompiledStyleGuide, api: Any = None
+) -> Any:
     """Re-score a canonical-import :class:`~app.import_source.LintReport` under a guide.
 
     The canonical import pipeline lints via adapters that return the SPI ``LintReport``
     (whose findings drop the ``category`` field). To re-score without changing the SPI,
     findings are lifted back into engine findings — category recovered from the GOV-1.2
-    registry (falling back to the rule id's pack prefix) — the guide is applied (without a
-    JSON document, so enable/disable + severity overrides only), and the result is adapted
-    back through ``LintReport.from_lint_result``. Under the default guide this reproduces
-    the adapter's report verbatim.
+    registry (falling back to the rule id's pack prefix) — the guide is applied, and the result
+    is adapted back through ``LintReport.from_lint_result``. Under the default guide this
+    reproduces the adapter's report verbatim.
 
     Args:
         report: The adapter's ``LintReport`` (typed ``Any`` to avoid importing the heavy
             SPI module at import time).
         guide: The compiled guide to score under.
+        api: The canonical artifact the report was produced from, when the caller has it. Passing
+            it lets the guide's canonical-scoped custom rules (FMT-4.3) evaluate; omitting it
+            keeps the pre-FMT-4.3 behaviour of enable/disable + severity overrides only.
 
     Returns:
         A new ``LintReport`` scored under the guide; ``report`` unchanged when it carries
@@ -419,4 +476,4 @@ def apply_style_guide_to_lint_report(report: Any, guide: CompiledStyleGuide) -> 
         for f in report.findings
     ]
     base = assemble_lint_result(findings)
-    return LintReport.from_lint_result(guide.apply(base))
+    return LintReport.from_lint_result(apply_style_guide_to_canonical_result(base, guide, api))

@@ -549,6 +549,58 @@ def test_put_custom_rules_validates_and_persists():
     assert stored[0]["custom_def"]["description"].startswith("Every server")
 
 
+SCHEMATRON_CUSTOM_YAML = """rules:
+  schematron.br-02:
+    description: An invoice shall have an invoice number.
+    severity: error
+    scope: canonical
+    given: "$.elements['Invoice'].children"
+    then:
+      field: ID
+      function: defined
+  schematron.br-co-10:
+    description: Totals shall agree with the sum of the line amounts.
+    severity: error
+    scope: declared
+    unevaluable:
+      reason: variable_reference
+      detail: reads $lineExtension, a let computed at validation time
+"""
+
+
+def test_put_custom_rules_stores_an_imported_schematron_guide_round_trip():
+    """FMT-4.3 (#5436): a declared rule survives the store/read cycle, reason and all."""
+    with patch(
+        "app.style_guide_routes.db.get_style_guide_by_id", return_value=_custom_row()
+    ), patch(
+        "app.style_guide_routes.db.replace_style_guide_custom_rules", return_value=True
+    ) as replace, patch(
+        "app.style_guide_routes.db.get_style_guide_rules", return_value=[]
+    ):
+        r = client.put(
+            f"/v1/style-guides/acme/{GUIDE_ID}/custom-rules",
+            json={"yaml": SCHEMATRON_CUSTOM_YAML},
+        )
+    assert r.status_code == 200
+    stored = {row["rule_id"]: row["custom_def"] for row in replace.call_args[0][2]}
+    assert stored["schematron.br-02"]["scope"] == "canonical"
+    assert stored["schematron.br-co-10"]["scope"] == "declared"
+    assert stored["schematron.br-co-10"]["unevaluable"]["reason"] == "variable_reference"
+    assert "given" not in stored["schematron.br-co-10"]
+
+    rows = [
+        {"rule_id": rule_id, "enabled": True, "severity": "error", "custom_def": definition}
+        for rule_id, definition in stored.items()
+    ]
+    with patch(
+        "app.style_guide_routes.db.get_style_guide_by_id", return_value=_custom_row()
+    ), patch("app.style_guide_routes.db.get_style_guide_rules", return_value=rows):
+        r = client.get(f"/v1/style-guides/acme/{GUIDE_ID}/custom-rules")
+    assert r.status_code == 200
+    assert "scope: declared" in r.json()["yaml"]
+    assert "variable_reference" in r.json()["yaml"]
+
+
 def test_put_custom_rules_malformed_yaml_returns_422_with_pointer():
     bad_yaml = """rules:
   broken:

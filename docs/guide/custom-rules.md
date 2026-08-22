@@ -37,8 +37,13 @@ Each rule id maps to a definition with exactly these keys (anything else is reje
 |---|---|---|
 | `description` | yes | Human explanation; becomes the base finding message. |
 | `severity` | no | `error` \| `warning` \| `info` (default `warning`). |
-| `given` | yes | One JSONPath expression, or a list of them, selecting the values to test. |
-| `then` | yes | One clause, or a list of clauses, applied to every `given` match. |
+| `given` | yes* | One JSONPath expression, or a list of them, selecting the values to test. |
+| `then` | yes* | One clause, or a list of clauses, applied to every `given` match. |
+| `scope` | no | Which model the rule reads: `document` (default) \| `canonical` \| `declared`. |
+| `unevaluable` | `declared` only | `{reason, detail}` — why a `declared` rule is recorded but never evaluated. |
+
+\* `given` and `then` are optional only on a `declared` rule, which is a record rather than a
+check.
 
 A `then` clause:
 
@@ -50,6 +55,42 @@ A `then` clause:
 
 Rule ids are lowercase alphanumeric segments separated by `.`, `-` or `_`, and may not shadow a
 [built-in rule id](lint-rules.md).
+
+## Rule scope
+
+Almost every rule is written against a **source document** — a reconstructed OpenAPI/JSON-Schema
+mapping — and that is the default, so a rule with no `scope` behaves exactly as it always has.
+Two other scopes exist for rules that cannot be:
+
+| `scope` | The rule reads | Written by |
+|---|---|---|
+| `document` | The reconstructed source document. | Hand-authored rules, [Spectral imports](spectral-import.md). |
+| `canonical` | The canonical-model governance projection — every named type keyed by name, its members split into `children` and `attributes`. | [Schematron imports](schematron-import.md). |
+| `declared` | Nothing. The rule is recorded, with a machine-readable reason, and never evaluated. | An import that could not express an assertion, so it says so instead of dropping it. |
+
+One scope is evaluated per lint run, so adding canonical rules to a guide cannot change what an
+OpenAPI lint reports, and a `declared` rule never produces a finding in any scope:
+
+```yaml
+rules:
+  schematron.br-02:
+    description: An invoice shall have an invoice number.
+    severity: error
+    scope: canonical
+    given: "$.elements['Invoice'].children"
+    then: {field: ID, function: defined}
+
+  schematron.br-co-10:
+    description: Totals shall agree with the sum of the line amounts.
+    severity: error
+    scope: declared
+    unevaluable:
+      reason: variable_reference
+      detail: "reads $lineExtension, a `let` computed at validation time"
+```
+
+`unevaluable.reason` is a lowercase snake_case code; `detail` is optional prose, capped at 1024
+characters.
 
 ## Core functions
 
@@ -115,4 +156,5 @@ evaluates.
 
 - [lint-rules.md](lint-rules.md) — the built-in rule catalog custom ids may not shadow
 - [spectral-import.md](spectral-import.md) — importing an existing `.spectral.yaml` onto this DSL
+- [schematron-import.md](schematron-import.md) — importing a `.sch` rule set onto this DSL
 - [lint-and-quality.md](lint-and-quality.md) — the lint/scoring surface style guides plug into
