@@ -52,7 +52,7 @@ output, and the round-trip ticket (MFX-12.3) automates the full loop.
 from __future__ import annotations
 
 import re
-from typing import Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from pydantic import Field
 
@@ -83,6 +83,14 @@ from .emitter import (
     ProvenanceTracker,
 )
 from .field_identity_store import FieldNumberAllocator
+from .proto_editions import (
+    EDITIONS_PROVENANCE_EXTRA_KEY,
+    ENUM_CLOSED_EXTRA_KEY,
+    FEATURES_EXTRA_KEY,
+    FIELD_PRESENCE_EXPLICIT,
+    FIELD_PRESENCE_EXTRA_KEY,
+    FIELD_PRESENCE_LEGACY_REQUIRED,
+)
 
 __all__ = [
     "ProtoEmitOptions",
@@ -274,6 +282,61 @@ def _record_has_inheritance(type_: Type) -> bool:
 def _is_arbitrary_json_ref(ref: TypeRef) -> bool:
     """Return ``True`` for a typeless leaf ref (arbitrary JSON) the emitter maps to ``Struct``."""
     return not ref.is_list() and ref.name is None
+
+
+#: How proto3 itself resolves each Editions feature — the value the emitted document forces.
+#: An Editions source that resolved a feature to anything else has made a choice this emitter
+#: cannot carry, which is what :meth:`ProtoEmitter._record_editions_downgrade` and
+#: :meth:`ProtoEmitter._record_feature_losses` declare.
+_PROTO3_FEATURE_VALUES: Dict[str, str] = {
+    "field_presence": "IMPLICIT",
+    "enum_type": "OPEN",
+    "repeated_field_encoding": "PACKED",
+    "utf8_validation": "VERIFY",
+    "message_encoding": "LENGTH_PREFIXED",
+    "json_format": "ALLOW",
+}
+
+
+def _feature_loss_subject(feature_name: str) -> str:
+    """The stable ``Loss.subject`` slug for one Editions feature (``editions-feature-…``)."""
+    return f"editions-feature-{feature_name.replace('_', '-')}"
+
+
+def _editions_record(api: CanonicalApi) -> Optional[Dict[str, Any]]:
+    """Return the FMT-3.7 Editions provenance record on ``api``, or ``None``.
+
+    Only a model normalized from an ``edition = `` document carries one, so its presence is
+    what tells this proto3 emitter that it is *downgrading* a dialect rather than round-tripping
+    the one it targets.
+    """
+    record = api.extras.get(EDITIONS_PROVENANCE_EXTRA_KEY)
+    return record if isinstance(record, dict) else None
+
+
+def _emits_proto3_optional(field: CanonicalField) -> bool:
+    """Whether a field should be written with the proto3 ``optional`` label.
+
+    Two sources answer this, and they mean the same thing. A model normalized from proto3
+    carries ``extras['proto3_optional']``. A model normalized from an Editions document
+    carries ``extras['field_presence']`` instead (FMT-3.7), and its ``EXPLICIT`` fields have
+    exactly the presence proto3 spells ``optional`` — so writing them bare would drop presence
+    tracking that the source document had, which is a silent semantic downgrade rather than a
+    stylistic one.
+
+    ``LEGACY_REQUIRED`` is deliberately **not** emitted as ``optional``: proto3 cannot enforce
+    requiredness at all, and labelling a required field ``optional`` would state the opposite of
+    the source. :meth:`ProtoEmitter` records that as a loss instead.
+
+    Args:
+        field: The canonical field being written.
+
+    Returns:
+        ``True`` when the declaration takes the ``optional`` prefix.
+    """
+    if field.extras.get("proto3_optional"):
+        return True
+    return field.extras.get(FIELD_PRESENCE_EXTRA_KEY) == FIELD_PRESENCE_EXPLICIT
 
 
 class ProtoFidelityRulePack(CapabilityRulePack):
@@ -652,6 +715,7 @@ class _ProtoWriter:
         """Render ``syntax``, ``package``, and the discovered ``import`` lines."""
         lines = [f'syntax = "{ProtoEmitter.SYNTAX}";']
         self.tracker.record("/syntax", Provenance.DEFAULT, "emitter targets proto3")
+        self._record_editions_downgrade()
         if self._package:
             lines.append("")
             lines.append(f"package {self._package};")
@@ -662,6 +726,97 @@ class _ProtoWriter:
                 lines.append("")
             lines.append(f'import "{path}";')
         return lines
+
+    def _record_editions_downgrade(self) -> None:
+        """Declare, as explicit losses, what writing proto3 costs an Editions source.
+
+        FMT-3.7 asks the emitter either to grow an edition output mode or to *declare the loss
+        explicitly*. This is that declaration. A proto3 document cannot say ``edition``, so the
+        dialect is gone the moment the header is written; what matters is that every feature the
+        source resolved away from the value proto3 forces is named, once, rather than
+        disappearing quietly.
+
+        Losses are recorded at the scope the choice was made at, so a reader can act on them.
+        This method covers the **file-level** settings; a message, enum or field that narrowed
+        a feature further reports its own through :meth:`_record_feature_losses`, and
+        ``field_presence = LEGACY_REQUIRED`` reports on the field that carries it (see
+        :meth:`_render_field`).
+
+        Presence itself is otherwise **not** a loss: an ``EXPLICIT`` field is emitted with the
+        proto3 ``optional`` label and an ``IMPLICIT`` one bare, which preserves the source's
+        presence semantics exactly (see :func:`_emits_proto3_optional`).
+        """
+        record = _editions_record(self._api)
+        if record is None:
+            return
+
+        editions = record.get("editions")
+        editions_label = ", ".join(editions) if isinstance(editions, list) and editions else "?"
+        self.losses.record(
+            LossKind.NA,
+            "editions-dialect",
+            f"The source is a Protobuf Editions document (edition {editions_label}); this "
+            "emitter writes proto3, so the `edition` declaration and the per-scope `features` "
+            "options are not reproduced.",
+        )
+
+        files = record.get("files")
+        if not isinstance(files, list):
+            return
+        # Reported once per (feature, value) across the whole set, sorted, so a fileset does not
+        # produce one identical loss per member.
+        overridden: Dict[str, set] = {}
+        for entry in files:
+            if not isinstance(entry, dict) or entry.get("syntax") != "editions":
+                continue
+            features = entry.get("features")
+            if not isinstance(features, dict):
+                continue
+            for name, value in features.items():
+                forced = _PROTO3_FEATURE_VALUES.get(name)
+                # ``field_presence`` is carried per field, not lost at document scope.
+                if name == "field_presence" or forced is None or value == forced:
+                    continue
+                overridden.setdefault(name, set()).add(value)
+
+        for name in sorted(overridden):
+            for value in sorted(overridden[name]):
+                self.losses.record(
+                    LossKind.NA,
+                    _feature_loss_subject(name),
+                    f"The source resolved '{name} = {value}'; proto3 fixes it at "
+                    f"'{_PROTO3_FEATURE_VALUES[name]}', so that choice is not reproduced.",
+                )
+
+    def _record_feature_losses(self, extras: Dict[str, Any], pointer: str, subject: str) -> None:
+        """Declare the Editions features one entity narrowed that proto3 cannot express.
+
+        The normalizer records a feature at the scope that set it and only where the value
+        deviates from its file's (FMT-3.7), so this reads exactly the choices the entity made
+        for itself — a message that opted into ``json_format = LEGACY_BEST_EFFORT``, a field
+        that opted into ``message_encoding = DELIMITED``. Anything already covered by the
+        file-level statement is not repeated here.
+
+        Args:
+            extras: The entity's ``extras`` bag.
+            pointer: The entity's canonical key, recorded on each loss.
+            subject: Human label for the entity kind, used in the message.
+        """
+        features = extras.get(FEATURES_EXTRA_KEY)
+        if not isinstance(features, dict):
+            return
+        for name in sorted(features):
+            value = features[name]
+            forced = _PROTO3_FEATURE_VALUES.get(name)
+            if forced is None or value == forced:
+                continue
+            self.losses.record(
+                LossKind.NA,
+                _feature_loss_subject(name),
+                f"{subject} {pointer!r} resolved '{name} = {value}'; proto3 fixes it at "
+                f"'{forced}', so that choice is not reproduced.",
+                pointer=pointer,
+            )
 
     # --- types --------------------------------------------------------------
 
@@ -680,6 +835,8 @@ class _ProtoWriter:
         lines = _comment(type_.description, pad)
         lines.append(f"{pad}message {name} {{")
         self.tracker.record(ProvenanceTracker.child("/messages", type_.key), Provenance.SOURCE)
+
+        self._record_feature_losses(type_.extras, type_.key, "Message")
 
         inner = _INDENT * (level + 1)
         if type_.deprecated:
@@ -798,6 +955,19 @@ class _ProtoWriter:
             )
             prefix = ""
 
+        if field.extras.get(FIELD_PRESENCE_EXTRA_KEY) == FIELD_PRESENCE_LEGACY_REQUIRED:
+            # proto3 removed ``required`` outright, so the one presence mode this emitter
+            # cannot express is the one that changes what a *reader* must accept. Emitting the
+            # field bare is the only legal output; saying so is what keeps it from being silent.
+            self.losses.record(
+                LossKind.NA,
+                "editions-legacy-required",
+                f"proto3 has no 'required'; the Editions 'field_presence = LEGACY_REQUIRED' "
+                f"on {field.key!r} was dropped and the field is emitted as singular.",
+                pointer=field.key,
+            )
+        self._record_feature_losses(field.extras, field.key, "Field")
+
         options = " [deprecated = true]" if field.deprecated else ""
         decl = f"{pad}{prefix}{type_expr} {name} = {number}{options};"
         comment = _comment(field.description, pad)
@@ -837,7 +1007,7 @@ class _ProtoWriter:
             expr = self._leaf_expr(element) if element is not None else "bytes"
             return expr, "repeated "
 
-        prefix = "optional " if field.extras.get("proto3_optional") else ""
+        prefix = "optional " if _emits_proto3_optional(field) else ""
         return self._leaf_expr(ref), prefix
 
     def _map_expr(self, map_type: Type, pointer: str) -> str:
@@ -917,6 +1087,17 @@ class _ProtoWriter:
         lines = _comment(type_.description, pad)
         lines.append(f"{pad}enum {name} {{")
         self.tracker.record(ProvenanceTracker.child("/enums", type_.key), Provenance.SOURCE)
+        self._record_feature_losses(type_.extras, type_.key, "Enum")
+        if type_.extras.get(ENUM_CLOSED_EXTRA_KEY) is True:
+            # proto3 enums are always open, so a closed enum's defining property — that an
+            # unrecognised number does not parse into it — is gone from the emitted document.
+            self.losses.record(
+                LossKind.NA,
+                _feature_loss_subject("enum_type"),
+                f"Enum {type_.key!r} is closed; proto3 enums are always open, so the "
+                "rejection of unrecognised values is not reproduced.",
+                pointer=type_.key,
+            )
 
         if type_.deprecated:
             lines.append(f"{inner}option deprecated = true;")

@@ -62,7 +62,7 @@ The **Direction** column below says whether a format can be imported, exported, 
 | Cap'n Proto | `capnproto` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `capnproto`, `capnp` | `.capnp`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 | Connect RPC | `connectrpc` | Import + export | Catalog | `file`, `url`, `paste`, `discovery`, `fileset` | Yes | `connectrpc` | `.proto`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 | CORBA IDL | `corbaidl` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `corbaidl`, `corba`, `idl` | `.idl`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
-| gRPC / Protobuf | `grpc` | Import + export | Catalog | `file`, `url`, `paste`, `discovery`, `fileset` | Yes | `protobuf` | `.proto`, `.binpb`, `.desc`, `.protoset`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
+| gRPC / Protobuf | `grpc` | Import + export | Catalog | `file`, `url`, `paste`, `discovery`, `fileset` | Yes | `protobuf`, `protobuf-editions` | `.proto`, `.binpb`, `.desc`, `.protoset`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | [Generic (reviewed)](#format-grpc) | Ready |
 | ONC RPC | `oncrpc` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `oncrpc`, `sunrpc`, `rpcgen`, `xdr` | `.x`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 | OpenRPC | `openrpc` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `openrpc`, `jsonrpc` | `.openrpc.json`, `.openrpc`, `.json`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
 | Smithy | `smithy` | Import + export | Catalog | `file`, `url`, `paste`, `fileset` | — | `smithy` | `.smithy`, `.zip`, `.tar.gz`, `.tgz`, `.tar` | Generic | Ready |
@@ -128,6 +128,15 @@ What these formats knowingly do **not** model, from the source-format capability
 - HL loops are described as the segments they are, not as the hierarchy they encode. Where the interchange declares a repetition separator (ISA11 at 00501 and later, never at 00401) a repeated element carries its occurrences and states how many.
 - Control totals declared by the SE, GE and IEA trailers are recorded beside the counts actually observed, so an interchange that disagrees with itself can be seen to. The trailer segments themselves are not tree nodes, and TA1 acknowledgements are removed by the parser before the analysis runs.
 - No 4010/5010 implementation-guide conformance is evaluated — a structurally valid interchange is not claimed to be a conformant one, and an ST03 implementation convention reference is recorded as the sender's claim rather than as a checked fact.
+
+<a id="format-grpc"></a>
+
+### gRPC / Protobuf
+
+- The compiled descriptor set is the artifact of record, not the .proto text: imports, option inheritance and Editions feature resolution are the compiler's answers, never a re-parse here. A document that does not compile has no analysis at all, which is reported as a compile failure rather than as an empty source.
+- Editions feature resolution is ours, not the compiler's: `buf build` writes each scope's raw `features` override into the descriptor and leaves the merge to the reader, so the resolved values reported here are computed from the edition's own defaults table as published in descriptor.proto.
+- A type a target file references but an *import* declares (google.protobuf.Timestamp, a sibling module's message) is carried as a reference with no local definition. That is the shape a protobuf `import` has, not a resolution failure.
+- Custom options and extension declarations are preserved in the descriptor set and in the retained source, and only there — the canonical model has no vocabulary for a user-defined option, so it is neither named nor counted.
 
 ## Related
 

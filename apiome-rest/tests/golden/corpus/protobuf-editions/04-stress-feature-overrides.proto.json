@@ -1,0 +1,503 @@
+{
+  "adapter": "grpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "protobuf_editions": {
+        "editions": [
+          "2023"
+        ],
+        "files": [
+          {
+            "edition": "2023",
+            "features": {
+              "enum_type": "CLOSED",
+              "field_presence": "IMPLICIT",
+              "json_format": "LEGACY_BEST_EFFORT",
+              "message_encoding": "LENGTH_PREFIXED",
+              "repeated_field_encoding": "EXPANDED",
+              "utf8_validation": "NONE"
+            },
+            "file": "04-stress-feature-overrides.proto",
+            "syntax": "editions"
+          }
+        ],
+        "modelled_features": [
+          "field_presence",
+          "enum_type",
+          "repeated_field_encoding",
+          "utf8_validation",
+          "message_encoding",
+          "json_format"
+        ],
+        "syntaxes": [
+          "editions"
+        ],
+        "unmodelled_features": []
+      }
+    },
+    "format": "protobuf",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "example.stress.v1",
+      "namespace": "example.stress.v1"
+    },
+    "paradigm": "rpc",
+    "protocol": "grpc",
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.stress.v1.ClosedByFile.CLOSED_BY_FILE_A",
+            "name": "CLOSED_BY_FILE_A",
+            "value": 1
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.stress.v1.ClosedByFile.CLOSED_BY_FILE_B",
+            "name": "CLOSED_BY_FILE_B",
+            "value": 2
+          }
+        ],
+        "extras": {
+          "enum_closed": true
+        },
+        "fields": [],
+        "key": "example.stress.v1.ClosedByFile",
+        "key_type": null,
+        "kind": "enum",
+        "name": "ClosedByFile",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.stress.v1.OpenByOverride.OPEN_BY_OVERRIDE_UNSPECIFIED",
+            "name": "OPEN_BY_OVERRIDE_UNSPECIFIED",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "example.stress.v1.OpenByOverride.OPEN_BY_OVERRIDE_A",
+            "name": "OPEN_BY_OVERRIDE_A",
+            "value": 1
+          }
+        ],
+        "extras": {
+          "enum_closed": false
+        },
+        "fields": [],
+        "key": "example.stress.v1.OpenByOverride",
+        "key_type": null,
+        "kind": "enum",
+        "name": "OpenByOverride",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "oneofs": [
+            "choice"
+          ],
+          "proto_features": {
+            "json_format": "ALLOW"
+          }
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "IMPLICIT",
+              "label": "optional",
+              "oneof": "choice"
+            },
+            "field_number": 11,
+            "key": "example.stress.v1.Overrides.blob",
+            "name": "blob",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 12,
+            "key": "example.stress.v1.Overrides.by_name",
+            "name": "by_name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.stress.v1.Overrides.ByNameEntry",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "IMPLICIT",
+              "label": "optional"
+            },
+            "field_number": 8,
+            "key": "example.stress.v1.Overrides.closed_enum",
+            "name": "closed_enum",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.stress.v1.ClosedByFile",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "IMPLICIT",
+              "label": "optional",
+              "proto_features": {
+                "message_encoding": "DELIMITED"
+              }
+            },
+            "field_number": 6,
+            "key": "example.stress.v1.Overrides.delimited",
+            "name": "delimited",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.stress.v1.Overrides.Nested",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated"
+            },
+            "field_number": 5,
+            "key": "example.stress.v1.Overrides.expanded_by_file",
+            "name": "expanded_by_file",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "int64",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.stress.v1.Overrides.explicit_by_field",
+            "name": "explicit_by_field",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "IMPLICIT",
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.stress.v1.Overrides.implicit_by_file",
+            "name": "implicit_by_file",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "LEGACY_REQUIRED",
+              "label": "optional"
+            },
+            "field_number": 3,
+            "key": "example.stress.v1.Overrides.legacy_required",
+            "name": "legacy_required",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "IMPLICIT",
+              "label": "optional"
+            },
+            "field_number": 9,
+            "key": "example.stress.v1.Overrides.open_enum",
+            "name": "open_enum",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.stress.v1.OpenByOverride",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "label": "repeated",
+              "proto_features": {
+                "repeated_field_encoding": "PACKED"
+              }
+            },
+            "field_number": 4,
+            "key": "example.stress.v1.Overrides.packed_by_field",
+            "name": "packed_by_field",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "int32",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "IMPLICIT",
+              "label": "optional",
+              "oneof": "choice"
+            },
+            "field_number": 10,
+            "key": "example.stress.v1.Overrides.text",
+            "name": "text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "IMPLICIT",
+              "label": "optional",
+              "proto_features": {
+                "utf8_validation": "VERIFY"
+              }
+            },
+            "field_number": 7,
+            "key": "example.stress.v1.Overrides.verified_text",
+            "name": "verified_text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.stress.v1.Overrides",
+        "key_type": null,
+        "kind": "record",
+        "name": "Overrides",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [],
+        "key": "example.stress.v1.Overrides.ByNameEntry",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        },
+        "kind": "map",
+        "name": "ByNameEntry",
+        "namespace": null,
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "example.stress.v1.Overrides.Nested",
+          "nullable": true
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.stress.v1.Overrides.Nested.flag",
+            "name": "flag",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "IMPLICIT",
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.stress.v1.Overrides.Nested.label",
+            "name": "label",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.stress.v1.Overrides.Nested",
+        "key_type": null,
+        "kind": "record",
+        "name": "Nested",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "protobuf-editions/04-stress-feature-overrides.proto",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 5
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "protobuf-editions"
+  },
+  "fingerprint": "sha256:f15198aa274cdc68adc17c24458c37ee9f50900cb2cd57c7231cdc71a3ab7c2f",
+  "lint": {
+    "findings": 24,
+    "grade": "F",
+    "report_fingerprint": "09ce523605ac0af6e46666ba35f7aee9ccbf37f81da12e472aa6ff079911f2bf",
+    "score": 49,
+    "severity_counts": {
+      "error": 0,
+      "info": 15,
+      "warning": 9
+    }
+  },
+  "snapshot_version": 1
+}

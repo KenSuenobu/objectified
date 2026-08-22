@@ -1,0 +1,137 @@
+{
+  "adapter": "grpc",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "protobuf_editions": {
+        "editions": [
+          "2023"
+        ],
+        "files": [
+          {
+            "edition": "2023",
+            "features": {
+              "enum_type": "OPEN",
+              "field_presence": "EXPLICIT",
+              "json_format": "ALLOW",
+              "message_encoding": "LENGTH_PREFIXED",
+              "repeated_field_encoding": "PACKED",
+              "utf8_validation": "VERIFY"
+            },
+            "file": "01-minimal-edition-2023.proto",
+            "syntax": "editions"
+          }
+        ],
+        "modelled_features": [
+          "field_presence",
+          "enum_type",
+          "repeated_field_encoding",
+          "utf8_validation",
+          "message_encoding",
+          "json_format"
+        ],
+        "syntaxes": [
+          "editions"
+        ],
+        "unmodelled_features": []
+      }
+    },
+    "format": "protobuf",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "example.ping.v1",
+      "namespace": "example.ping.v1"
+    },
+    "paradigm": "rpc",
+    "protocol": "grpc",
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": null,
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 1,
+            "key": "example.ping.v1.Beacon.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "field_presence": "EXPLICIT",
+              "label": "optional"
+            },
+            "field_number": 2,
+            "key": "example.ping.v1.Beacon.seen_at",
+            "name": "seen_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.ping.v1.Beacon",
+        "key_type": null,
+        "kind": "record",
+        "name": "Beacon",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "protobuf-editions/01-minimal-edition-2023.proto",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "protobuf-editions"
+  },
+  "fingerprint": "sha256:20a5c43a9841dc633af97a5cea74467ce20fb3e1d245a7acad5856c81c04eedc",
+  "lint": {
+    "findings": 4,
+    "grade": "A",
+    "report_fingerprint": "8cc92e6eb19da462109557fc599c04509e7d9e59326f3a765b1e50e867c3025d",
+    "score": 93,
+    "severity_counts": {
+      "error": 0,
+      "info": 3,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

@@ -74,7 +74,13 @@ from .import_source import (
 )
 from .proto_descriptor import DESCRIPTOR_SET_SUFFIXES, CompiledDescriptorSet, ProtoFile
 
-__all__ = ["GrpcImportSource"]
+__all__ = ["EDITIONS_FORMAT_KEY", "GrpcImportSource"]
+
+#: Version-scoped detection key for a Protobuf **Editions** document (FMT-3.7, #5432). It
+#: names the dialect in :meth:`GrpcImportSource.detect` and in the adapter's advertised
+#: :attr:`~GrpcImportSource.formats`; it is deliberately *not* a canonical model format —
+#: :func:`app.format_lint_capabilities.normalize_format_key` folds it back onto ``protobuf``.
+EDITIONS_FORMAT_KEY = "protobuf-editions"
 
 #: Default module-relative path given to an uploaded single ``.proto`` when the source has no
 #: usable filename (stdin, a paste). ``buf build`` resolves imports by these paths, so a stable,
@@ -142,6 +148,66 @@ def _compile_on_worker_loop(files: Sequence[ProtoFile]) -> CompiledDescriptorSet
     return box["value"]
 
 
+#: Substrings that identify a ``buf build`` diagnostic about the ``edition`` *declaration
+#: itself* rather than about the schema. buf phrases it two ways — ``unrecognized `edition`
+#: declaration value`` for a value it cannot parse at all, and ``edition value "2024" not
+#: recognized; should be one of [...]`` for one it parses but does not implement — and both
+#: mean the same thing to a user: this document declares an edition this build cannot read.
+#: FMT-3.7 (#5432) classifies them as ``FORMAT_VERSION_UNSUPPORTED`` so the failure says
+#: "unsupported version", not "malformed document", which is the difference between "upgrade
+#: the server" and "fix your file".
+_EDITION_VERSION_DIAGNOSTICS: Tuple[str, ...] = (
+    "unrecognized `edition` declaration value",
+    "edition value",
+)
+
+
+def _edition_version_failure(diagnostics: Optional[str]) -> bool:
+    """Whether ``diagnostics`` says the compiler rejected the document's ``edition`` value.
+
+    Args:
+        diagnostics: The compiler's combined stdout/stderr, or ``None``.
+
+    Returns:
+        ``True`` when every reported *first* fault is the edition declaration. The check is
+        anchored on the first diagnostic line mentioning an edition because a rejected edition
+        cascades — buf goes on to misparse the rest of the file — and the cascade must not
+        pull the classification back to a generic syntax error.
+    """
+    if not diagnostics:
+        return False
+    for line in diagnostics.splitlines():
+        lowered = line.lower()
+        if "edition" not in lowered:
+            continue
+        return any(marker in lowered for marker in _EDITION_VERSION_DIAGNOSTICS)
+    return False
+
+
+def _compile_error(exc: "Exception") -> ImportSourceError:
+    """Translate a ``ProtoCompileError`` into the adapter's :class:`ImportSourceError`.
+
+    The compiler's diagnostics are surfaced verbatim — they name the file, line and column,
+    which is the most useful thing anyone can be told about a proto that will not build. The
+    only classification applied on top is the edition one: a document whose ``edition``
+    declaration this build cannot read is an unsupported *version*, not a malformed document
+    (FMT-3.7). Everything else keeps the default ``INPUT_MALFORMED`` the parse phase assigns.
+
+    Args:
+        exc: The :class:`~app.proto_descriptor.ProtoCompileError` raised by the compiler.
+
+    Returns:
+        The :class:`ImportSourceError` to raise, with ``code`` set only when classified.
+    """
+    diagnostics = getattr(exc, "diagnostics", None)
+    detail = f"{exc}"
+    if diagnostics:
+        detail = f"{detail}\n{diagnostics}"
+    if _edition_version_failure(diagnostics):
+        return ImportSourceError(detail, code="FORMAT_VERSION_UNSUPPORTED")
+    return ImportSourceError(detail)
+
+
 def _proto_path_for(source_label: Optional[str]) -> str:
     """Return a safe, module-relative ``.proto`` path for a single uploaded source.
 
@@ -176,7 +242,12 @@ class GrpcImportSource(ImportSource, register=True):
         InputKind.FILESET,
     )
     supports_live_discovery = True
-    formats = ("protobuf",)
+    # ``protobuf-editions`` is a *version-scoped detection key*, not a second format: an
+    # Editions document is claimed under it so the routing UI can say which dialect it saw,
+    # while the canonical model it normalizes to still carries ``protobuf`` (FMT-3.7, and the
+    # same rule FMT-3.4/3.6 applied to OData v2 and Postman v2.0). Only the *new* dialect gets
+    # a key, so no proto2/proto3 detection result moves.
+    formats = ("protobuf", "protobuf-editions")
     # The binary descriptor-set suffixes come from `proto_descriptor` rather than being
     # respelled here, so the picker and `is_descriptor_set_filename` cannot drift apart.
     file_extensions = (".proto", *DESCRIPTOR_SET_SUFFIXES)
@@ -194,6 +265,12 @@ class GrpcImportSource(ImportSource, register=True):
         ``FileDescriptorSet`` / buf image is claimed at high confidence — the parse *is* the
         evidence. A ``.proto`` (or ``.binpb``/``.desc``/``.protoset``) filename is a weaker
         signal. Never raises: an unrecognized input returns :data:`NO_MATCH`.
+
+        An ``edition = `` document is claimed as :data:`EDITIONS_FORMAT_KEY` rather than
+        ``protobuf`` (FMT-3.7) so the wizard can name the dialect it recognized. That is a
+        *detection* key only — :meth:`normalize` still routes through the one ``protobuf``
+        normalizer and the canonical model still carries ``format = "protobuf"``, because a
+        second model format would fork every downstream branch keyed on it.
         """
         from .proto_descriptor import is_descriptor_set_filename, sniff_file_descriptor_set
 
@@ -212,7 +289,9 @@ class GrpcImportSource(ImportSource, register=True):
                 )
             if "edition = " in text and ("message " in text or "service " in text):
                 return DetectionResult(
-                    confidence=0.95, format="protobuf", reason="Protobuf Editions marker"
+                    confidence=0.95,
+                    format=EDITIONS_FORMAT_KEY,
+                    reason="Protobuf Editions marker",
                 )
             if any(marker in text for marker in _PROTO_MARKERS):
                 return DetectionResult(
@@ -249,7 +328,9 @@ class GrpcImportSource(ImportSource, register=True):
         Raises:
             ImportSourceError: If ``buf`` is unavailable in this runtime, the proto does not compile
                 (syntax error / unresolved import — diagnostics surfaced verbatim), or the compiler
-                produced no readable descriptor set.
+                produced no readable descriptor set. A document declaring an ``edition`` this build
+                cannot read carries the taxonomy code ``FORMAT_VERSION_UNSUPPORTED`` (FMT-3.7)
+                rather than the generic malformed-input one.
         """
         from .proto_descriptor import ProtoCompileError, ProtoDescriptorError
 
@@ -257,10 +338,7 @@ class GrpcImportSource(ImportSource, register=True):
         try:
             return _compile_on_worker_loop(files)
         except ProtoCompileError as exc:
-            detail = f"{exc}"
-            if exc.diagnostics:
-                detail = f"{detail}\n{exc.diagnostics}"
-            raise ImportSourceError(detail) from exc
+            raise _compile_error(exc) from exc
         except ProtoDescriptorError as exc:
             raise ImportSourceError(str(exc)) from exc
 
@@ -358,10 +436,7 @@ class GrpcImportSource(ImportSource, register=True):
         try:
             return _compile_on_worker_loop(files)
         except ProtoCompileError as exc:
-            detail = f"{exc}"
-            if exc.diagnostics:
-                detail = f"{detail}\n{exc.diagnostics}"
-            raise ImportSourceError(detail) from exc
+            raise _compile_error(exc) from exc
         except ProtoDescriptorError as exc:
             raise ImportSourceError(str(exc)) from exc
 

@@ -121,7 +121,8 @@ def test_probe_reports_unavailable_when_binary_absent(monkeypatch):
     assert isinstance(avail, ToolAvailability)
     assert avail.available is False
     assert avail.resolved_path is None
-    assert avail.pinned_version == "1.50.0"
+    # FMT-3.7 raised the pin to the first release that compiles Protobuf Edition 2024.
+    assert avail.pinned_version == "1.72.0"
     assert "unavailable" in avail.detail
 
 

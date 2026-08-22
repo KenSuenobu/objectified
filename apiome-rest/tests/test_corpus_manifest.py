@@ -194,7 +194,12 @@ def test_load_corpus_filters_by_adapter_key():
     entries = load_corpus(adapter_key="grpc")
     assert entries, "no grpc-adapter entries in the corpus"
     assert all(entry.adapter_key == "grpc" for entry in entries)
-    assert {entry.path.split("/", 1)[0] for entry in entries} == {"protobuf"}
+    # FMT-3.7 activated the Editions directory against the same adapter: one adapter key can
+    # own more than one corpus directory when a directory holds a *dialect* of its format.
+    assert {entry.path.split("/", 1)[0] for entry in entries} == {
+        "protobuf",
+        "protobuf-editions",
+    }
 
 
 def test_load_corpus_filters_compose_with_and_semantics():

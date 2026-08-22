@@ -2,8 +2,18 @@ edition = "2023";
 
 package example.stress.v1;
 
-// File-level feature set: every knob editions exposes, set away from its default so
-// the resolution order (file -> message -> field) is observable.
+// File-level feature set: every knob editions exposes, set away from its edition default
+// wherever a second value exists, so the resolution chain is observable at every scope.
+//
+// Each feature declares which scopes may set it (`targets` in descriptor.proto), and the
+// compiler rejects the others — so this file overrides each one only where it is legal:
+//
+//   field_presence           FILE, FIELD
+//   enum_type                FILE, ENUM
+//   repeated_field_encoding  FILE, FIELD
+//   utf8_validation          FILE, FIELD
+//   message_encoding         FILE, FIELD
+//   json_format              FILE, MESSAGE, ENUM
 option features.field_presence = IMPLICIT;
 option features.enum_type = CLOSED;
 option features.repeated_field_encoding = EXPANDED;
@@ -17,6 +27,7 @@ enum ClosedByFile {
 }
 
 enum OpenByOverride {
+  // Enum-scope override, back to the edition default against the file's CLOSED.
   option features.enum_type = OPEN;
 
   OPEN_BY_OVERRIDE_UNSPECIFIED = 0;
@@ -24,20 +35,20 @@ enum OpenByOverride {
 }
 
 message Overrides {
-  // Message-level override: fields here get EXPLICIT presence unless they say otherwise.
-  option features.field_presence = EXPLICIT;
-  option features.utf8_validation = VERIFY;
+  // Message-scope override: `json_format` is the only one of the six a message may set,
+  // and a nested message inherits it unless it overrides in turn.
+  option features.json_format = ALLOW;
 
-  // Inherits EXPLICIT from the message.
-  string explicit_by_message = 1;
+  // Inherits the file's IMPLICIT presence.
+  string implicit_by_file = 1;
 
-  // Back to the file's IMPLICIT for this field only.
-  string implicit_by_field = 2 [features.field_presence = IMPLICIT];
+  // Field-scope override, back to the edition default against the file's IMPLICIT.
+  string explicit_by_field = 2 [features.field_presence = EXPLICIT];
 
   // LEGACY_REQUIRED is the editions spelling of proto2 `required`.
   string legacy_required = 3 [features.field_presence = LEGACY_REQUIRED];
 
-  // Field-level encoding override, back to PACKED against the file default.
+  // Field-scope encoding override, back to PACKED against the file's EXPANDED.
   repeated int32 packed_by_field = 4 [features.repeated_field_encoding = PACKED];
 
   repeated int64 expanded_by_file = 5;
@@ -45,23 +56,35 @@ message Overrides {
   // Delimited encoding is the editions spelling of a proto2 group.
   Nested delimited = 6 [features.message_encoding = DELIMITED];
 
-  ClosedByFile closed_enum = 7;
-  OpenByOverride open_enum = 8;
+  // Field-scope override, back to VERIFY against the file's NONE. `utf8_validation` is
+  // meaningful only on a string field; setting it on `bytes` is a compile error.
+  string verified_text = 7 [features.utf8_validation = VERIFY];
 
+  ClosedByFile closed_enum = 8;
+  OpenByOverride open_enum = 9;
+
+  // A oneof member always tracks presence, whatever the file's `field_presence` says.
   oneof choice {
-    string text = 9;
-    bytes blob = 10;
+    string text = 10;
+    bytes blob = 11;
   }
 
-  map<string, Nested> by_name = 11;
+  map<string, Nested> by_name = 12;
+
+  // The range the `extend` block below fills; an extension with no declared range is a
+  // compile error.
+  extensions 1000 to 1999;
 
   message Nested {
+    // Nested-message override of the value inherited from `Overrides`.
+    option features.json_format = LEGACY_BEST_EFFORT;
+
     string label = 1;
-    bool flag = 2 [features.field_presence = IMPLICIT];
+    bool flag = 2 [features.field_presence = EXPLICIT];
   }
 }
 
 extend Overrides {
-  // Extensions remain available in editions.
+  // Extensions remain available in editions, and always track presence.
   string annotation = 1000;
 }

@@ -138,7 +138,9 @@ BUNDLED_TOOLS: Tuple[BundledTool, ...] = (
     BundledTool(
         key="buf",
         executable="buf",
-        version="1.50.0",
+        # 1.72.0 is the floor for Protobuf **Edition 2024** (FMT-3.7, #5432): 1.50.0 rejects
+        # `edition = "2024"` outright with `should be one of ["2023"]`.
+        version="1.72.0",
         description="Protobuf/gRPC build, lint and breaking-change tool (bufbuild/buf).",
         env_override_key="APIOME_BUF_BIN",
         runtime="native",

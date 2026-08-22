@@ -24,7 +24,7 @@ ship a parser the runtime never verified. See
 
 | Key | Tool | Pinned | Runtime | Installed by |
 |-----|------|--------|---------|--------------|
-| `buf` | Protobuf/gRPC build·lint·breaking | `1.50.0` | native | GitHub release binary |
+| `buf` | Protobuf/gRPC build·lint·breaking | `1.72.0` — floor for Protobuf Edition 2024 (FMT-3.7) | native | GitHub release binary |
 | `tsp` | TypeSpec compiler (`@typespec/compiler`) | `0.65.0` | node | npm into tools prefix + wrapper |
 | `smithy` | Smithy IDL build·validate | `1.53.0` | jvm | GitHub CLI zip (bundles its own runtime) |
 | `drafter` | API Blueprint → JSON | `4.0.0` | native | built from source (pinned tag) |
@@ -166,7 +166,7 @@ availability, whether it is required, and which registered formats it gates:
                "required": 1, "required_missing": [],
                "toolchain_status": "ok", "enforced": true },
   "tools": [
-    { "key": "buf", "pinned_version": "1.50.0", "runtime": "native",
+    { "key": "buf", "pinned_version": "1.72.0", "runtime": "native",
       "available": true, "resolved_path": "/opt/apiome-tools/bin/buf",
       "override_env": "APIOME_BUF_BIN", "detail": "resolved to /opt/apiome-tools/bin/buf",
       "required": false, "gated_formats": ["connectrpc", "grpc"] },

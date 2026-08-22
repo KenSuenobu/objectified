@@ -454,6 +454,34 @@ Fetch this catalog programmatically with `GET /v1/lint/rules` (see
 
 ## Pack: `protobuf`
 
+<a id="protobuf-editions-closed-enum"></a>
+### `protobuf.editions.closed-enum`
+
+- **Category:** structure
+- **Default severity:** warning
+- **Rationale:** A closed enum cannot receive a value a newer peer added.
+
+<a id="protobuf-editions-delimited-encoding"></a>
+### `protobuf.editions.delimited-encoding`
+
+- **Category:** structure
+- **Default severity:** warning
+- **Rationale:** Editions 'message_encoding = DELIMITED' is the proto2 group wire format.
+
+<a id="protobuf-editions-legacy-json-format"></a>
+### `protobuf.editions.legacy-json-format`
+
+- **Category:** structure
+- **Default severity:** warning
+- **Rationale:** Editions 'json_format = LEGACY_BEST_EFFORT' gives up the JSON guarantee.
+
+<a id="protobuf-editions-utf8-validation-off"></a>
+### `protobuf.editions.utf8-validation-off`
+
+- **Category:** structure
+- **Default severity:** info
+- **Rationale:** Editions 'utf8_validation = NONE' admits strings with no JSON encoding.
+
 <a id="protobuf-field-no-required"></a>
 ### `protobuf.field-no-required`
 

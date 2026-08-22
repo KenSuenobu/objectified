@@ -429,7 +429,7 @@
       "marker": "`syntax = \"proto3\"`"
     },
     "protobuf-editions": {
-      "label": "Protobuf editions (pending #5432)",
+      "label": "Protobuf editions (2023/2024)",
       "category": "rpc",
       "paradigm": "rpc",
       "marker": "`edition = \"2023\"` / `\"2024\"` in place of `syntax`"
@@ -22148,7 +22148,7 @@
     {
       "path": "protobuf-editions/01-minimal-edition-2023.proto",
       "format": "protobuf-editions",
-      "adapter_key": null,
+      "adapter_key": "grpc",
       "validity_class": "valid",
       "expected_detection": {
         "format": "protobuf-editions",
@@ -22156,8 +22156,7 @@
       },
       "features": [
         "edition-2023",
-        "defaults-only",
-        "pending-adapter"
+        "defaults-only"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -22168,7 +22167,7 @@
     {
       "path": "protobuf-editions/02-typical-orders-edition-2023.proto",
       "format": "protobuf-editions",
-      "adapter_key": null,
+      "adapter_key": "grpc",
       "validity_class": "valid",
       "expected_detection": {
         "format": "protobuf-editions",
@@ -22179,8 +22178,7 @@
         "field-presence",
         "EXPLICIT",
         "IMPLICIT",
-        "service",
-        "pending-adapter"
+        "service"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -22191,7 +22189,7 @@
     {
       "path": "protobuf-editions/03-imports-set/common.proto",
       "format": "protobuf-editions",
-      "adapter_key": null,
+      "adapter_key": "grpc",
       "validity_class": "valid",
       "expected_detection": {
         "format": "protobuf-editions",
@@ -22200,8 +22198,7 @@
       "features": [
         "multi-file",
         "edition-2023",
-        "IMPLICIT",
-        "pending-adapter"
+        "IMPLICIT"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -22214,7 +22211,7 @@
     {
       "path": "protobuf-editions/03-imports-set/orders.proto",
       "format": "protobuf-editions",
-      "adapter_key": null,
+      "adapter_key": "grpc",
       "validity_class": "valid",
       "expected_detection": {
         "format": "protobuf-editions",
@@ -22224,8 +22221,7 @@
         "multi-file",
         "import",
         "edition-2023",
-        "feature-scope",
-        "pending-adapter"
+        "feature-scope"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -22237,7 +22233,7 @@
     {
       "path": "protobuf-editions/04-stress-feature-overrides.proto",
       "format": "protobuf-editions",
-      "adapter_key": null,
+      "adapter_key": "grpc",
       "validity_class": "valid",
       "expected_detection": {
         "format": "protobuf-editions",
@@ -22254,8 +22250,7 @@
         "DELIMITED",
         "oneof",
         "map",
-        "extension",
-        "pending-adapter"
+        "extension"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -22266,7 +22261,7 @@
     {
       "path": "protobuf-editions/05-real-world-telemetry-edition-2023.proto",
       "format": "protobuf-editions",
-      "adapter_key": null,
+      "adapter_key": "grpc",
       "validity_class": "valid",
       "expected_detection": {
         "format": "protobuf-editions",
@@ -22277,8 +22272,7 @@
         "LEGACY-REQUIRED",
         "utf8-validation",
         "streaming",
-        "well-known-types",
-        "pending-adapter"
+        "well-known-types"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -22289,7 +22283,7 @@
     {
       "path": "protobuf-editions/06-typical-edition-2024.proto",
       "format": "protobuf-editions",
-      "adapter_key": null,
+      "adapter_key": "grpc",
       "validity_class": "valid",
       "expected_detection": {
         "format": "protobuf-editions",
@@ -22298,8 +22292,7 @@
       "features": [
         "edition-2024",
         "enum-type",
-        "IMPLICIT",
-        "pending-adapter"
+        "IMPLICIT"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -22310,7 +22303,7 @@
     {
       "path": "protobuf-editions/07-composition-nested-and-extended.proto",
       "format": "protobuf-editions",
-      "adapter_key": null,
+      "adapter_key": "grpc",
       "validity_class": "valid",
       "expected_detection": {
         "format": "protobuf-editions",
@@ -22321,8 +22314,7 @@
         "nested-enum",
         "message-reuse",
         "extensions",
-        "feature-scope",
-        "pending-adapter"
+        "feature-scope"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -22333,7 +22325,7 @@
     {
       "path": "protobuf-editions/negative/01-syntactic-missing-semicolon.proto",
       "format": "protobuf-editions",
-      "adapter_key": null,
+      "adapter_key": "grpc",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "protobuf-editions",
@@ -22342,8 +22334,7 @@
       "features": [
         "negative",
         "syntactic",
-        "missing-semicolon",
-        "pending-adapter"
+        "missing-semicolon"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -22355,7 +22346,7 @@
     {
       "path": "protobuf-editions/negative/02-semantic-unknown-feature-value.proto",
       "format": "protobuf-editions",
-      "adapter_key": null,
+      "adapter_key": "grpc",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "protobuf-editions",
@@ -22364,20 +22355,20 @@
       "features": [
         "negative",
         "semantic",
-        "unknown-feature-value",
-        "pending-adapter"
+        "unknown-feature-value"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
       "failure_class": "semantic",
-      "expected_error_code": "INPUT_SEMANTIC_INVALID"
+      "expected_error_code": "INPUT_MALFORMED",
+      "notes": "Grounded on current behaviour: `buf build` reports an unknown feature enum value as an ordinary name-resolution fault (\"cannot find `SOMETIMES` in this scope\"), and every compile failure the adapter surfaces carries the parse phase's default INPUT_MALFORMED. The intent that this is a *semantic* fault is recorded in failure_class."
     },
     {
       "path": "protobuf-editions/negative/03-truncated-mid-message.proto",
       "format": "protobuf-editions",
-      "adapter_key": null,
+      "adapter_key": "grpc",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "protobuf-editions",
@@ -22386,20 +22377,20 @@
       "features": [
         "negative",
         "truncated",
-        "mid-field-option",
-        "pending-adapter"
+        "mid-field-option"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
       "license": "Apache-2.0",
       "provenance": "Authored in-repo for the apiome catalog import examples.",
       "failure_class": "truncated",
-      "expected_error_code": "INPUT_TRUNCATED"
+      "expected_error_code": "INPUT_MALFORMED",
+      "notes": "Grounded on current behaviour: a .proto cut off mid-message reaches the compiler as unbalanced delimiters, so it is reported as INPUT_MALFORMED rather than INPUT_TRUNCATED (the same re-grounding FMT-3.3/3.4/3.5/3.6 made for truncated text inputs). Only the binary descriptor-set path can tell truncation from corruption, and it does \u2014 see protobuf/negative."
     },
     {
       "path": "protobuf-editions/negative/04-wrong-format-flatbuffers.fbs",
       "format": "protobuf-editions",
-      "adapter_key": null,
+      "adapter_key": "grpc",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "protobuf-editions",
@@ -22408,8 +22399,7 @@
       "features": [
         "negative",
         "wrong-format",
-        "flatbuffers",
-        "pending-adapter"
+        "flatbuffers"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -22421,7 +22411,7 @@
     {
       "path": "protobuf-editions/negative/05-encoding-utf16.proto",
       "format": "protobuf-editions",
-      "adapter_key": null,
+      "adapter_key": "grpc",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "protobuf-editions",
@@ -22430,8 +22420,7 @@
       "features": [
         "negative",
         "encoding",
-        "utf-16",
-        "pending-adapter"
+        "utf-16"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -22443,7 +22432,7 @@
     {
       "path": "protobuf-editions/negative/06-version-out-of-range-edition-2099.proto",
       "format": "protobuf-editions",
-      "adapter_key": null,
+      "adapter_key": "grpc",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "protobuf-editions",
@@ -22452,8 +22441,7 @@
       "features": [
         "negative",
         "version-out-of-range",
-        "edition-2099",
-        "pending-adapter"
+        "edition-2099"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",

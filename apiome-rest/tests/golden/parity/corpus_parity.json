@@ -871,17 +871,19 @@
       "label": "gRPC / Protobuf",
       "paradigm": "rpc",
       "corpus_formats": [
-        "protobuf"
+        "protobuf",
+        "protobuf-editions"
       ],
       "corpus_directories": [
-        "protobuf"
+        "protobuf",
+        "protobuf-editions"
       ],
       "fixtures": {
-        "valid": 10,
-        "negative": 7,
+        "valid": 18,
+        "negative": 13,
         "adversarial": 0,
         "scale": 0,
-        "total": 17
+        "total": 31
       },
       "rungs": [
         "composition",
@@ -892,9 +894,10 @@
         "typical"
       ],
       "rung_waivers": [],
-      "goldens": 9,
+      "goldens": 16,
       "golden_directories": [
-        "protobuf"
+        "protobuf",
+        "protobuf-editions"
       ],
       "emit_key": "protobuf",
       "roundtrip_row": true,
@@ -904,9 +907,15 @@
           "emit_key": "protobuf",
           "status": "pass",
           "has_reason": false
+        },
+        {
+          "source_format": "protobuf-editions",
+          "emit_key": "protobuf",
+          "status": "xfail",
+          "has_reason": true
         }
       ],
-      "capability_provenance": "derived",
+      "capability_provenance": "reviewed",
       "requirements": {
         "valid-examples": "satisfied",
         "negative-examples": "satisfied",
@@ -2264,7 +2273,6 @@
     "owl",
     "pkl",
     "pli",
-    "protobuf-editions",
     "pydantic",
     "relaxng",
     "ros2",
