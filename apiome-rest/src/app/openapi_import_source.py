@@ -25,6 +25,15 @@ adapter. Swagger 2.0 normalization is handled by
 :class:`app.swagger2_normalizer.Swagger2Normalizer` (MFI-30.1); OpenAPI 3.x by
 :class:`app.openapi_normalizer.OpenApiNormalizer` (MFI-2.3).
 
+**Swagger 1.2 (FMT-3.6).** The adapter also reads the version *below* 2.0. Swagger
+1.2 is a resource listing plus one API declaration per resource, which
+:mod:`app.swagger12_projection` rewrites onto the Swagger 2.0 document shape before
+anything else runs — so a 1.2 upload is normalized, linted, and routed by the code
+that already reads 2.0, and its canonical ``format`` is ``swagger-2.0``. The 1.2
+provenance (source version, the declarations merged, and the constructs 2.0 cannot
+hold) rides on the projected document and is published on the canonical model's
+extras under ``swagger_1_2``.
+
 **Overlays (IXH-7.7).** The adapter is also the Overlay 1.0 pre-processor seam: a
 fileset whose members carry an ``overlay`` version marker resolves base + overlays
 through :func:`app.openapi_overlay.apply_overlays` before normalization, publishing
@@ -41,8 +50,10 @@ from typing import Any, Dict, List, Optional, Tuple
 
 # Importing the normalizers self-registers format keys resolved by
 # :meth:`OpenApiImportSource.normalize`.
-from . import openapi_normalizer  # noqa: F401
-from . import swagger2_normalizer  # noqa: F401
+from . import (
+    openapi_normalizer,  # noqa: F401
+    swagger2_normalizer,  # noqa: F401
+)
 from .canonical_model import ApiParadigm, CanonicalApi
 from .fileset import IntakeFileset
 from .import_ingestion import IngestionError, parse_document
@@ -63,21 +74,34 @@ from .openapi_overlay import (
     overlay_lint_findings,
     overlay_version,
 )
+from .swagger12_projection import (
+    Swagger12Error,
+    declaration_resource,
+    is_resource_listing,
+    is_swagger12_document,
+    project_swagger12,
+    swagger12_version,
+)
 
-__all__ = ["OpenApiImportSource"]
+__all__ = ["OpenApiImportSource", "SWAGGER_12_EXTRA_KEY"]
+
+#: Canonical-model extras key carrying a Swagger 1.2 import's provenance (FMT-3.6).
+SWAGGER_12_EXTRA_KEY = "swagger_1_2"
 
 
 class OpenApiImportSource(ImportSource, register=True):
-    """Adapter for OpenAPI 3.x / Swagger 2.0 REST descriptions."""
+    """Adapter for OpenAPI 3.x / Swagger 2.0 / Swagger 1.2 REST descriptions."""
 
     key = "openapi"
     label = "OpenAPI / Swagger"
-    description = "Import an OpenAPI 3.0/3.1/3.2 or Swagger 2.0 REST API description."
+    description = (
+        "Import an OpenAPI 3.0/3.1/3.2, Swagger 2.0 or Swagger 1.2 REST API description."
+    )
     icon = "file-json"
     paradigm = ApiParadigm.REST
     input_kinds = (InputKind.FILE, InputKind.URL, InputKind.PASTE, InputKind.FILESET)
     supports_live_discovery = False
-    formats = ("openapi-3.0", "openapi-3.1", "openapi-3.2", "swagger-2.0")
+    formats = ("openapi-3.0", "openapi-3.1", "openapi-3.2", "swagger-2.0", "swagger-1.2")
     file_extensions = (".yaml", ".yml", ".json")
 
     def detect(self, payload: DetectionInput) -> DetectionResult:
@@ -86,7 +110,12 @@ class OpenApiImportSource(ImportSource, register=True):
         Reads the already-parsed ``document`` when present, else parses ``text``
         cheaply (a malformed document is simply not a match — never raises). An
         ``openapi: 3.x`` marker pins ``openapi-3.0``/``openapi-3.1``/``openapi-3.2``
-        with high confidence; a ``swagger: 2.x`` marker pins ``swagger-2.0``.
+        with high confidence; a ``swagger: 2.x`` marker pins ``swagger-2.0``; a
+        ``swaggerVersion: 1.2`` marker pins ``swagger-1.2`` (FMT-3.6), which the
+        adapter reads by projecting onto the 2.0 path. Swagger 1.0/1.1 share that
+        marker but not the grammar, so they are deliberately *not* claimed here —
+        routed to this adapter explicitly they fail as ``FORMAT_VERSION_UNSUPPORTED``
+        rather than being mis-read as 1.2.
 
         An Overlay 1.0 document (``overlay: 1.x`` marker, IXH-7.7) is also claimed
         — with no ``format`` pinned, since an overlay is not itself an importable
@@ -124,6 +153,16 @@ class OpenApiImportSource(ImportSource, register=True):
                 confidence=0.95, format="swagger-2.0", reason=f"`swagger: {swagger}` marker"
             )
 
+        if is_swagger12_document(document):
+            shape = (
+                "resource listing" if is_resource_listing(document) else "API declaration"
+            )
+            return DetectionResult(
+                confidence=0.95,
+                format="swagger-1.2",
+                reason=f"`swaggerVersion: 1.2` marker ({shape})",
+            )
+
         version = overlay_version(document)
         if version is not None:
             return DetectionResult(
@@ -138,18 +177,28 @@ class OpenApiImportSource(ImportSource, register=True):
         Reuses the import pipeline's loader so YAML- and JSON-authored documents
         behave identically.
 
+        A Swagger 1.2 document (FMT-3.6) is projected onto the 2.0 shape here, so
+        everything downstream — normalization, lint, routing — sees an ordinary
+        Swagger 2.0 mapping. A 1.2 *resource listing* cannot be imported alone: it
+        only names its declarations, so it fails with
+        ``INPUT_REFERENCE_UNRESOLVED`` and the "upload them together" prompt.
+
         Raises:
             ImportSourceError: If the text is not valid JSON/YAML or is not a
                 mapping at the top level — or is a *bare* Overlay document
                 (``INPUT_OVERLAY_BASE_MISSING``, IXH-7.7): an overlay modifies a
                 base OpenAPI document, so importing one alone prompts for its base
                 rather than failing downstream with a confusing "no version
-                marker" error.
+                marker" error — or is a Swagger 1.x document this adapter cannot
+                project (see :func:`app.swagger12_projection.project_swagger12` for
+                the codes it raises).
         """
         try:
             document = parse_document(raw, source_label=source_label)
         except IngestionError as exc:
             raise ImportSourceError(str(exc)) from exc
+        if swagger12_version(document) is not None:
+            return self._project_swagger12(document, source_label=source_label)
         if is_overlay_document(document):
             label = f" {source_label!r}" if source_label else ""
             raise ImportSourceError(
@@ -168,6 +217,12 @@ class OpenApiImportSource(ImportSource, register=True):
         source_label: Optional[str] = None,
     ) -> Any:
         """Parse a multi-document fileset: a base document plus Overlay 1.0 overlays.
+
+        A set whose members carry the Swagger 1.2 marker takes the FMT-3.6 route
+        instead: the *resource listing* is the root and every API declaration
+        beside it is merged into one projected Swagger 2.0 document, so a 1.2 API
+        published as a listing plus N declarations imports as **one** API. A set of
+        declarations with no listing merges just the same.
 
         Members are classified by their version markers — exactly one member must
         be an OpenAPI/Swagger *base* (``openapi``/``swagger`` marker), any member
@@ -199,6 +254,14 @@ class OpenApiImportSource(ImportSource, register=True):
                     f"Fileset member {path!r} is not valid JSON/YAML: {exc}",
                     code="INPUT_MALFORMED",
                 ) from exc
+
+        swagger12 = [
+            (path, document)
+            for path, document in documents.items()
+            if swagger12_version(document) is not None
+        ]
+        if swagger12:
+            return self._project_swagger12_fileset(swagger12, source_label=source_label)
 
         bases: List[Tuple[str, Dict[str, Any]]] = []
         overlays: List[Tuple[str, Dict[str, Any]]] = []
@@ -249,10 +312,143 @@ class OpenApiImportSource(ImportSource, register=True):
         }
         return resolved
 
+    @staticmethod
+    def _project_swagger12(
+        document: Dict[str, Any],
+        *,
+        declarations: Optional[List[Tuple[str, Dict[str, Any]]]] = None,
+        source_label: Optional[str] = None,
+    ) -> Any:
+        """Project a Swagger 1.x document onto the Swagger 2.0 shape (FMT-3.6).
+
+        Args:
+            document: The parsed root — a 1.2 resource listing or API declaration.
+            declarations: The listing's declarations as ``(member path, document)``
+                pairs, when the import is a fileset.
+            source_label: Label used only to make error messages specific.
+
+        Returns:
+            The projected :class:`~app.swagger12_projection.Swagger12ProjectedDocument`.
+
+        Raises:
+            ImportSourceError: Carrying the projection's own taxonomy code, so an
+                unsupported 1.x revision, an empty listing, and a listing whose
+                declarations were not uploaded each report as themselves.
+        """
+        try:
+            return project_swagger12(
+                document,
+                declarations=tuple(declarations or ()),
+                source_label=source_label,
+            )
+        except Swagger12Error as exc:
+            raise ImportSourceError(str(exc), code=exc.code) from exc
+
+    def _project_swagger12_fileset(
+        self,
+        members: List[Tuple[str, Dict[str, Any]]],
+        *,
+        source_label: Optional[str] = None,
+    ) -> Any:
+        """Project a Swagger 1.2 fileset (resource listing + declarations) as one API.
+
+        The listing is the root when the set has one; otherwise the declarations
+        merge on their own, in member-path order, which is deterministic and
+        directly controllable by naming.
+
+        Args:
+            members: Every 1.2 member as ``(member path, parsed document)``, in
+                member-path order.
+            source_label: Label used only to make error messages specific.
+
+        Returns:
+            The projected :class:`~app.swagger12_projection.Swagger12ProjectedDocument`.
+
+        Raises:
+            ImportSourceError: With the projection's own taxonomy code — including
+                ``INPUT_REFERENCE_UNRESOLVED`` when the listing names a resource no
+                member declares.
+        """
+        listings = [(path, doc) for path, doc in members if is_resource_listing(doc)]
+        declarations = [(path, doc) for path, doc in members if not is_resource_listing(doc)]
+
+        if not listings:
+            root_path, root_document = declarations[0]
+            return self._project_swagger12(
+                root_document,
+                declarations=declarations[1:],
+                source_label=root_path or source_label,
+            )
+
+        listing_path, listing = listings[0]
+        if len(listings) > 1:
+            names = ", ".join(path for path, _ in listings)
+            raise ImportSourceError(
+                f"The fileset contains more than one Swagger 1.2 resource listing "
+                f"({names}); a 1.2 import needs exactly one.",
+                code="INPUT_SEMANTIC_INVALID",
+            )
+        self._require_declared_resources(listing, declarations, source_label=listing_path)
+        return self._project_swagger12(
+            listing, declarations=declarations, source_label=listing_path or source_label
+        )
+
+    @staticmethod
+    def _require_declared_resources(
+        listing: Dict[str, Any],
+        declarations: List[Tuple[str, Dict[str, Any]]],
+        *,
+        source_label: Optional[str],
+    ) -> None:
+        """Fail when a resource listing names a resource no member declares.
+
+        A 1.2 listing's ``apis[].path`` is a *reference* to a declaration document.
+        A member is taken to answer it when its ``resourcePath`` matches, or — for
+        exports that drop ``resourcePath`` — when its filename stem does.
+
+        Args:
+            listing: The parsed resource listing.
+            declarations: Every declaration member as ``(member path, document)``.
+            source_label: The listing's member path, for the error message.
+
+        Raises:
+            ImportSourceError: ``INPUT_REFERENCE_UNRESOLVED`` naming the resources
+                whose declarations are missing.
+        """
+        resolved = set()
+        for path, declaration in declarations:
+            resource = declaration_resource(declaration)
+            if resource:
+                resolved.add(resource.strip("/").lower())
+            stem = path.rsplit("/", 1)[-1].rsplit(".", 1)[0]
+            if stem:
+                resolved.add(stem.strip("/").lower())
+
+        missing = [
+            path
+            for api in listing.get("apis") or []
+            if isinstance(api, dict)
+            for path in [api.get("path")]
+            if isinstance(path, str) and path.strip()
+            and path.strip().strip("/").lower() not in resolved
+        ]
+        if missing:
+            where = f" {source_label!r}" if source_label else ""
+            names = ", ".join(missing)
+            raise ImportSourceError(
+                f"The Swagger 1.2 resource listing{where} names {names}, for which the "
+                "upload contains no API declaration. Add the missing declaration "
+                "file(s) to the upload.",
+                code="INPUT_REFERENCE_UNRESOLVED",
+            )
+
     def normalize(self, native_ast: Any, *, include_raw: bool = True) -> CanonicalApi:
         """Normalize a parsed OpenAPI/Swagger document into a :class:`CanonicalApi`.
 
-        Detects the precise format and delegates to its registered normalizer.
+        Detects the precise format and delegates to its registered normalizer. A
+        Swagger 1.2 document that reaches this method unprojected (``normalize``
+        called without ``parse``, as the conversion and preview paths may) is
+        projected here first, so the 1.2 grammar has exactly one reader.
 
         Raises:
             ImportSourceError: If ``native_ast`` is not a mapping, is not an
@@ -261,6 +457,8 @@ class OpenApiImportSource(ImportSource, register=True):
         """
         if not isinstance(native_ast, dict):
             raise ImportSourceError("OpenAPI/Swagger source must be a parsed mapping (dict)")
+        if swagger12_version(native_ast) is not None:
+            native_ast = self._project_swagger12(native_ast)
 
         detection = self.detect(DetectionInput(document=native_ast))
         if detection.format is None:
@@ -277,6 +475,12 @@ class OpenApiImportSource(ImportSource, register=True):
         report = getattr(native_ast, "overlay_report", None)
         if isinstance(report, dict) and isinstance(model.extras, dict):
             model.extras[OVERLAY_EXTRA_KEY] = report
+        # FMT-3.6: a projected Swagger 1.2 import normalizes as Swagger 2.0 (which is
+        # what keeps it publishable and lintable); its 1.2 provenance is published here
+        # so the model still states which version, and which declarations, it came from.
+        provenance = getattr(native_ast, "swagger12_provenance", None)
+        if provenance is not None and isinstance(model.extras, dict):
+            model.extras[SWAGGER_12_EXTRA_KEY] = provenance.as_extras()
         return model
 
     def lint(self, model: CanonicalApi) -> LintReport:

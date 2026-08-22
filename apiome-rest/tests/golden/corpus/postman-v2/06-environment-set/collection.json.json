@@ -2,14 +2,22 @@
   "adapter": "postman",
   "canonical": {
     "channels": [],
-    "description": "Postman Collection v2.1 example for the built-in Postman import source. Each request's body/response shapes contribute the Task class to the catalog.",
+    "description": "Root of the set: every URL resolves through the sibling environment file.",
     "extras": {
-      "postman_collection_version": "2.1",
-      "postman_schema_url": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      "postman_collection_version": "2.0",
+      "postman_schema_url": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
       "postman_variables": [
         {
           "key": "baseUrl",
-          "value": "https://api.example.com"
+          "value": "https://staging.example.com/inventory"
+        },
+        {
+          "key": "warehouse",
+          "value": "AMS"
+        },
+        {
+          "key": "apiKey",
+          "value": ""
         }
       ]
     },
@@ -17,7 +25,7 @@
     "identity": {
       "extras": {},
       "id": null,
-      "name": "Tasks API",
+      "name": "Inventory (set root)",
       "namespace": null
     },
     "paradigm": "rest",
@@ -29,7 +37,7 @@
         "extras": {},
         "name": null,
         "protocol": null,
-        "url": "https://api.example.com",
+        "url": "https://staging.example.com/inventory",
         "variables": []
       }
     ],
@@ -37,8 +45,8 @@
       {
         "description": null,
         "extras": {},
-        "key": "Tasks API",
-        "name": "Tasks API",
+        "key": "Inventory (set root)",
+        "name": "Inventory (set root)",
         "operations": [
           {
             "channel_ref": null,
@@ -49,41 +57,17 @@
               "postman_headers": [
                 {
                   "disabled": false,
-                  "key": "Accept",
-                  "value": "application/json"
+                  "key": "X-Api-Key",
+                  "value": "{{apiKey}}"
                 }
               ]
             },
             "http_method": "GET",
-            "http_path": "/tasks",
-            "key": "GET /tasks",
+            "http_path": "/stock/{sku}",
+            "key": "GET /stock/{sku}",
             "kind": "request_response",
             "messages": [],
-            "name": "List tasks",
-            "parameters": [],
-            "streaming": "none",
-            "tags": []
-          },
-          {
-            "channel_ref": null,
-            "deprecated": false,
-            "description": null,
-            "extras": {
-              "postman_folder_path": [],
-              "postman_headers": [
-                {
-                  "disabled": false,
-                  "key": "Accept",
-                  "value": "application/json"
-                }
-              ]
-            },
-            "http_method": "GET",
-            "http_path": "/tasks/{id}",
-            "key": "GET /tasks/{id}",
-            "kind": "request_response",
-            "messages": [],
-            "name": "Get task",
+            "name": "Check stock",
             "parameters": [
               {
                 "constraints": null,
@@ -93,10 +77,30 @@
                 "extras": {
                   "postman_style": "path"
                 },
-                "key": "GET /tasks/{id}#path.id",
+                "key": "GET /stock/{sku}#path.sku",
                 "location": "path",
-                "name": "id",
+                "name": "sku",
                 "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "postman_sample": "{{warehouse}}",
+                  "postman_style": "query"
+                },
+                "key": "GET /stock/{sku}#query.warehouse",
+                "location": "query",
+                "name": "warehouse",
+                "required": false,
                 "type": {
                   "extras": {},
                   "item": null,
@@ -123,28 +127,28 @@
               ]
             },
             "http_method": "POST",
-            "http_path": "/tasks",
-            "key": "POST /tasks",
+            "http_path": "/reservations",
+            "key": "POST /reservations",
             "kind": "request_response",
             "messages": [
               {
                 "content_types": [],
                 "description": null,
                 "extras": {
-                  "postman_body_language": "json",
+                  "postman_body_language": null,
                   "postman_body_mode": "raw",
-                  "postman_body_raw": "{\n  \"title\": \"Buy milk\",\n  \"dueDate\": \"2026-01-31\",\n  \"done\": false\n}",
+                  "postman_body_raw": "{ \"sku\": \"WID-0001\", \"quantity\": 1 }",
                   "postman_body_schema": {
-                    "$ref": "#/components/schemas/Task"
+                    "$ref": "#/components/schemas/Reservation"
                   }
                 },
                 "headers": [],
-                "key": "POST /tasks#request",
+                "key": "POST /reservations#request",
                 "name": null,
                 "payload": {
                   "extras": {},
                   "item": null,
-                  "name": "Task",
+                  "name": "Reservation",
                   "nullable": false
                 },
                 "payload_schema": null,
@@ -153,7 +157,7 @@
                 "status_code": null
               }
             ],
-            "name": "Create task",
+            "name": "Reserve stock",
             "parameters": [],
             "streaming": "none",
             "tags": []
@@ -161,7 +165,7 @@
         ]
       }
     ],
-    "title": "Tasks API",
+    "title": "Inventory (set root)",
     "types": [
       {
         "aliased": null,
@@ -178,12 +182,12 @@
             "description": null,
             "extras": {},
             "field_number": null,
-            "key": "Task.done",
-            "name": "done",
+            "key": "Reservation.quantity",
+            "name": "quantity",
             "type": {
               "extras": {},
               "item": null,
-              "name": "boolean",
+              "name": "integer",
               "nullable": false
             }
           },
@@ -194,24 +198,8 @@
             "description": null,
             "extras": {},
             "field_number": null,
-            "key": "Task.dueDate",
-            "name": "dueDate",
-            "type": {
-              "extras": {},
-              "item": null,
-              "name": "string",
-              "nullable": false
-            }
-          },
-          {
-            "constraints": null,
-            "default": null,
-            "deprecated": false,
-            "description": null,
-            "extras": {},
-            "field_number": null,
-            "key": "Task.title",
-            "name": "title",
+            "key": "Reservation.sku",
+            "name": "sku",
             "type": {
               "extras": {},
               "item": null,
@@ -220,10 +208,10 @@
             }
           }
         ],
-        "key": "Task",
+        "key": "Reservation",
         "key_type": null,
         "kind": "record",
-        "name": "Task",
+        "name": "Reservation",
         "namespace": null,
         "union_members": [],
         "value_type": null
@@ -231,28 +219,28 @@
     ],
     "version": null
   },
-  "corpus_path": "postman/01-tasks-collection.postman_collection.json",
+  "corpus_path": "postman-v2/06-environment-set/collection.json",
   "counts": {
     "channels": 0,
-    "operations": 3,
+    "operations": 2,
     "servers": 1,
     "services": 1,
     "types": 1
   },
   "detection": {
     "confidence": 0.98,
-    "format": "postman"
+    "format": "postman-2.0"
   },
-  "fingerprint": "sha256:a9fd9c35bd05be4f4e7ed13e12641f609e3549545ea6d063678fbcb73804cff0",
+  "fingerprint": "sha256:49494818b247112d6519edfc9818d34341cfd5bbbea18a5178414b38afc4267f",
   "lint": {
-    "findings": 8,
+    "findings": 6,
     "grade": "B",
-    "report_fingerprint": "81a5f7d044529f1e3684f651ee1c31234d7ace1ca63ae17255f73438edcc1013",
-    "score": 80,
+    "report_fingerprint": "5336a3bd12e289535c69124030e9182fe20f42d41fef8267acbe7cf5e7c18ad4",
+    "score": 85,
     "severity_counts": {
       "error": 0,
-      "info": 4,
-      "warning": 4
+      "info": 3,
+      "warning": 3
     }
   },
   "snapshot_version": 1

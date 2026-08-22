@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A SOAP service description, not a Swagger 1.2 resource listing or API
+     declaration. Routed to the OpenAPI/Swagger importer it must be reported as
+     the wrong format rather than as a broken Swagger document. -->
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/"
+             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+             xmlns:xs="http://www.w3.org/2001/XMLSchema"
+             xmlns:tns="http://example.com/ping"
+             targetNamespace="http://example.com/ping">
+  <types>
+    <xs:schema targetNamespace="http://example.com/ping">
+      <xs:element name="pingRequest" type="xs:string"/>
+      <xs:element name="pingResponse" type="xs:string"/>
+    </xs:schema>
+  </types>
+  <message name="pingIn">
+    <part name="body" element="tns:pingRequest"/>
+  </message>
+  <message name="pingOut">
+    <part name="body" element="tns:pingResponse"/>
+  </message>
+  <portType name="PingPortType">
+    <operation name="ping">
+      <input message="tns:pingIn"/>
+      <output message="tns:pingOut"/>
+    </operation>
+  </portType>
+  <binding name="PingBinding" type="tns:PingPortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="ping">
+      <soap:operation soapAction="http://example.com/ping/ping"/>
+      <input><soap:body use="literal"/></input>
+      <output><soap:body use="literal"/></output>
+    </operation>
+  </binding>
+  <service name="PingService">
+    <port name="PingPort" binding="tns:PingBinding">
+      <soap:address location="https://api.example.com/ping"/>
+    </port>
+  </service>
+</definitions>

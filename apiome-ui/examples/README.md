@@ -40,11 +40,11 @@ The corpus holds **1418 files** across **103 format directories**. Every file ha
 | `odata-v2/` | OData v2 / v3 (CSDL) | rest | `<edmx:Edmx>` with the 2007/06 or 2009/11 EDM namespaces | 14 |
 | `openapi/` | OpenAPI 3.x | rest | top-level `openapi:` version | 44 |
 | `postman/` | Postman v2.1 | rest | collection `info.schema` URL | 11 |
-| `postman-v2/` | Postman Collection v2.0 (pending #5431) | rest | `info.schema` ending `/collection/v2.0.0/collection.json` | 13 |
+| `postman-v2/` | Postman Collection v2.0 | rest | `info.schema` ending `/collection/v2.0.0/collection.json` | 13 |
 | `raml/` | RAML 1.0 | rest | `#%RAML 1.0` header | 11 |
 | `soapui/` | SoapUI / ReadyAPI projects (pending #5477) | rest | `<con:soapui-project>` root in the eviware config namespace | 14 |
 | `swagger/` | Swagger 2.0 | rest | `swagger: "2.0"` | 1 |
-| `swagger-1.2/` | Swagger 1.2 (pending #5431) | rest | `"swaggerVersion": "1.2"` | 14 |
+| `swagger-1.2/` | Swagger 1.2 | rest | `"swaggerVersion": "1.2"` | 14 |
 | `thunder-client/` | Thunder Client collections (pending #5475) | rest | `"clientName": "Thunder Client"` + `requests[]` or environment `data[]` | 14 |
 | `traefik/` | Traefik dynamic config (pending #5459) | rest | `http.routers` + `http.services` (YAML/TOML), or `kind: IngressRoute` | 15 |
 | `tyk/` | Tyk API definition (pending #5459) | rest | `api_id` + `proxy.listen_path`, or an OpenAPI document with `x-tyk-api-gateway` | 14 |
@@ -1791,25 +1791,27 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 | `negative/04-wrong-format-openrpc.json` | — | `postman` (no guarantee) | invalid | `negative`, `wrong-format`, `openrpc-document` |
 | `negative/05-encoding-utf16.postman_collection.json` | — | `postman` (no guarantee) | invalid | `negative`, `encoding`, `utf16-bytes` |
 
-### `postman-v2/` — Postman Collection v2.0 (pending #5431)
+### `postman-v2/` — Postman Collection v2.0
 
 | File | Rung | Expected detection | Class | Features |
 | --- | --- | --- | --- | --- |
-| `01-minimal-single-request.json` | minimal | `postman-2.0` ≥ 0.95 | valid | `string-url`, `single-request`, `pending-adapter` |
-| `02-typical-crud-collection.json` | typical | `postman-2.0` ≥ 0.95 | valid | `string-url`, `collection-variables`, `path-variables`, `saved-response`, `pending-adapter` |
-| `03-composition-nested-folders.json` | composition | `postman-2.0` ≥ 0.95 | valid | `nested-folders`, `operation-groups`, `pending-adapter` |
-| `04-stress-auth-bodies-and-scripts.json` | stress | `postman-2.0` ≥ 0.95 | valid | `raw-body`, `urlencoded-body`, `formdata-body`, `graphql-body`, `v2.0-auth-shape`, `scripts`, `disabled-entries`, `pending-adapter` |
-| `05-real-world-payments-collection.json` | real-world | `postman-2.0` ≥ 0.95 | valid | `oauth-token-capture`, `idempotency-key`, `saved-response`, `nested-folders`, `pending-adapter` |
-| `06-environment-set/collection.json` | multi-file (root) | `postman-2.0` ≥ 0.95 | valid | `multi-file`, `environment-variables`, `pending-adapter` |
-| `06-environment-set/environment.json` ⚠ | multi-file (member) | `postman-2.0` (no guarantee) | valid | `multi-file`, `environment-file`, `pending-adapter` |
-| `negative/01-syntactic-unterminated-string.json` | — | `postman-2.0` (no guarantee) | invalid | `negative`, `syntactic`, `unterminated-string`, `pending-adapter` |
-| `negative/02-semantic-no-items.json` | — | `postman-2.0` (no guarantee) | invalid | `negative`, `semantic`, `no-items`, `pending-adapter` |
-| `negative/03-truncated-mid-item.json` | — | `postman-2.0` (no guarantee) | invalid | `negative`, `truncated`, `mid-url`, `pending-adapter` |
-| `negative/04-wrong-format-openapi.json` | — | `postman-2.0` (no guarantee) | invalid | `negative`, `wrong-format`, `openapi`, `pending-adapter` |
-| `negative/05-encoding-utf16.json` | — | `postman-2.0` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
-| `negative/06-version-out-of-range-v1.json` ⚠ | — | `postman-2.0` (no guarantee) | invalid | `negative`, `version-out-of-range`, `collection-v1`, `pending-adapter` |
+| `01-minimal-single-request.json` | minimal | `postman-2.0` ≥ 0.95 | valid | `string-url`, `single-request` |
+| `02-typical-crud-collection.json` | typical | `postman-2.0` ≥ 0.95 | valid | `string-url`, `collection-variables`, `path-variables`, `saved-response` |
+| `03-composition-nested-folders.json` | composition | `postman-2.0` ≥ 0.95 | valid | `nested-folders`, `operation-groups` |
+| `04-stress-auth-bodies-and-scripts.json` | stress | `postman-2.0` ≥ 0.95 | valid | `raw-body`, `urlencoded-body`, `formdata-body`, `graphql-body`, `v2.0-auth-shape`, `scripts`, `disabled-entries` |
+| `05-real-world-payments-collection.json` | real-world | `postman-2.0` ≥ 0.95 | valid | `oauth-token-capture`, `idempotency-key`, `saved-response`, `nested-folders` |
+| `06-environment-set/collection.json` | multi-file (root) | `postman-2.0` ≥ 0.95 | valid | `multi-file`, `environment-variables` |
+| `06-environment-set/environment.json` ⚠ | multi-file (member) | `postman-2.0` (no guarantee) | valid | `multi-file`, `environment-file` |
+| `negative/01-syntactic-unterminated-string.json` | — | `postman-2.0` (no guarantee) | invalid | `negative`, `syntactic`, `unterminated-string` |
+| `negative/02-semantic-no-items.json` | — | `postman-2.0` (no guarantee) | invalid | `negative`, `semantic`, `no-items` |
+| `negative/03-truncated-mid-item.json` ⚠ | — | `postman-2.0` (no guarantee) | invalid | `negative`, `truncated`, `mid-url` |
+| `negative/04-wrong-format-openapi.json` | — | `postman-2.0` (no guarantee) | invalid | `negative`, `wrong-format`, `openapi` |
+| `negative/05-encoding-utf16.json` | — | `postman-2.0` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+| `negative/06-version-out-of-range-v1.json` ⚠ | — | `postman-2.0` (no guarantee) | invalid | `negative`, `version-out-of-range`, `collection-v1` |
 
 > ⚠ **`06-environment-set/environment.json`** — Fileset member: a Postman environment export (_postman_variable_scope), not a collection — not independently detectable as one.
+
+> ⚠ **`negative/03-truncated-mid-item.json`** — JSON truncation surfaces as a parse error indistinguishable from any other malformed document, so the pipeline reports INPUT_MALFORMED — the same code the shipped postman/ truncation fixture carries.
 
 > ⚠ **`negative/06-version-out-of-range-v1.json`** — Postman Collection v1: no info.schema at all. FMT-3.6 extends intake to v2.0, not to v1, so this must reject with a version message rather than a parse error.
 
@@ -2129,26 +2131,30 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`01-swagger-2-petstore.yaml`** — Currently outranked: detection ranks `api-blueprint` (0.98) above `swagger-2.0` (0.95); expected_detection records the intended winner for the detection-hardening work.
 
-### `swagger-1.2/` — Swagger 1.2 (pending #5431)
+### `swagger-1.2/` — Swagger 1.2
 
 | File | Rung | Expected detection | Class | Features |
 | --- | --- | --- | --- | --- |
-| `01-minimal-declaration.json` | minimal | `swagger-1.2` ≥ 0.95 | valid | `api-declaration`, `operations`, `pending-adapter` |
-| `02-typical-orders-declaration.json` | typical | `swagger-1.2` ≥ 0.95 | valid | `api-declaration`, `models`, `responseMessages`, `body-parameter`, `enum`, `pending-adapter` |
-| `03-composition-model-subtypes.json` | composition | `swagger-1.2` ≥ 0.95 | valid | `subTypes`, `discriminator`, `inheritance`, `pending-adapter` |
-| `04-stress-parameter-and-auth-forms.json` | stress | `swagger-1.2` ≥ 0.95 | valid | `form-parameter`, `header-parameter`, `allowMultiple`, `File`, `oauth2`, `apiKey`, `grantTypes`, `pending-adapter` |
-| `05-petstore-set/api-docs.json` | multi-file (root) | `swagger-1.2` ≥ 0.95 | valid | `multi-file`, `resource-listing`, `authorizations`, `pending-adapter` |
-| `05-petstore-set/carts.json` | multi-file (member) | `swagger-1.2` (no guarantee) | valid | `multi-file`, `api-declaration`, `pending-adapter` |
-| `05-petstore-set/products.json` | multi-file (member) | `swagger-1.2` (no guarantee) | valid | `multi-file`, `api-declaration`, `pending-adapter` |
-| `06-real-world-user-directory.json` | real-world | `swagger-1.2` ≥ 0.95 | valid | `api-declaration`, `models`, `apiKey`, `cursor-paging`, `pending-adapter` |
-| `negative/01-syntactic-unquoted-key.json` | — | `swagger-1.2` (no guarantee) | invalid | `negative`, `syntactic`, `unquoted-key`, `pending-adapter` |
-| `negative/02-semantic-empty-resource-listing.json` | — | `swagger-1.2` (no guarantee) | invalid | `negative`, `semantic`, `empty-listing`, `pending-adapter` |
-| `negative/03-truncated-mid-model.json` | — | `swagger-1.2` (no guarantee) | invalid | `negative`, `truncated`, `mid-model`, `pending-adapter` |
-| `negative/04-wrong-format-swagger-2.0.json` ⚠ | — | `swagger-1.2` (no guarantee) | invalid | `negative`, `wrong-format`, `swagger-2.0`, `pending-adapter` |
-| `negative/05-encoding-utf16.json` | — | `swagger-1.2` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
-| `negative/06-unresolvable-declaration-ref.json` ⚠ | — | `swagger-1.2` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-declaration`, `pending-adapter` |
+| `01-minimal-declaration.json` | minimal | `swagger-1.2` ≥ 0.95 | valid | `api-declaration`, `operations` |
+| `02-typical-orders-declaration.json` | typical | `swagger-1.2` ≥ 0.95 | valid | `api-declaration`, `models`, `responseMessages`, `body-parameter`, `enum` |
+| `03-composition-model-subtypes.json` | composition | `swagger-1.2` ≥ 0.95 | valid | `subTypes`, `discriminator`, `inheritance` |
+| `04-stress-parameter-and-auth-forms.json` | stress | `swagger-1.2` ≥ 0.95 | valid | `form-parameter`, `header-parameter`, `allowMultiple`, `File`, `oauth2`, `apiKey`, `grantTypes` |
+| `05-petstore-set/api-docs.json` | multi-file (root) | `swagger-1.2` ≥ 0.95 | valid | `multi-file`, `resource-listing`, `authorizations` |
+| `05-petstore-set/carts.json` | multi-file (member) | `swagger-1.2` (no guarantee) | valid | `multi-file`, `api-declaration` |
+| `05-petstore-set/products.json` | multi-file (member) | `swagger-1.2` (no guarantee) | valid | `multi-file`, `api-declaration` |
+| `06-real-world-user-directory.json` | real-world | `swagger-1.2` ≥ 0.95 | valid | `api-declaration`, `models`, `apiKey`, `cursor-paging` |
+| `negative/01-syntactic-unclosed-apis-array.json` ⚠ | — | `swagger-1.2` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-array` |
+| `negative/02-semantic-empty-resource-listing.json` | — | `swagger-1.2` (no guarantee) | invalid | `negative`, `semantic`, `empty-listing` |
+| `negative/03-truncated-mid-model.json` ⚠ | — | `swagger-1.2` (no guarantee) | invalid | `negative`, `truncated`, `mid-model` |
+| `negative/04-wrong-format-wsdl.wsdl` ⚠ | — | `swagger-1.2` (no guarantee) | invalid | `negative`, `wrong-format`, `wsdl` |
+| `negative/05-encoding-utf16.json` | — | `swagger-1.2` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+| `negative/06-unresolvable-declaration-ref.json` ⚠ | — | `swagger-1.2` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-declaration` |
 
-> ⚠ **`negative/04-wrong-format-swagger-2.0.json`** — The neighbouring version the shipped adapter already claims; a 1.2 reader must not take it, and detection must route it to the Swagger 2.0 path.
+> ⚠ **`negative/01-syntactic-unclosed-apis-array.json`** — An unquoted JSON key is valid YAML, and the intake loader falls back to YAML, so "unquoted key" is not a syntactic failure here; the fixture leaves the `apis` array unclosed instead, which neither parser accepts.
+
+> ⚠ **`negative/03-truncated-mid-model.json`** — JSON/YAML truncation surfaces as a parse error the loader cannot distinguish from any other malformed document, so the pipeline reports INPUT_MALFORMED — the same code the shipped openapi/ truncation fixture carries.
+
+> ⚠ **`negative/04-wrong-format-wsdl.wsdl`** — A Swagger 2.0 document cannot serve as this directory's wrong-format negative: the same adapter reads 1.2 and 2.0, so a 2.0 upload imports rather than failing. That routing is asserted directly in tests/test_swagger_1_2_import.py; this entry carries a SOAP description, which the openapi adapter never claims.
 
 > ⚠ **`negative/06-unresolvable-declaration-ref.json`** — The FMT-3.6 acceptance case: a 1.2 listing whose declaration is missing from the fileset.
 
@@ -2587,7 +2593,6 @@ Rungs that do not apply to an adapter's format, with the manifest-recorded justi
 | `llm-tools` | multi-file | LlmToolsImportSource.parse_fileset only parses the root member and tool bundles do not resolve cross-file references, so a multi-file set demonstrates nothing beyond a single document. |
 | `oncrpc` | multi-file | The ONC RPC adapter's parse_fileset only parses the root document and does not resolve references across fileset members, so a multi-file set would exercise nothing. |
 | `openrpc` | multi-file | The openrpc adapter's parse_fileset only parses the root member and does not resolve external $ref targets in other members, so a multi-file set exercises nothing. |
-| `postman` | multi-file | The Postman adapter's parse_fileset only parses the root collection and never resolves references across fileset members, so a multi-file set would exercise nothing beyond a single file. |
 | `raml` | multi-file | The RAML adapter's parse_fileset only parses the root document and never resolves !include or library references across fileset members, so a multi-file set would exercise nothing beyond a single file. |
 | `smithy` | multi-file | The smithy adapter's parse_fileset parses only the root member and never resolves shapes defined in other members, so a multi-file set demonstrates nothing. |
 | `thrift` | multi-file | ThriftImportSource.parse_fileset only parses the fileset root and never resolves included members, so a multi-file set demonstrates nothing beyond a single file. |

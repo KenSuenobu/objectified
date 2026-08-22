@@ -1,0 +1,666 @@
+{
+  "adapter": "openapi",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "swagger_1_2": {
+        "api_version": "0.9.1",
+        "declarations": [
+          "/samples"
+        ],
+        "limits": [
+          "Authorization 'oauth2' declares more than one OAuth2 grant type; Swagger 2.0 allows one flow per definition, so 'authorization_code' was projected as the separate definition 'oauth2_accessCode'."
+        ],
+        "source_version": "1.2"
+      }
+    },
+    "format": "swagger-2.0",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Samples",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": null,
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com/lab",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "samples",
+        "name": "samples",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Every parameter kind 1.2 admits, in one operation.",
+            "extras": {
+              "operationId": "searchSamples",
+              "summary": "Every parameter kind 1.2 admits, in one operation."
+            },
+            "http_method": "GET",
+            "http_path": "/samples",
+            "key": "GET /samples",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json",
+                  "text/csv"
+                ],
+                "description": "Matching samples",
+                "extras": {},
+                "headers": [],
+                "key": "GET /samples#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Sample",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              },
+              {
+                "content_types": [
+                  "application/json",
+                  "text/csv"
+                ],
+                "description": "Bad query",
+                "extras": {},
+                "headers": [],
+                "key": "GET /samples#response.400",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ErrorModel",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": "400"
+              },
+              {
+                "content_types": [],
+                "description": "Rate limited",
+                "extras": {},
+                "headers": [],
+                "key": "GET /samples#response.429",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": "429"
+              }
+            ],
+            "name": "searchSamples",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /samples#header.X-Request-Id",
+                "location": "header",
+                "name": "X-Request-Id",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": {
+                  "enum": null,
+                  "exclusive_maximum": null,
+                  "exclusive_minimum": null,
+                  "extras": {},
+                  "format": "int64",
+                  "max_items": null,
+                  "max_length": null,
+                  "maximum": null,
+                  "min_items": null,
+                  "min_length": null,
+                  "minimum": 0.0,
+                  "multiple_of": null,
+                  "pattern": null,
+                  "unique_items": null
+                },
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /samples#query.page",
+                "location": "query",
+                "name": "page",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /samples#query.q",
+                "location": "query",
+                "name": "q",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": {
+                  "enum": [
+                    "queued",
+                    "running",
+                    "complete",
+                    "failed"
+                  ],
+                  "exclusive_maximum": null,
+                  "exclusive_minimum": null,
+                  "extras": {},
+                  "format": null,
+                  "max_items": null,
+                  "max_length": null,
+                  "maximum": null,
+                  "min_items": null,
+                  "min_length": null,
+                  "minimum": null,
+                  "multiple_of": null,
+                  "pattern": null,
+                  "unique_items": null
+                },
+                "default": "complete",
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /samples#query.status",
+                "location": "query",
+                "name": "status",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /samples#query.tags",
+                "location": "query",
+                "name": "tags",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "string",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": [
+              "samples"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Form parameters and a file upload.",
+            "extras": {
+              "operationId": "uploadSample",
+              "summary": "Form parameters and a file upload."
+            },
+            "http_method": "POST",
+            "http_path": "/samples",
+            "key": "POST /samples",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "multipart/form-data"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /samples#request",
+                "name": null,
+                "payload": null,
+                "payload_schema": {
+                  "properties": {
+                    "assay": {
+                      "enum": [
+                        "elisa",
+                        "pcr",
+                        "hplc"
+                      ],
+                      "type": "string"
+                    },
+                    "attachment": {
+                      "format": "binary",
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "replicates": {
+                      "default": 3,
+                      "format": "int32",
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "assay"
+                  ],
+                  "type": "object"
+                },
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json",
+                  "application/xml",
+                  "text/csv"
+                ],
+                "description": "Sample accepted",
+                "extras": {},
+                "headers": [],
+                "key": "POST /samples#response.201",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Sample",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              },
+              {
+                "content_types": [],
+                "description": "Attachment too large",
+                "extras": {},
+                "headers": [],
+                "key": "POST /samples#response.413",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": "413"
+              }
+            ],
+            "name": "uploadSample",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "samples"
+            ]
+          }
+        ]
+      }
+    ],
+    "title": "Samples",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "int32",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ErrorModel.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ErrorModel.field",
+            "name": "field",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ErrorModel.message",
+            "name": "message",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ErrorModel",
+        "key_type": null,
+        "kind": "record",
+        "name": "ErrorModel",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": [
+                "elisa",
+                "pcr",
+                "hplc"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Sample.assay",
+            "name": "assay",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Sample.collectedAt",
+            "name": "collectedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "byte",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Sample.raw",
+            "name": "raw",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": false
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Sample.readings",
+            "name": "readings",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "number",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Sample.sampleId",
+            "name": "sampleId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "queued",
+                "running",
+                "complete",
+                "failed"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Sample.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Sample",
+        "key_type": null,
+        "kind": "record",
+        "name": "Sample",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "0.9.1"
+  },
+  "corpus_path": "swagger-1.2/04-stress-parameter-and-auth-forms.json",
+  "counts": {
+    "channels": 0,
+    "operations": 2,
+    "servers": 1,
+    "services": 1,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "swagger-1.2"
+  },
+  "fingerprint": "sha256:fabbc7f71d62c10b85b85ce02c3cf43bb42b7c331903f0dc1c2d2de5de458415",
+  "lint": {
+    "findings": 13,
+    "grade": "B",
+    "report_fingerprint": "0fc7096c62041b59e3314a89b7772a2e205e2a8827d6454508d0cb4c6d2a9fc1",
+    "score": 81,
+    "severity_counts": {
+      "error": 0,
+      "info": 11,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

@@ -1,0 +1,384 @@
+{
+  "adapter": "postman",
+  "canonical": {
+    "channels": [],
+    "description": "Every v2.0 body mode and the v2.0 auth shape, which differs from v2.1's array form.",
+    "extras": {
+      "postman_auth": {
+        "parameters": [
+          "token"
+        ],
+        "type": "bearer"
+      },
+      "postman_collection_version": "2.0",
+      "postman_schema_url": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+      "postman_variables": [
+        {
+          "key": "baseUrl",
+          "value": "https://api.example.com/lab"
+        },
+        {
+          "key": "accessToken",
+          "value": ""
+        }
+      ]
+    },
+    "format": "postman",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Grammar corners",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": "From Postman collection variable",
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com/lab",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "Grammar corners",
+        "name": "Grammar corners",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "postman_auth": {
+                "parameters": [
+                  "password",
+                  "username"
+                ],
+                "type": "basic"
+              },
+              "postman_folder_path": [],
+              "postman_headers": []
+            },
+            "http_method": "GET",
+            "http_path": "/samples/legacy",
+            "key": "GET /samples/legacy",
+            "kind": "request_response",
+            "messages": [],
+            "name": "Basic auth override",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "postman_folder_path": [],
+              "postman_headers": [
+                {
+                  "disabled": false,
+                  "key": "X-Request-Id",
+                  "value": "{{requestId}}"
+                },
+                {
+                  "disabled": true,
+                  "key": "X-Debug",
+                  "value": "1"
+                }
+              ]
+            },
+            "http_method": "PATCH",
+            "http_path": "/samples/{sampleId}/status",
+            "key": "PATCH /samples/{sampleId}/status",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "postman_body_language": null,
+                  "postman_body_mode": "raw",
+                  "postman_body_raw": "{ \"status\": \"complete\" }",
+                  "postman_body_schema": {
+                    "$ref": "#/components/schemas/Statu"
+                  }
+                },
+                "headers": [],
+                "key": "PATCH /samples/{sampleId}/status#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Statu",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "Disabled request header and path variables",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "postman_style": "path"
+                },
+                "key": "PATCH /samples/{sampleId}/status#path.sampleId",
+                "location": "path",
+                "name": "sampleId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "postman_folder_path": [],
+              "postman_headers": [
+                {
+                  "disabled": false,
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            },
+            "http_method": "POST",
+            "http_path": "/graphql",
+            "key": "POST /graphql",
+            "kind": "request_response",
+            "messages": [],
+            "name": "GraphQL body",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "postman_folder_path": [],
+              "postman_headers": [
+                {
+                  "disabled": false,
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            },
+            "http_method": "POST",
+            "http_path": "/samples",
+            "key": "POST /samples",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "postman_body_language": null,
+                  "postman_body_mode": "raw",
+                  "postman_body_raw": "{ \"label\": \"sample-a\", \"assay\": \"pcr\" }",
+                  "postman_body_schema": {
+                    "$ref": "#/components/schemas/Sample"
+                  }
+                },
+                "headers": [],
+                "key": "POST /samples#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Sample",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": true,
+                "role": "request",
+                "status_code": null
+              }
+            ],
+            "name": "Raw JSON body",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "postman_folder_path": [],
+              "postman_headers": [
+                {
+                  "disabled": false,
+                  "key": "Content-Type",
+                  "value": "application/x-www-form-urlencoded"
+                }
+              ]
+            },
+            "http_method": "POST",
+            "http_path": "/samples",
+            "key": "POST /samples",
+            "kind": "request_response",
+            "messages": [],
+            "name": "URL-encoded body",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "postman_folder_path": [],
+              "postman_headers": []
+            },
+            "http_method": "POST",
+            "http_path": "/samples/upload",
+            "key": "POST /samples/upload",
+            "kind": "request_response",
+            "messages": [],
+            "name": "Form-data with a file",
+            "parameters": [],
+            "streaming": "none",
+            "tags": []
+          }
+        ]
+      }
+    ],
+    "title": "Grammar corners",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Sample.assay",
+            "name": "assay",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Sample.label",
+            "name": "label",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Sample",
+        "key_type": null,
+        "kind": "record",
+        "name": "Sample",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Statu.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "Statu",
+        "key_type": null,
+        "kind": "record",
+        "name": "Statu",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "postman-v2/04-stress-auth-bodies-and-scripts.json",
+  "counts": {
+    "channels": 0,
+    "operations": 6,
+    "servers": 1,
+    "services": 1,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.98,
+    "format": "postman-2.0"
+  },
+  "fingerprint": "sha256:9bf443d4171485141a9451e835027a88c2b45d457358eadbc961752d6c077d70",
+  "lint": {
+    "findings": 13,
+    "grade": "D",
+    "report_fingerprint": "5ea5f5fc3be022799e3a19d451c740393bc602447d2d0f6341464577510414eb",
+    "score": 67,
+    "severity_counts": {
+      "error": 0,
+      "info": 5,
+      "warning": 8
+    }
+  },
+  "snapshot_version": 1
+}

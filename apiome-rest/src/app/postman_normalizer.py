@@ -3,6 +3,13 @@
 Maps a parsed :class:`~app.postman_parser.PostmanDocument` into a
 :class:`~app.canonical_model.CanonicalApi` of paradigm
 :attr:`~app.canonical_model.ApiParadigm.REST`.
+
+One normalizer serves Collection v2.0 and v2.1 (FMT-3.6, #5431): the two minors'
+spelling differences are resolved by the parser, so everything here reads the same
+AST either way. The minor itself is published as ``postman_collection_version`` in
+the model's extras — the "with its version recorded" half of FMT-3.6 — and the
+collection's and each request's auth **scheme** (never its credentials) as
+``postman_auth``.
 """
 
 from __future__ import annotations
@@ -27,7 +34,12 @@ from .canonical_model import (
     TypeRef,
 )
 from .normalizer import Keys, Normalizer, SchemaCoercer, normalize_ordering
-from .postman_parser import PostmanDocument, PostmanOperation, postman_http_path
+from .postman_parser import (
+    PostmanAuth,
+    PostmanDocument,
+    PostmanOperation,
+    postman_http_path,
+)
 
 __all__ = ["PostmanNormalizer"]
 
@@ -129,6 +141,22 @@ def _collect_components(document: PostmanDocument) -> Dict[str, Any]:
         else:
             components[type_name] = schema
     return components
+
+
+def _auth_extras(auth: Optional[PostmanAuth]) -> Optional[Dict[str, Any]]:
+    """Render an auth declaration for the extras bag — scheme and parameter names only.
+
+    Args:
+        auth: The parsed auth declaration, or ``None``.
+
+    Returns:
+        ``{"type": …, "parameters": [...]}``, or ``None`` when nothing was declared.
+        Credential *values* are deliberately absent: the parser never reads them,
+        so an imported collection cannot leak the token it was exported with.
+    """
+    if auth is None:
+        return None
+    return {"type": auth.type, "parameters": list(auth.parameters)}
 
 
 def _parameters(operation: PostmanOperation, *, op_key: str) -> List[Parameter]:
@@ -286,6 +314,16 @@ class PostmanNormalizer(Normalizer, register=True):
                         extras=extras,
                     )
                 )
+            operation_extras: Dict[str, Any] = {
+                "postman_folder_path": list(endpoint.folder_path),
+                "postman_headers": [
+                    {"key": header.key, "value": header.value, "disabled": header.disabled}
+                    for header in endpoint.request.headers
+                ],
+            }
+            request_auth = _auth_extras(endpoint.request.auth)
+            if request_auth is not None:
+                operation_extras["postman_auth"] = request_auth
             operations.append(
                 Operation(
                     key=op_key,
@@ -297,13 +335,7 @@ class PostmanNormalizer(Normalizer, register=True):
                     http_path=path,
                     parameters=_parameters(endpoint, op_key=op_key),
                     messages=messages,
-                    extras={
-                        "postman_folder_path": list(endpoint.folder_path),
-                        "postman_headers": [
-                            {"key": header.key, "value": header.value, "disabled": header.disabled}
-                            for header in endpoint.request.headers
-                        ],
-                    },
+                    extras=operation_extras,
                 )
             )
 
@@ -313,6 +345,18 @@ class PostmanNormalizer(Normalizer, register=True):
             servers.append(Server(url=base_url, description="From Postman collection variable"))
 
         types = coercer.named_types_from_components()
+        document_extras: Dict[str, Any] = {
+            "postman_schema_url": source.schema_url,
+            "postman_variables": [
+                {"key": variable.key, "value": variable.value}
+                for variable in source.variables
+            ],
+        }
+        if source.collection_version:
+            document_extras["postman_collection_version"] = source.collection_version
+        collection_auth = _auth_extras(source.auth)
+        if collection_auth is not None:
+            document_extras["postman_auth"] = collection_auth
         api = CanonicalApi(
             paradigm=self.paradigm,
             format=self.format,
@@ -324,12 +368,6 @@ class PostmanNormalizer(Normalizer, register=True):
             services=[Service(key=service_key, name=source.name, operations=operations)],
             types=types,
             raw={"postman": source.raw} if include_raw else None,
-            extras={
-                "postman_schema_url": source.schema_url,
-                "postman_variables": [
-                    {"key": variable.key, "value": variable.value}
-                    for variable in source.variables
-                ],
-            },
+            extras=document_extras,
         )
         return normalize_ordering(api)

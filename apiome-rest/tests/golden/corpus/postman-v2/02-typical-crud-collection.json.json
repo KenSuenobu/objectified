@@ -2,14 +2,14 @@
   "adapter": "postman",
   "canonical": {
     "channels": [],
-    "description": "Typical everyday Postman Collection v2.1 example: CRUD requests for an orders service with headers, JSON request bodies, a collection variable for the base URL, and a path variable on the item requests.",
+    "description": "Collection v2.0: note that every request URL is a plain string, not the object form v2.1 introduced.",
     "extras": {
-      "postman_collection_version": "2.1",
-      "postman_schema_url": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      "postman_collection_version": "2.0",
+      "postman_schema_url": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
       "postman_variables": [
         {
           "key": "baseUrl",
-          "value": "https://api.example.com"
+          "value": "https://api.example.com/v2"
         }
       ]
     },
@@ -29,7 +29,7 @@
         "extras": {},
         "name": null,
         "protocol": null,
-        "url": "https://api.example.com",
+        "url": "https://api.example.com/v2",
         "variables": []
       }
     ],
@@ -43,7 +43,7 @@
           {
             "channel_ref": null,
             "deprecated": false,
-            "description": "Cancel an order that has not shipped yet.",
+            "description": null,
             "extras": {
               "postman_folder_path": [],
               "postman_headers": []
@@ -73,6 +73,26 @@
                   "name": "string",
                   "nullable": false
                 }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "postman_sample": "customer-request",
+                  "postman_style": "query"
+                },
+                "key": "DELETE /orders/{orderId}#query.reason",
+                "location": "query",
+                "name": "reason",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
               }
             ],
             "streaming": "none",
@@ -81,7 +101,7 @@
           {
             "channel_ref": null,
             "deprecated": false,
-            "description": "List orders, optionally filtered by status.",
+            "description": "Returns the caller's orders, newest first.",
             "extras": {
               "postman_folder_path": [],
               "postman_headers": [
@@ -96,7 +116,23 @@
             "http_path": "/orders",
             "key": "GET /orders",
             "kind": "request_response",
-            "messages": [],
+            "messages": [
+              {
+                "content_types": [],
+                "description": null,
+                "extras": {
+                  "http_status": "200"
+                },
+                "headers": [],
+                "key": "GET /orders#response.200",
+                "name": "200 OK",
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": null
+              }
+            ],
             "name": "List orders",
             "parameters": [
               {
@@ -105,7 +141,27 @@
                 "deprecated": false,
                 "description": null,
                 "extras": {
-                  "postman_sample": "placed",
+                  "postman_sample": "25",
+                  "postman_style": "query"
+                },
+                "key": "GET /orders#query.limit",
+                "location": "query",
+                "name": "limit",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "postman_sample": "new",
                   "postman_style": "query"
                 },
                 "key": "GET /orders#query.status",
@@ -126,16 +182,10 @@
           {
             "channel_ref": null,
             "deprecated": false,
-            "description": "Fetch a single order by id.",
+            "description": null,
             "extras": {
               "postman_folder_path": [],
-              "postman_headers": [
-                {
-                  "disabled": false,
-                  "key": "Accept",
-                  "value": "application/json"
-                }
-              ]
+              "postman_headers": []
             },
             "http_method": "GET",
             "http_path": "/orders/{orderId}",
@@ -170,7 +220,7 @@
           {
             "channel_ref": null,
             "deprecated": false,
-            "description": "Place a new order.",
+            "description": null,
             "extras": {
               "postman_folder_path": [],
               "postman_headers": [
@@ -190,9 +240,9 @@
                 "content_types": [],
                 "description": null,
                 "extras": {
-                  "postman_body_language": "json",
+                  "postman_body_language": null,
                   "postman_body_mode": "raw",
-                  "postman_body_raw": "{\n  \"customerId\": \"c-77\",\n  \"items\": [\n    { \"sku\": \"SKU-1\", \"quantity\": 2 }\n  ]\n}",
+                  "postman_body_raw": "{\n  \"customerId\": \"CUS-000123\",\n  \"lines\": [{ \"sku\": \"WID-0001\", \"quantity\": 2 }]\n}",
                   "postman_body_schema": {
                     "$ref": "#/components/schemas/Order"
                   }
@@ -253,8 +303,8 @@
             "description": null,
             "extras": {},
             "field_number": null,
-            "key": "Order.items",
-            "name": "items",
+            "key": "Order.lines",
+            "name": "lines",
             "type": {
               "extras": {},
               "item": {
@@ -279,7 +329,7 @@
     ],
     "version": null
   },
-  "corpus_path": "postman/03-orders-service.postman_collection.json",
+  "corpus_path": "postman-v2/02-typical-crud-collection.json",
   "counts": {
     "channels": 0,
     "operations": 4,
@@ -289,18 +339,18 @@
   },
   "detection": {
     "confidence": 0.98,
-    "format": "postman"
+    "format": "postman-2.0"
   },
-  "fingerprint": "sha256:1361326e3d35cd346899f01736601c72e831e5d75d059f824e2ba42bd06ed1c5",
+  "fingerprint": "sha256:1a43c66371fc4682df3be70b1e6fcb7c8218f311287f393fd23ddfb9cf2c368d",
   "lint": {
-    "findings": 4,
-    "grade": "A",
-    "report_fingerprint": "615a1a2b5c0d2d2402fc3e497c9e942e720c3b173834ad4b26c8877fa4c3aa9b",
-    "score": 93,
+    "findings": 8,
+    "grade": "B",
+    "report_fingerprint": "bb092341b135a4688649f8bd13673f5389a37dba4e5cadc1d99a37cf4739b119",
+    "score": 80,
     "severity_counts": {
       "error": 0,
-      "info": 3,
-      "warning": 1
+      "info": 4,
+      "warning": 4
     }
   },
   "snapshot_version": 1

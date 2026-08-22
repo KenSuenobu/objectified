@@ -1,0 +1,798 @@
+{
+  "adapter": "openapi",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "swagger_1_2": {
+        "api_version": "2.3.0",
+        "declarations": [
+          "/orders"
+        ],
+        "source_version": "1.2"
+      }
+    },
+    "format": "swagger-2.0",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Orders",
+      "namespace": null
+    },
+    "paradigm": "rest",
+    "protocol": "http",
+    "schema_version": 1,
+    "servers": [
+      {
+        "description": null,
+        "extras": {},
+        "name": null,
+        "protocol": null,
+        "url": "https://api.example.com/v2",
+        "variables": []
+      }
+    ],
+    "services": [
+      {
+        "description": null,
+        "extras": {},
+        "key": "orders",
+        "name": "orders",
+        "operations": [
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Cancel an order",
+            "extras": {
+              "operationId": "cancelOrder",
+              "summary": "Cancel an order"
+            },
+            "http_method": "DELETE",
+            "http_path": "/orders/{orderId}",
+            "key": "DELETE /orders/{orderId}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [],
+                "description": "Cancelled",
+                "extras": {},
+                "headers": [],
+                "key": "DELETE /orders/{orderId}#response.204",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "204"
+              }
+            ],
+            "name": "cancelOrder",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "DELETE /orders/{orderId}#path.orderId",
+                "location": "path",
+                "name": "orderId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              },
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "DELETE /orders/{orderId}#query.reason",
+                "location": "query",
+                "name": "reason",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": [
+              "orders"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Returns the caller's orders, newest first.",
+            "extras": {
+              "operationId": "listOrders",
+              "summary": "List orders"
+            },
+            "http_method": "GET",
+            "http_path": "/orders",
+            "key": "GET /orders",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "Matching orders",
+                "extras": {},
+                "headers": [],
+                "key": "GET /orders#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": {
+                    "extras": {},
+                    "item": null,
+                    "name": "Order",
+                    "nullable": false
+                  },
+                  "name": null,
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              },
+              {
+                "content_types": [],
+                "description": "Not authenticated",
+                "extras": {},
+                "headers": [],
+                "key": "GET /orders#response.401",
+                "name": null,
+                "payload": null,
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": "401"
+              }
+            ],
+            "name": "listOrders",
+            "parameters": [
+              {
+                "constraints": {
+                  "enum": null,
+                  "exclusive_maximum": null,
+                  "exclusive_minimum": null,
+                  "extras": {},
+                  "format": "int32",
+                  "max_items": null,
+                  "max_length": null,
+                  "maximum": 100.0,
+                  "min_items": null,
+                  "min_length": null,
+                  "minimum": 1.0,
+                  "multiple_of": null,
+                  "pattern": null,
+                  "unique_items": null
+                },
+                "default": 25,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /orders#query.limit",
+                "location": "query",
+                "name": "limit",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "integer",
+                  "nullable": true
+                }
+              },
+              {
+                "constraints": {
+                  "enum": [
+                    "new",
+                    "paid",
+                    "shipped",
+                    "cancelled"
+                  ],
+                  "exclusive_maximum": null,
+                  "exclusive_minimum": null,
+                  "extras": {},
+                  "format": null,
+                  "max_items": null,
+                  "max_length": null,
+                  "maximum": null,
+                  "min_items": null,
+                  "min_length": null,
+                  "minimum": null,
+                  "multiple_of": null,
+                  "pattern": null,
+                  "unique_items": null
+                },
+                "default": null,
+                "deprecated": false,
+                "description": "Filter by lifecycle status.",
+                "extras": {},
+                "key": "GET /orders#query.status",
+                "location": "query",
+                "name": "status",
+                "required": false,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": true
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": [
+              "orders"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Fetch one order",
+            "extras": {
+              "operationId": "getOrder",
+              "summary": "Fetch one order"
+            },
+            "http_method": "GET",
+            "http_path": "/orders/{orderId}",
+            "key": "GET /orders/{orderId}",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "Successful response",
+                "extras": {},
+                "headers": [],
+                "key": "GET /orders/{orderId}#response.200",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Order",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "200"
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "No such order",
+                "extras": {},
+                "headers": [],
+                "key": "GET /orders/{orderId}#response.404",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ErrorModel",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": "404"
+              }
+            ],
+            "name": "getOrder",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {},
+                "key": "GET /orders/{orderId}#path.orderId",
+                "location": "path",
+                "name": "orderId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": [
+              "orders"
+            ]
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": "Place an order",
+            "extras": {
+              "operationId": "placeOrder",
+              "summary": "Place an order"
+            },
+            "http_method": "POST",
+            "http_path": "/orders",
+            "key": "POST /orders",
+            "kind": "request_response",
+            "messages": [
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": null,
+                "extras": {},
+                "headers": [],
+                "key": "POST /orders#request",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "NewOrder",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "request",
+                "status_code": null
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "Order created",
+                "extras": {},
+                "headers": [],
+                "key": "POST /orders#response.201",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "Order",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "response",
+                "status_code": "201"
+              },
+              {
+                "content_types": [
+                  "application/json"
+                ],
+                "description": "Invalid order",
+                "extras": {},
+                "headers": [],
+                "key": "POST /orders#response.422",
+                "name": null,
+                "payload": {
+                  "extras": {},
+                  "item": null,
+                  "name": "ErrorModel",
+                  "nullable": false
+                },
+                "payload_schema": null,
+                "required": false,
+                "role": "error",
+                "status_code": "422"
+              }
+            ],
+            "name": "placeOrder",
+            "parameters": [],
+            "streaming": "none",
+            "tags": [
+              "orders"
+            ]
+          }
+        ]
+      }
+    ],
+    "title": "Orders",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "int32",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ErrorModel.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "ErrorModel.message",
+            "name": "message",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ErrorModel",
+        "key_type": null,
+        "kind": "record",
+        "name": "ErrorModel",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "NewOrder.lines",
+            "name": "lines",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "OrderLine",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "NewOrder.note",
+            "name": "note",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "NewOrder",
+        "key_type": null,
+        "kind": "record",
+        "name": "NewOrder",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "A placed order.",
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.lines",
+            "name": "lines",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "OrderLine",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.orderId",
+            "name": "orderId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.placedAt",
+            "name": "placedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "new",
+                "paid",
+                "shipped",
+                "cancelled"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "double",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "Order.total",
+            "name": "total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "number",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "Order",
+        "key_type": null,
+        "kind": "record",
+        "name": "Order",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {},
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "int32",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 1.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "OrderLine.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "integer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "OrderLine.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "double",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "field_number": null,
+            "key": "OrderLine.unitPrice",
+            "name": "unitPrice",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "number",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "OrderLine",
+        "key_type": null,
+        "kind": "record",
+        "name": "OrderLine",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "2.3.0"
+  },
+  "corpus_path": "swagger-1.2/02-typical-orders-declaration.json",
+  "counts": {
+    "channels": 0,
+    "operations": 4,
+    "servers": 1,
+    "services": 1,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "swagger-1.2"
+  },
+  "fingerprint": "sha256:610c26d1527c9900804b0fd9637d1c0fd137bf260e770b338c7262c9e29096a1",
+  "lint": {
+    "findings": 17,
+    "grade": "C",
+    "report_fingerprint": "30a9b5959aecca43710d242f572ac9e2b7582c8be8747924a87799e1b5bd3c35",
+    "score": 74,
+    "severity_counts": {
+      "error": 0,
+      "info": 14,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

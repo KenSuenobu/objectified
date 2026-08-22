@@ -2,18 +2,14 @@
   "adapter": "postman",
   "canonical": {
     "channels": [],
-    "description": "Composition Postman Collection v2.1 example: requests grouped into nested folders (Users, and Admin containing a Reports subfolder) that all reuse the collection-level baseUrl and apiVersion variables.",
+    "description": "Folders inside folders — the grouping an importer must flatten into operation groups.",
     "extras": {
-      "postman_collection_version": "2.1",
-      "postman_schema_url": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      "postman_collection_version": "2.0",
+      "postman_schema_url": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
       "postman_variables": [
         {
           "key": "baseUrl",
-          "value": "https://api.example.com"
-        },
-        {
-          "key": "apiVersion",
-          "value": "v2"
+          "value": "https://api.example.com/store"
         }
       ]
     },
@@ -21,7 +17,7 @@
     "identity": {
       "extras": {},
       "id": null,
-      "name": "Workspace API",
+      "name": "Storefront",
       "namespace": null
     },
     "paradigm": "rest",
@@ -33,7 +29,7 @@
         "extras": {},
         "name": null,
         "protocol": null,
-        "url": "https://api.example.com",
+        "url": "https://api.example.com/store",
         "variables": []
       }
     ],
@@ -41,8 +37,8 @@
       {
         "description": null,
         "extras": {},
-        "key": "Workspace API",
-        "name": "Workspace API",
+        "key": "Storefront",
+        "name": "Storefront",
         "operations": [
           {
             "channel_ref": null,
@@ -50,16 +46,17 @@
             "description": null,
             "extras": {
               "postman_folder_path": [
-                "Admin"
+                "Catalogue",
+                "Categories"
               ],
               "postman_headers": []
             },
             "http_method": "GET",
-            "http_path": "/admin/audit",
-            "key": "GET /admin/audit",
+            "http_path": "/categories",
+            "key": "GET /categories",
             "kind": "request_response",
             "messages": [],
-            "name": "Audit log",
+            "name": "List categories",
             "parameters": [],
             "streaming": "none",
             "tags": []
@@ -70,17 +67,17 @@
             "description": null,
             "extras": {
               "postman_folder_path": [
-                "Admin",
-                "Reports"
+                "Catalogue",
+                "Products"
               ],
               "postman_headers": []
             },
             "http_method": "GET",
-            "http_path": "/admin/reports/usage",
-            "key": "GET /admin/reports/usage",
+            "http_path": "/products",
+            "key": "GET /products",
             "kind": "request_response",
             "messages": [],
-            "name": "Usage report",
+            "name": "List products",
             "parameters": [
               {
                 "constraints": null,
@@ -88,12 +85,12 @@
                 "deprecated": false,
                 "description": null,
                 "extras": {
-                  "postman_sample": "2026-06",
+                  "postman_sample": "tools",
                   "postman_style": "query"
                 },
-                "key": "GET /admin/reports/usage#query.month",
+                "key": "GET /products#query.category",
                 "location": "query",
-                "name": "month",
+                "name": "category",
                 "required": false,
                 "type": {
                   "extras": {},
@@ -112,22 +109,57 @@
             "description": null,
             "extras": {
               "postman_folder_path": [
-                "Users"
+                "Catalogue",
+                "Products"
               ],
-              "postman_headers": [
-                {
-                  "disabled": false,
-                  "key": "Accept",
-                  "value": "application/json"
-                }
-              ]
+              "postman_headers": []
             },
             "http_method": "GET",
-            "http_path": "/users",
-            "key": "GET /users",
+            "http_path": "/products/{sku}",
+            "key": "GET /products/{sku}",
             "kind": "request_response",
             "messages": [],
-            "name": "List users",
+            "name": "Get product",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "postman_style": "path"
+                },
+                "key": "GET /products/{sku}#path.sku",
+                "location": "path",
+                "name": "sku",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
+            "streaming": "none",
+            "tags": []
+          },
+          {
+            "channel_ref": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "postman_folder_path": [
+                "Cart"
+              ],
+              "postman_headers": []
+            },
+            "http_method": "POST",
+            "http_path": "/carts",
+            "key": "POST /carts",
+            "kind": "request_response",
+            "messages": [],
+            "name": "Create cart",
             "parameters": [],
             "streaming": "none",
             "tags": []
@@ -138,7 +170,7 @@
             "description": null,
             "extras": {
               "postman_folder_path": [
-                "Users"
+                "Cart"
               ],
               "postman_headers": [
                 {
@@ -149,28 +181,28 @@
               ]
             },
             "http_method": "POST",
-            "http_path": "/users/invitations",
-            "key": "POST /users/invitations",
+            "http_path": "/carts/{cartId}/items",
+            "key": "POST /carts/{cartId}/items",
             "kind": "request_response",
             "messages": [
               {
                 "content_types": [],
                 "description": null,
                 "extras": {
-                  "postman_body_language": "json",
+                  "postman_body_language": null,
                   "postman_body_mode": "raw",
-                  "postman_body_raw": "{\n  \"email\": \"kai@example.com\",\n  \"role\": \"member\"\n}",
+                  "postman_body_raw": "{ \"sku\": \"WID-0001\", \"quantity\": 1 }",
                   "postman_body_schema": {
-                    "$ref": "#/components/schemas/Invitation"
+                    "$ref": "#/components/schemas/Item"
                   }
                 },
                 "headers": [],
-                "key": "POST /users/invitations#request",
+                "key": "POST /carts/{cartId}/items#request",
                 "name": null,
                 "payload": {
                   "extras": {},
                   "item": null,
-                  "name": "Invitation",
+                  "name": "Item",
                   "nullable": false
                 },
                 "payload_schema": null,
@@ -179,15 +211,35 @@
                 "status_code": null
               }
             ],
-            "name": "Invite user",
-            "parameters": [],
+            "name": "Add item",
+            "parameters": [
+              {
+                "constraints": null,
+                "default": null,
+                "deprecated": false,
+                "description": null,
+                "extras": {
+                  "postman_style": "path"
+                },
+                "key": "POST /carts/{cartId}/items#path.cartId",
+                "location": "path",
+                "name": "cartId",
+                "required": true,
+                "type": {
+                  "extras": {},
+                  "item": null,
+                  "name": "string",
+                  "nullable": false
+                }
+              }
+            ],
             "streaming": "none",
             "tags": []
           }
         ]
       }
     ],
-    "title": "Workspace API",
+    "title": "Storefront",
     "types": [
       {
         "aliased": null,
@@ -204,12 +256,12 @@
             "description": null,
             "extras": {},
             "field_number": null,
-            "key": "Invitation.email",
-            "name": "email",
+            "key": "Item.quantity",
+            "name": "quantity",
             "type": {
               "extras": {},
               "item": null,
-              "name": "string",
+              "name": "integer",
               "nullable": false
             }
           },
@@ -220,8 +272,8 @@
             "description": null,
             "extras": {},
             "field_number": null,
-            "key": "Invitation.role",
-            "name": "role",
+            "key": "Item.sku",
+            "name": "sku",
             "type": {
               "extras": {},
               "item": null,
@@ -230,10 +282,10 @@
             }
           }
         ],
-        "key": "Invitation",
+        "key": "Item",
         "key_type": null,
         "kind": "record",
-        "name": "Invitation",
+        "name": "Item",
         "namespace": null,
         "union_members": [],
         "value_type": null
@@ -241,28 +293,28 @@
     ],
     "version": null
   },
-  "corpus_path": "postman/04-folders-and-variables.postman_collection.json",
+  "corpus_path": "postman-v2/03-composition-nested-folders.json",
   "counts": {
     "channels": 0,
-    "operations": 4,
+    "operations": 5,
     "servers": 1,
     "services": 1,
     "types": 1
   },
   "detection": {
     "confidence": 0.98,
-    "format": "postman"
+    "format": "postman-2.0"
   },
-  "fingerprint": "sha256:3b3009c90a26c5ada0a6c4f7505894e740413c9e2f09bc5ae6dc87999316976e",
+  "fingerprint": "sha256:2666acd86773105f0f2ad2df5080b16f98e55478c6b08c07dceb50538f6b590f",
   "lint": {
-    "findings": 8,
+    "findings": 9,
     "grade": "C",
-    "report_fingerprint": "82c7b9a28bbe57b9399ba041de09d5d601a8c33eaae4707356cfb6fc53e36b49",
-    "score": 77,
+    "report_fingerprint": "82daf1f7c9936ede63507c0a32e6fc915f27f87ab82a5ab6f953a6b91b1ecf82",
+    "score": 73,
     "severity_counts": {
       "error": 0,
       "info": 3,
-      "warning": 5
+      "warning": 6
     }
   },
   "snapshot_version": 1
