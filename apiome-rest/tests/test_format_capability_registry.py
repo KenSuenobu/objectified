@@ -41,6 +41,7 @@ from app.format_capability_registry import (
     NativeHierarchy,
     ProjectionCoverage,
     SourceLocationQuality,
+    VersionSupport,
     _derive_source_location,
     absence_explanation,
     absence_explanations,
@@ -60,8 +61,8 @@ from app.payload_analysis import (
     PAYLOAD_ANALYSIS_SCHEMA_VERSION,
     REASON_ANALYZER_FAILED,
     REASON_BOUNDS_EXCEEDED,
-    REASON_NOT_ANALYZED,
     REASON_NO_SOURCE_CAPTURED,
+    REASON_NOT_ANALYZED,
     REASON_UNSUPPORTED_FORMAT,
     STATUS_AVAILABLE,
     STATUS_FAILED,
@@ -577,6 +578,7 @@ def test_vocabulary_snapshot_matches_the_python_registry(vocabulary: Dict[str, A
     assert vocabularies["source_location_quality"] == [m.value for m in SourceLocationQuality]
     assert vocabularies["projection_coverage"] == [m.value for m in ProjectionCoverage]
     assert vocabularies["conversion_support"] == [m.value for m in ConversionSupport]
+    assert vocabularies["version_support"] == [m.value for m in VersionSupport]
     assert vocabularies["absence_category"] == [m.value for m in AbsenceCategory]
     assert vocabularies["construct_availability"] == [m.value for m in ConstructAvailability]
     assert vocabularies["analysis_reason"] == list(ANALYSIS_REASONS)

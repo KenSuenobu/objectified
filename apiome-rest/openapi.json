@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.148.0",
+    "version": "1.149.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -77709,7 +77709,7 @@
             "type": "string",
             "title": "Operation Uuid",
             "description": "The apiome.path_operation UUID.",
-            "example": "b63fa60e-630a-4fb6-ad58-7b81456fa632"
+            "example": "da3c93cd-8a81-4c0d-9021-9f6ae8d2da15"
           },
           "method": {
             "type": "string",
@@ -80073,7 +80073,7 @@
             "type": "string",
             "title": "Generated At",
             "description": "Statement timestamp (ISO-8601, UTC).",
-            "example": "2026-08-22T01:55:49Z"
+            "example": "2026-08-22T03:20:04Z"
           },
           "envelope": {
             "additionalProperties": true,
@@ -85440,6 +85440,10 @@
             "$ref": "#/components/schemas/ConversionSupportEntry",
             "description": "Whether this format participates in the conversion graph, and by which route."
           },
+          "version_coverage": {
+            "$ref": "#/components/schemas/VersionCoverage",
+            "description": "Which versions of this format are read and written, which one an export produces by default, and where a version is reached through a projection or a downgrade (FMT-3.8). A claim about *versions*: how completely the format's constructs are modelled is what ``unsupported_constructs`` and ``canonical_projection`` above answer."
+          },
           "notes": {
             "items": {
               "type": "string"
@@ -85476,6 +85480,7 @@
           "value_visibility",
           "canonical_projection",
           "conversion",
+          "version_coverage",
           "registry_version",
           "review_date"
         ],
@@ -85580,6 +85585,10 @@
             "$ref": "#/components/schemas/ConversionSupport",
             "description": "Whether this format participates in the conversion graph."
           },
+          "version_coverage": {
+            "$ref": "#/components/schemas/VersionCoverage",
+            "description": "Which versions of this format are read and written, which one an export produces by default, and where a version is reached through a projection or downgrade (FMT-3.8). Distinct from the row's own ``version_coverage``, which is the flat list of *format keys* the adapter declares \u2014 that list mixes version keys with detection aliases and cannot answer \"which versions?\" on its own."
+          },
           "unsupported_constructs": {
             "items": {
               "type": "string"
@@ -85620,6 +85629,7 @@
           "native_hierarchy_note",
           "projection_coverage",
           "conversion",
+          "version_coverage",
           "registry_version",
           "review_date"
         ],
@@ -86203,6 +86213,51 @@
         "type": "object",
         "title": "FormatToolchainGate",
         "description": "The external binaries a format hard-requires, and whether this runtime has them.\n\nSeparates the two facts a single \"unsupported\" would collapse: *Apiome does not support this*\nand *this deployment is missing a binary*. Only the first is about the product."
+      },
+      "FormatVersion": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Version",
+            "description": "How the format spells this version, or the authored surface an unversioned format's row covers.",
+            "example": "1.0.0"
+          },
+          "format_key": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Format Key",
+            "description": "The registry key that selects this version \u2014 a declared adapter format key on a read row, an emitter output-format key on a write row.",
+            "example": "openapi"
+          },
+          "support": {
+            "$ref": "#/components/schemas/VersionSupport",
+            "description": "Whether this version is a first-class target, reached through a stated projection, or not gated on a version marker at all."
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Format Version schema."
+              },
+              {
+                "type": "null",
+                "description": "Format Version schema."
+              }
+            ],
+            "title": "Note",
+            "description": "One line on the boundary \u2014 required whenever support is not ``full``."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "version",
+          "format_key",
+          "support"
+        ],
+        "title": "FormatVersion",
+        "description": "One version (or authored surface) a format is read at or written at.\n\nAttributes:\n    version: How the format itself spells this version (``3.1``, ``005010``, ``R4``). When the\n        format has no version to spell, this names the grammar or authored surface the row\n        covers (``Avro IDL (.avdl)``) and :attr:`support` is :attr:`VersionSupport.UNGATED`.\n    format_key: The registry key that selects this version. On a **read** row it is a key the\n        adapter declares and a document of this version detects as, which is what makes the\n        row checkable against the corpus. On a **write** row it is the emitter's output-format\n        key, which is what the round-trip matrix records a row under. Several rows may share\n        one key \u2014 three OpenAPI write versions all come out of the ``openapi-3.1`` emitter.\n    support: See :class:`VersionSupport`.\n    note: One line on the boundary. Required for :attr:`VersionSupport.PARTIAL` and\n        :attr:`VersionSupport.UNGATED`, because both are claims a reader cannot act on without\n        the reason; optional for :attr:`VersionSupport.FULL`, which needs none."
       },
       "FunctionBody": {
         "properties": {
@@ -115591,7 +115646,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-22T01:55:50Z"
+            "example": "2026-08-22T03:20:04Z"
           }
         },
         "additionalProperties": false,
@@ -130285,14 +130340,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-22T01:55:50Z"
+            "example": "2026-08-22T03:20:04Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-22T01:55:50Z"
+            "example": "2026-08-22T03:20:04Z"
           },
           "outcome": {
             "anyOf": [
@@ -132772,6 +132827,55 @@
         "title": "VersionChangelogSummaryRow",
         "description": "Per-published-revision changelog summary (no entries payload).\n\n``status`` is ``None`` when the revision has no ``version_changelogs`` row yet\n(classification pending, or published before V178 without backfill)."
       },
+      "VersionCoverage": {
+        "properties": {
+          "declared": {
+            "type": "boolean",
+            "title": "Declared",
+            "description": "False for a format key nothing declares coverage for, whose versions are unknown rather than empty.",
+            "default": true,
+            "example": false
+          },
+          "reads": {
+            "items": {
+              "$ref": "#/components/schemas/FormatVersion"
+            },
+            "type": "array",
+            "title": "Reads",
+            "description": "The versions this format is read at, newest first.",
+            "default": [],
+            "maxItems": 1000
+          },
+          "writes": {
+            "items": {
+              "$ref": "#/components/schemas/FormatVersion"
+            },
+            "type": "array",
+            "title": "Writes",
+            "description": "The versions this format is written at, newest first. Empty when no emitter produces it.",
+            "default": [],
+            "maxItems": 1000
+          },
+          "default_write": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Version Coverage schema."
+              },
+              {
+                "type": "null",
+                "description": "Version Coverage schema."
+              }
+            ],
+            "title": "Default Write",
+            "description": "The version an export produces when the caller states no preference; null when the format is import-only."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "VersionCoverage",
+        "description": "One format's declared read and write version coverage (FMT-3.8).\n\nAttributes:\n    declared: Whether this coverage was declared at all. ``False`` is the honest answer for a\n        format key nothing here speaks for \u2014 one no adapter is registered under, or the\n        internal acceptance adapter every published surface already excludes. An empty\n        ``reads``/``writes`` pair would otherwise read as \"reads nothing, writes nothing\",\n        which is a claim about the format rather than an absence of one.\n    reads: The versions read, in the order a reader should see them (newest first).\n    writes: The versions written, newest first. Empty for an import-only format.\n    default_write: The :attr:`FormatVersion.version` an export produces when the caller states\n        no preference. ``None`` exactly when :attr:`writes` is empty."
+      },
       "VersionCreateRequest": {
         "properties": {
           "version_id": {
@@ -134066,6 +134170,16 @@
         ],
         "title": "VersionSchema",
         "description": "Schema revision: shortMessage = commit-style note; changelog = release notes (markdown)."
+      },
+      "VersionSupport": {
+        "type": "string",
+        "enum": [
+          "full",
+          "partial",
+          "ungated"
+        ],
+        "title": "VersionSupport",
+        "description": "How a format's version is supported \u2014 a claim about the *version*, not the grammar.\n\nKept to three members on purpose. A fourth grade (\"mostly\") would be a way of not answering,\nand the construct-level boundaries a reader actually needs are already published by the\ncapability registry's ``unsupported_constructs`` and ``canonical_projection``."
       },
       "VersionTagCreateRequest": {
         "properties": {

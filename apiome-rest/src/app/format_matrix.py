@@ -59,6 +59,7 @@ from .format_capability_registry import (
     ProjectionCoverage,
     capability_for,
 )
+from .format_version_coverage import VersionCoverage
 from .import_routing import PUBLISHABLE_FORMATS
 from .import_source import (
     ImportSourceDescriptor,
@@ -340,6 +341,13 @@ class FormatCapabilitySummary(BaseModel):
     conversion: ConversionSupport = Field(
         description="Whether this format participates in the conversion graph.",
     )
+    version_coverage: VersionCoverage = Field(
+        description="Which versions of this format are read and written, which one an export "
+        "produces by default, and where a version is reached through a projection or downgrade "
+        "(FMT-3.8). Distinct from the row's own ``version_coverage``, which is the flat list of "
+        "*format keys* the adapter declares — that list mixes version keys with detection aliases "
+        "and cannot answer \"which versions?\" on its own.",
+    )
     unsupported_constructs: List[str] = Field(
         default_factory=list,
         description="Construct keys the analyzer knowingly does not model, sorted — the format's "
@@ -541,6 +549,7 @@ def _capability_summary(format_key: str) -> FormatCapabilitySummary:
         native_hierarchy_note=capability.native_hierarchy_note,
         projection_coverage=capability.canonical_projection.coverage,
         conversion=capability.conversion.support,
+        version_coverage=capability.version_coverage,
         unsupported_constructs=list(capability.unsupported_constructs),
         notes=list(capability.notes),
         registry_version=capability.registry_version,

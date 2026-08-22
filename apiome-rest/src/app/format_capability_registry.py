@@ -41,6 +41,14 @@ as source-missing": :func:`explain_analysis_absence` and :func:`explain_construc
 only two ways to phrase an absence, and neither can produce a source-missing claim from a
 parser limitation.
 
+**Version coverage is declared, not inferred.** FMT-3.8 hangs a
+:class:`~app.format_version_coverage.VersionCoverage` on every entry: which versions of the format
+are read, which are written, which one an export produces by default, and a note wherever a version
+is reached through a projection or a downgrade rather than head-on. The declaration lives in
+:mod:`app.format_version_coverage` and is checked against fixtures — every declared read version
+must have a corpus entry that detects at its key, every declared write version a round-trip matrix
+row — so a version cannot be claimed here without evidence that it works.
+
 The whole registry is exposed as a deterministic, versioned
 :class:`FormatCapabilitySnapshot` for the REST contract and the UI, mirroring its sibling
 :mod:`app.capability_registry` (EFP-1.2), which does the same job for export *destinations*.
@@ -59,13 +67,20 @@ from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .format_version_coverage import (
+    UNDECLARED_VERSION_COVERAGE,
+    FormatVersion,
+    VersionCoverage,
+    VersionSupport,
+    version_coverage_for,
+)
 from .payload_analysis import (
     ANALYSIS_REASONS,
     PAYLOAD_ANALYSIS_SCHEMA_VERSION,
     REASON_ANALYZER_FAILED,
     REASON_BOUNDS_EXCEEDED,
-    REASON_NOT_ANALYZED,
     REASON_NO_SOURCE_CAPTURED,
+    REASON_NOT_ANALYZED,
     REASON_UNSUPPORTED_FORMAT,
     STATUS_AVAILABLE,
     AnalyzerCapabilities,
@@ -97,12 +112,15 @@ __all__ = [
     "FormatAvailability",
     "FormatCapability",
     "FormatCapabilitySnapshot",
+    "FormatVersion",
     "NativeHierarchy",
     "ProjectionCoverage",
     "REASON_ABSENCE_CATEGORIES",
     "SourceLocationQuality",
     "SourceLocationSupport",
     "ValueVisibilitySupport",
+    "VersionCoverage",
+    "VersionSupport",
     "absence_explanation",
     "absence_explanations",
     "capability_for",
@@ -112,6 +130,7 @@ __all__ = [
     "is_valid_format_key",
     "registry_snapshot",
     "render_absence",
+    "version_coverage_for",
 ]
 
 
@@ -122,7 +141,7 @@ __all__ = [
 #: The registry contract version. Bumped whenever an entry, a reviewed seed, an absence
 #: explanation, or a vocabulary member changes, so a consumer can detect a stale contract and
 #: a cached snapshot can be keyed by it. Mirrored in the committed vocabulary snapshot.
-REGISTRY_VERSION = "4"
+REGISTRY_VERSION = "5"
 
 #: The date the current seeds and absence explanations were last reviewed. Recorded as
 #: provenance on every entry, so a claim about a format carries the date somebody checked it.
@@ -467,6 +486,12 @@ class FormatCapability(BaseModel):
     )
     conversion: ConversionSupportEntry = Field(
         description="Whether this format participates in the conversion graph, and by which route."
+    )
+    version_coverage: VersionCoverage = Field(
+        description="Which versions of this format are read and written, which one an export "
+        "produces by default, and where a version is reached through a projection or a downgrade "
+        "(FMT-3.8). A claim about *versions*: how completely the format's constructs are modelled "
+        "is what ``unsupported_constructs`` and ``canonical_projection`` above answer.",
     )
     notes: List[str] = Field(
         default_factory=list,
@@ -1154,6 +1179,10 @@ def _unknown_format_capability(format_key: str) -> FormatCapability:
             declared_formats=[],
             note="No adapter is registered, so this format has no conversion route.",
         ),
+        # Not an empty coverage — an *undeclared* one. "Reads no versions" would be a claim about
+        # the format; the honest answer for a key nothing is registered under is that the question
+        # has no answer here.
+        version_coverage=UNDECLARED_VERSION_COVERAGE,
         notes=[
             "This format key is not one apiome currently imports. Anything a catalog item of "
             "this format does not show is unknown, not absent.",
@@ -1313,6 +1342,11 @@ def _derive_capability(source: "ImportSource") -> FormatCapability:
             available=descriptor.available,
             preview_only=source.preview_only,
         ),
+        # Read from the FMT-3.8 declaration rather than from the adapter: ``descriptor.formats``
+        # mixes version keys with detection aliases (``cobol``, ``apib``), so it cannot answer
+        # "which versions?" on its own. An adapter with no declaration resolves to the undeclared
+        # coverage instead of an invented one.
+        version_coverage=version_coverage_for(descriptor.key),
         notes=notes,
         registry_version=REGISTRY_VERSION,
         review_date=REVIEW_DATE,

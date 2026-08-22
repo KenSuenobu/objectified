@@ -39,12 +39,14 @@ from .format_matrix import (
     is_shipped_import_source,
     shipped_emitters,
 )
+from .format_version_coverage import FormatVersion, VersionCoverage, VersionSupport
 
 __all__ = [
     "SUPPORTED_FORMATS_DOCS_PAGE",
     "REGENERATE_COMMAND",
     "INTERNAL_FORMAT_KEYS",
     "FormatRow",
+    "VersionCoverage",
     "collect_format_rows",
     "is_shipped_import_source",
     "render_supported_formats_page",
@@ -132,6 +134,7 @@ class FormatRow:
     native_hierarchy: NativeHierarchy
     provenance: CapabilityProvenance
     boundary_notes: Tuple[str, ...]
+    version_coverage: VersionCoverage
 
     @property
     def direction(self) -> str:
@@ -184,6 +187,7 @@ def _row_from_matrix(entry: FormatMatrixRow) -> FormatRow:
         native_hierarchy=entry.capability.native_hierarchy,
         provenance=entry.capability.provenance,
         boundary_notes=tuple(entry.capability.notes),
+        version_coverage=entry.capability.version_coverage,
     )
 
 
@@ -332,8 +336,9 @@ def _header(rows: Sequence[FormatRow]) -> List[str]:
         "repository). |",
         "| **Live discovery** | The adapter can introspect a running endpoint instead of "
         "reading a document. |",
-        "| **Format keys** | The version coverage — every format string the adapter emits, "
-        "so a specific version can be requested. |",
+        "| **Format keys** | Every format string the adapter declares, so a specific version "
+        "can be requested. A mix of version keys and detection aliases — see "
+        "[Version coverage](#version-coverage) for which of them are versions. |",
         "| **File extensions** | What the file pickers offer for this format. Advisory: "
         "content sniffing decides, so an unlisted extension is still accepted. |",
         "| **Analysis** | `Format-native` keeps the format's own vocabulary (an X12 envelope "
@@ -343,6 +348,112 @@ def _header(rows: Sequence[FormatRow]) -> List[str]:
         "format is still *supported* — this deployment just cannot run it. |",
         "",
     ]
+
+
+#: Marker appended to a version whose support is qualified — reached through a projection or a
+#: downgrade, or not gated on a version marker at all. The marked versions' notes are listed under
+#: the table rather than crammed into a cell, so the table stays readable and no note is lost.
+_QUALIFIED_MARK = "*"
+
+
+def _version_cell(versions: Sequence[FormatVersion]) -> str:
+    """Render one direction's versions as a table cell.
+
+    Args:
+        versions: The read or write rows, already in declaration order.
+
+    Returns:
+        The versions comma-separated, each qualified one carrying :data:`_QUALIFIED_MARK`, or
+        :data:`_NONE` when the format is not read/written at all.
+    """
+    if not versions:
+        return _NONE
+    return ", ".join(
+        _escape_cell(entry.version)
+        + (_QUALIFIED_MARK if entry.support is not VersionSupport.FULL else "")
+        for entry in versions
+    )
+
+
+def _qualified_versions(coverage: VersionCoverage) -> List[Tuple[str, FormatVersion]]:
+    """Return every qualified version in one format's coverage, tagged with its direction.
+
+    Args:
+        coverage: One format's declared coverage.
+
+    Returns:
+        ``(direction, version)`` pairs for the rows whose support is not ``full``, reads first.
+    """
+    return [
+        (direction, entry)
+        for direction, entries in (("Reads", coverage.reads), ("Writes", coverage.writes))
+        for entry in entries
+        if entry.support is not VersionSupport.FULL
+    ]
+
+
+def _version_coverage_section(rows: Sequence[FormatRow]) -> List[str]:
+    """Render the declared read/write version coverage for every format (FMT-3.8).
+
+    The answer to "which versions?" that used to live in adapter docstrings and sales decks. Each
+    listed version is backed by a fixture — a corpus example that detects at it for a read, a
+    round-trip matrix row for a write — so this table states what is demonstrated rather than what
+    is intended.
+    """
+    lines = [
+        "## Version coverage",
+        "",
+        "Which **versions** of each format Apiome reads and writes, from the source-format "
+        "capability registry (`GET /v1/import/format-capabilities` → `version_coverage`, also on "
+        "every matrix row under `capability.version_coverage`).",
+        "",
+        "This table is **evidence, not intent**: a conformance suite requires a corpus example "
+        "that detects at every listed read version and a round-trip matrix row for every listed "
+        "write version, so a version cannot be claimed here without a fixture that demonstrates "
+        "it.",
+        "",
+        f"A version marked {_QUALIFIED_MARK} is qualified — reached through a projection or a "
+        "downgrade, or not gated on a version marker at all because the format carries none. "
+        "Every qualified version's reason is listed under the table. How completely a format's "
+        "*constructs* are modelled is a different question, answered by "
+        "[Format boundaries](#format-boundaries) below.",
+        "",
+        "| Format | Key | Reads | Writes | Default export |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    for row in rows:
+        coverage = row.version_coverage
+        lines.append(
+            "| "
+            + " | ".join(
+                (
+                    _escape_cell(row.label),
+                    f"`{_escape_cell(row.key)}`",
+                    _version_cell(coverage.reads),
+                    _version_cell(coverage.writes),
+                    _escape_cell(coverage.default_write) if coverage.default_write else _NONE,
+                )
+            )
+            + " |"
+        )
+
+    qualified = [(row, _qualified_versions(row.version_coverage)) for row in rows]
+    qualified = [(row, entries) for row, entries in qualified if entries]
+    if qualified:
+        lines.extend(["", f"### Where support is qualified ({_QUALIFIED_MARK})", ""])
+        for row, entries in qualified:
+            lines.append(f"**{_escape_cell(row.label)}**")
+            lines.append("")
+            for direction, entry in entries:
+                note = " ".join((entry.note or "").split())
+                lines.append(
+                    f"- {direction} **{_escape_cell(entry.version)}** "
+                    f"({entry.support.value}) — {note}"
+                )
+            lines.append("")
+    else:  # pragma: no cover - the shipped table declares qualified versions
+        lines.append("")
+    return lines
 
 
 def _boundaries_section(rows: Sequence[FormatRow]) -> List[str]:
@@ -398,6 +509,7 @@ def render_supported_formats_page() -> str:
         lines.extend(_format_table(section_rows))
         lines.append("")
 
+    lines.extend(_version_coverage_section(rows))
     lines.extend(_boundaries_section(rows))
 
     lines.extend(
