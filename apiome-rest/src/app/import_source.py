@@ -1122,6 +1122,12 @@ def load_builtin_import_sources() -> None:
     # its own imports, the ODCS normalizer under ``odcs``.
     from . import odcs_import_source as _odcs  # noqa: F401
 
+    # ``kafka_connect_import_source`` (FMT-5.3) self-registers the ``kafka-connect``
+    # adapter — a Connect schema, a ``{schema, payload}`` converter envelope, or a
+    # pipeline file set — and, via its own imports, the Connect normalizer under
+    # ``kafka-connect``.
+    from . import kafka_connect_import_source as _kafka_connect  # noqa: F401
+
     # ``arrow_import_source`` (FMT-4.5) self-registers the ``arrow`` adapter — the JSON
     # integration form, a binary IPC payload, a captured Flight fileset and a live Flight
     # endpoint — and, via its own imports, the Arrow normalizer under ``arrow``.

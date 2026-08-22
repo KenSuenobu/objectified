@@ -1,0 +1,235 @@
+{
+  "adapter": "kafka-connect",
+  "canonical": {
+    "channels": [],
+    "description": "One placed order as it travels through a Connect pipeline.",
+    "extras": {
+      "kafka_connect": {
+        "capability_limits": [
+          {
+            "construct": "kafka-connect.schema_version",
+            "count": 1,
+            "detail": "Connect's per-schema integer `version` is the revision a schema registry assigned to that subject. The canonical model versions an *artifact*, not each of its types, so the number is carried verbatim in `extras['connect_version']` on the type or field that declared it.",
+            "locations": [
+              "com.example.orders.Order"
+            ]
+          }
+        ],
+        "envelope": false,
+        "roots": [
+          "com.example.orders.Order"
+        ],
+        "source_files": [
+          "kafka-connect/02-typical-order-schema.json"
+        ]
+      }
+    },
+    "format": "kafka-connect",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Order",
+      "namespace": "com.example.orders"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Order",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "One placed order as it travels through a Connect pipeline.",
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "struct",
+          "connect_version": 3
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": false,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "boolean",
+              "has_default": true
+            },
+            "field_number": 8,
+            "key": "com.example.orders.Order.cancelled",
+            "name": "cancelled",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 6,
+            "key": "com.example.orders.Order.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 2,
+            "key": "com.example.orders.Order.customer_id",
+            "name": "customer_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 7,
+            "key": "com.example.orders.Order.note",
+            "name": "note",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Business identifier.",
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 1,
+            "key": "com.example.orders.Order.order_id",
+            "name": "order_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "int64"
+            },
+            "field_number": 4,
+            "key": "com.example.orders.Order.placed_at",
+            "name": "placed_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "new",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string",
+              "has_default": true
+            },
+            "field_number": 3,
+            "key": "com.example.orders.Order.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "int64"
+            },
+            "field_number": 5,
+            "key": "com.example.orders.Order.total_minor_units",
+            "name": "total_minor_units",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.orders.Order",
+        "key_type": null,
+        "kind": "record",
+        "name": "Order",
+        "namespace": "com.example.orders",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "kafka-connect/02-typical-order-schema.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "kafka-connect"
+  },
+  "fingerprint": "sha256:32d427bc28ffa20c6c7659214c6425ce3a5fd74aeafa55b81d621750ee50430c",
+  "lint": {
+    "findings": 7,
+    "grade": "A",
+    "report_fingerprint": "d8e48240088a0eb8d3519acb12c71fee226f4fedf91a1656645310dabe76b2c6",
+    "score": 93,
+    "severity_counts": {
+      "error": 0,
+      "info": 7,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

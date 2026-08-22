@@ -333,6 +333,7 @@ export const CATALOG_FORMATS: readonly CatalogFormat[] = [
   { id: 'cddl', label: 'CDDL', icon: Binary, tone: 'stone', dataType: 'schema', origin: 'systems', importable: true, aliases: ['rfc8610'], description: 'CDDL (RFC 8610) — the schema language of CBOR, COSE and WebAuthn.' },
   { id: 'arrow', label: 'Apache Arrow', icon: Binary, tone: 'amber', dataType: 'schema', origin: 'data', importable: true, aliases: ['arrow-ipc', 'flight', 'arrow-flight', 'feather'], description: 'Apache Arrow schema — JSON integration form, IPC bytes, or a live Flight endpoint.' },
   { id: 'odcs', label: 'ODCS Data Contract', icon: Database, tone: 'teal', dataType: 'schema', origin: 'data', importable: true, aliases: ['datacontract', 'data-contract', 'bitol'], description: 'Open Data Contract Standard (ODCS v3.x) — the Linux Foundation data-contract YAML.' },
+  { id: 'kafka-connect', label: 'Kafka Connect Schema', icon: Database, tone: 'amber', dataType: 'schema', origin: 'data', importable: true, aliases: ['kafkaconnect', 'connect-schema', 'debezium'], description: 'Kafka Connect schema — the struct/logical-type form a Connect pipeline carries.' },
   { id: 'cobolcopybook', label: 'COBOL Copybook', icon: FileCode, tone: 'slate', dataType: 'records', origin: 'mainframe', importable: true, aliases: ['copybook', 'cobol', 'cobol-copybook'], description: 'COBOL copybook record layout.' },
 
   // ---- Healthcare ----

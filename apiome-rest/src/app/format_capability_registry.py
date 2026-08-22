@@ -141,7 +141,7 @@ __all__ = [
 #: The registry contract version. Bumped whenever an entry, a reviewed seed, an absence
 #: explanation, or a vocabulary member changes, so a consumer can detect a stale contract and
 #: a cached snapshot can be keyed by it. Mirrored in the committed vocabulary snapshot.
-REGISTRY_VERSION = "11"
+REGISTRY_VERSION = "12"
 
 #: The date the current seeds and absence explanations were last reviewed. Recorded as
 #: provenance on every entry, so a claim about a format carries the date somebody checked it.
@@ -1310,6 +1310,100 @@ _CAPABILITY_SEED: Dict[str, _Seed] = {
             "Arrow *output* is not implemented here (#4317 files the Parquet/Arrow emitter), so "
             "a schema imported through this adapter is exported through another target's "
             "emitter and is not written back as Arrow.",
+        ],
+    ),
+    "kafka-connect": _Seed(
+        # Kafka Connect's payload analysis is the format-blind walk, so the first three
+        # fields restate what derivation produces. The reviewed judgement is the
+        # projection statement below: FMT-5.3's acceptance criterion is that logical
+        # types map to canonical formats and constraints rather than to opaque strings,
+        # and this is where a reader is told which names are decoded, what a name this
+        # reader does not know still costs, and where a schema's parameters end up.
+        native_hierarchy=NativeHierarchy.GENERIC,
+        native_hierarchy_note=(
+            "The format-blind walk records containers, ordered collections and leaves. Nesting "
+            "and ordering survive; this format's own semantics are not named, and their absence "
+            "from the tree says nothing about the source."
+        ),
+        source_location=SourceLocationSupport(
+            quality=SourceLocationQuality.PATH_ONLY,
+            note=(
+                "Structs and fields locate by name and structural path only. A pipeline "
+                "published across files is composed before normalization — the connector "
+                "configuration and every schema member are read together — so a field's "
+                "position inside one member does not identify it inside the composed model."
+            ),
+        ),
+        value_visibility=ValueVisibilitySupport(
+            default=ValueVisibility.DEFAULT,
+            maximum=ValueVisibility.NONE,
+            note=(
+                "A Connect schema is metadata about the records a pipeline carries, not the "
+                "records: the analyzer observes no runtime values at any policy level. The one "
+                "place a *value* appears is the sample record beside an enveloped schema, and "
+                "it is carried verbatim rather than inspected, so nothing is inferred from it."
+            ),
+        ),
+        canonical_projection=CanonicalProjectionSupport(
+            coverage=ProjectionCoverage.PARTIAL,
+            dropped_constructs=[
+                "kafka-connect.anonymous_struct",
+                "kafka-connect.connector_config",
+                "kafka-connect.decimal_precision",
+                "kafka-connect.envelope_payload",
+                "kafka-connect.schema_parameters",
+                "kafka-connect.schema_version",
+                "kafka-connect.unknown_logical_type",
+            ],
+            note=(
+                "Each `struct` becomes one canonical `RECORD` keyed by its schema `name`, each "
+                "member becomes one field keyed by its `field` name, `optional` becomes "
+                "nullability, `default` becomes the field's default, an `array` becomes a list "
+                "reference and a `map` becomes a canonical `MAP` carrying both its key and "
+                "value types. Declaration order is kept in `field_number` because a key-sorted "
+                "model would otherwise lose it, and two members that name the same struct share "
+                "one canonical type — which is what makes a change-event envelope's "
+                "`before`/`after` pair one record rather than two. Primitives take the "
+                "canonical scalar of their exact declared width, so `int8` stays `int8`. A "
+                "**logical type** — Connect's semantic layer, spelled as a `name` on a "
+                "non-struct schema — becomes a canonical constraint and never an opaque string: "
+                "`Date`, `Time` and `Timestamp` (and the Debezium `MicroTimestamp` / "
+                "`ZonedTimestamp` a change-data pipeline carries) become a formatted `string`, "
+                "`Decimal` becomes `format: decimal`, and `io.debezium.data.Enum` becomes an "
+                "`enum` constraint from its `allowed` parameter. The listed constructs are "
+                "*carried but not modelled*: a name this reader does not decode keeps its base "
+                "type and is carried verbatim, a `Decimal`'s digits have no canonical facet, "
+                "the per-schema registry `version`, the free-form `parameters` map, an "
+                "enveloped sample record and a connector configuration all survive under the "
+                "documented `connect_*` extras namespace. Every occurrence is counted and "
+                "located in `extras['kafka_connect']['capability_limits']`."
+            ),
+        ),
+        notes=[
+            "Connect's schema form is neither Avro nor JSON Schema, and telling it from Avro is "
+            "the reader's first job: Connect names a struct member with `field`, Avro with "
+            "`name`. An Avro schema routed to this adapter is refused without a taxonomy code "
+            "so the pipeline reports it as a wrong-format upload on the strength of the Avro "
+            "adapter claiming it, rather than as a malformed Connect document.",
+            "A logical type this reader does not decode is still recognized *as* a logical "
+            "type. The field keeps its base type's canonical scalar and the name is carried "
+            "verbatim, so a connector-specific semantic is never silently reduced to its wire "
+            "representation — what is lost is the canonical constraint the name would imply, "
+            "and that loss is counted.",
+            "A connector configuration is operational, not structural. It states how a pipeline "
+            "runs — `connector.class`, converters, transforms, sink settings — and is carried "
+            "verbatim; the key and value schemas beside it in the file set are what becomes "
+            "structure. Imported on its own it is refused, because it describes no record.",
+            "Kafka Connect *output* is implemented (FMT-5.3). The Connect spellings the reader "
+            "carried are written back verbatim — an `int8` returns as `int8` and a logical type "
+            "returns with its parameters — so a schema imported and re-exported is canonically "
+            "identical. A model from any other format is projected instead: its canonical "
+            "scalars pick Connect primitives, a canonical `format` picks a bundled logical type "
+            "where Connect has one, and what Connect cannot carry is reported as a loss.",
+            "Connect validates nothing — a schema states a type, not a value range — so every "
+            "canonical constraint other than the two a logical type implies is dropped on "
+            "export and reported. Connect also has no union and no enumeration type, and this "
+            "emitter does not invent a connector-specific logical type to fake one.",
         ],
     ),
     "cddl": _Seed(

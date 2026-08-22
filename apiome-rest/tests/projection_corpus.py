@@ -147,6 +147,7 @@ CORPUS_COVERAGE: Dict[str, Union[str, Waiver]] = {
     "json-schema": GENERIC,
     "jtd": GENERIC,
     "k8s-crd": GENERIC,
+    "kafka-connect": GENERIC,
     "kong": GENERIC,
     "llm-tools": GENERIC,
     "odata": GENERIC,

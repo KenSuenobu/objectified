@@ -1,0 +1,424 @@
+{
+  "adapter": "kafka-connect",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "kafka_connect": {
+        "capability_limits": [
+          {
+            "construct": "kafka-connect.decimal_precision",
+            "count": 1,
+            "detail": "A `Decimal`'s `scale` and `connect.decimal.precision` state how many digits the value carries. The canonical constraint vocabulary has no precision facet — `multipleOf` would describe a different thing — so `format: decimal` is set and both numbers are carried in `extras['scale']` and `extras['precision']`, which is the spelling the Avro writer already reads.",
+            "locations": [
+              "com.example.orders.OrderLine"
+            ]
+          },
+          {
+            "construct": "kafka-connect.schema_version",
+            "count": 2,
+            "detail": "Connect's per-schema integer `version` is the revision a schema registry assigned to that subject. The canonical model versions an *artifact*, not each of its types, so the number is carried verbatim in `extras['connect_version']` on the type or field that declared it.",
+            "locations": [
+              "com.example.orders.OrderDetail",
+              "com.example.orders.OrderLine"
+            ]
+          }
+        ],
+        "envelope": false,
+        "roots": [
+          "com.example.orders.OrderDetail"
+        ],
+        "source_files": [
+          "kafka-connect/03-composition-nested-and-map.json"
+        ]
+      }
+    },
+    "format": "kafka-connect",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "OrderDetail",
+      "namespace": "com.example.orders"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "OrderDetail",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "struct",
+          "connect_optional": true
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 2,
+            "key": "com.example.orders.Address.city",
+            "name": "city",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 3,
+            "key": "com.example.orders.Address.country_code",
+            "name": "country_code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 1,
+            "key": "com.example.orders.Address.line1",
+            "name": "line1",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.orders.Address",
+        "key_type": null,
+        "kind": "record",
+        "name": "Address",
+        "namespace": "com.example.orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "struct"
+            },
+            "field_number": 2,
+            "key": "com.example.orders.Customer.address",
+            "name": "address",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.orders.Address",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 1,
+            "key": "com.example.orders.Customer.customer_id",
+            "name": "customer_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.orders.Customer",
+        "key_type": null,
+        "kind": "record",
+        "name": "Customer",
+        "namespace": "com.example.orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "struct",
+          "connect_version": 1
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "map"
+            },
+            "field_number": 4,
+            "key": "com.example.orders.OrderDetail.attributes",
+            "name": "attributes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.orders.OrderDetail.Map_attributes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "struct"
+            },
+            "field_number": 2,
+            "key": "com.example.orders.OrderDetail.customer",
+            "name": "customer",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.orders.Customer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "array"
+            },
+            "field_number": 3,
+            "key": "com.example.orders.OrderDetail.lines",
+            "name": "lines",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "com.example.orders.OrderLine",
+                "nullable": false
+              },
+              "name": null,
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 1,
+            "key": "com.example.orders.OrderDetail.order_id",
+            "name": "order_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.orders.OrderDetail",
+        "key_type": null,
+        "kind": "record",
+        "name": "OrderDetail",
+        "namespace": "com.example.orders",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "map"
+        },
+        "fields": [],
+        "key": "com.example.orders.OrderDetail.Map_attributes",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": false
+        },
+        "kind": "map",
+        "name": "Map_attributes",
+        "namespace": "com.example.orders.OrderDetail",
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "int32"
+            },
+            "field_number": 2,
+            "key": "com.example.orders.OrderLine.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 1,
+            "key": "com.example.orders.OrderLine.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "decimal",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_logical_type": "org.apache.kafka.connect.data.Decimal",
+              "connect_type": "bytes",
+              "connect_version": 1,
+              "precision": 18,
+              "scale": 4
+            },
+            "field_number": 3,
+            "key": "com.example.orders.OrderLine.unit_price",
+            "name": "unit_price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.orders.OrderLine",
+        "key_type": null,
+        "kind": "record",
+        "name": "OrderLine",
+        "namespace": "com.example.orders",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "kafka-connect/03-composition-nested-and-map.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 5
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "kafka-connect"
+  },
+  "fingerprint": "sha256:23a36158c850bce7caeec14d55b672655dd6af579f2f396804929754a9c97728",
+  "lint": {
+    "findings": 18,
+    "grade": "D",
+    "report_fingerprint": "1aac4f1283929304d0a8fd69a8420cd5a42bd8eb461fc8204f46407c7ad0b88e",
+    "score": 67,
+    "severity_counts": {
+      "error": 0,
+      "info": 13,
+      "warning": 5
+    }
+  },
+  "snapshot_version": 1
+}

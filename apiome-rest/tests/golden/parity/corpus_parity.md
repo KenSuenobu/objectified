@@ -5,7 +5,7 @@
 
 Every shipped, non-preview import adapter must carry four artifacts: corpus examples (at least one valid and one negative), a golden snapshot directory, a round-trip matrix row, and a `format_capability_registry` entry. This report is what the FMT-1.4 parity gate (`apiome-rest/tests/test_corpus_parity.py`) asserts.
 
-- **Formats gated:** 48
+- **Formats gated:** 49
 - **Formats with an unwaived gap:** 0
 - **Formats with a waived requirement:** 0
 
@@ -41,6 +41,7 @@ Every shipped, non-preview import adapter must carry four artifacts: corpus exam
 | `json-schema` | JSON Schema | data_schema | 12 | 5 | 0 | 0 | 17 | 5/6 (+1 waived) | 12 | `json-schema` |
 | `jtd` | JSON Type Definition | data_schema | 6 | 5 | 0 | 0 | 11 | 5/6 (+1 waived) | 6 | `jtd` |
 | `k8s-crd` | Kubernetes CRD | data_schema | 7 | 5 | 0 | 0 | 12 | 5/6 (+1 waived) | 7 | `k8s-crd` |
+| `kafka-connect` | Kafka Connect Schema | data_schema | 9 | 6 | 0 | 0 | 15 | 6/6 | 7 | `kafka-connect` |
 | `kong` | Kong Declarative Config | rest | 7 | 5 | 0 | 0 | 12 | 6/6 | 6 | `kong` |
 | `llm-tools` | LLM Tools | agent | 8 | 5 | 0 | 0 | 13 | 5/6 (+1 waived) | 8 | `llm-tools` |
 | `mcp` | MCP Server Manifest | agent | 7 | 5 | 0 | 0 | 12 | 6/6 | 6 | — |
@@ -96,6 +97,7 @@ Every shipped, non-preview import adapter must carry four artifacts: corpus exam
 | `json-schema` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `jtd` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `k8s-crd` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `kafka-connect` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `kong` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `llm-tools` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `mcp` | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -135,4 +137,4 @@ None.
 
 Fixtures staged ahead of the adapter that will claim them (`adapter_key: null`). They are not gated until an adapter registers, at which point every requirement above applies.
 
-`apigee`, `aws-apigateway`, `azure-apim`, `cics-bms`, `consul`, `cue`, `dbt`, `dhall`, `dicom`, `edifact`, `envoy-xds`, `fix-orchestra`, `haproxy`, `hl7v3`, `hoppscotch`, `idoc`, `ims`, `istio`, `jsonld`, `kafka-connect`, `lwm2m`, `matter`, `nacha`, `natural-ddm`, `ncpdp`, `nginx`, `opcua-nodeset`, `owl`, `pkl`, `pli`, `pydantic`, `ros2`, `schematron`, `sepa`, `shacl`, `soapui`, `sparkplug`, `sql-ddl`, `swift-mt`, `thunder-client`, `tradacoms`, `traefik`, `trpc`, `tyk`, `typescript-types`, `vsam-idcams`, `zod`
+`apigee`, `aws-apigateway`, `azure-apim`, `cics-bms`, `consul`, `cue`, `dbt`, `dhall`, `dicom`, `edifact`, `envoy-xds`, `fix-orchestra`, `haproxy`, `hl7v3`, `hoppscotch`, `idoc`, `ims`, `istio`, `jsonld`, `lwm2m`, `matter`, `nacha`, `natural-ddm`, `ncpdp`, `nginx`, `opcua-nodeset`, `owl`, `pkl`, `pli`, `pydantic`, `ros2`, `schematron`, `sepa`, `shacl`, `soapui`, `sparkplug`, `sql-ddl`, `swift-mt`, `thunder-client`, `tradacoms`, `traefik`, `trpc`, `tyk`, `typescript-types`, `vsam-idcams`, `zod`

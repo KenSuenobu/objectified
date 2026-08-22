@@ -142,6 +142,7 @@ from .import_source import (
 )
 from .import_source_pipeline import ImportRunArtifacts, _normalize_import_project_slug
 from .models import ImportPreflightCounts, ImportPreflightReport, ImportPreflightRequest
+from .kafka_connect_normalizer import KAFKA_CONNECT_EXTRAS_KEY
 from .odcs_normalizer import ODCS_EXTRAS_KEY
 from .projection_taxonomy import ProjectionReason, ProjectionStatus
 from .proto_editions import (
@@ -226,6 +227,11 @@ PROVENANCE_EXTRA_KEYS = frozenset(SOURCE_LOCATION_EXTRA_KEYS) | frozenset(NATIVE
         # metadata carried through, the Flight envelope). Our own bookkeeping about the
         # read — the schema's own constructs are the fields it declares.
         ARROW_EXTRAS_KEY,
+        # FMT-5.3: the Kafka Connect projection record (root schemas, whether the intake
+        # was enveloped, the source files, the declared limits). Our own bookkeeping about
+        # the read — the schema's own constructs are the structs and fields it declares,
+        # and the ``connect_*`` keys that carry them are deliberately NOT listed here.
+        KAFKA_CONNECT_EXTRAS_KEY,
         # FMT-3.6: derived version/provenance labels, not source constructs — the
         # source's own `info.schema` is still reported (as `postman_schema_url`).
         "swagger_1_2",
@@ -1073,6 +1079,7 @@ def _document_scope_rows(
     ledger.extend(_cddl_capability_rows(api))
     ledger.extend(_arrow_capability_rows(api))
     ledger.extend(_odcs_capability_rows(api))
+    ledger.extend(_kafka_connect_capability_rows(api))
 
     return nodes, edges, ledger
 
@@ -1505,6 +1512,33 @@ def _odcs_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
         api,
         extras_key=ODCS_EXTRAS_KEY,
         location_label="Schema object(s)",
+        normalized_noun="declaration",
+    )
+
+
+def _kafka_connect_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
+    """Render the FMT-5.3 Kafka Connect declared limits as document-scoped ledger rows.
+
+    A Connect schema's undecoded semantics — a logical type this reader does not know, a
+    schema's free-form ``parameters``, the registry ``version``, a ``Decimal``'s digits,
+    an anonymous struct's derived identity, an enveloped sample record and a connector
+    configuration — are stated as ``partially-mapped``: every one of them is carried
+    verbatim under the documented ``connect_*`` extras namespace, on the node that
+    declared it, and only the ability of a canonical *feature* to act on it is lost. A
+    **capability limit, never a silent omission**, which is what the ticket's "logical
+    types map to canonical formats and constraints, not to opaque strings" criterion
+    needs the registry to be honest about at the edges of that mapping.
+
+    Args:
+        api: The normalized model.
+
+    Returns:
+        One ledger row per declared limit, or an empty list for a schema that met none.
+    """
+    return _declared_limit_rows(
+        api,
+        extras_key=KAFKA_CONNECT_EXTRAS_KEY,
+        location_label="Struct(s)",
         normalized_noun="declaration",
     )
 

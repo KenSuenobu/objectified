@@ -1,0 +1,697 @@
+{
+  "adapter": "kafka-connect",
+  "canonical": {
+    "channels": [],
+    "description": "Every Connect primitive, every bundled logical type, and the parameter forms that carry them.",
+    "extras": {
+      "kafka_connect": {
+        "capability_limits": [
+          {
+            "construct": "kafka-connect.decimal_precision",
+            "count": 1,
+            "detail": "A `Decimal`'s `scale` and `connect.decimal.precision` state how many digits the value carries. The canonical constraint vocabulary has no precision facet — `multipleOf` would describe a different thing — so `format: decimal` is set and both numbers are carried in `extras['scale']` and `extras['precision']`, which is the spelling the Avro writer already reads.",
+            "locations": [
+              "com.example.stress.AllTypes"
+            ]
+          },
+          {
+            "construct": "kafka-connect.schema_parameters",
+            "count": 1,
+            "detail": "A schema's `parameters` map is free-form connector metadata — a source database's column type, a converter hint, an ownership label. The parameters a recognized logical type defines are consumed (a `Decimal`'s scale and precision, an enum's `allowed` values); every remaining entry is carried verbatim in `extras['connect_parameters']` on the type or field that declared it, and no canonical feature reads it.",
+            "locations": [
+              "com.example.stress.AllTypes"
+            ]
+          },
+          {
+            "construct": "kafka-connect.schema_version",
+            "count": 7,
+            "detail": "Connect's per-schema integer `version` is the revision a schema registry assigned to that subject. The canonical model versions an *artifact*, not each of its types, so the number is carried verbatim in `extras['connect_version']` on the type or field that declared it.",
+            "locations": [
+              "com.example.stress.AllTypes"
+            ]
+          }
+        ],
+        "envelope": false,
+        "roots": [
+          "com.example.stress.AllTypes"
+        ],
+        "source_files": [
+          "kafka-connect/04-stress-logical-types-and-parameters.json"
+        ]
+      }
+    },
+    "format": "kafka-connect",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "AllTypes",
+      "namespace": "com.example.stress"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "AllTypes",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Every Connect primitive, every bundled logical type, and the parameter forms that carry them.",
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "struct",
+          "connect_parameters": {
+            "connect.record.origin": "corpus",
+            "io.example/owner": "platform"
+          },
+          "connect_version": 7
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "array"
+            },
+            "field_number": 16,
+            "key": "com.example.stress.AllTypes.f_array_of_arrays",
+            "name": "f_array_of_arrays",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": {
+                  "extras": {},
+                  "item": null,
+                  "name": "int32",
+                  "nullable": false
+                },
+                "name": null,
+                "nullable": false
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": true,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "boolean",
+              "has_default": true
+            },
+            "field_number": 7,
+            "key": "com.example.stress.AllTypes.f_boolean",
+            "name": "f_boolean",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "bytes"
+            },
+            "field_number": 9,
+            "key": "com.example.stress.AllTypes.f_bytes",
+            "name": "f_bytes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_logical_type": "org.apache.kafka.connect.data.Date",
+              "connect_type": "int32",
+              "connect_version": 1
+            },
+            "field_number": 11,
+            "key": "com.example.stress.AllTypes.f_date",
+            "name": "f_date",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "A connector-specific logical type: the name is meaningful, the base type is string.",
+            "extras": {
+              "connect_logical_type": "io.debezium.time.ZonedTimestamp",
+              "connect_type": "string",
+              "connect_version": 1
+            },
+            "field_number": 14,
+            "key": "com.example.stress.AllTypes.f_debezium_zoned_timestamp",
+            "name": "f_debezium_zoned_timestamp",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "decimal",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_logical_type": "org.apache.kafka.connect.data.Decimal",
+              "connect_type": "bytes",
+              "connect_version": 1,
+              "precision": 12,
+              "scale": 2
+            },
+            "field_number": 10,
+            "key": "com.example.stress.AllTypes.f_decimal",
+            "name": "f_decimal",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "new",
+                "paid",
+                "shipped",
+                "cancelled"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_logical_type": "io.debezium.data.Enum",
+              "connect_type": "string",
+              "connect_version": 1
+            },
+            "field_number": 15,
+            "key": "com.example.stress.AllTypes.f_enum_by_parameters",
+            "name": "f_enum_by_parameters",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "float32"
+            },
+            "field_number": 5,
+            "key": "com.example.stress.AllTypes.f_float32",
+            "name": "f_float32",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "float",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "float64"
+            },
+            "field_number": 6,
+            "key": "com.example.stress.AllTypes.f_float64",
+            "name": "f_float64",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "int16"
+            },
+            "field_number": 2,
+            "key": "com.example.stress.AllTypes.f_int16",
+            "name": "f_int16",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int16",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": 0,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "int32",
+              "has_default": true
+            },
+            "field_number": 3,
+            "key": "com.example.stress.AllTypes.f_int32",
+            "name": "f_int32",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "int64"
+            },
+            "field_number": 4,
+            "key": "com.example.stress.AllTypes.f_int64",
+            "name": "f_int64",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "int8"
+            },
+            "field_number": 1,
+            "key": "com.example.stress.AllTypes.f_int8",
+            "name": "f_int8",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int8",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "map"
+            },
+            "field_number": 17,
+            "key": "com.example.stress.AllTypes.f_map_of_structs",
+            "name": "f_map_of_structs",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.stress.AllTypes.Map_f_map_of_structs",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "struct",
+              "has_default": true
+            },
+            "field_number": 18,
+            "key": "com.example.stress.AllTypes.f_optional_struct_with_default",
+            "name": "f_optional_struct_with_default",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "com.example.stress.Flags",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": "unset",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string",
+              "has_default": true
+            },
+            "field_number": 8,
+            "key": "com.example.stress.AllTypes.f_string",
+            "name": "f_string",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_logical_type": "org.apache.kafka.connect.data.Time",
+              "connect_type": "int32",
+              "connect_version": 1
+            },
+            "field_number": 12,
+            "key": "com.example.stress.AllTypes.f_time",
+            "name": "f_time",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_logical_type": "org.apache.kafka.connect.data.Timestamp",
+              "connect_type": "int64",
+              "connect_version": 1
+            },
+            "field_number": 13,
+            "key": "com.example.stress.AllTypes.f_timestamp",
+            "name": "f_timestamp",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.stress.AllTypes",
+        "key_type": null,
+        "kind": "record",
+        "name": "AllTypes",
+        "namespace": "com.example.stress",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "map"
+        },
+        "fields": [],
+        "key": "com.example.stress.AllTypes.Map_f_map_of_structs",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": false
+        },
+        "kind": "map",
+        "name": "Map_f_map_of_structs",
+        "namespace": "com.example.stress.AllTypes",
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "com.example.stress.Inner",
+          "nullable": true
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "struct",
+          "connect_optional": true
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "int16"
+            },
+            "field_number": 2,
+            "key": "com.example.stress.Flags.score",
+            "name": "score",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int16",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": false,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "boolean",
+              "has_default": true
+            },
+            "field_number": 1,
+            "key": "com.example.stress.Flags.verified",
+            "name": "verified",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "com.example.stress.Flags",
+        "key_type": null,
+        "kind": "record",
+        "name": "Flags",
+        "namespace": "com.example.stress",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "struct",
+          "connect_optional": true
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 1,
+            "key": "com.example.stress.Inner.label",
+            "name": "label",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "float64"
+            },
+            "field_number": 2,
+            "key": "com.example.stress.Inner.weight",
+            "name": "weight",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "double",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "com.example.stress.Inner",
+        "key_type": null,
+        "kind": "record",
+        "name": "Inner",
+        "namespace": "com.example.stress",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "kafka-connect/04-stress-logical-types-and-parameters.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "kafka-connect"
+  },
+  "fingerprint": "sha256:60b0af5fdb3775ecd9bdf0492a4d6420e4213692b9cd418f968d4c6e35bef504",
+  "lint": {
+    "findings": 24,
+    "grade": "D",
+    "report_fingerprint": "49c69c90a24dee2e29760c684990286e12faa8f23d1780a58d8d9152126d024f",
+    "score": 68,
+    "severity_counts": {
+      "error": 0,
+      "info": 21,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

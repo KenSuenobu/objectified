@@ -1,0 +1,670 @@
+{
+  "adapter": "kafka-connect",
+  "canonical": {
+    "channels": [],
+    "description": "Change-data-capture envelope in the shape a CDC connector emits: before/after row images, a source block, an operation code and a transaction block.",
+    "extras": {
+      "kafka_connect": {
+        "capability_limits": [
+          {
+            "construct": "kafka-connect.decimal_precision",
+            "count": 1,
+            "detail": "A `Decimal`'s `scale` and `connect.decimal.precision` state how many digits the value carries. The canonical constraint vocabulary has no precision facet — `multipleOf` would describe a different thing — so `format: decimal` is set and both numbers are carried in `extras['scale']` and `extras['precision']`, which is the spelling the Avro writer already reads.",
+            "locations": [
+              "example.inventory.customers.Value"
+            ]
+          },
+          {
+            "construct": "kafka-connect.schema_version",
+            "count": 6,
+            "detail": "Connect's per-schema integer `version` is the revision a schema registry assigned to that subject. The canonical model versions an *artifact*, not each of its types, so the number is carried verbatim in `extras['connect_version']` on the type or field that declared it.",
+            "locations": [
+              "event.block",
+              "example.inventory.customers.Envelope",
+              "example.inventory.customers.Value",
+              "io.debezium.connector.postgresql.Source"
+            ]
+          }
+        ],
+        "envelope": false,
+        "roots": [
+          "example.inventory.customers.Envelope"
+        ],
+        "source_files": [
+          "kafka-connect/05-real-world-change-event-schema.json"
+        ]
+      }
+    },
+    "format": "kafka-connect",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "Envelope",
+      "namespace": "example.inventory.customers"
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "Envelope",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "struct",
+          "connect_optional": true,
+          "connect_version": 1
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "int64"
+            },
+            "field_number": 3,
+            "key": "event.block.data_collection_order",
+            "name": "data_collection_order",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 1,
+            "key": "event.block.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "int64"
+            },
+            "field_number": 2,
+            "key": "event.block.total_order",
+            "name": "total_order",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "event.block",
+        "key_type": null,
+        "kind": "record",
+        "name": "block",
+        "namespace": "event",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Change-data-capture envelope in the shape a CDC connector emits: before/after row images, a source block, an operation code and a transaction block.",
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "struct",
+          "connect_version": 1
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "struct"
+            },
+            "field_number": 2,
+            "key": "example.inventory.customers.Envelope.after",
+            "name": "after",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.inventory.customers.Value",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "struct"
+            },
+            "field_number": 1,
+            "key": "example.inventory.customers.Envelope.before",
+            "name": "before",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "example.inventory.customers.Value",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 4,
+            "key": "example.inventory.customers.Envelope.op",
+            "name": "op",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "struct"
+            },
+            "field_number": 3,
+            "key": "example.inventory.customers.Envelope.source",
+            "name": "source",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "io.debezium.connector.postgresql.Source",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "struct",
+              "connect_version": 1
+            },
+            "field_number": 6,
+            "key": "example.inventory.customers.Envelope.transaction",
+            "name": "transaction",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "event.block",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "int64"
+            },
+            "field_number": 5,
+            "key": "example.inventory.customers.Envelope.ts_ms",
+            "name": "ts_ms",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "example.inventory.customers.Envelope",
+        "key_type": null,
+        "kind": "record",
+        "name": "Envelope",
+        "namespace": "example.inventory.customers",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "struct",
+          "connect_optional": true
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "date-time",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_logical_type": "io.debezium.time.MicroTimestamp",
+              "connect_type": "int64",
+              "connect_version": 1
+            },
+            "field_number": 6,
+            "key": "example.inventory.customers.Value.created_at",
+            "name": "created_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": "decimal",
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_logical_type": "org.apache.kafka.connect.data.Decimal",
+              "connect_type": "bytes",
+              "connect_version": 1,
+              "precision": 10,
+              "scale": 2
+            },
+            "field_number": 5,
+            "key": "example.inventory.customers.Value.credit_limit",
+            "name": "credit_limit",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 4,
+            "key": "example.inventory.customers.Value.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 2,
+            "key": "example.inventory.customers.Value.first_name",
+            "name": "first_name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "int32"
+            },
+            "field_number": 1,
+            "key": "example.inventory.customers.Value.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 3,
+            "key": "example.inventory.customers.Value.last_name",
+            "name": "last_name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "example.inventory.customers.Value",
+        "key_type": null,
+        "kind": "record",
+        "name": "Value",
+        "namespace": "example.inventory.customers",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "connect_kind": "struct"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 2,
+            "key": "io.debezium.connector.postgresql.Source.connector",
+            "name": "connector",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 6,
+            "key": "io.debezium.connector.postgresql.Source.db",
+            "name": "db",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "int64"
+            },
+            "field_number": 10,
+            "key": "io.debezium.connector.postgresql.Source.lsn",
+            "name": "lsn",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 3,
+            "key": "io.debezium.connector.postgresql.Source.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 7,
+            "key": "io.debezium.connector.postgresql.Source.schema",
+            "name": "schema",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "true",
+                "last",
+                "false",
+                "incremental"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": "false",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_logical_type": "io.debezium.data.Enum",
+              "connect_type": "string",
+              "connect_version": 1,
+              "has_default": true
+            },
+            "field_number": 5,
+            "key": "io.debezium.connector.postgresql.Source.snapshot",
+            "name": "snapshot",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 8,
+            "key": "io.debezium.connector.postgresql.Source.table",
+            "name": "table",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "int64"
+            },
+            "field_number": 4,
+            "key": "io.debezium.connector.postgresql.Source.ts_ms",
+            "name": "ts_ms",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "int64"
+            },
+            "field_number": 9,
+            "key": "io.debezium.connector.postgresql.Source.txId",
+            "name": "txId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "connect_type": "string"
+            },
+            "field_number": 1,
+            "key": "io.debezium.connector.postgresql.Source.version",
+            "name": "version",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "io.debezium.connector.postgresql.Source",
+        "key_type": null,
+        "kind": "record",
+        "name": "Source",
+        "namespace": "io.debezium.connector.postgresql",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "kafka-connect/05-real-world-change-event-schema.json",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "kafka-connect"
+  },
+  "fingerprint": "sha256:23b8983e7a557ed988b8b881b64db77ca079108b62bd5143e44244b5ce0ff850",
+  "lint": {
+    "findings": 28,
+    "grade": "D",
+    "report_fingerprint": "bdd307155dc2c9084c474c2956359e0a18c17cbd80ca471505fc8350ce8a1b5e",
+    "score": 68,
+    "severity_counts": {
+      "error": 0,
+      "info": 25,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

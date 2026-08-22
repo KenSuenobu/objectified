@@ -128,6 +128,7 @@ const FORMAT_LABELS: Readonly<Record<string, string>> = {
   cddl: 'CDDL',
   arrow: 'Apache Arrow',
   odcs: 'ODCS Data Contract',
+  'kafka-connect': 'Kafka Connect Schema',
   cobolcopybook: 'COBOL Copybook',
   fhir: 'FHIR',
   hl7v2: 'HL7 v2',

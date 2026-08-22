@@ -107,7 +107,7 @@ The corpus holds **1421 files** across **103 format directories**. Every file ha
 | `jsonld/` | JSON-LD contexts (pending #5471) | data_schema | top-level `@context` with term definitions (`@id`/`@type`/`@container`) | 14 |
 | `jtd/` | JSON Type Definition | data_schema | `properties`/`optionalProperties` | 11 |
 | `k8s-crd/` | Kubernetes CRD | data_schema | `apiVersion: apiextensions.k8s.io/*` + `kind: CustomResourceDefinition` | 12 |
-| `kafka-connect/` | Kafka Connect schema (pending #5441) | data_schema | `"type": "struct"` + `fields[].field` | 15 |
+| `kafka-connect/` | Kafka Connect schema | data_schema | `"type": "struct"` + `fields[].field` | 15 |
 | `lwm2m/` | LwM2M / IPSO objects (pending #5472) | data_schema | `<LWM2M>` root with `<Object ObjectType="MODefinition">` and `Resources/Item` | 15 |
 | `matter/` | Matter clusters and device types (pending #5472) | rpc | `<configurator>` root with `<cluster>` (name/code/define) or `<deviceType>` | 15 |
 | `natural-ddm/` | Natural / ADABAS DDM (pending #5486) | data_schema | `DDM Name ......` header + the `T L DB Name … F Leng S D Remark` banner | 14 |
@@ -1263,25 +1263,25 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`06-multi-crd-stream.yaml`** — Multi-document YAML stream with two CRDs; imports as one CanonicalApi with two Services. The multi-file ladder rung is waived because CRDs do not resolve cross-file references.
 
-### `kafka-connect/` — Kafka Connect schema (pending #5441)
+### `kafka-connect/` — Kafka Connect schema
 
 | File | Rung | Expected detection | Class | Features |
 | --- | --- | --- | --- | --- |
-| `01-minimal-struct.json` | minimal | `kafka-connect` ≥ 0.85 | valid | `struct`, `primitives`, `pending-adapter` |
-| `02-typical-order-schema.json` | typical | `kafka-connect` ≥ 0.85 | valid | `struct`, `version`, `doc`, `optional`, `defaults`, `pending-adapter` |
-| `03-composition-nested-and-map.json` | composition | `kafka-connect` ≥ 0.85 | valid | `nested-struct`, `array`, `map`, `Decimal`, `pending-adapter` |
-| `04-stress-logical-types-and-parameters.json` | stress | `kafka-connect` ≥ 0.85 | valid | `Decimal`, `Date`, `Time`, `Timestamp`, `connector-logical-types`, `parameters`, `array-of-array`, `map-of-struct`, `null-default`, `pending-adapter` |
-| `05-real-world-change-event-schema.json` | real-world | `kafka-connect` ≥ 0.85 | valid | `cdc-envelope`, `before-after`, `source-block`, `Decimal`, `enum-parameters`, `pending-adapter` |
-| `06-typical-schema-payload-envelope.json` | typical | `kafka-connect` ≥ 0.85 | valid | `schema-payload-envelope`, `array`, `Timestamp`, `pending-adapter` |
-| `07-pipeline-set/connector.json` | multi-file (root) | `kafka-connect` ≥ 0.85 | valid | `connector-config`, `converters`, `transforms`, `pending-adapter` |
-| `07-pipeline-set/key-schema.json` ⚠ | multi-file (member) | `kafka-connect` (no guarantee) | valid | `key-schema`, `struct`, `pending-adapter` |
-| `07-pipeline-set/value-schema.json` ⚠ | multi-file (member) | `kafka-connect` (no guarantee) | valid | `value-schema`, `Decimal`, `Timestamp`, `array-of-struct`, `map`, `pending-adapter` |
-| `negative/01-syntactic-missing-brace.json` | — | `kafka-connect` (no guarantee) | invalid | `negative`, `syntactic`, `missing-brace`, `pending-adapter` |
-| `negative/02-semantic-struct-without-fields.json` | — | `kafka-connect` (no guarantee) | invalid | `negative`, `semantic`, `no-fields`, `pending-adapter` |
-| `negative/03-truncated-mid-field.json` | — | `kafka-connect` (no guarantee) | invalid | `negative`, `truncated`, `mid-type`, `pending-adapter` |
-| `negative/04-wrong-format-avro.avsc` ⚠ | — | `kafka-connect` (no guarantee) | invalid | `negative`, `wrong-format`, `avro`, `pending-adapter` |
-| `negative/05-encoding-utf16.json` | — | `kafka-connect` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
-| `negative/06-semantic-field-without-type.json` | — | `kafka-connect` (no guarantee) | invalid | `negative`, `semantic`, `missing-type`, `unknown-type`, `pending-adapter` |
+| `01-minimal-struct.json` | minimal | `kafka-connect` ≥ 0.85 | valid | `struct`, `primitives` |
+| `02-typical-order-schema.json` | typical | `kafka-connect` ≥ 0.85 | valid | `struct`, `version`, `doc`, `optional`, `defaults` |
+| `03-composition-nested-and-map.json` | composition | `kafka-connect` ≥ 0.85 | valid | `nested-struct`, `array`, `map`, `Decimal` |
+| `04-stress-logical-types-and-parameters.json` | stress | `kafka-connect` ≥ 0.85 | valid | `Decimal`, `Date`, `Time`, `Timestamp`, `connector-logical-types`, `parameters`, `array-of-array`, `map-of-struct`, `null-default` |
+| `05-real-world-change-event-schema.json` | real-world | `kafka-connect` ≥ 0.85 | valid | `cdc-envelope`, `before-after`, `source-block`, `Decimal`, `enum-parameters` |
+| `06-typical-schema-payload-envelope.json` | typical | `kafka-connect` ≥ 0.85 | valid | `schema-payload-envelope`, `array`, `Timestamp` |
+| `07-pipeline-set/connector.json` | multi-file (root) | `kafka-connect` ≥ 0.85 | valid | `connector-config`, `converters`, `transforms` |
+| `07-pipeline-set/key-schema.json` ⚠ | multi-file (member) | `kafka-connect` (no guarantee) | valid | `key-schema`, `struct` |
+| `07-pipeline-set/value-schema.json` ⚠ | multi-file (member) | `kafka-connect` (no guarantee) | valid | `value-schema`, `Decimal`, `Timestamp`, `array-of-struct`, `map` |
+| `negative/01-syntactic-missing-brace.json` | — | `kafka-connect` (no guarantee) | invalid | `negative`, `syntactic`, `missing-brace` |
+| `negative/02-semantic-struct-without-fields.json` | — | `kafka-connect` (no guarantee) | invalid | `negative`, `semantic`, `no-fields` |
+| `negative/03-truncated-mid-field.json` | — | `kafka-connect` (no guarantee) | invalid | `negative`, `truncated`, `mid-type` |
+| `negative/04-wrong-format-avro.avsc` ⚠ | — | `kafka-connect` (no guarantee) | invalid | `negative`, `wrong-format`, `avro` |
+| `negative/05-encoding-utf16.json` | — | `kafka-connect` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+| `negative/06-semantic-field-without-type.json` | — | `kafka-connect` (no guarantee) | invalid | `negative`, `semantic`, `missing-type`, `unknown-type` |
 
 > ⚠ **`07-pipeline-set/key-schema.json`** — Fileset member: the key schema the pipeline carries.
 
