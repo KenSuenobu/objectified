@@ -116,6 +116,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from . import __version__
 from .breaking_change import classify_models, get_breaking_change_classifier
 from .canonical_model import CanonicalApi
+from .dtd_normalizer import DTD_EXTRAS_KEY
 from .export_projection import (
     NATIVE_ID_EXTRA_KEYS,
     SOURCE_LOCATION_EXTRA_KEYS,
@@ -210,6 +211,10 @@ PROVENANCE_EXTRA_KEYS = frozenset(SOURCE_LOCATION_EXTRA_KEYS) | frozenset(NATIVE
         # FMT-4.1: the RELAX NG projection record (root type, declared limits, composition
         # hrefs). It is our own bookkeeping about the read, not a construct the grammar names.
         RELAXNG_EXTRAS_KEY,
+        # FMT-4.2: the DTD projection record (root type, declared limits, the entity and
+        # notation declarations, the modules composed in). Our own bookkeeping about the
+        # read — the DTD's own constructs are the elements and attributes it declares.
+        DTD_EXTRAS_KEY,
         # FMT-3.6: derived version/provenance labels, not source constructs — the
         # source's own `info.schema` is still reported (as `postman_schema_url`).
         "swagger_1_2",
@@ -1047,6 +1052,7 @@ def _document_scope_rows(
     ledger.extend(_gateway_capability_rows(api))
     ledger.extend(_wit_capability_rows(api))
     ledger.extend(_relaxng_capability_rows(api))
+    ledger.extend(_dtd_capability_rows(api))
 
     return nodes, edges, ledger
 
@@ -1330,6 +1336,53 @@ def _relaxng_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
                 detail=(
                     f"{limit.get('detail')} ({count} occurrence(s); a capability limit of the "
                     f"canonical model, not a drop — the pattern itself is normalized.){where}"
+                ),
+                document_scoped=True,
+            )
+        )
+    return rows
+
+
+def _dtd_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
+    """Render the FMT-4.2 DTD declared limits as document-scoped ledger rows.
+
+    DTD constructs the canonical model cannot fully hold — mixed content's interleaving,
+    ``ANY``'s open content, an occurrence indicator on a group, the tokenized attribute
+    types, ``ID``/``IDREF`` identity, an unparsed entity, an ``<!ATTLIST>`` for an element
+    that is never declared, and a system identifier import will not fetch — are stated as
+    ``partially-mapped``: the construct itself is normalized (a mixed model keeps its child
+    elements and its text, an ``ANY`` element becomes an open-content record, a tokenized
+    attribute becomes a list) and only the part with no canonical analogue is lost. A
+    **capability limit, never a silent omission**, which is what the ticket's "modelled or
+    declared a limit, explicitly" criterion asks the registry to carry.
+
+    Args:
+        api: The normalized model.
+
+    Returns:
+        One ledger row per declared limit, or an empty list for a DTD that met none.
+    """
+    report = api.extras.get(DTD_EXTRAS_KEY) if isinstance(api.extras, dict) else None
+    if not isinstance(report, dict):
+        return []
+    rows: List[CoverageEntry] = []
+    partial_status, partial_reason = STATUS_FOR_COVERAGE[CoverageClass.PARTIALLY_MAPPED]
+    for limit in report.get("capability_limits") or []:
+        if not isinstance(limit, dict) or not limit.get("construct"):
+            continue
+        count = int(limit.get("count") or 1)
+        locations = [str(name) for name in (limit.get("locations") or [])]
+        where = f" Declaration(s): {', '.join(locations)}." if locations else ""
+        rows.append(
+            CoverageEntry(
+                source_construct=str(limit.get("construct")),
+                coverage=CoverageClass.PARTIALLY_MAPPED,
+                status=partial_status,
+                reason=partial_reason,
+                detail=(
+                    f"{limit.get('detail')} ({count} occurrence(s); a capability limit of the "
+                    f"canonical model, not a drop — the declaration itself is normalized.)"
+                    f"{where}"
                 ),
                 document_scoped=True,
             )

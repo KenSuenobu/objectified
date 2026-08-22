@@ -218,6 +218,53 @@ def _yaml_alias_bomb() -> bytes:
     return ("\n".join(lines) + "\n").encode("utf-8")
 
 
+def _dtd_billion_laughs() -> bytes:
+    """A DTD billion-laughs: ten-way general-entity fan-out over nine levels.
+
+    The DTD parser is the one reader whose *own grammar* contains a macro facility, so
+    this is the shape it must survive by budget rather than by refusing entities outright
+    the way every sibling XML adapter does. Fully expanded the last entity is 10^10
+    characters; a bounded reader never materializes more than its byte budget.
+    """
+    lines = ['<!ENTITY lol "lollollollollollollollollollol">']
+    for level in range(1, 10):
+        previous = "lol" if level == 1 else f"lol{level - 1}"
+        lines.append(f'<!ENTITY lol{level} "' + f"&{previous};" * 10 + '">')
+    lines.append("<!ELEMENT boom (#PCDATA)>")
+    lines.append('<!ATTLIST boom payload CDATA "&lol9;">')
+    return ("\n".join(lines) + "\n").encode("utf-8")
+
+
+def _dtd_parameter_entity_bomb() -> bytes:
+    """A parameter-entity bomb: the same fan-out through the *declaration* mechanism.
+
+    Parameter entities expand where markup declarations go, so this bomb is spent on the
+    scanner's input stack rather than on entity values — the second of the two mechanisms
+    a DTD can amplify with, and the reason both charge one shared budget.
+    """
+    lines = ['<!ENTITY % p0 "<!ELEMENT a0 (#PCDATA)>">']
+    for level in range(1, 10):
+        lines.append(f'<!ENTITY % p{level} "' + f"%p{level - 1};" * 10 + '">')
+    lines.append("%p9;")
+    return ("\n".join(lines) + "\n").encode("utf-8")
+
+
+def _dtd_recursive_entity() -> bytes:
+    """Mutually recursive parameter entities: bounded expansion is not enough on its own.
+
+    No budget makes this document *finish* correctly — it has no finite expansion — so the
+    reader must recognize the cycle and refuse it rather than spend a budget discovering
+    that it never ends.
+    """
+    return (
+        '<!ENTITY % a "%b;">\n'
+        '<!ENTITY % b "%c;">\n'
+        '<!ENTITY % c "%a;">\n'
+        "%a;\n"
+        "<!ELEMENT doc (#PCDATA)>\n"
+    ).encode("utf-8")
+
+
 def _sparse_one_gigabyte(path: Path) -> None:
     """Write a 1 GiB **sparse** JSON document (IXH-6.5 streaming-limit material).
 
@@ -656,6 +703,38 @@ GENERATED_FIXTURES: List[GeneratedFixture] = [
             "basic-auth",
             "jwt",
         ],
+    ),
+    GeneratedFixture(
+        name="dtd-billion-laughs.dtd",
+        guard="xml-entity-expansion",
+        adapter_key="dtd",
+        expected_error_code="INPUT_EXPANSION_LIMIT",
+        description="Ten-way general-entity fan-out over nine levels inside a DTD.",
+        builder=_dtd_billion_laughs,
+        approx_bytes=700,
+        features=["negative", "xml-entity-expansion", "billion-laughs", "general-entity"],
+    ),
+    GeneratedFixture(
+        name="dtd-parameter-entity-bomb.dtd",
+        guard="xml-entity-expansion",
+        adapter_key="dtd",
+        expected_error_code="INPUT_EXPANSION_LIMIT",
+        description=(
+            "The same fan-out through parameter entities, spent on the scanner's input stack."
+        ),
+        builder=_dtd_parameter_entity_bomb,
+        approx_bytes=700,
+        features=["negative", "xml-entity-expansion", "billion-laughs", "parameter-entity"],
+    ),
+    GeneratedFixture(
+        name="dtd-recursive-entity.dtd",
+        guard="reference-recursion",
+        adapter_key="dtd",
+        expected_error_code="INPUT_UNSAFE_CONSTRUCT",
+        description="Three mutually recursive parameter entities; must be refused, not unrolled.",
+        builder=_dtd_recursive_entity,
+        approx_bytes=120,
+        features=["negative", "reference-recursion", "entity-cycle", "parameter-entity"],
     ),
     GeneratedFixture(
         name="sparse-one-gigabyte.json",

@@ -563,6 +563,49 @@
       "waivers": {}
     },
     {
+      "format_key": "dtd",
+      "label": "DTD",
+      "paradigm": "data_schema",
+      "corpus_formats": [
+        "dtd"
+      ],
+      "corpus_directories": [
+        "dtd"
+      ],
+      "fixtures": {
+        "valid": 9,
+        "negative": 6,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 15
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "multi-file",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [],
+      "goldens": 7,
+      "golden_directories": [
+        "dtd"
+      ],
+      "emit_key": null,
+      "roundtrip_row": true,
+      "roundtrip_cells": [],
+      "capability_provenance": "reviewed",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
       "format_key": "edix12",
       "label": "EDI X12",
       "paradigm": "data_schema",
@@ -2293,7 +2336,6 @@
     "dbt",
     "dhall",
     "dicom",
-    "dtd",
     "edifact",
     "envoy-xds",
     "fix-orchestra",

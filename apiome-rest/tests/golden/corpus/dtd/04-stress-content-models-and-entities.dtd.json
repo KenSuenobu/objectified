@@ -1,0 +1,1930 @@
+{
+  "adapter": "dtd",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "dtd": {
+        "capability_limits": [
+          {
+            "construct": "dtd.any_content",
+            "count": 1,
+            "detail": "`ANY` admits character data and any declared element, in any order and any number. The canonical model names every member, so the element is carried as a record with its attributes and one open-content member, and the set of children it actually admits is not enumerable.",
+            "locations": [
+              "appendix"
+            ]
+          },
+          {
+            "construct": "dtd.id_uniqueness",
+            "count": 1,
+            "detail": "`ID`, `IDREF` and `IDREFS` declare document-wide uniqueness and referential integrity. The canonical constraint vocabulary has no identity facet, so the declared type is recorded on the member and the constraint is not enforced.",
+            "locations": [
+              "document"
+            ]
+          },
+          {
+            "construct": "dtd.mixed_content",
+            "count": 7,
+            "detail": "Mixed content interleaves character data with child elements. The canonical model has no mixed-content record, so the child elements are carried as ordinary repeated members alongside a `#text` member, and the interleaving — text before, between and after the children — is not expressible.",
+            "locations": [
+              "caption",
+              "cell",
+              "emphasis",
+              "item",
+              "link",
+              "para",
+              "title"
+            ]
+          },
+          {
+            "construct": "dtd.repeated_group",
+            "count": 1,
+            "detail": "An occurrence indicator on a *group* — `(a, b)+` — repeats the group as a unit. The canonical model repeats members, not groups, so the indicator is distributed onto the group's members and the fact that they repeat together is lost.",
+            "locations": [
+              "header"
+            ]
+          },
+          {
+            "construct": "dtd.tokenized_attribute",
+            "count": 1,
+            "detail": "`IDREFS`, `ENTITIES` and `NMTOKENS` hold several whitespace-separated tokens in one attribute value. The member is carried as a list of strings; the fact that the list is encoded as a single text value is not expressible.",
+            "locations": [
+              "document"
+            ]
+          },
+          {
+            "construct": "dtd.unparsed_entity",
+            "count": 1,
+            "detail": "An unparsed entity (`<!ENTITY logo SYSTEM … NDATA png>`) names external binary content through a notation. Neither is a canonical construct, so both are recorded in `extras['dtd']` and the referenced resource is never fetched.",
+            "locations": [
+              "logo"
+            ]
+          }
+        ],
+        "entities": [
+          {
+            "name": "vendor",
+            "value": "Example Corporation"
+          },
+          {
+            "name": "product",
+            "value": "Example Corporation Widget"
+          },
+          {
+            "name": "tagline",
+            "value": "Example Corporation Widget — built by Example Corporation"
+          },
+          {
+            "name": "logo",
+            "notation": "png",
+            "system_id": "logo.png"
+          }
+        ],
+        "entity_expansions": 13,
+        "notations": [
+          {
+            "name": "png",
+            "system_id": "image/png"
+          }
+        ],
+        "parameter_entities": [
+          {
+            "name": "inlineContent",
+            "value": "(#PCDATA | emphasis | code | link)*"
+          },
+          {
+            "name": "commonAtts",
+            "value": "id ID #IMPLIED\n                          lang NMTOKEN #IMPLIED\n                          class NMTOKENS #IMPLIED"
+          },
+          {
+            "name": "blockChoice",
+            "value": "(para | list | figure | table)"
+          }
+        ],
+        "root_element": "document",
+        "root_type": "document"
+      }
+    },
+    "format": "dtd",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "document",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "document",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "any",
+          "dtd_element": "appendix"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "any",
+              "dtd_open_content": true
+            },
+            "field_number": 1,
+            "key": "appendix.*",
+            "name": "*",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "appendix",
+        "key_type": null,
+        "kind": "record",
+        "name": "appendix",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "pcdata",
+          "dtd_element": "author",
+          "dtd_type": "string"
+        },
+        "fields": [],
+        "key": "author",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "author",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "sequence",
+          "dtd_element": "body"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "choice"
+            },
+            "field_number": 1,
+            "key": "body.bodyChoice",
+            "name": "bodyChoice",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "bodyChoice",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "body",
+        "key_type": null,
+        "kind": "record",
+        "name": "body",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "choice",
+          "dtd_owner": "body"
+        },
+        "fields": [],
+        "key": "bodyChoice",
+        "key_type": null,
+        "kind": "union",
+        "name": "bodyChoice",
+        "namespace": null,
+        "union_members": [
+          "para",
+          "list",
+          "figure",
+          "table"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "mixed",
+          "dtd_element": "caption"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "text",
+              "dtd_mixed": true
+            },
+            "field_number": 4,
+            "key": "caption.#text",
+            "name": "#text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 2,
+            "key": "caption.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "code",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 1,
+            "key": "caption.emphasis",
+            "name": "emphasis",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "emphasis",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 3,
+            "key": "caption.link",
+            "name": "link",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "link",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "caption",
+        "key_type": null,
+        "kind": "record",
+        "name": "caption",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "mixed",
+          "dtd_element": "cell"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "text",
+              "dtd_mixed": true
+            },
+            "field_number": 7,
+            "key": "cell.#text",
+            "name": "#text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "left",
+                "center",
+                "right"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": "left",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "align",
+              "dtd_attribute_type": "ENUMERATION",
+              "dtd_default": "default",
+              "dtd_enumeration": [
+                "left",
+                "center",
+                "right"
+              ],
+              "dtd_kind": "attribute"
+            },
+            "field_number": 2,
+            "key": "cell.@align",
+            "name": "@align",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "1",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "span",
+              "dtd_attribute_type": "NMTOKEN",
+              "dtd_default": "default",
+              "dtd_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "cell.@span",
+            "name": "@span",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 5,
+            "key": "cell.figure",
+            "name": "figure",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "figure",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 4,
+            "key": "cell.list",
+            "name": "list",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "list",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 3,
+            "key": "cell.para",
+            "name": "para",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "para",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 6,
+            "key": "cell.table",
+            "name": "table",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "table",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "cell",
+        "key_type": null,
+        "kind": "record",
+        "name": "cell",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "pcdata",
+          "dtd_element": "code",
+          "dtd_type": "string"
+        },
+        "fields": [],
+        "key": "code",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "code",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "pcdata",
+          "dtd_element": "corporateAuthor",
+          "dtd_type": "string"
+        },
+        "fields": [],
+        "key": "corporateAuthor",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "corporateAuthor",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "sequence",
+          "dtd_element": "document"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "class",
+              "dtd_attribute_type": "NMTOKENS",
+              "dtd_default": "#IMPLIED",
+              "dtd_kind": "attribute",
+              "dtd_tokenized": true
+            },
+            "field_number": 3,
+            "key": "document.@class",
+            "name": "@class",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "id",
+              "dtd_attribute_type": "ID",
+              "dtd_default": "#IMPLIED",
+              "dtd_identity": true,
+              "dtd_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "document.@id",
+            "name": "@id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "lang",
+              "dtd_attribute_type": "NMTOKEN",
+              "dtd_default": "#IMPLIED",
+              "dtd_kind": "attribute"
+            },
+            "field_number": 2,
+            "key": "document.@lang",
+            "name": "@lang",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "2.0"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": "2.0",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "version",
+              "dtd_attribute_type": "CDATA",
+              "dtd_default": "#FIXED",
+              "dtd_kind": "attribute"
+            },
+            "field_number": 4,
+            "key": "document.@version",
+            "name": "@version",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "*"
+            },
+            "field_number": 7,
+            "key": "document.appendix",
+            "name": "appendix",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "appendix",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "1"
+            },
+            "field_number": 6,
+            "key": "document.body",
+            "name": "body",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "body",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "1"
+            },
+            "field_number": 5,
+            "key": "document.header",
+            "name": "header",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "header",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "document",
+        "key_type": null,
+        "kind": "record",
+        "name": "document",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "mixed",
+          "dtd_element": "emphasis"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "text",
+              "dtd_mixed": true
+            },
+            "field_number": 4,
+            "key": "emphasis.#text",
+            "name": "#text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 2,
+            "key": "emphasis.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "code",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 1,
+            "key": "emphasis.emphasis",
+            "name": "emphasis",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "emphasis",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 3,
+            "key": "emphasis.link",
+            "name": "link",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "link",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "emphasis",
+        "key_type": null,
+        "kind": "record",
+        "name": "emphasis",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "sequence",
+          "dtd_element": "figure"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "?"
+            },
+            "field_number": 1,
+            "key": "figure.caption",
+            "name": "caption",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "caption",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "1"
+            },
+            "field_number": 2,
+            "key": "figure.image",
+            "name": "image",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "image",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "figure",
+        "key_type": null,
+        "kind": "record",
+        "name": "figure",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "sequence",
+          "dtd_element": "header"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "choice"
+            },
+            "field_number": 2,
+            "key": "header.headerChoice",
+            "name": "headerChoice",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "headerChoice",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "?"
+            },
+            "field_number": 3,
+            "key": "header.published",
+            "name": "published",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "published",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "1"
+            },
+            "field_number": 1,
+            "key": "header.title",
+            "name": "title",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "title",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "header",
+        "key_type": null,
+        "kind": "record",
+        "name": "header",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "choice",
+          "dtd_owner": "header"
+        },
+        "fields": [],
+        "key": "headerChoice",
+        "key_type": null,
+        "kind": "union",
+        "name": "headerChoice",
+        "namespace": null,
+        "union_members": [
+          "author",
+          "corporateAuthor"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "empty",
+          "dtd_element": "image"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "alt",
+              "dtd_attribute_type": "CDATA",
+              "dtd_default": "#IMPLIED",
+              "dtd_kind": "attribute"
+            },
+            "field_number": 2,
+            "key": "image.@alt",
+            "name": "@alt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "src",
+              "dtd_attribute_type": "ENTITY",
+              "dtd_default": "#REQUIRED",
+              "dtd_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "image.@src",
+            "name": "@src",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "width",
+              "dtd_attribute_type": "NMTOKEN",
+              "dtd_default": "#IMPLIED",
+              "dtd_kind": "attribute"
+            },
+            "field_number": 3,
+            "key": "image.@width",
+            "name": "@width",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "image",
+        "key_type": null,
+        "kind": "record",
+        "name": "image",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "mixed",
+          "dtd_element": "item"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "text",
+              "dtd_mixed": true
+            },
+            "field_number": 5,
+            "key": "item.#text",
+            "name": "#text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 3,
+            "key": "item.figure",
+            "name": "figure",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "figure",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 2,
+            "key": "item.list",
+            "name": "list",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "list",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 1,
+            "key": "item.para",
+            "name": "para",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "para",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 4,
+            "key": "item.table",
+            "name": "table",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "table",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "item",
+        "key_type": null,
+        "kind": "record",
+        "name": "item",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "mixed",
+          "dtd_element": "link"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "text",
+              "dtd_mixed": true
+            },
+            "field_number": 6,
+            "key": "link.#text",
+            "name": "#text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "href",
+              "dtd_attribute_type": "CDATA",
+              "dtd_default": "#REQUIRED",
+              "dtd_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "link.@href",
+            "name": "@href",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "self",
+                "next",
+                "prev",
+                "external"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": "external",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "rel",
+              "dtd_attribute_type": "ENUMERATION",
+              "dtd_default": "default",
+              "dtd_enumeration": [
+                "self",
+                "next",
+                "prev",
+                "external"
+              ],
+              "dtd_kind": "attribute"
+            },
+            "field_number": 2,
+            "key": "link.@rel",
+            "name": "@rel",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 4,
+            "key": "link.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "code",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 3,
+            "key": "link.emphasis",
+            "name": "emphasis",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "emphasis",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 5,
+            "key": "link.link",
+            "name": "link",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "link",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "link",
+        "key_type": null,
+        "kind": "record",
+        "name": "link",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "sequence",
+          "dtd_element": "list"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": [
+                "yes",
+                "no"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": "no",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "ordered",
+              "dtd_attribute_type": "ENUMERATION",
+              "dtd_default": "default",
+              "dtd_enumeration": [
+                "yes",
+                "no"
+              ],
+              "dtd_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "list.@ordered",
+            "name": "@ordered",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "+"
+            },
+            "field_number": 2,
+            "key": "list.item",
+            "name": "item",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "item",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "list",
+        "key_type": null,
+        "kind": "record",
+        "name": "list",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "mixed",
+          "dtd_element": "para"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "text",
+              "dtd_mixed": true
+            },
+            "field_number": 4,
+            "key": "para.#text",
+            "name": "#text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 2,
+            "key": "para.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "code",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 1,
+            "key": "para.emphasis",
+            "name": "emphasis",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "emphasis",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 3,
+            "key": "para.link",
+            "name": "link",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "link",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "para",
+        "key_type": null,
+        "kind": "record",
+        "name": "para",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "empty",
+          "dtd_element": "published"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_attribute": "date",
+              "dtd_attribute_type": "CDATA",
+              "dtd_default": "#REQUIRED",
+              "dtd_kind": "attribute"
+            },
+            "field_number": 1,
+            "key": "published.@date",
+            "name": "@date",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "published",
+        "key_type": null,
+        "kind": "record",
+        "name": "published",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "sequence",
+          "dtd_element": "row"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "+"
+            },
+            "field_number": 1,
+            "key": "row.cell",
+            "name": "cell",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "cell",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "row",
+        "key_type": null,
+        "kind": "record",
+        "name": "row",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "sequence",
+          "dtd_element": "table"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_occurrence": "+"
+            },
+            "field_number": 1,
+            "key": "table.row",
+            "name": "row",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "row",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "table",
+        "key_type": null,
+        "kind": "record",
+        "name": "table",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dtd_content": "mixed",
+          "dtd_element": "title"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "text",
+              "dtd_mixed": true
+            },
+            "field_number": 4,
+            "key": "title.#text",
+            "name": "#text",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 2,
+            "key": "title.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "code",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 1,
+            "key": "title.emphasis",
+            "name": "emphasis",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "emphasis",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dtd_kind": "element",
+              "dtd_mixed": true
+            },
+            "field_number": 3,
+            "key": "title.link",
+            "name": "link",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "link",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "title",
+        "key_type": null,
+        "kind": "record",
+        "name": "title",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "dtd/04-stress-content-models-and-entities.dtd",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 22
+  },
+  "detection": {
+    "confidence": 0.95,
+    "format": "dtd"
+  },
+  "fingerprint": "sha256:37633bc87510e3198f992bd24cf705cc9ad24b57985b909c9b64c550000f3565",
+  "lint": {
+    "findings": 79,
+    "grade": "F",
+    "report_fingerprint": "650820cdbd7701dbfa807e798e985e47fcd40c27691b2b55a4e6548f93b937e3",
+    "score": 59,
+    "severity_counts": {
+      "error": 0,
+      "info": 57,
+      "warning": 22
+    }
+  },
+  "snapshot_version": 1
+}

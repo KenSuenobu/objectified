@@ -122,6 +122,7 @@ const FORMAT_LABELS: Readonly<Record<string, string>> = {
   'k8s-crd': 'Kubernetes CRD',
   avro: 'Avro',
   xsd: 'XSD',
+  dtd: 'DTD',
   relaxng: 'RELAX NG',
   asn1: 'ASN.1',
   cobolcopybook: 'COBOL Copybook',

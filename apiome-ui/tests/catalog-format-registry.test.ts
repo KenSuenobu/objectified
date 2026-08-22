@@ -146,7 +146,7 @@ describe('catalog-format-registry — importable vs recognized (MFI-23.12)', () 
   test('importable alternatives are exactly the adapter-backed (store-raw) formats', () => {
     // Only formats with a server-registered adapter can be stored raw in the catalog today.
     expect(IMPORTABLE_ALTERNATIVE_FORMATS.map((f) => f.id).sort()).toEqual(
-      ['apiblueprint', 'arazzo', 'asn1', 'asyncapi', 'avro', 'capnproto', 'cloudevents', 'cobolcopybook', 'connectrpc', 'corbaidl', 'discovery', 'edix12', 'fix', 'flatbuffers', 'fhir', 'gateway-api', 'graphql', 'grpc', 'hl7v2', 'http-file', 'iso20022', 'iso8583', 'jsonschema', 'jtd', 'k8s-crd', 'kong', 'llm-tools', 'mcp', 'odata', 'oncrpc', 'openrpc', 'postman', 'protobuf', 'raml', 'relaxng', 'smithy', 'thrift', 'typespec', 'wadl', 'wit', 'wsdl', 'xmlrpc', 'xsd', 'zosconnect'].sort(),
+      ['apiblueprint', 'arazzo', 'asn1', 'asyncapi', 'avro', 'capnproto', 'cloudevents', 'cobolcopybook', 'connectrpc', 'corbaidl', 'discovery', 'dtd', 'edix12', 'fix', 'flatbuffers', 'fhir', 'gateway-api', 'graphql', 'grpc', 'hl7v2', 'http-file', 'iso20022', 'iso8583', 'jsonschema', 'jtd', 'k8s-crd', 'kong', 'llm-tools', 'mcp', 'odata', 'oncrpc', 'openrpc', 'postman', 'protobuf', 'raml', 'relaxng', 'smithy', 'thrift', 'typespec', 'wadl', 'wit', 'wsdl', 'xmlrpc', 'xsd', 'zosconnect'].sort(),
     );
   });
 

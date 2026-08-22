@@ -868,6 +868,22 @@ _VERSION_COVERAGE: Dict[str, VersionCoverage] = {
         ],
         default_write="1.0",
     ),
+    "dtd": VersionCoverage(
+        reads=[
+            FormatVersion(
+                version="XML 1.0 DTD",
+                format_key="dtd",
+                support=VersionSupport.UNGATED,
+                note="A DTD carries no version marker of its own — it is part of the XML 1.0 "
+                "grammar, and XML 1.1 did not change it — so one reader covers every "
+                "document. An external subset, an internal subset and a modular set "
+                "composed through parameter entities are three placements of one grammar, "
+                "not three versions of it.",
+            )
+        ],
+        writes=[],
+        default_write=None,
+    ),
     "relaxng": VersionCoverage(
         reads=[
             FormatVersion(
