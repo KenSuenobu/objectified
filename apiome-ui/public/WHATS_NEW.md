@@ -22,6 +22,7 @@ We continue to improve the platform based on your feedback with improvements and
     - RELAX NG import
     - DTD import
     - Schematron import
+    - CDDL (RFC-8610) import and export
   - Added pills to supported format list to show the source and type that the API format provides
   - Every format now declares which versions it reads and writes, and which version an export produces by default
 

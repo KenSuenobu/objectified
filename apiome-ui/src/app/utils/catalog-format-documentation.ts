@@ -59,6 +59,7 @@ export const CATALOG_FORMAT_DOCUMENTATION_URL: Readonly<Record<string, string>> 
   dtd: 'https://www.w3.org/TR/xml/#dt-doctype',
   relaxng: 'https://relaxng.org/spec-20011203.html',
   asn1: 'https://www.itu.int/rec/T-REC-X.680',
+  cddl: 'https://www.rfc-editor.org/rfc/rfc8610',
   cobolcopybook: 'https://www.ibm.com/docs/en/cobol-zos/latest?topic=programs-copybook',
 
   // Healthcare

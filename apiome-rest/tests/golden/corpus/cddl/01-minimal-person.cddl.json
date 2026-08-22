@@ -1,0 +1,135 @@
+{
+  "adapter": "cddl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "cddl": {
+        "capability_limits": [],
+        "members": [
+          "cddl/01-minimal-person.cddl"
+        ],
+        "root_rule": "person",
+        "root_type": "person"
+      }
+    },
+    "format": "cddl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "person",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "person",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "The canonical CDDL hello-world: one map rule with three members.",
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "uint"
+            },
+            "field_number": 2,
+            "key": "person.age",
+            "name": "age",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_occurrence": "?",
+              "cddl_type": "tstr"
+            },
+            "field_number": 3,
+            "key": "person.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "tstr"
+            },
+            "field_number": 1,
+            "key": "person.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "person",
+        "key_type": null,
+        "kind": "record",
+        "name": "person",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "cddl/01-minimal-person.cddl",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.9,
+    "format": "cddl"
+  },
+  "fingerprint": "sha256:4d3391acc4606ffac09c985be5837182cc41bf0ad792e6b01a119e605b042cca",
+  "lint": {
+    "findings": 4,
+    "grade": "A",
+    "report_fingerprint": "0c3f05453f96712e433796b108ad5d18a4968c06ed88c907d5f9dc3f26c2f652",
+    "score": 96,
+    "severity_counts": {
+      "error": 0,
+      "info": 4,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

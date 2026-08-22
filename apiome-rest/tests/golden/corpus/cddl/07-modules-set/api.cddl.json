@@ -1,0 +1,630 @@
+{
+  "adapter": "cddl",
+  "canonical": {
+    "channels": [],
+    "description": "Root of the set: the request/response grammar. The shared value types live in common.cddl, which the tool must be given alongside this file — CDDL has no include directive, so composition is a fileset property.",
+    "extras": {
+      "cddl": {
+        "capability_limits": [
+          {
+            "construct": "cddl.tag",
+            "count": 1,
+            "detail": "A CBOR tag (`#6.1(number)`) marks a value's semantics in the encoding. The canonical model has no tag facet, so the tagged type is carried and the tag number is recorded in `cddl_tag` — preserved and re-emitted, but not modelled.",
+            "locations": [
+              "timestamp"
+            ]
+          }
+        ],
+        "members": [
+          "api.cddl",
+          "common.cddl"
+        ],
+        "root_rule": "request",
+        "root_type": "request"
+      }
+    },
+    "format": "cddl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "request",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "request",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": {
+          "enum": null,
+          "exclusive_maximum": null,
+          "exclusive_minimum": null,
+          "extras": {},
+          "format": null,
+          "max_items": null,
+          "max_length": 2,
+          "maximum": null,
+          "min_items": null,
+          "min_length": 2,
+          "minimum": null,
+          "multiple_of": null,
+          "pattern": null,
+          "unique_items": null
+        },
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_scalar": "string",
+          "cddl_size": "2",
+          "cddl_type": "tstr"
+        },
+        "fields": [],
+        "key": "country-code",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "country-code",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 3,
+              "maximum": null,
+              "min_items": null,
+              "min_length": 3,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_size": "3",
+              "cddl_type": "tstr"
+            },
+            "field_number": 2,
+            "key": "money.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "int"
+            },
+            "field_number": 1,
+            "key": "money.minor-units",
+            "name": "minor-units",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "money",
+        "key_type": null,
+        "kind": "record",
+        "name": "money",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map",
+          "cddl_table": true
+        },
+        "fields": [],
+        "key": "payload",
+        "key_type": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        },
+        "kind": "map",
+        "name": "payload",
+        "namespace": null,
+        "union_members": [],
+        "value_type": {
+          "extras": {},
+          "item": null,
+          "name": "any",
+          "nullable": true
+        }
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "tstr"
+            },
+            "field_number": 1,
+            "key": "problem.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_list_occurrence": [
+                "*"
+              ],
+              "cddl_occurrence": "?",
+              "cddl_type": "tstr"
+            },
+            "field_number": 3,
+            "key": "problem.details",
+            "name": "details",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "tstr"
+            },
+            "field_number": 2,
+            "key": "problem.message",
+            "name": "message",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "problem",
+        "key_type": null,
+        "kind": "record",
+        "name": "problem",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_occurrence": "?"
+            },
+            "field_number": 4,
+            "key": "request.body",
+            "name": "body",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "payload",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 1,
+            "key": "request.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uuid",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 2,
+            "key": "request.method",
+            "name": "method",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "request-method",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "tstr"
+            },
+            "field_number": 3,
+            "key": "request.resource",
+            "name": "resource",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 5,
+            "key": "request.sent-at",
+            "name": "sent-at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "request",
+        "key_type": null,
+        "kind": "record",
+        "name": "request",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": {
+          "enum": [
+            "get",
+            "put",
+            "delete"
+          ],
+          "exclusive_maximum": null,
+          "exclusive_minimum": null,
+          "extras": {},
+          "format": null,
+          "max_items": null,
+          "max_length": null,
+          "maximum": null,
+          "min_items": null,
+          "min_length": null,
+          "minimum": null,
+          "multiple_of": null,
+          "pattern": null,
+          "unique_items": null
+        },
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_literals": [
+            "\"get\"",
+            "\"put\"",
+            "\"delete\""
+          ],
+          "cddl_scalar": "string",
+          "cddl_shape": "literal-choice"
+        },
+        "fields": [],
+        "key": "request-method",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "request-method",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_occurrence": "?"
+            },
+            "field_number": 3,
+            "key": "response.body",
+            "name": "body",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "payload",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_occurrence": "?"
+            },
+            "field_number": 4,
+            "key": "response.error",
+            "name": "error",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "problem",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 1,
+            "key": "response.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uuid",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 5,
+            "key": "response.received-at",
+            "name": "received-at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": 599.0,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 100.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_range": {
+                "from": "100",
+                "operator": "..",
+                "to": "599"
+              }
+            },
+            "field_number": 2,
+            "key": "response.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "response",
+        "key_type": null,
+        "kind": "record",
+        "name": "response",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_scalar": "number",
+          "cddl_tag": 1,
+          "cddl_type": "number"
+        },
+        "fields": [],
+        "key": "timestamp",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "timestamp",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": {
+          "enum": null,
+          "exclusive_maximum": null,
+          "exclusive_minimum": null,
+          "extras": {},
+          "format": null,
+          "max_items": null,
+          "max_length": 16,
+          "maximum": null,
+          "min_items": null,
+          "min_length": 16,
+          "minimum": null,
+          "multiple_of": null,
+          "pattern": null,
+          "unique_items": null
+        },
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_scalar": "bytes",
+          "cddl_size": "16",
+          "cddl_type": "bstr"
+        },
+        "fields": [],
+        "key": "uuid",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "uuid",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "cddl/07-modules-set/api.cddl",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 9
+  },
+  "detection": {
+    "confidence": 0.9,
+    "format": "cddl"
+  },
+  "fingerprint": "sha256:81f3ecd922aa8dc746104d96543ca3d41891fc2f2af23e3a76d8d0e827f5a07f",
+  "lint": {
+    "findings": 24,
+    "grade": "D",
+    "report_fingerprint": "3f0fb8cc2dc8c4724a12cdb240c93884d7300fa73267aa3635cde984cdbc5e93",
+    "score": 65,
+    "severity_counts": {
+      "error": 0,
+      "info": 15,
+      "warning": 9
+    }
+  },
+  "snapshot_version": 1
+}

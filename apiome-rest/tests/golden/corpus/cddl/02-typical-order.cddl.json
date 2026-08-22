@@ -1,0 +1,598 @@
+{
+  "adapter": "cddl",
+  "canonical": {
+    "channels": [],
+    "description": "Order document: maps, arrays, occurrence indicators and type choices.",
+    "extras": {
+      "cddl": {
+        "capability_limits": [],
+        "members": [
+          "cddl/02-typical-order.cddl"
+        ],
+        "root_rule": "order",
+        "root_type": "order"
+      }
+    },
+    "format": "cddl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "order",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "order",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "tstr"
+            },
+            "field_number": 3,
+            "key": "address.city",
+            "name": "city",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "tstr"
+            },
+            "field_number": 5,
+            "key": "address.country",
+            "name": "country",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "tstr"
+            },
+            "field_number": 1,
+            "key": "address.line1",
+            "name": "line1",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_occurrence": "?",
+              "cddl_type": "tstr"
+            },
+            "field_number": 2,
+            "key": "address.line2",
+            "name": "line2",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "tstr"
+            },
+            "field_number": 4,
+            "key": "address.postal-code",
+            "name": "postal-code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "address",
+        "key_type": null,
+        "kind": "record",
+        "name": "address",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_occurrence": "?"
+            },
+            "field_number": 3,
+            "key": "customer.address",
+            "name": "address",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "address",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "tstr"
+            },
+            "field_number": 1,
+            "key": "customer.customer-id",
+            "name": "customer-id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "tstr"
+            },
+            "field_number": 2,
+            "key": "customer.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "customer",
+        "key_type": null,
+        "kind": "record",
+        "name": "customer",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_scalar": "uint64",
+          "cddl_type": "uint"
+        },
+        "fields": [],
+        "key": "epoch-time",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "epoch-time",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "uint"
+            },
+            "field_number": 2,
+            "key": "line.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "tstr"
+            },
+            "field_number": 1,
+            "key": "line.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 3,
+            "key": "line.unit-price",
+            "name": "unit-price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "money",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "line",
+        "key_type": null,
+        "kind": "record",
+        "name": "line",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "tstr"
+            },
+            "field_number": 2,
+            "key": "money.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "int"
+            },
+            "field_number": 1,
+            "key": "money.minor-units",
+            "name": "minor-units",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "money",
+        "key_type": null,
+        "kind": "record",
+        "name": "money",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 2,
+            "key": "order.customer",
+            "name": "customer",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "customer",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": 1,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_list_occurrence": [
+                "+"
+              ]
+            },
+            "field_number": 3,
+            "key": "order.lines",
+            "name": "lines",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "line",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_occurrence": "?",
+              "cddl_type": "tstr"
+            },
+            "field_number": 4,
+            "key": "order.note",
+            "name": "note",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "tstr"
+            },
+            "field_number": 1,
+            "key": "order.order-id",
+            "name": "order-id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 6,
+            "key": "order.placed-at",
+            "name": "placed-at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "epoch-time",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 5,
+            "key": "order.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "status",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "order",
+        "key_type": null,
+        "kind": "record",
+        "name": "order",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": {
+          "enum": [
+            "new",
+            "paid",
+            "shipped",
+            "cancelled"
+          ],
+          "exclusive_maximum": null,
+          "exclusive_minimum": null,
+          "extras": {},
+          "format": null,
+          "max_items": null,
+          "max_length": null,
+          "maximum": null,
+          "min_items": null,
+          "min_length": null,
+          "minimum": null,
+          "multiple_of": null,
+          "pattern": null,
+          "unique_items": null
+        },
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_literals": [
+            "\"new\"",
+            "\"paid\"",
+            "\"shipped\"",
+            "\"cancelled\""
+          ],
+          "cddl_scalar": "string",
+          "cddl_shape": "literal-choice"
+        },
+        "fields": [],
+        "key": "status",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "status",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "cddl/02-typical-order.cddl",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 7
+  },
+  "detection": {
+    "confidence": 0.9,
+    "format": "cddl"
+  },
+  "fingerprint": "sha256:c340a69a5f35a3cad8f943c7f04bee166097e6cb39df4132cbd8f2e350b35b2d",
+  "lint": {
+    "findings": 26,
+    "grade": "D",
+    "report_fingerprint": "3f6c1aec631bda2163efa341158f2c4e4b17666b3e13750cb34fdd0595663092",
+    "score": 61,
+    "severity_counts": {
+      "error": 0,
+      "info": 19,
+      "warning": 7
+    }
+  },
+  "snapshot_version": 1
+}

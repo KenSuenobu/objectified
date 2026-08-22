@@ -791,6 +791,15 @@ async def _validate_wit(
     return await _run_text_validator(target, emit_result, validate_wit_document)
 
 
+async def _validate_cddl(
+    target: str, emit_result: EmitResult, api: CanonicalApi
+) -> EmittedArtifactValidation:
+    """Re-validate an emitted CDDL grammar by re-parsing it through the ``cddl`` adapter."""
+    from .cddl_emitter import validate_cddl_document
+
+    return await _run_text_validator(target, emit_result, validate_cddl_document)
+
+
 _VALIDATORS: Dict[str, _Validator] = {
     "openapi-3.1": _validate_openapi,
     "graphql": _validate_graphql,
@@ -820,6 +829,8 @@ _VALIDATORS: Dict[str, _Validator] = {
     "http-file": _validate_http_file,
     "llm-tools": _validate_llm_tools,
     "wit": _validate_wit,
+    # FMT-4.4 (#5437)
+    "cddl": _validate_cddl,
 }
 
 

@@ -141,11 +141,11 @@ __all__ = [
 #: The registry contract version. Bumped whenever an entry, a reviewed seed, an absence
 #: explanation, or a vocabulary member changes, so a consumer can detect a stale contract and
 #: a cached snapshot can be keyed by it. Mirrored in the committed vocabulary snapshot.
-REGISTRY_VERSION = "7"
+REGISTRY_VERSION = "8"
 
 #: The date the current seeds and absence explanations were last reviewed. Recorded as
 #: provenance on every entry, so a claim about a format carries the date somebody checked it.
-REVIEW_DATE = "2026-08-21"
+REVIEW_DATE = "2026-08-22"
 
 #: Accepted shape of a format key. The registry resolves an *arbitrary caller-supplied* string
 #: (a stored ``source_format`` whose adapter may have been retired), so the key is constrained
@@ -1117,6 +1117,105 @@ _CAPABILITY_SEED: Dict[str, _Seed] = {
             "the absence is the format's, not the reader's.",
             "DTD *output* is not implemented, so a DTD imported here is exported through "
             "another target's emitter and is not written back as a DTD.",
+        ],
+    ),
+    "cddl": _Seed(
+        # CDDL's payload analysis is the format-blind walk, so the first three fields
+        # restate what derivation produces. The reviewed judgement is the projection
+        # statement below: FMT-4.4's acceptance criterion is that control operators map to
+        # canonical constraints where an analogue exists and are *declared losses* where
+        # none does, and this is where a reader is told which is which — and what sockets,
+        # generics and tags cost on the way into the model.
+        native_hierarchy=NativeHierarchy.GENERIC,
+        native_hierarchy_note=(
+            "The format-blind walk records containers, ordered collections and leaves. Nesting "
+            "and ordering survive; this format's own semantics are not named, and their absence "
+            "from the tree says nothing about the source."
+        ),
+        source_location=SourceLocationSupport(
+            quality=SourceLocationQuality.PATH_ONLY,
+            note=(
+                "Rules locate by name and structural path only. A grammar split across files "
+                "is composed into one namespace before normalization — CDDL has no include "
+                "directive, so the set is the unit of import — and a rule's byte offset in one "
+                "member does not identify it inside the composed grammar."
+            ),
+        ),
+        value_visibility=ValueVisibilitySupport(
+            default=ValueVisibility.DEFAULT,
+            maximum=ValueVisibility.NONE,
+            note=(
+                "A CDDL grammar is a schema, not data: the analyzer observes no runtime values "
+                "at any policy level. 'No value here' is the absence of data to observe, not a "
+                "redaction. The literal values a grammar states — a member key, a type choice "
+                "of strings — are part of the schema and are carried as constraints."
+            ),
+        ),
+        canonical_projection=CanonicalProjectionSupport(
+            coverage=ProjectionCoverage.PARTIAL,
+            dropped_constructs=[
+                "cddl.control_bits",
+                "cddl.control_cbor",
+                "cddl.control_intersection",
+                "cddl.control_unmapped",
+                "cddl.control_within",
+                "cddl.generic_rule",
+                "cddl.group_choice",
+                "cddl.group_socket",
+                "cddl.major_type",
+                "cddl.open_map_entry",
+                "cddl.tag",
+                "cddl.type_socket",
+                "cddl.unwrap",
+            ],
+            note=(
+                "Every type rule becomes one canonical type: a map is a `RECORD` (a `MAP` when "
+                "its whole body is a table), an array is a `RECORD` of positional members (an "
+                "`ALIAS` to a list when it holds one repeated element), `&( … )` is an `ENUM`, a "
+                "choice is a `UNION` (a `SCALAR` carrying `enum` when every branch is a "
+                "literal), and everything else is a `SCALAR`. A group rule produces no type — it "
+                "exists to be spliced, and every splice site carries its members. Occurrence "
+                "indicators become nullability and lists, and an explicit `n*m` additionally "
+                "bounds the list with `min_items`/`max_items`. Control operators become "
+                "constraints wherever an analogue exists: `.size` becomes lengths (or, on an "
+                "integer, the value range that many bytes admit), `.regexp` becomes `pattern`, "
+                "`.lt`/`.le`/`.gt`/`.ge` become the numeric bounds, `.eq` becomes a "
+                "single-valued `enum`, `.default` becomes the member's default, and `.and` "
+                "merges both operands' constraints. The listed constructs are *carried but not "
+                "fully expressible*: a CBOR tag and a major-type shorthand keep the type "
+                "underneath and record the encoding slot, `~name` types the member by the rule "
+                "it unwraps, a table entry beside named members becomes one open-content member "
+                "named `*`, a group choice spliced into a larger group carries its first "
+                "alternative (a group choice that is a whole map or array body is modelled "
+                "exactly, as a union of one record per alternative), a socket is resolved to "
+                "the plugs the document supplies and only its open-endedness is lost, a "
+                "parameterised rule is instantiated once per use rather than typed in the "
+                "abstract, and `.cbor`/`.cborseq`/`.bits`/`.within`/`.ne` are recorded on the "
+                "member in `cddl_control` without being enforced. Every occurrence is counted "
+                "and located in `extras['cddl']['capability_limits']`."
+            ),
+        ),
+        notes=[
+            "CDDL is read *and* written. The reader records each construct's source spelling — "
+            "which prelude type a leaf used, a tag, an unmapped control operator, whether a "
+            "record came from a map or an array — in `extras`, and the emitter writes every one "
+            "of them back, so a grammar imported and re-exported is the grammar that arrived "
+            "rather than a re-derivation of it.",
+            "Sockets, plugs and generics are *composition*, and are resolved before "
+            "normalization: a type socket's `/=` plugs become a choice, a group socket's `//=` "
+            "plugs become a group choice, and a generic rule is instantiated once per distinct "
+            "argument list. Instantiation is bounded and refuses to re-enter an identical "
+            "instantiation, so a self-instantiating generic fails rather than running.",
+            "CDDL has no include directive, so a grammar split across files composes as a "
+            "*fileset*: the members are loaded together into one namespace. A reference that "
+            "resolves in no member fails the import naming the missing rule, rather than being "
+            "read as an open type — which would silently produce a smaller grammar than the "
+            "author wrote.",
+            "The `;` comment is CDDL's only documentation construct and binds to nothing. A "
+            "comment block written directly above a rule becomes that rule's description, the "
+            "same block separated by a blank line becomes the document's, and a comment sharing "
+            "a line with a member becomes that member's. Anything else is left unattached "
+            "rather than guessed at.",
         ],
     ),
     "cobolcopybook": _Seed(

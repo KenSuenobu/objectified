@@ -116,6 +116,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from . import __version__
 from .breaking_change import classify_models, get_breaking_change_classifier
 from .canonical_model import CanonicalApi
+from .cddl_normalizer import CDDL_EXTRAS_KEY
 from .dtd_normalizer import DTD_EXTRAS_KEY
 from .export_projection import (
     NATIVE_ID_EXTRA_KEYS,
@@ -215,6 +216,10 @@ PROVENANCE_EXTRA_KEYS = frozenset(SOURCE_LOCATION_EXTRA_KEYS) | frozenset(NATIVE
         # notation declarations, the modules composed in). Our own bookkeeping about the
         # read — the DTD's own constructs are the elements and attributes it declares.
         DTD_EXTRAS_KEY,
+        # FMT-4.4: the CDDL projection record (root rule, declared limits, the sockets,
+        # generics and group rules composition resolved). Our own bookkeeping about the
+        # read — the grammar's own constructs are the rules it declares.
+        CDDL_EXTRAS_KEY,
         # FMT-3.6: derived version/provenance labels, not source constructs — the
         # source's own `info.schema` is still reported (as `postman_schema_url`).
         "swagger_1_2",
@@ -1053,6 +1058,7 @@ def _document_scope_rows(
     ledger.extend(_wit_capability_rows(api))
     ledger.extend(_relaxng_capability_rows(api))
     ledger.extend(_dtd_capability_rows(api))
+    ledger.extend(_cddl_capability_rows(api))
 
     return nodes, edges, ledger
 
@@ -1382,6 +1388,54 @@ def _dtd_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
                 detail=(
                     f"{limit.get('detail')} ({count} occurrence(s); a capability limit of the "
                     f"canonical model, not a drop — the declaration itself is normalized.)"
+                    f"{where}"
+                ),
+                document_scoped=True,
+            )
+        )
+    return rows
+
+
+def _cddl_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
+    """Render the FMT-4.4 CDDL declared limits as document-scoped ledger rows.
+
+    CDDL constructs the canonical model cannot fully hold — a CBOR tag, a major-type
+    shorthand, an unwrap, a table entry beside named members, a group choice spliced into a
+    larger group, a socket's open-endedness, a parameterised rule, and the control operators
+    with no constraint analogue (``.cbor``, ``.cborseq``, ``.bits``, ``.within``, ``.ne``,
+    an unmergeable ``.and``) — are stated as ``partially-mapped``: the construct itself is
+    normalized (the tagged type exists, the table becomes an open-content member, the plugs
+    become union members, the controlled type keeps its type) and only the part with no
+    canonical analogue is lost. A **capability limit, never a silent omission**, which is
+    what the ticket's "map to canonical constraints where an analogue exists and are
+    declared losses where none does" criterion asks the registry to carry.
+
+    Args:
+        api: The normalized model.
+
+    Returns:
+        One ledger row per declared limit, or an empty list for a grammar that met none.
+    """
+    report = api.extras.get(CDDL_EXTRAS_KEY) if isinstance(api.extras, dict) else None
+    if not isinstance(report, dict):
+        return []
+    rows: List[CoverageEntry] = []
+    partial_status, partial_reason = STATUS_FOR_COVERAGE[CoverageClass.PARTIALLY_MAPPED]
+    for limit in report.get("capability_limits") or []:
+        if not isinstance(limit, dict) or not limit.get("construct"):
+            continue
+        count = int(limit.get("count") or 1)
+        locations = [str(name) for name in (limit.get("locations") or [])]
+        where = f" Rule(s): {', '.join(locations)}." if locations else ""
+        rows.append(
+            CoverageEntry(
+                source_construct=str(limit.get("construct")),
+                coverage=CoverageClass.PARTIALLY_MAPPED,
+                status=partial_status,
+                reason=partial_reason,
+                detail=(
+                    f"{limit.get('detail')} ({count} occurrence(s); a capability limit of the "
+                    f"canonical model, not a drop — the rule itself is normalized.)"
                     f"{where}"
                 ),
                 document_scoped=True,

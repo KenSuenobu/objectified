@@ -316,6 +316,56 @@
       "waivers": {}
     },
     {
+      "format_key": "cddl",
+      "label": "CDDL",
+      "paradigm": "data_schema",
+      "corpus_formats": [
+        "cddl"
+      ],
+      "corpus_directories": [
+        "cddl"
+      ],
+      "fixtures": {
+        "valid": 8,
+        "negative": 6,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 14
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "multi-file",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [],
+      "goldens": 7,
+      "golden_directories": [
+        "cddl"
+      ],
+      "emit_key": "cddl",
+      "roundtrip_row": true,
+      "roundtrip_cells": [
+        {
+          "source_format": "cddl",
+          "emit_key": "cddl",
+          "status": "pass",
+          "has_reason": false
+        }
+      ],
+      "capability_provenance": "reviewed",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
       "format_key": "cloudevents",
       "label": "CloudEvents",
       "paradigm": "event",
@@ -2329,7 +2379,6 @@
     "arrow",
     "aws-apigateway",
     "azure-apim",
-    "cddl",
     "cics-bms",
     "consul",
     "cue",

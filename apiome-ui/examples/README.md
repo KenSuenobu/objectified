@@ -94,7 +94,7 @@ The corpus holds **1418 files** across **103 format directories**. Every file ha
 | `avro/` | Avro schema | data_schema | `type: record` + `fields` | 11 |
 | `avro-idl/` | Avro IDL | data_schema / rpc | `protocol … {` or `namespace …;` + `record` declarations in `.avdl` | 14 |
 | `capnproto/` | Cap'n Proto | data_schema | `@0x…` file id + `struct` | 11 |
-| `cddl/` | CDDL (RFC 8610) (pending #5437) | data_schema | `name = { … }` rules with `tstr`/`bstr`/`uint` prelude types | 14 |
+| `cddl/` | CDDL (RFC 8610) | data_schema | `name = { … }` rules with `tstr`/`bstr`/`uint` prelude types | 14 |
 | `cics-bms/` | CICS BMS maps (pending #5484) | data_schema | `DFHMSD`/`DFHMDI`/`DFHMDF` macro source with column-72 continuations | 14 |
 | `cobol-copybook/` | COBOL copybook | data_schema | level numbers + `PIC` clauses | 13 |
 | `cue/` | CUE (pending #5466) | data_schema | `package …` + `#Definition: {…}` with `&`/`\|`/`=~` constraints | 15 |
@@ -432,24 +432,24 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`04-event-stress.capnp`** — Import fidelity gap: the `drain` method's `List(Event)` result contains parentheses, which the interface-method regex cannot span, so that method is silently dropped from the imported Collector interface.
 
-### `cddl/` — CDDL (RFC 8610) (pending #5437)
+### `cddl/` — CDDL (RFC 8610)
 
 | File | Rung | Expected detection | Class | Features |
 | --- | --- | --- | --- | --- |
-| `01-minimal-person.cddl` | minimal | `cddl` ≥ 0.85 | valid | `map`, `optional-member`, `pending-adapter` |
-| `02-typical-order.cddl` | typical | `cddl` ≥ 0.85 | valid | `map`, `array`, `occurrence`, `type-choice`, `rule-reference`, `pending-adapter` |
-| `03-composition-sockets-and-generics.cddl` ⚠ | composition | `cddl` ≥ 0.85 | valid | `socket`, `plug`, `group-socket`, `generics`, `type-extension`, `pending-adapter` |
-| `04-stress-control-operators.cddl` | stress | `cddl` ≥ 0.85 | valid | `size`, `regexp`, `cbor`, `within`, `and`, `default`, `bits`, `ranges`, `tags`, `unwrap`, `table`, `group-choice`, `pending-adapter` |
-| `05-real-world-cose-shaped.cddl` | real-world | `cddl` ≥ 0.85 | valid | `tags`, `header-map`, `negative-labels`, `cbor`, `cose`, `pending-adapter` |
-| `06-real-world-webauthn-shaped.cddl` | real-world | `cddl` ≥ 0.85 | valid | `attestation`, `bits`, `cbor`, `webauthn`, `type-choice`, `pending-adapter` |
-| `07-modules-set/api.cddl` | multi-file (root) | `cddl` ≥ 0.85 | valid | `multi-file`, `cross-file-reference`, `pending-adapter` |
-| `07-modules-set/common.cddl` ⚠ | multi-file (member) | `cddl` (no guarantee) | valid | `multi-file`, `shared-types`, `pending-adapter` |
-| `negative/01-syntactic-unclosed-map.cddl` | — | `cddl` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-map`, `pending-adapter` |
-| `negative/02-semantic-duplicate-rule.cddl` | — | `cddl` (no guarantee) | invalid | `negative`, `semantic`, `duplicate-rule`, `pending-adapter` |
-| `negative/03-truncated-mid-rule.cddl` | — | `cddl` (no guarantee) | invalid | `negative`, `truncated`, `mid-rule`, `pending-adapter` |
-| `negative/04-wrong-format-json-schema.json` | — | `cddl` (no guarantee) | invalid | `negative`, `wrong-format`, `json-schema`, `pending-adapter` |
-| `negative/05-encoding-utf16.cddl` | — | `cddl` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
-| `negative/06-unresolvable-type-reference.cddl` | — | `cddl` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `undefined-rule`, `pending-adapter` |
+| `01-minimal-person.cddl` | minimal | `cddl` ≥ 0.85 | valid | `map`, `optional-member` |
+| `02-typical-order.cddl` | typical | `cddl` ≥ 0.85 | valid | `map`, `array`, `occurrence`, `type-choice`, `rule-reference` |
+| `03-composition-sockets-and-generics.cddl` ⚠ | composition | `cddl` ≥ 0.85 | valid | `socket`, `plug`, `group-socket`, `generics`, `type-extension` |
+| `04-stress-control-operators.cddl` | stress | `cddl` ≥ 0.85 | valid | `size`, `regexp`, `cbor`, `within`, `and`, `default`, `bits`, `ranges`, `tags`, `unwrap`, `table`, `group-choice` |
+| `05-real-world-cose-shaped.cddl` | real-world | `cddl` ≥ 0.85 | valid | `tags`, `header-map`, `negative-labels`, `cbor`, `cose` |
+| `06-real-world-webauthn-shaped.cddl` | real-world | `cddl` ≥ 0.85 | valid | `attestation`, `bits`, `cbor`, `webauthn`, `type-choice` |
+| `07-modules-set/api.cddl` | multi-file (root) | `cddl` ≥ 0.85 | valid | `multi-file`, `cross-file-reference` |
+| `07-modules-set/common.cddl` ⚠ | multi-file (member) | `cddl` (no guarantee) | valid | `multi-file`, `shared-types` |
+| `negative/01-syntactic-unclosed-map.cddl` | — | `cddl` (no guarantee) | invalid | `negative`, `syntactic`, `unclosed-map` |
+| `negative/02-semantic-duplicate-rule.cddl` | — | `cddl` (no guarantee) | invalid | `negative`, `semantic`, `duplicate-rule` |
+| `negative/03-truncated-mid-rule.cddl` | — | `cddl` (no guarantee) | invalid | `negative`, `truncated`, `mid-rule` |
+| `negative/04-wrong-format-json-schema.json` | — | `cddl` (no guarantee) | invalid | `negative`, `wrong-format`, `json-schema` |
+| `negative/05-encoding-utf16.cddl` | — | `cddl` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+| `negative/06-unresolvable-type-reference.cddl` | — | `cddl` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `undefined-rule` |
 
 > ⚠ **`03-composition-sockets-and-generics.cddl`** — Sockets/plugs and generics are the constructs FMT-4.4 expects to model or declare as parsing limits; a clean import here should carry declared-limit warnings, not silence.
 

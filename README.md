@@ -6,12 +6,12 @@ Apiome reads, converts and publishes API descriptions.  It provides a visual edi
 and editing Schema Objects and Properties on OpenAPI 3.2.0 documents, and a catalog that keeps every
 other description format in its own shape rather than forcing it into OpenAPI's.
 
-**45<!--format-count:total--> formats, any-to-any**, spanning all 6<!--format-count:paradigms-->
+**46<!--format-count:total--> formats, any-to-any**, spanning all 6<!--format-count:paradigms-->
 canonical paradigms — REST, RPC, event-driven, graph, data schema and agent:
 
-- Imports 45<!--format-count:importable--> formats.
-- Exports 41<!--format-count:exportable--> formats.
-- Round-trips 41<!--format-count:round_trip--> of them — import *and* export.
+- Imports 46<!--format-count:importable--> formats.
+- Exports 42<!--format-count:exportable--> formats.
+- Round-trips 42<!--format-count:round_trip--> of them — import *and* export.
 - Introspects a live endpoint, rather than reading a file, for
   4<!--format-count:live_discovery--> of them.
 

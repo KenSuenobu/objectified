@@ -1,0 +1,1124 @@
+{
+  "adapter": "cddl",
+  "canonical": {
+    "channels": [],
+    "description": "WebAuthn-shaped grammar: the attestation object, its statement formats, and the authenticator extension inputs — the shape a FIDO profile publishes. Reconstructed from the shape of those structures; no upstream text copied.",
+    "extras": {
+      "cddl": {
+        "capability_limits": [
+          {
+            "construct": "cddl.control_bits",
+            "count": 1,
+            "detail": "`.bits` reads an integer as a bit set whose positions are named by a group. The canonical constraint vocabulary has no bit-set facet, so the member keeps its integer type and the named group is recorded in `cddl_control`; which bits are legal is not enforced.",
+            "locations": [
+              "authenticator-data-layout"
+            ]
+          },
+          {
+            "construct": "cddl.control_cbor",
+            "count": 1,
+            "detail": "`.cbor` and `.cborseq` say a byte string carries a *nested* CBOR encoding of another type. The canonical model has no embedded-encoding facet, so the member stays a byte string and the embedded type is recorded in `cddl_control` — the nesting is described, not modelled.",
+            "locations": [
+              "attested-credential-data"
+            ]
+          },
+          {
+            "construct": "cddl.open_map_entry",
+            "count": 2,
+            "detail": "A table entry (`* label => values`) alongside named members admits any number of further entries whose keys are not enumerable. The named members are carried and the table becomes one open-content member named `*`; a map whose *whole* body is a table is modelled exactly, as a canonical `MAP`.",
+            "locations": [
+              "cose-key",
+              "extension-outputs"
+            ]
+          }
+        ],
+        "members": [
+          "cddl/06-real-world-webauthn-shaped.cddl"
+        ],
+        "root_rule": "attestation-object",
+        "root_type": "attestation-object"
+      }
+    },
+    "format": "cddl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "attestation-object",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "attestation-object",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": 1,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_list_occurrence": [
+                "+"
+              ],
+              "cddl_type": "bstr"
+            },
+            "field_number": 1,
+            "key": "apple-stmt.x5c",
+            "name": "x5c",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "bytes",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "apple-stmt",
+        "key_type": null,
+        "kind": "record",
+        "name": "apple-stmt",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": {
+          "enum": [
+            "packed",
+            "tpm",
+            "android-key",
+            "fido-u2f",
+            "apple",
+            "none"
+          ],
+          "exclusive_maximum": null,
+          "exclusive_minimum": null,
+          "extras": {},
+          "format": null,
+          "max_items": null,
+          "max_length": null,
+          "maximum": null,
+          "min_items": null,
+          "min_length": null,
+          "minimum": null,
+          "multiple_of": null,
+          "pattern": null,
+          "unique_items": null
+        },
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_literals": [
+            "\"packed\"",
+            "\"tpm\"",
+            "\"android-key\"",
+            "\"fido-u2f\"",
+            "\"apple\"",
+            "\"none\""
+          ],
+          "cddl_scalar": "string",
+          "cddl_shape": "literal-choice"
+        },
+        "fields": [],
+        "key": "attestation-format",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "attestation-format",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 2,
+            "key": "attestation-object.attStmt",
+            "name": "attStmt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "attestation-statement",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "bstr"
+            },
+            "field_number": 3,
+            "key": "attestation-object.authData",
+            "name": "authData",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 1,
+            "key": "attestation-object.fmt",
+            "name": "fmt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "attestation-format",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "attestation-object",
+        "key_type": null,
+        "kind": "record",
+        "name": "attestation-object",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "choice"
+        },
+        "fields": [],
+        "key": "attestation-statement",
+        "key_type": null,
+        "kind": "union",
+        "name": "attestation-statement",
+        "namespace": null,
+        "union_members": [
+          "packed-stmt",
+          "u2f-stmt",
+          "apple-stmt",
+          "none-stmt"
+        ],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "array"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 16,
+              "maximum": null,
+              "min_items": null,
+              "min_length": 16,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_size": "16",
+              "cddl_type": "bstr"
+            },
+            "field_number": 1,
+            "key": "attested-credential-data.aaguid",
+            "name": "aaguid",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "bstr"
+            },
+            "field_number": 3,
+            "key": "attested-credential-data.credentialId",
+            "name": "credentialId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": 65535.0,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 0.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_size": "2",
+              "cddl_type": "uint"
+            },
+            "field_number": 2,
+            "key": "attested-credential-data.credentialIdLength",
+            "name": "credentialIdLength",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_controls": [
+                {
+                  "operand": "cose-key",
+                  "operator": ".cbor"
+                }
+              ],
+              "cddl_key": "bareword",
+              "cddl_type": "bstr"
+            },
+            "field_number": 4,
+            "key": "attested-credential-data.credentialPublicKey",
+            "name": "credentialPublicKey",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "attested-credential-data",
+        "key_type": null,
+        "kind": "record",
+        "name": "attested-credential-data",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Authenticator data is a byte string; its internal layout is described here for documentation and for a reader that unpacks it.",
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "array"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_occurrence": "?"
+            },
+            "field_number": 4,
+            "key": "authenticator-data-layout.attestedCredentialData",
+            "name": "attestedCredentialData",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "attested-credential-data",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_occurrence": "?"
+            },
+            "field_number": 5,
+            "key": "authenticator-data-layout.extensions",
+            "name": "extensions",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "extension-outputs",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_controls": [
+                {
+                  "operand": "authenticator-flags",
+                  "operator": ".bits"
+                }
+              ],
+              "cddl_key": "bareword",
+              "cddl_type": "uint"
+            },
+            "field_number": 2,
+            "key": "authenticator-data-layout.flags",
+            "name": "flags",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 32,
+              "maximum": null,
+              "min_items": null,
+              "min_length": 32,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_size": "32",
+              "cddl_type": "bstr"
+            },
+            "field_number": 1,
+            "key": "authenticator-data-layout.rpIdHash",
+            "name": "rpIdHash",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": 4294967295.0,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 0.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_size": "4",
+              "cddl_type": "uint"
+            },
+            "field_number": 3,
+            "key": "authenticator-data-layout.signCount",
+            "name": "signCount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "uint64",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "authenticator-data-layout",
+        "key_type": null,
+        "kind": "record",
+        "name": "authenticator-data-layout",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_value": "0"
+            },
+            "key": "authenticator-flags.user-present",
+            "name": "user-present",
+            "value": 0
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_value": "2"
+            },
+            "key": "authenticator-flags.user-verified",
+            "name": "user-verified",
+            "value": 2
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_value": "3"
+            },
+            "key": "authenticator-flags.backup-eligible",
+            "name": "backup-eligible",
+            "value": 3
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_value": "4"
+            },
+            "key": "authenticator-flags.backup-state",
+            "name": "backup-state",
+            "value": 4
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_value": "6"
+            },
+            "key": "authenticator-flags.attested-credential-data-included",
+            "name": "attested-credential-data-included",
+            "value": 6
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_value": "7"
+            },
+            "key": "authenticator-flags.extension-data-included",
+            "name": "extension-data-included",
+            "value": 7
+          }
+        ],
+        "extras": {
+          "cddl_shape": "enum-group"
+        },
+        "fields": [],
+        "key": "authenticator-flags",
+        "key_type": null,
+        "kind": "enum",
+        "name": "authenticator-flags",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": {
+          "enum": [
+            -7,
+            -8,
+            -35,
+            -36,
+            -37,
+            -38,
+            -39,
+            -257,
+            -258,
+            -259
+          ],
+          "exclusive_maximum": null,
+          "exclusive_minimum": null,
+          "extras": {},
+          "format": null,
+          "max_items": null,
+          "max_length": null,
+          "maximum": null,
+          "min_items": null,
+          "min_length": null,
+          "minimum": null,
+          "multiple_of": null,
+          "pattern": null,
+          "unique_items": null
+        },
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_literals": [
+            "-7",
+            "-8",
+            "-35",
+            "-36",
+            "-37",
+            "-38",
+            "-39",
+            "-257",
+            "-258",
+            "-259"
+          ],
+          "cddl_scalar": "i64",
+          "cddl_shape": "literal-choice"
+        },
+        "fields": [],
+        "key": "cose-alg",
+        "key_type": null,
+        "kind": "scalar",
+        "name": "cose-alg",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "table",
+              "cddl_key_type": "int",
+              "cddl_occurrence": "*",
+              "cddl_type": "any"
+            },
+            "field_number": 3,
+            "key": "cose-key.*",
+            "name": "*",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "any",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "kty",
+            "extras": {
+              "cddl_key": "arrow-literal",
+              "cddl_key_literal": "1",
+              "cddl_type": "int"
+            },
+            "field_number": 1,
+            "key": "cose-key.1",
+            "name": "1",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "alg",
+            "extras": {
+              "cddl_key": "arrow-literal",
+              "cddl_key_literal": "3"
+            },
+            "field_number": 2,
+            "key": "cose-key.3",
+            "name": "3",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "cose-alg",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "cose-key",
+        "key_type": null,
+        "kind": "record",
+        "name": "cose-key",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "table",
+              "cddl_key_type": "tstr",
+              "cddl_occurrence": "*",
+              "cddl_type": "any"
+            },
+            "field_number": 4,
+            "key": "extension-outputs.*",
+            "name": "*",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "any",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": 3.0,
+              "min_items": null,
+              "min_length": null,
+              "minimum": 1.0,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "literal",
+              "cddl_key_literal": "\"credProtect\"",
+              "cddl_occurrence": "?",
+              "cddl_range": {
+                "from": "1",
+                "operator": "..",
+                "to": "3"
+              }
+            },
+            "field_number": 1,
+            "key": "extension-outputs.credProtect",
+            "name": "credProtect",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "i64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "literal",
+              "cddl_key_literal": "\"hmac-secret\"",
+              "cddl_occurrence": "?",
+              "cddl_type": "bool"
+            },
+            "field_number": 2,
+            "key": "extension-outputs.hmac-secret",
+            "name": "hmac-secret",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bool",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "literal",
+              "cddl_key_literal": "\"largeBlobKey\"",
+              "cddl_occurrence": "?",
+              "cddl_type": "bstr"
+            },
+            "field_number": 3,
+            "key": "extension-outputs.largeBlobKey",
+            "name": "largeBlobKey",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "extension-outputs",
+        "key_type": null,
+        "kind": "record",
+        "name": "extension-outputs",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [],
+        "key": "none-stmt",
+        "key_type": null,
+        "kind": "record",
+        "name": "none-stmt",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 1,
+            "key": "packed-stmt.alg",
+            "name": "alg",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "cose-alg",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "bstr"
+            },
+            "field_number": 2,
+            "key": "packed-stmt.sig",
+            "name": "sig",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": 1,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_list_occurrence": [
+                "+"
+              ],
+              "cddl_occurrence": "?",
+              "cddl_type": "bstr"
+            },
+            "field_number": 3,
+            "key": "packed-stmt.x5c",
+            "name": "x5c",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "bytes",
+                "nullable": false
+              },
+              "name": "list",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "packed-stmt",
+        "key_type": null,
+        "kind": "record",
+        "name": "packed-stmt",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "map"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword",
+              "cddl_type": "bstr"
+            },
+            "field_number": 1,
+            "key": "u2f-stmt.sig",
+            "name": "sig",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "bareword"
+            },
+            "field_number": 2,
+            "key": "u2f-stmt.x5c",
+            "name": "x5c",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "u2f-stmt-x5c",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "u2f-stmt",
+        "key_type": null,
+        "kind": "record",
+        "name": "u2f-stmt",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "cddl_shape": "array"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "cddl_key": "positional",
+              "cddl_type": "bstr"
+            },
+            "field_number": 1,
+            "key": "u2f-stmt-x5c.item1",
+            "name": "item1",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "u2f-stmt-x5c",
+        "key_type": null,
+        "kind": "record",
+        "name": "u2f-stmt-x5c",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "cddl/06-real-world-webauthn-shaped.cddl",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 14
+  },
+  "detection": {
+    "confidence": 0.9,
+    "format": "cddl"
+  },
+  "fingerprint": "sha256:ddabdbbe3ba8f87394a0ccb5bcccc62467b9c442033e636042df8e3613417b20",
+  "lint": {
+    "findings": 39,
+    "grade": "F",
+    "report_fingerprint": "4eafa1df7bca61f7e94a721751c98629a87ac8e7f8db90f968f30bdf93f50e69",
+    "score": 52,
+    "severity_counts": {
+      "error": 0,
+      "info": 24,
+      "warning": 15
+    }
+  },
+  "snapshot_version": 1
+}

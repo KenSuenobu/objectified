@@ -130,6 +130,7 @@ CORPUS_COVERAGE: Dict[str, Union[str, Waiver]] = {
     "arazzo": GENERIC,
     "asn1": GENERIC,
     "capnproto": GENERIC,
+    "cddl": GENERIC,
     "cloudevents": GENERIC,
     "cobolcopybook": GENERIC,
     "connectrpc": GENERIC,
