@@ -612,6 +612,49 @@
       "waivers": {}
     },
     {
+      "format_key": "dbt",
+      "label": "dbt Project",
+      "paradigm": "data_schema",
+      "corpus_formats": [
+        "dbt"
+      ],
+      "corpus_directories": [
+        "dbt"
+      ],
+      "fixtures": {
+        "valid": 10,
+        "negative": 6,
+        "adversarial": 0,
+        "scale": 0,
+        "total": 16
+      },
+      "rungs": [
+        "composition",
+        "minimal",
+        "multi-file",
+        "real-world",
+        "stress",
+        "typical"
+      ],
+      "rung_waivers": [],
+      "goldens": 7,
+      "golden_directories": [
+        "dbt"
+      ],
+      "emit_key": null,
+      "roundtrip_row": true,
+      "roundtrip_cells": [],
+      "capability_provenance": "reviewed",
+      "requirements": {
+        "valid-examples": "satisfied",
+        "negative-examples": "satisfied",
+        "golden-snapshots": "satisfied",
+        "roundtrip-matrix": "satisfied",
+        "capability-entry": "satisfied"
+      },
+      "waivers": {}
+    },
+    {
       "format_key": "discovery",
       "label": "Google API Discovery",
       "paradigm": "rest",
@@ -2524,7 +2567,6 @@
     "cics-bms",
     "consul",
     "cue",
-    "dbt",
     "dhall",
     "dicom",
     "edifact",

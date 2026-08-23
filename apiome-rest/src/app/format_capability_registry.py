@@ -141,7 +141,7 @@ __all__ = [
 #: The registry contract version. Bumped whenever an entry, a reviewed seed, an absence
 #: explanation, or a vocabulary member changes, so a consumer can detect a stale contract and
 #: a cached snapshot can be keyed by it. Mirrored in the committed vocabulary snapshot.
-REGISTRY_VERSION = "12"
+REGISTRY_VERSION = "13"
 
 #: The date the current seeds and absence explanations were last reviewed. Recorded as
 #: provenance on every entry, so a claim about a format carries the date somebody checked it.
@@ -1404,6 +1404,117 @@ _CAPABILITY_SEED: Dict[str, _Seed] = {
             "canonical constraint other than the two a logical type implies is dropped on "
             "export and reported. Connect also has no union and no enumeration type, and this "
             "emitter does not invent a connector-specific logical type to fake one.",
+        ],
+    ),
+    "dbt": _Seed(
+        # dbt's payload analysis is the format-blind walk, so the first three fields
+        # restate what derivation produces. The reviewed judgement is the projection
+        # statement below: FMT-5.4's acceptance criterion is that dbt tests land on
+        # constraints or on the shared quality namespace, and this is where a reader is
+        # told which of a project's constructs goes where.
+        native_hierarchy=NativeHierarchy.GENERIC,
+        native_hierarchy_note=(
+            "The format-blind walk records containers, ordered collections and leaves. Nesting "
+            "and ordering survive; this format's own semantics are not named, and their absence "
+            "from the tree says nothing about the source."
+        ),
+        source_location=SourceLocationSupport(
+            quality=SourceLocationQuality.PATH_ONLY,
+            note=(
+                "Resources and columns locate by name and structural path only. A project "
+                "imported as a file set is composed before normalization — several properties "
+                "files contribute to one namespace, and each model's SQL contributes its "
+                "`ref()` lineage — so a column's position in one member does not identify it "
+                "inside the composed project. A compiled manifest hoists every test into a "
+                "node of its own, and re-attaching it to the column it constrains loses the "
+                "test node's own coordinates."
+            ),
+        ),
+        value_visibility=ValueVisibilitySupport(
+            default=ValueVisibility.DEFAULT,
+            maximum=ValueVisibility.NONE,
+            note=(
+                "A dbt project describes a warehouse, it does not contain one: the analyzer "
+                "observes no runtime values at any policy level. 'No value here' is the absence "
+                "of data to observe, not a redaction. The values a project *states* — an "
+                "`accepted_values` test's `values` list — are part of the schema and become "
+                "constraints."
+            ),
+        ),
+        canonical_projection=CanonicalProjectionSupport(
+            coverage=ProjectionCoverage.PARTIAL,
+            dropped_constructs=[
+                "dbt.check_constraint",
+                "dbt.data_test",
+                "dbt.data_type",
+                "dbt.declaration_order",
+                "dbt.exposure",
+                "dbt.freshness",
+                "dbt.lineage_relationship",
+                "dbt.manifest_graph",
+                "dbt.materialization",
+                "dbt.meta",
+                "dbt.metric",
+                "dbt.model_lineage",
+                "dbt.model_version",
+                "dbt.project_config",
+                "dbt.relation_name",
+                "dbt.semantic_layer",
+                "dbt.tag",
+                "dbt.undocumented_columns",
+                "dbt.uniqueness",
+                "dbt.unresolved_lineage",
+            ],
+            note=(
+                "Every dbt resource that describes data is modelled: a model, a source table, "
+                "a seed, a snapshot and a semantic model each become one canonical `RECORD`, "
+                "and each column becomes one member. A column's `data_type` is projected onto "
+                "a canonical scalar **by its base name only** — `varchar(20)` becomes a "
+                "string, not a string of length 20, because the unit of that 20 differs by "
+                "dialect and by encoding — and the declared spelling is carried. Where a dbt "
+                "*test* lands is the projection's real decision: `not_null` becomes "
+                "nullability and `accepted_values` becomes an `enum`, because the canonical "
+                "model has those facets; `unique` and `relationships` are carried on the field, "
+                "because it has no identity facet and no edge vocabulary; and every other test "
+                "— a package test, a singular test, a generic test this reader does not decode "
+                "— is projected into the **shared quality namespace FMT-5.1 defined** "
+                "(`extras['odcs_quality']`), in the ODCS `type: custom` rule shape with "
+                "`engine: dbt`. A dbt project and an ODCS contract describing the same table "
+                "therefore put their expectations in the same place, in the same shape. "
+                "Everything else the listed constructs name — build configuration, physical "
+                "relation names, freshness windows, `meta`, `tags`, model versions, exposures, "
+                "metrics, the semantic layer's aggregation vocabulary, the manifest's build "
+                "graph — is **carried but not modelled** under the documented `dbt_*` extras "
+                "namespace, on whichever node declared it. Every occurrence is counted and "
+                "located in `extras['dbt']['capability_limits']`."
+            ),
+        ),
+        notes=[
+            "Both of dbt's descriptions of a project read into one model: a hand-written "
+            "`schema.yml` properties file and the `manifest.json` dbt compiles from it. A "
+            "manifest hoists every test into a node of its own, and this reader re-attaches "
+            "each one to the column it constrains, so the two surfaces produce comparable "
+            "canonical models rather than two shapes.",
+            "A dbt project is a directory, so a file set is the format's ordinary shape rather "
+            "than an include mechanism: `dbt_project.yml` names the project, every properties "
+            "file contributes to one resource namespace, and each model's `.sql` contributes "
+            "the `ref()`/`source()` calls in it as that model's lineage. The SQL is read for "
+            "those calls only — it is never compiled, executed, or otherwise interpreted.",
+            "Lineage is recorded, not traversed. A `relationships` test and a `foreign_key` "
+            "constraint are the two edges this reader writes down, so one that names a model "
+            "the import does not contain is refused as `INPUT_REFERENCE_UNRESOLVED` rather "
+            "than silently dropped. Every other `ref()` — a semantic model's `model:`, an "
+            "exposure's `depends_on`, a call in a member's SQL — is recorded as unresolved "
+            "and carried, because an import is one file or one file set and a project's "
+            "upstream commonly lives outside it.",
+            "A project that describes no data is refused rather than imported: a properties "
+            "file with a `version: 2` marker and no models, sources, seeds, snapshots or "
+            "semantic models would produce an empty catalog entry, which reads as 'this "
+            "project has no tables' rather than as 'this document did not say'.",
+            "dbt *output* is not implemented, and is not planned. dbt owns its own project "
+            "files, they are under version control, and writing one back would put a second "
+            "author on a directory that already has one. A project imported here is exported "
+            "through another target's emitter.",
         ],
     ),
     "cddl": _Seed(

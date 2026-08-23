@@ -1,0 +1,497 @@
+{
+  "adapter": "dbt",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "dbt": {
+        "capability_limits": [
+          {
+            "construct": "dbt.declaration_order",
+            "count": 2,
+            "detail": "A model's column order is physical: it is the order the relation actually presents. Canonical entities are keyed and sorted by key, so declaration order is not a canonical property; the source index is recorded on every resource and every column as `extras['dbt_position']` and the canonical ordering does not follow it.",
+            "locations": [
+              "semantic_model.customers",
+              "semantic_model.orders"
+            ]
+          },
+          {
+            "construct": "dbt.metric",
+            "count": 4,
+            "detail": "A `metric` composes measures into a number the semantic layer serves — `simple`, `ratio`, `derived`, with filters and offset windows. The canonical model has no aggregation vocabulary, so the entries are carried verbatim in `extras['dbt_metrics']` and no expression is parsed.",
+            "locations": []
+          },
+          {
+            "construct": "dbt.semantic_layer",
+            "count": 12,
+            "detail": "A `semantic_model`'s entities, dimensions and measures are read as an additional layer: each becomes one canonical field so the layer is visible and diffable. What the canonical model cannot hold is what each one *means* — an entity's `primary`/`foreign` role, a dimension's `time_granularity`, a measure's `agg` and `agg_time_dimension`, an `expr` that is warehouse SQL — so the declaring block is carried verbatim on the field in `extras['dbt_semantic']`.",
+            "locations": [
+              "semantic_model.customers",
+              "semantic_model.orders"
+            ]
+          },
+          {
+            "construct": "dbt.unresolved_lineage",
+            "count": 2,
+            "detail": "A `ref()` or `source()` that names something the import does not contain — an upstream model in another package, a source a `schema.yml` beside this one declares, a semantic model's `model:` target. The name is recorded in `extras['dbt']['unresolved_lineage']` exactly as written and is *not* resolved; the import does not reach outside itself to look for it. A `relationships` test or a `foreign_key` constraint that dangles is a different matter and is refused, because that edge is one this reader records.",
+            "locations": []
+          }
+        ],
+        "properties_version": 2,
+        "resources": [
+          {
+            "key": "semantic_model.customers",
+            "kind": "semantic_model",
+            "name": "customers"
+          },
+          {
+            "key": "semantic_model.orders",
+            "kind": "semantic_model",
+            "name": "orders"
+          }
+        ],
+        "surface": "properties",
+        "unresolved_lineage": [
+          {
+            "declared_by": "semantic_model.customers",
+            "kind": "ref",
+            "ref": "ref('dim_customers')",
+            "target": "dim_customers"
+          },
+          {
+            "declared_by": "semantic_model.orders",
+            "kind": "ref",
+            "ref": "ref('fct_orders')",
+            "target": "fct_orders"
+          }
+        ]
+      },
+      "dbt_metrics": [
+        {
+          "description": "Sum of order totals.",
+          "label": "Revenue",
+          "name": "revenue",
+          "type": "simple",
+          "type_params": {
+            "measure": "order_total"
+          }
+        },
+        {
+          "filter": "{{ Dimension('order__status') }} = 'paid'\n",
+          "label": "Paid revenue",
+          "name": "paid_revenue",
+          "type": "simple",
+          "type_params": {
+            "measure": "order_total"
+          }
+        },
+        {
+          "label": "Revenue per customer",
+          "name": "revenue_per_customer",
+          "type": "ratio",
+          "type_params": {
+            "denominator": "customer_count",
+            "numerator": "revenue"
+          }
+        },
+        {
+          "label": "Revenue month-over-month growth",
+          "name": "revenue_mom_growth",
+          "type": "derived",
+          "type_params": {
+            "expr": "(revenue - revenue_prior_month) * 100 / revenue_prior_month",
+            "metrics": [
+              {
+                "name": "revenue"
+              },
+              {
+                "alias": "revenue_prior_month",
+                "name": "revenue",
+                "offset_window": "1 month"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "format": "dbt",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "06-semantic-manifest",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "06-semantic-manifest",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dbt_position": 1,
+          "dbt_resource_type": "semantic_model",
+          "dbt_semantic_model": {
+            "model": "ref('dim_customers')"
+          }
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 1,
+              "dbt_semantic": {
+                "name": "country_code",
+                "role": "dimension",
+                "type": "categorical"
+              }
+            },
+            "field_number": null,
+            "key": "semantic_model.customers.country_code",
+            "name": "country_code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 0,
+              "dbt_semantic": {
+                "expr": "customer_id",
+                "name": "customer",
+                "role": "entity",
+                "type": "primary"
+              }
+            },
+            "field_number": null,
+            "key": "semantic_model.customers.customer",
+            "name": "customer",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 3,
+              "dbt_semantic": {
+                "agg": "count_distinct",
+                "expr": "customer_id",
+                "name": "customer_count",
+                "role": "measure"
+              }
+            },
+            "field_number": null,
+            "key": "semantic_model.customers.customer_count",
+            "name": "customer_count",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 2,
+              "dbt_semantic": {
+                "name": "signup_channel",
+                "role": "dimension",
+                "type": "categorical"
+              }
+            },
+            "field_number": null,
+            "key": "semantic_model.customers.signup_channel",
+            "name": "signup_channel",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "semantic_model.customers",
+        "key_type": null,
+        "kind": "record",
+        "name": "customers",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Semantic model over the order fact table.",
+        "enum_values": [],
+        "extras": {
+          "dbt_position": 0,
+          "dbt_resource_type": "semantic_model",
+          "dbt_semantic_model": {
+            "defaults": {
+              "agg_time_dimension": "placed_at"
+            },
+            "model": "ref('fct_orders')"
+          }
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 7,
+              "dbt_semantic": {
+                "agg": "average",
+                "expr": "total_amount",
+                "name": "average_order_value",
+                "role": "measure"
+              }
+            },
+            "field_number": null,
+            "key": "semantic_model.orders.average_order_value",
+            "name": "average_order_value",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "number",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 4,
+              "dbt_semantic": {
+                "expr": "order_channel",
+                "name": "channel",
+                "role": "dimension",
+                "type": "categorical"
+              }
+            },
+            "field_number": null,
+            "key": "semantic_model.orders.channel",
+            "name": "channel",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 1,
+              "dbt_semantic": {
+                "expr": "customer_id",
+                "name": "customer",
+                "role": "entity",
+                "type": "foreign"
+              }
+            },
+            "field_number": null,
+            "key": "semantic_model.orders.customer",
+            "name": "customer",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 0,
+              "dbt_semantic": {
+                "expr": "order_id",
+                "name": "order",
+                "role": "entity",
+                "type": "primary"
+              }
+            },
+            "field_number": null,
+            "key": "semantic_model.orders.order",
+            "name": "order",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 5,
+              "dbt_semantic": {
+                "agg": "count",
+                "agg_time_dimension": "placed_at",
+                "expr": "order_id",
+                "name": "order_count",
+                "role": "measure"
+              }
+            },
+            "field_number": null,
+            "key": "semantic_model.orders.order_count",
+            "name": "order_count",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 6,
+              "dbt_semantic": {
+                "agg": "sum",
+                "agg_time_dimension": "placed_at",
+                "expr": "total_amount",
+                "name": "order_total",
+                "role": "measure"
+              }
+            },
+            "field_number": null,
+            "key": "semantic_model.orders.order_total",
+            "name": "order_total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "number",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 2,
+              "dbt_semantic": {
+                "name": "placed_at",
+                "role": "dimension",
+                "type": "time",
+                "type_params": {
+                  "time_granularity": "day"
+                }
+              }
+            },
+            "field_number": null,
+            "key": "semantic_model.orders.placed_at",
+            "name": "placed_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 3,
+              "dbt_semantic": {
+                "name": "status",
+                "role": "dimension",
+                "type": "categorical"
+              }
+            },
+            "field_number": null,
+            "key": "semantic_model.orders.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "semantic_model.orders",
+        "key_type": null,
+        "kind": "record",
+        "name": "orders",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "dbt/06-semantic-manifest.yml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.93,
+    "format": "dbt"
+  },
+  "fingerprint": "sha256:583f86a0eed086d4ba89f3488612c9d849842013716108dcb79195b452d868ac",
+  "lint": {
+    "findings": 14,
+    "grade": "B",
+    "report_fingerprint": "cbb0b67dabf60d8d0f093e5dc67d47261c32183b31b889e9d866a3179992a08d",
+    "score": 83,
+    "severity_counts": {
+      "error": 0,
+      "info": 13,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

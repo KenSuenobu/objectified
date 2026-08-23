@@ -123,7 +123,7 @@
       "marker": "`package \u2026` + `#Definition: {\u2026}` with `&`/`|`/`=~` constraints"
     },
     "dbt": {
-      "label": "dbt models and manifests (pending #5442)",
+      "label": "dbt models and manifests",
       "category": "data-schema",
       "paradigm": "data_schema",
       "marker": "`version: 2` + `models:`/`sources:`, or `metadata.dbt_schema_version` in a manifest"
@@ -6423,7 +6423,7 @@
     {
       "path": "dbt/01-minimal-schema.yml",
       "format": "dbt",
-      "adapter_key": null,
+      "adapter_key": "dbt",
       "validity_class": "valid",
       "expected_detection": {
         "format": "dbt",
@@ -6431,8 +6431,7 @@
       },
       "features": [
         "models",
-        "columns",
-        "pending-adapter"
+        "columns"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -6443,7 +6442,7 @@
     {
       "path": "dbt/02-typical-schema.yml",
       "format": "dbt",
-      "adapter_key": null,
+      "adapter_key": "dbt",
       "validity_class": "valid",
       "expected_detection": {
         "format": "dbt",
@@ -6455,8 +6454,7 @@
         "accepted-values",
         "relationships",
         "meta",
-        "tags",
-        "pending-adapter"
+        "tags"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -6467,7 +6465,7 @@
     {
       "path": "dbt/03-project-set/dbt_project.yml",
       "format": "dbt",
-      "adapter_key": null,
+      "adapter_key": "dbt",
       "validity_class": "valid",
       "expected_detection": {
         "format": "dbt",
@@ -6476,8 +6474,7 @@
       "features": [
         "multi-file",
         "dbt-project",
-        "materialization-config",
-        "pending-adapter"
+        "materialization-config"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -6489,7 +6486,7 @@
     {
       "path": "dbt/03-project-set/fct_orders.sql",
       "format": "dbt",
-      "adapter_key": null,
+      "adapter_key": "dbt",
       "validity_class": "valid",
       "expected_detection": {
         "format": "dbt",
@@ -6498,8 +6495,7 @@
       "features": [
         "multi-file",
         "ref",
-        "lineage",
-        "pending-adapter"
+        "lineage"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -6512,7 +6508,7 @@
     {
       "path": "dbt/03-project-set/schema.yml",
       "format": "dbt",
-      "adapter_key": null,
+      "adapter_key": "dbt",
       "validity_class": "valid",
       "expected_detection": {
         "format": "dbt",
@@ -6521,8 +6517,7 @@
       "features": [
         "multi-file",
         "models",
-        "relationships",
-        "pending-adapter"
+        "relationships"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -6534,7 +6529,7 @@
     {
       "path": "dbt/03-project-set/stg_orders.sql",
       "format": "dbt",
-      "adapter_key": null,
+      "adapter_key": "dbt",
       "validity_class": "valid",
       "expected_detection": {
         "format": "dbt",
@@ -6543,8 +6538,7 @@
       "features": [
         "multi-file",
         "source",
-        "lineage",
-        "pending-adapter"
+        "lineage"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -6556,7 +6550,7 @@
     {
       "path": "dbt/04-stress-contracts-sources-and-exposures.yml",
       "format": "dbt",
-      "adapter_key": null,
+      "adapter_key": "dbt",
       "validity_class": "valid",
       "expected_detection": {
         "format": "dbt",
@@ -6572,8 +6566,7 @@
         "snapshots",
         "exposures",
         "package-test",
-        "severity",
-        "pending-adapter"
+        "severity"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -6584,7 +6577,7 @@
     {
       "path": "dbt/05-real-world-manifest.json",
       "format": "dbt",
-      "adapter_key": null,
+      "adapter_key": "dbt",
       "validity_class": "valid",
       "expected_detection": {
         "format": "dbt",
@@ -6596,8 +6589,7 @@
         "test-metadata",
         "parent-map",
         "child-map",
-        "exposures",
-        "pending-adapter"
+        "exposures"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -6608,7 +6600,7 @@
     {
       "path": "dbt/06-semantic-manifest.yml",
       "format": "dbt",
-      "adapter_key": null,
+      "adapter_key": "dbt",
       "validity_class": "valid",
       "expected_detection": {
         "format": "dbt",
@@ -6620,8 +6612,7 @@
         "dimensions",
         "measures",
         "metrics",
-        "derived-metric",
-        "pending-adapter"
+        "derived-metric"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -6632,7 +6623,7 @@
     {
       "path": "dbt/07-composition-model-inheritance.yml",
       "format": "dbt",
-      "adapter_key": null,
+      "adapter_key": "dbt",
       "validity_class": "valid",
       "expected_detection": {
         "format": "dbt",
@@ -6642,8 +6633,7 @@
         "yaml-anchors",
         "shared-column-groups",
         "shared-tests",
-        "versions",
-        "pending-adapter"
+        "versions"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -6654,7 +6644,7 @@
     {
       "path": "dbt/negative/01-syntactic-bad-indentation.yml",
       "format": "dbt",
-      "adapter_key": null,
+      "adapter_key": "dbt",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "dbt",
@@ -6663,8 +6653,7 @@
       "features": [
         "negative",
         "syntactic",
-        "bad-indentation",
-        "pending-adapter"
+        "bad-indentation"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -6676,7 +6665,7 @@
     {
       "path": "dbt/negative/02-semantic-no-models.yml",
       "format": "dbt",
-      "adapter_key": null,
+      "adapter_key": "dbt",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "dbt",
@@ -6685,8 +6674,7 @@
       "features": [
         "negative",
         "semantic",
-        "no-resources",
-        "pending-adapter"
+        "no-resources"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -6698,7 +6686,7 @@
     {
       "path": "dbt/negative/03-truncated-mid-test.yml",
       "format": "dbt",
-      "adapter_key": null,
+      "adapter_key": "dbt",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "dbt",
@@ -6707,8 +6695,7 @@
       "features": [
         "negative",
         "truncated",
-        "mid-flow-sequence",
-        "pending-adapter"
+        "mid-flow-sequence"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -6720,7 +6707,7 @@
     {
       "path": "dbt/negative/04-wrong-format-odcs.yaml",
       "format": "dbt",
-      "adapter_key": null,
+      "adapter_key": "dbt",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "dbt",
@@ -6729,8 +6716,7 @@
       "features": [
         "negative",
         "wrong-format",
-        "odcs",
-        "pending-adapter"
+        "odcs"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -6742,7 +6728,7 @@
     {
       "path": "dbt/negative/05-encoding-utf16.yml",
       "format": "dbt",
-      "adapter_key": null,
+      "adapter_key": "dbt",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "dbt",
@@ -6751,8 +6737,7 @@
       "features": [
         "negative",
         "encoding",
-        "utf-16",
-        "pending-adapter"
+        "utf-16"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -6764,7 +6749,7 @@
     {
       "path": "dbt/negative/06-unresolvable-ref.yml",
       "format": "dbt",
-      "adapter_key": null,
+      "adapter_key": "dbt",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "dbt",
@@ -6773,8 +6758,7 @@
       "features": [
         "negative",
         "unresolvable-ref",
-        "broken-ref",
-        "pending-adapter"
+        "broken-ref"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",

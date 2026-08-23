@@ -1,0 +1,457 @@
+{
+  "adapter": "dbt",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "dbt": {
+        "capability_limits": [
+          {
+            "construct": "dbt.declaration_order",
+            "count": 3,
+            "detail": "A model's column order is physical: it is the order the relation actually presents. Canonical entities are keyed and sorted by key, so declaration order is not a canonical property; the source index is recorded on every resource and every column as `extras['dbt_position']` and the canonical ordering does not follow it.",
+            "locations": [
+              "fct_orders",
+              "stg_customers",
+              "stg_orders"
+            ]
+          },
+          {
+            "construct": "dbt.lineage_relationship",
+            "count": 1,
+            "detail": "A `relationships` test and a `foreign_key` constraint name the model a column points at. The canonical model has no edge vocabulary, so the edge is recorded on the field in `extras['dbt_relationship']` — in the ODCS v3.1 property-level relationship shape (`type: foreignKey`, `to: <model>.<column>`), beside the canonical type and field keys it resolved to — and no canonical feature traverses it.",
+            "locations": [
+              "fct_orders"
+            ]
+          },
+          {
+            "construct": "dbt.model_lineage",
+            "count": 2,
+            "detail": "A resource's upstream lineage — the `ref()`/`source()` calls in its SQL, or the `depends_on.nodes` a compiled manifest records for it. The canonical model has no edge vocabulary, so the resolved and unresolved upstreams are recorded on the type in `extras['dbt_depends_on']` and no canonical feature traverses them. This is the *build* lineage; the column-level edges a `relationships` test or a `foreign_key` constraint declares are `dbt.lineage_relationship`.",
+            "locations": [
+              "fct_orders",
+              "stg_orders"
+            ]
+          },
+          {
+            "construct": "dbt.project_config",
+            "count": 1,
+            "detail": "`dbt_project.yml` configures how the project is *built*: path lists, profile selection, and per-directory `+materialized`/`+schema` defaults that dbt merges onto nodes at compile time. None of it is dataset structure, and this reader does not merge it onto anything, so the file is carried verbatim in `extras['dbt_project']`.",
+            "locations": []
+          },
+          {
+            "construct": "dbt.uniqueness",
+            "count": 3,
+            "detail": "A `unique` test, a `primary_key` constraint and a `unique` constraint declare identity over the *rows* of a model. The canonical constraint vocabulary has no identity facet (`unique_items` is about the members of one array), so the declaration is carried on the field or the type in `extras['dbt_key']` and is not enforced.",
+            "locations": [
+              "fct_orders",
+              "stg_customers",
+              "stg_orders"
+            ]
+          },
+          {
+            "construct": "dbt.unresolved_lineage",
+            "count": 1,
+            "detail": "A `ref()` or `source()` that names something the import does not contain — an upstream model in another package, a source a `schema.yml` beside this one declares, a semantic model's `model:` target. The name is recorded in `extras['dbt']['unresolved_lineage']` exactly as written and is *not* resolved; the import does not reach outside itself to look for it. A `relationships` test or a `foreign_key` constraint that dangles is a different matter and is refused, because that edge is one this reader records.",
+            "locations": []
+          }
+        ],
+        "fileset": {
+          "members": [
+            "dbt_project.yml",
+            "fct_orders.sql",
+            "schema.yml",
+            "stg_orders.sql"
+          ],
+          "model_files": [
+            "fct_orders.sql",
+            "stg_orders.sql"
+          ],
+          "properties_files": [
+            "schema.yml"
+          ],
+          "root": "dbt_project.yml"
+        },
+        "lineage": [
+          {
+            "from": "fct_orders",
+            "from_columns": [
+              "customer_id"
+            ],
+            "origin": "relationships_test",
+            "to": "stg_customers",
+            "to_columns": [
+              "customer_id"
+            ]
+          }
+        ],
+        "project_version": "1.3.0",
+        "properties_version": 2,
+        "resources": [
+          {
+            "key": "fct_orders",
+            "kind": "model",
+            "name": "fct_orders"
+          },
+          {
+            "key": "stg_customers",
+            "kind": "model",
+            "name": "stg_customers"
+          },
+          {
+            "key": "stg_orders",
+            "kind": "model",
+            "name": "stg_orders"
+          }
+        ],
+        "surface": "project",
+        "unresolved_lineage": [
+          {
+            "declared_by": "stg_orders",
+            "kind": "source",
+            "ref": "source('raw_commerce', 'orders_raw')",
+            "target": "raw_commerce.orders_raw"
+          }
+        ]
+      },
+      "dbt_project": {
+        "config-version": 2,
+        "model-paths": [
+          "models"
+        ],
+        "models": {
+          "example_commerce": {
+            "+materialized": "view",
+            "marts": {
+              "+materialized": "table",
+              "+schema": "analytics"
+            }
+          }
+        },
+        "name": "example_commerce",
+        "profile": "example_commerce",
+        "seed-paths": [
+          "seeds"
+        ],
+        "test-paths": [
+          "tests"
+        ],
+        "version": "1.3.0"
+      }
+    },
+    "format": "dbt",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "example_commerce",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "example_commerce",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Order facts joined to the customer dimension.",
+        "enum_values": [],
+        "extras": {
+          "dbt_depends_on": {
+            "resolved": [
+              "stg_customers",
+              "stg_orders"
+            ]
+          },
+          "dbt_position": 1,
+          "dbt_resource_type": "model"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 2
+            },
+            "field_number": null,
+            "key": "fct_orders.customer_country",
+            "name": "customer_country",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 1,
+              "dbt_relationship": [
+                {
+                  "origin": "relationships_test",
+                  "ref": "ref('stg_customers')",
+                  "to": "stg_customers.customer_id",
+                  "to_columns": [
+                    "customer_id"
+                  ],
+                  "to_field": "stg_customers.customer_id",
+                  "to_type": "stg_customers",
+                  "type": "foreignKey"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "fct_orders.customer_id",
+            "name": "customer_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_key": {
+                "unique": true
+              },
+              "dbt_position": 0
+            },
+            "field_number": null,
+            "key": "fct_orders.order_id",
+            "name": "order_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 3
+            },
+            "field_number": null,
+            "key": "fct_orders.total_amount",
+            "name": "total_amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "fct_orders",
+        "key_type": null,
+        "kind": "record",
+        "name": "fct_orders",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Cleaned customer rows.",
+        "enum_values": [],
+        "extras": {
+          "dbt_position": 2,
+          "dbt_resource_type": "model"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 1
+            },
+            "field_number": null,
+            "key": "stg_customers.country_code",
+            "name": "country_code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_key": {
+                "unique": true
+              },
+              "dbt_position": 0
+            },
+            "field_number": null,
+            "key": "stg_customers.customer_id",
+            "name": "customer_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "stg_customers",
+        "key_type": null,
+        "kind": "record",
+        "name": "stg_customers",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Cleaned order rows straight off the source table.",
+        "enum_values": [],
+        "extras": {
+          "dbt_depends_on": {
+            "unresolved": [
+              "raw_commerce.orders_raw"
+            ]
+          },
+          "dbt_position": 0,
+          "dbt_resource_type": "model"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 1
+            },
+            "field_number": null,
+            "key": "stg_orders.customer_id",
+            "name": "customer_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_key": {
+                "unique": true
+              },
+              "dbt_position": 0
+            },
+            "field_number": null,
+            "key": "stg_orders.order_id",
+            "name": "order_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 2
+            },
+            "field_number": null,
+            "key": "stg_orders.placed_at",
+            "name": "placed_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 3
+            },
+            "field_number": null,
+            "key": "stg_orders.total_amount",
+            "name": "total_amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "stg_orders",
+        "key_type": null,
+        "kind": "record",
+        "name": "stg_orders",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": "1.3.0"
+  },
+  "corpus_path": "dbt/03-project-set/dbt_project.yml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.93,
+    "format": "dbt"
+  },
+  "fingerprint": "sha256:90cb0e41edb8bd45e3abf2f585d7a3c5f0f50e6159e0ea62802b5fc46f966bc7",
+  "lint": {
+    "findings": 11,
+    "grade": "B",
+    "report_fingerprint": "d84eebe5024190665a6c2af65766856928c12a1dd1b3b4510c07b0e2d30cfec2",
+    "score": 89,
+    "severity_counts": {
+      "error": 0,
+      "info": 11,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

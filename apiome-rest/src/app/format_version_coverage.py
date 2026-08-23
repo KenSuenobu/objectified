@@ -969,6 +969,33 @@ _VERSION_COVERAGE: Dict[str, VersionCoverage] = {
         ],
         default_write="Kafka Connect schema form",
     ),
+    "dbt": VersionCoverage(
+        reads=[
+            FormatVersion(
+                version="dbt properties `version: 2`",
+                format_key="dbt",
+                support=VersionSupport.FULL,
+                note="The only properties schema dbt has published since 0.21, and the one "
+                "every `schema.yml` in the wild declares. A file that omits `version:` is "
+                "read as 2, exactly as dbt itself does; a file that declares anything else "
+                "is rejected as `FORMAT_VERSION_UNSUPPORTED` rather than mis-read, because "
+                "the v1 shape spelled models as a mapping keyed by name.",
+            ),
+            FormatVersion(
+                version="dbt manifest v7-v12 (dbt 1.0 - 1.9)",
+                format_key="dbt",
+                support=VersionSupport.FULL,
+                note="v7 is the first manifest with the node shape this reader walks — "
+                "`nodes` keyed by `unique_id`, `columns` as a mapping, and every test "
+                "hoisted into its own node with `test_metadata`. Every schema version since "
+                "has *added* keys, which are carried verbatim, so one reader covers the "
+                "line and a v7 manifest reads identically to a v12 one. A manifest outside "
+                "the line is rejected by version with the `dbt compile` remediation named.",
+            ),
+        ],
+        writes=[],
+        default_write=None,
+    ),
     "dtd": VersionCoverage(
         reads=[
             FormatVersion(

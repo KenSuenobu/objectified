@@ -98,7 +98,7 @@ The corpus holds **1421 files** across **103 format directories**. Every file ha
 | `cics-bms/` | CICS BMS maps (pending #5484) | data_schema | `DFHMSD`/`DFHMDI`/`DFHMDF` macro source with column-72 continuations | 14 |
 | `cobol-copybook/` | COBOL copybook | data_schema | level numbers + `PIC` clauses | 13 |
 | `cue/` | CUE (pending #5466) | data_schema | `package …` + `#Definition: {…}` with `&`/`\|`/`=~` constraints | 15 |
-| `dbt/` | dbt models and manifests (pending #5442) | data_schema | `version: 2` + `models:`/`sources:`, or `metadata.dbt_schema_version` in a manifest | 16 |
+| `dbt/` | dbt models and manifests | data_schema | `version: 2` + `models:`/`sources:`, or `metadata.dbt_schema_version` in a manifest | 16 |
 | `dhall/` | Dhall (pending #5466) | data_schema | `let … in …` with type annotations, union types and `::` completion | 14 |
 | `dtd/` | DTD | data_schema | `<!ELEMENT>`/`<!ATTLIST>` declarations, or a `<!DOCTYPE …[…]>` internal subset | 15 |
 | `flatbuffers/` | FlatBuffers | data_schema | `table`/`struct` + `root_type` | 11 |
@@ -614,26 +614,26 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`negative/06-semantic-incomplete-value.cue`** — Valid CUE that `cue export` refuses: the sandboxed evaluation produces no JSON, so the import must fail with that reason rather than an empty model.
 
-### `dbt/` — dbt models and manifests (pending #5442)
+### `dbt/` — dbt models and manifests
 
 | File | Rung | Expected detection | Class | Features |
 | --- | --- | --- | --- | --- |
-| `01-minimal-schema.yml` | minimal | `dbt` ≥ 0.85 | valid | `models`, `columns`, `pending-adapter` |
-| `02-typical-schema.yml` | typical | `dbt` ≥ 0.85 | valid | `not-null`, `unique`, `accepted-values`, `relationships`, `meta`, `tags`, `pending-adapter` |
-| `03-project-set/dbt_project.yml` | multi-file (root) | `dbt` ≥ 0.85 | valid | `multi-file`, `dbt-project`, `materialization-config`, `pending-adapter` |
-| `03-project-set/fct_orders.sql` ⚠ | multi-file (member) | `dbt` (no guarantee) | valid | `multi-file`, `ref`, `lineage`, `pending-adapter` |
-| `03-project-set/schema.yml` | multi-file (member) | `dbt` (no guarantee) | valid | `multi-file`, `models`, `relationships`, `pending-adapter` |
-| `03-project-set/stg_orders.sql` | multi-file (member) | `dbt` (no guarantee) | valid | `multi-file`, `source`, `lineage`, `pending-adapter` |
-| `04-stress-contracts-sources-and-exposures.yml` | stress | `dbt` ≥ 0.85 | valid | `contract`, `constraints`, `sources`, `freshness`, `versions`, `seeds`, `snapshots`, `exposures`, `package-test`, `severity`, `pending-adapter` |
-| `05-real-world-manifest.json` | real-world | `dbt` ≥ 0.85 | valid | `manifest`, `nodes`, `test-metadata`, `parent-map`, `child-map`, `exposures`, `pending-adapter` |
-| `06-semantic-manifest.yml` | typical | `dbt` ≥ 0.85 | valid | `semantic-models`, `entities`, `dimensions`, `measures`, `metrics`, `derived-metric`, `pending-adapter` |
-| `07-composition-model-inheritance.yml` | composition | `dbt` ≥ 0.85 | valid | `yaml-anchors`, `shared-column-groups`, `shared-tests`, `versions`, `pending-adapter` |
-| `negative/01-syntactic-bad-indentation.yml` | — | `dbt` (no guarantee) | invalid | `negative`, `syntactic`, `bad-indentation`, `pending-adapter` |
-| `negative/02-semantic-no-models.yml` | — | `dbt` (no guarantee) | invalid | `negative`, `semantic`, `no-resources`, `pending-adapter` |
-| `negative/03-truncated-mid-test.yml` | — | `dbt` (no guarantee) | invalid | `negative`, `truncated`, `mid-flow-sequence`, `pending-adapter` |
-| `negative/04-wrong-format-odcs.yaml` | — | `dbt` (no guarantee) | invalid | `negative`, `wrong-format`, `odcs`, `pending-adapter` |
-| `negative/05-encoding-utf16.yml` | — | `dbt` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
-| `negative/06-unresolvable-ref.yml` ⚠ | — | `dbt` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `broken-ref`, `pending-adapter` |
+| `01-minimal-schema.yml` | minimal | `dbt` ≥ 0.85 | valid | `models`, `columns` |
+| `02-typical-schema.yml` | typical | `dbt` ≥ 0.85 | valid | `not-null`, `unique`, `accepted-values`, `relationships`, `meta`, `tags` |
+| `03-project-set/dbt_project.yml` | multi-file (root) | `dbt` ≥ 0.85 | valid | `multi-file`, `dbt-project`, `materialization-config` |
+| `03-project-set/fct_orders.sql` ⚠ | multi-file (member) | `dbt` (no guarantee) | valid | `multi-file`, `ref`, `lineage` |
+| `03-project-set/schema.yml` | multi-file (member) | `dbt` (no guarantee) | valid | `multi-file`, `models`, `relationships` |
+| `03-project-set/stg_orders.sql` | multi-file (member) | `dbt` (no guarantee) | valid | `multi-file`, `source`, `lineage` |
+| `04-stress-contracts-sources-and-exposures.yml` | stress | `dbt` ≥ 0.85 | valid | `contract`, `constraints`, `sources`, `freshness`, `versions`, `seeds`, `snapshots`, `exposures`, `package-test`, `severity` |
+| `05-real-world-manifest.json` | real-world | `dbt` ≥ 0.85 | valid | `manifest`, `nodes`, `test-metadata`, `parent-map`, `child-map`, `exposures` |
+| `06-semantic-manifest.yml` | typical | `dbt` ≥ 0.85 | valid | `semantic-models`, `entities`, `dimensions`, `measures`, `metrics`, `derived-metric` |
+| `07-composition-model-inheritance.yml` | composition | `dbt` ≥ 0.85 | valid | `yaml-anchors`, `shared-column-groups`, `shared-tests`, `versions` |
+| `negative/01-syntactic-bad-indentation.yml` | — | `dbt` (no guarantee) | invalid | `negative`, `syntactic`, `bad-indentation` |
+| `negative/02-semantic-no-models.yml` | — | `dbt` (no guarantee) | invalid | `negative`, `semantic`, `no-resources` |
+| `negative/03-truncated-mid-test.yml` | — | `dbt` (no guarantee) | invalid | `negative`, `truncated`, `mid-flow-sequence` |
+| `negative/04-wrong-format-odcs.yaml` | — | `dbt` (no guarantee) | invalid | `negative`, `wrong-format`, `odcs` |
+| `negative/05-encoding-utf16.yml` | — | `dbt` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+| `negative/06-unresolvable-ref.yml` ⚠ | — | `dbt` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `broken-ref` |
 
 > ⚠ **`03-project-set/fct_orders.sql`** — Fileset member: the model SQL whose ref() calls are the lineage edges; not independently detectable as dbt.
 
