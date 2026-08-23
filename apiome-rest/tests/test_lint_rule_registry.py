@@ -12,6 +12,8 @@ from pathlib import Path
 
 from app.lint_engine import (
     available_lint_formats,
+    available_lint_paradigms,
+    get_paradigm_rule_pack,
     get_rule_pack,
     lint_canonical_model,
     unconditional_rule_packs,
@@ -40,13 +42,19 @@ def _all_engine_rule_ids() -> set:
     """The union of rule ids across every lint engine the registry aggregates.
 
     Includes the intake-stage catalogue (MFI-29.4): those rules fire while a source is being
-    ingested rather than from a model rule pack, so they have no engine to read them from.
+    ingested rather than from a model rule pack, so they have no engine to read them from —
+    and every *paradigm* pack (FMT-5.5), which the engine dispatches on ``api.paradigm``
+    rather than on a format key.
     """
     ids = set(OPENAPI_RULES) | set(INTAKE_RULES)
     # Every pack the engine runs for all formats — the common pack and the IXH-5.4
     # example-conformance pack — taken from the engine itself rather than listed here.
     for pack in unconditional_rule_packs():
         ids.update(rule.rule_id for rule in pack.rules())
+    for paradigm_key in available_lint_paradigms():
+        paradigm_cls = get_paradigm_rule_pack(paradigm_key)
+        assert paradigm_cls is not None
+        ids.update(rule.rule_id for rule in paradigm_cls().rules())
     for format_key in available_lint_formats():
         pack_cls = get_rule_pack(format_key)
         assert pack_cls is not None

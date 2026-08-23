@@ -761,14 +761,14 @@
   },
   "fingerprint": "sha256:8ad6078441eaa802195c37547f39626089a43dbf90292da4f71a35f28a2517a5",
   "lint": {
-    "findings": 18,
-    "grade": "C",
-    "report_fingerprint": "024e848e0808c6f5a4b5771ccb685a432fb6fba130bd4ee932fd032a6418a071",
-    "score": 73,
+    "findings": 26,
+    "grade": "F",
+    "report_fingerprint": "5034c4b1004a8ba3226e22a32c3a0f9394f477a2647aeb75f811adc9d50ab669",
+    "score": 50,
     "severity_counts": {
       "error": 0,
-      "info": 15,
-      "warning": 3
+      "info": 18,
+      "warning": 8
     }
   },
   "snapshot_version": 1

@@ -711,14 +711,14 @@
   },
   "fingerprint": "sha256:0d179a7e0676cd1ae7eb158bbe9765954c4435b50d11f5545ceeab6700eef93b",
   "lint": {
-    "findings": 9,
-    "grade": "A",
-    "report_fingerprint": "7b33fd5d8fae1b3bdb58e9f039765553519ddbda6eadb7b8bf0fa97fc28223c1",
-    "score": 91,
+    "findings": 19,
+    "grade": "D",
+    "report_fingerprint": "2b1e4bbd8336538d27d70d6673b50d082b0d6f17600fef8da87d98414b3c04d4",
+    "score": 60,
     "severity_counts": {
       "error": 0,
-      "info": 9,
-      "warning": 0
+      "info": 12,
+      "warning": 7
     }
   },
   "snapshot_version": 1

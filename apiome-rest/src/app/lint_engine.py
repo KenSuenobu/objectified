@@ -37,6 +37,14 @@ fingerprint-hasher (:mod:`app.fingerprint`) and breaking-change-classifier
   AsyncAPI pack, …). :func:`lint_canonical_model` runs the unconditional packs plus the format
   pack registered for ``api.format``, if any.
 
+* **Paradigm packs** (FMT-5.5) register under a *paradigm* key with ``register_paradigm=True``
+  and run for every artifact of that family, whatever syntax it arrived in. The data-contract
+  pack (:mod:`app.data_contract_lint`) is the first: "is there a reachable owner, a stated
+  service level, a documented retention window" are the same questions for an ODCS contract
+  and a dbt project, and neither is a question to ask a REST description. A paradigm pack may
+  also publish **category bars** (:meth:`RulePack.categories_for`) so a clean artifact still
+  shows it ran, and may **self-gate** to nothing for an artifact it has no standing to judge.
+
 The OpenAPI behavior is unchanged: :func:`app.schema_lint.lint_openapi_spec` remains the
 OpenAPI rule pack and reproduces its current findings exactly (its tests are untouched). Both
 linters share :func:`app.schema_lint.assemble_lint_result`, so the score / grade / fingerprint
@@ -77,8 +85,11 @@ __all__ = [
     "CommonRulePack",
     "lint_canonical_model",
     "register_rule_pack",
+    "register_paradigm_rule_pack",
     "get_rule_pack",
+    "get_paradigm_rule_pack",
     "available_lint_formats",
+    "available_lint_paradigms",
     "is_unstable_name",
     "load_format_rule_packs",
     "unconditional_rule_packs",
@@ -164,24 +175,59 @@ class RulePack(ABC):
     #: applies to every format and is never resolved through the registry (it always runs).
     format: ClassVar[str] = ""
 
+    #: Paradigm this pack applies to, matched against
+    #: :attr:`app.canonical_model.CanonicalApi.paradigm` (FMT-5.5, #5443). A *paradigm* pack
+    #: asks questions that hold for a whole family of formats rather than for one syntax —
+    #: a data contract's ownership, service level and quality expectations are the same
+    #: questions whether the source was ODCS, dbt or a Connect schema. Empty means the pack
+    #: is not paradigm-scoped.
+    paradigm: ClassVar[str] = ""
+
+    #: Categories this pack always contributes to the report's per-category rollup, even
+    #: with no findings, so a clean artifact still publishes the bar. Empty for a pack whose
+    #: categories are whatever its findings happened to carry.
+    base_categories: ClassVar[Tuple[str, ...]] = ()
+
     #: Stable identifier recorded on findings/diagnostics; defaults to the class name.
     pack_id: ClassVar[str] = ""
 
-    def __init_subclass__(cls, *, register: bool = False, **kwargs: Any) -> None:
-        """Optionally self-register a concrete subclass in the rule-pack registry.
+    def __init_subclass__(
+        cls, *, register: bool = False, register_paradigm: bool = False, **kwargs: Any
+    ) -> None:
+        """Optionally self-register a concrete subclass in one of the rule-pack registries.
 
         Args:
-            register: When ``True``, the subclass is added to the registry under its
-                :attr:`format` key as soon as it is defined.
+            register: When ``True``, the subclass is added to the *format* registry under
+                its :attr:`format` key as soon as it is defined.
+            register_paradigm: When ``True``, the subclass is added to the *paradigm*
+                registry under its :attr:`paradigm` key as soon as it is defined.
         """
         super().__init_subclass__(**kwargs)
         if register:
             register_rule_pack(cls)
+        if register_paradigm:
+            register_paradigm_rule_pack(cls)
 
     @abstractmethod
     def rules(self) -> List[LintRule]:
         """Return this pack's rules in deterministic execution order."""
         raise NotImplementedError
+
+    def categories_for(self, api: CanonicalApi) -> Tuple[str, ...]:
+        """Return the category bars this pack publishes for ``api``, even with no findings.
+
+        The default is :attr:`base_categories`. A pack that **self-gates** — one that
+        contributes nothing for an artifact it has no standing to judge — overrides this to
+        return ``()`` for that artifact, so a report cannot claim a clean bar for a pack that
+        never ran.
+
+        Args:
+            api: The canonical artifact about to be linted.
+
+        Returns:
+            The category names to publish.
+        """
+        return tuple(self.base_categories)
 
     def lint(self, api: CanonicalApi) -> List[LintFinding]:
         """Run every rule in this pack over ``api`` and collect their findings.
@@ -237,6 +283,80 @@ def register_rule_pack(cls: type[RulePack]) -> type[RulePack]:
     return cls
 
 
+# Paradigm-key -> rule-pack-class registry (FMT-5.5, #5443). Separate from the format
+# registry because the two are different questions and a pack answers exactly one of them:
+# a *format* pack knows a syntax's own hygiene, a *paradigm* pack knows what an artifact of
+# that family has to state regardless of which syntax stated it.
+_PARADIGM_RULE_PACK_REGISTRY: Dict[str, type[RulePack]] = {}
+
+
+def _paradigm_key(paradigm: Any) -> str:
+    """Normalize a paradigm to its registry key.
+
+    :class:`~app.canonical_model.ApiParadigm` is a ``str`` enum, and ``str(member)`` renders
+    as ``ApiParadigm.DATA_SCHEMA`` rather than ``data_schema`` on Python 3.11+. Both the
+    registration side (which is handed an enum member as a class attribute) and the lookup
+    side (which is handed ``api.paradigm``) go through here, so the two cannot disagree
+    about the key — which is exactly how a pack silently stops running.
+
+    Args:
+        paradigm: An :class:`~app.canonical_model.ApiParadigm`, its string value, or ``""``.
+
+    Returns:
+        The paradigm's string value, or ``""`` when there is none.
+    """
+    value = getattr(paradigm, "value", paradigm)
+    return str(value) if value else ""
+
+
+def register_paradigm_rule_pack(cls: type[RulePack]) -> type[RulePack]:
+    """Register a concrete :class:`RulePack` under its ``paradigm`` key.
+
+    Args:
+        cls: A concrete :class:`RulePack` subclass with a non-empty ``paradigm``.
+
+    Returns:
+        ``cls`` unchanged, so this can also be used as a class decorator.
+
+    Raises:
+        ValueError: If ``cls.paradigm`` is empty, or a *different* class is already
+            registered under the same paradigm key (re-registering the same class is a
+            no-op, so module re-import is safe).
+    """
+    key = _paradigm_key(cls.paradigm)
+    if not key:
+        raise ValueError(
+            f"{cls.__name__} must set a non-empty `paradigm` to register as a paradigm pack"
+        )
+    existing = _PARADIGM_RULE_PACK_REGISTRY.get(key)
+    if existing is not None and existing is not cls:
+        raise ValueError(
+            f"paradigm rule pack for {key!r} already registered to {existing.__name__}; "
+            f"cannot re-register to {cls.__name__}"
+        )
+    _PARADIGM_RULE_PACK_REGISTRY[key] = cls
+    return cls
+
+
+def get_paradigm_rule_pack(paradigm: Any) -> Optional[type[RulePack]]:
+    """Return the rule-pack class registered for ``paradigm``, or ``None``.
+
+    Args:
+        paradigm: An :class:`~app.canonical_model.ApiParadigm` or its string value.
+
+    Returns:
+        The registered pack class, or ``None`` when the paradigm has none.
+    """
+    load_format_rule_packs()
+    return _PARADIGM_RULE_PACK_REGISTRY.get(_paradigm_key(paradigm))
+
+
+def available_lint_paradigms() -> List[str]:
+    """Return the sorted paradigm keys that have a registered rule pack."""
+    load_format_rule_packs()
+    return sorted(_PARADIGM_RULE_PACK_REGISTRY)
+
+
 def get_rule_pack(format_key: str) -> Optional[type[RulePack]]:
     """Return the rule-pack class registered for ``format_key``, or ``None``."""
     load_format_rule_packs()
@@ -284,6 +404,10 @@ def load_format_rule_packs() -> None:
     from . import k8s_crd_lint as _k8s_crd_lint  # noqa: F401
     # LLM tool-bundle lint pack (IXH-7.3): registers under ``llm-tools``.
     from . import llm_tools_lint as _llm_tools_lint  # noqa: F401
+
+    # Data-contract lint pack (FMT-5.5): registers under the ``data_schema`` *paradigm*,
+    # so it runs for every data-schema artifact rather than for one format key.
+    from . import data_contract_lint as _data_contract_lint  # noqa: F401
 
 
 # ===========================================================================
@@ -597,8 +721,18 @@ def lint_canonical_model(
     findings.extend(_COMMON.lint(api))
     findings.extend(_example_conformance_pack().lint(api))
 
+    base_categories: Tuple[str, ...] = ()
+    paradigm_cls = get_paradigm_rule_pack(api.paradigm)
+    if paradigm_cls is not None:
+        paradigm_pack = paradigm_cls()
+        findings.extend(paradigm_pack.lint(api))
+        # A paradigm pack's category bars are published even on a clean artifact, so a
+        # consumer can tell "scored by this pack and clean" from "never scored by it" — and
+        # a pack that self-gated for this artifact publishes none, so the distinction holds.
+        base_categories = paradigm_pack.categories_for(api)
+
     pack_cls = get_rule_pack(api.format)
     if pack_cls is not None:
         findings.extend(pack_cls().lint(api))
 
-    return assemble_lint_result(findings)
+    return assemble_lint_result(findings, base_categories=base_categories)

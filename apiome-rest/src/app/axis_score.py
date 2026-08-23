@@ -12,8 +12,11 @@ Algorithm id ``clx-axis-v1``:
 * **security** (MCP only) — scored from native findings whose ``category`` is ``security``.
 * **compatibility** (catalog only) — scored from findings whose ``category`` is
   ``compatibility`` when a base revision comparison produced them.
-* **protocol / supply_chain / supportability** — explicit not assessed until their scanners
-  exist (later CLX work).
+* **supportability** — scored from a data-schema artifact's ``governance`` findings when
+  FMT-5.5's data-contract ruleset produced them (ownership, SLA, freshness, retention,
+  serving location); explicit not assessed for every other subject.
+* **protocol / supply_chain** — explicit not assessed until their scanners exist (later
+  CLX work).
 
 Composite is published only when required coverage is present (v1: ``quality`` assessed).
 Participating axes are assessed axes whose coverage state is not ``none``. Weights are equal
@@ -27,7 +30,7 @@ Pure and deterministic: no DB or network access. Persistence lives with callers 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, Tuple
 
 from .lint_evidence import (
     COVERAGE_FULL,
@@ -45,7 +48,14 @@ from .schema_lint import GRADE_THRESHOLDS, PER_RULE_PENALTY_CAP, SEVERITY_PENALT
 ALGORITHM_ID = "clx-axis-v1"
 
 #: Implementation revision of :data:`ALGORITHM_ID` (stored alongside for audit).
-ALGORITHM_VERSION = "1"
+#:
+#: ``2`` (FMT-5.5, #5443): the supportability axis became assessable. The axis *set*, the
+#: weights and the composite formula are unchanged — which is why the algorithm id stays
+#: ``clx-axis-v1`` — but a data contract's governance findings now score their own axis
+#: instead of quality, so an evaluation stored before this revision and one stored after
+#: are not directly comparable for a ``data_schema`` subject. Every other subject is
+#: byte-identical.
+ALGORITHM_VERSION = "2"
 
 #: Repository-relative guide documenting :data:`ALGORITHM_ID` / :data:`ALGORITHM_VERSION`
 #: (CLX-4.3, #4861). Displayed algorithm chips in the UI link here.
@@ -91,6 +101,16 @@ REASON_SECURITY_CATALOG = "No security scanner evidence for catalog revisions ye
 REASON_COMPAT_MCP = "Compatibility axis applies to catalog revisions"
 REASON_COMPAT_NO_BASE = "No base-revision compatibility evidence"
 REASON_QUALITY_MISSING = "No quality score has been captured for this subject yet"
+
+#: The lint category FMT-5.5's data-contract rule pack scores under. Its presence in a
+#: report's ``categories`` rollup is how this module tells a report that *was* scored by
+#: that pack from one that was not: the pack publishes the bar as a base category, so a
+#: clean data contract still carries it while an API-paradigm report never does.
+GOVERNANCE_CATEGORY = "governance"
+
+#: Stable id of the data-schema-paradigm ruleset that feeds the supportability axis.
+#: Recorded on the axis so a reader can tell *which* ruleset assessed it.
+DATA_CONTRACT_RULESET_ID = "data-contract"
 
 
 @dataclass(frozen=True)
@@ -203,6 +223,15 @@ def _assessed(
     }
 
 
+#: Finding categories scored on an axis of their own, and therefore excluded from the
+#: quality axis's severity tallies so no finding is counted twice.
+_REMAPPED_CATEGORIES: Tuple[str, ...] = (
+    AXIS_SECURITY,
+    AXIS_COMPATIBILITY,
+    GOVERNANCE_CATEGORY,
+)
+
+
 def _finding_category(finding: Mapping[str, Any]) -> str:
     return str(finding.get("category") or "").strip().lower()
 
@@ -229,7 +258,7 @@ def _quality_axis(
     quality_findings = [
         f
         for f in findings
-        if _finding_category(f) not in (AXIS_SECURITY, AXIS_COMPATIBILITY)
+        if _finding_category(f) not in _REMAPPED_CATEGORIES
     ]
     report_counts = report.get("severity_counts")
     axis = _assessed(
@@ -241,7 +270,7 @@ def _quality_axis(
     # Prefer the report's own severity_counts for quality when no remapping occurred,
     # so the axis matches the legacy report headline for typical catalog runs.
     if isinstance(report_counts, Mapping) and not any(
-        _finding_category(f) in (AXIS_SECURITY, AXIS_COMPATIBILITY) for f in findings
+        _finding_category(f) in _REMAPPED_CATEGORIES for f in findings
     ):
         axis["severity_counts"] = {
             "error": int(report_counts.get("error") or 0),
@@ -302,6 +331,54 @@ def _protocol_axis(
         findings=findings,
         coverage_state=coverage_state,
     )
+
+
+def _report_categories(report: Mapping[str, Any]) -> Set[str]:
+    """Return the category names a report's per-category rollup carries."""
+    names: Set[str] = set()
+    for entry in report.get("categories") or []:
+        if isinstance(entry, Mapping):
+            name = entry.get("name")
+            if isinstance(name, str) and name.strip():
+                names.add(name.strip().lower())
+    return names
+
+
+def _supportability_axis(
+    report: Mapping[str, Any], *, findings: Sequence[Mapping[str, Any]]
+) -> Dict[str, Any]:
+    """Assess the supportability axis from the FMT-5.5 data-contract ruleset (#5443).
+
+    This axis was declared by CLX-1.2 and has always read *not assessed* — nothing scored
+    whether an artifact could actually be operated and supported. For a **data-schema**
+    artifact that is exactly what the data-contract rule pack asks: is there a reachable
+    owner, a stated service level, a freshness promise, a documented retention window, a
+    support channel, a serving location. So when a report was scored by that ruleset, its
+    ``governance`` findings fill the axis in.
+
+    The signal is the report's own ``governance`` category bar rather than a caller-supplied
+    flag, so every existing entry point (import scoring, the lint routes, the repository
+    sweep) gets the axis without threading a new argument through — and an API-paradigm
+    report, which never carries that bar, is untouched.
+
+    Args:
+        report: The native lint report dict.
+        findings: The report's findings.
+
+    Returns:
+        The axis payload: assessed from the governance findings when the ruleset ran,
+        otherwise the pre-FMT-5.5 *not assessed* state.
+    """
+    if GOVERNANCE_CATEGORY not in _report_categories(report):
+        return _not_assessed(AXIS_SUPPORTABILITY, REASON_SUPPORTABILITY)
+    governance = _filter_by_category(findings, GOVERNANCE_CATEGORY)
+    axis = _assessed(
+        AXIS_SUPPORTABILITY,
+        score_from_finding_dicts(governance),
+        findings=governance,
+    )
+    axis["ruleset"] = DATA_CONTRACT_RULESET_ID
+    return axis
 
 
 def _supply_chain_axis(
@@ -469,7 +546,7 @@ def evaluate_axes(
         _protocol_axis(subject_type, conformance_report),
         _security_axis(subject_type, findings),
         _supply_chain_axis(subject_type, posture_report),
-        _not_assessed(AXIS_SUPPORTABILITY, REASON_SUPPORTABILITY),
+        _supportability_axis(report, findings=findings),
         _compatibility_axis(
             subject_type, findings, compatibility_compared=compatibility_compared
         ),
@@ -512,7 +589,8 @@ def axis_key_for_finding(
       axes wholesale (their ``category`` values — ``readiness``, ``metadata``, ``source`` …
       — are scanner-internal vocabularies, and ``protocol`` appears in both).
     * Surface-lint findings split by category: ``security`` and ``compatibility`` map to
-      their axes; everything else is definition quality.
+      their axes, FMT-5.5's ``governance`` findings map to ``supportability``, and
+      everything else is definition quality.
 
     Args:
         category: The finding's envelope ``category`` value, if any.
@@ -529,6 +607,8 @@ def axis_key_for_finding(
         return AXIS_SECURITY
     if normalized == AXIS_COMPATIBILITY:
         return AXIS_COMPATIBILITY
+    if normalized == GOVERNANCE_CATEGORY:
+        return AXIS_SUPPORTABILITY
     return AXIS_QUALITY
 
 

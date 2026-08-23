@@ -524,16 +524,56 @@ def blocking_rules_for_engine(engine: str) -> List[BlockingRuleMeta]:
     )
 
 
+def _pack_transparency() -> Mapping[str, Mapping[str, Any]]:
+    """Rule id -> transparency fields published by a **non-blocking** rule pack (FMT-5.5).
+
+    :data:`BLOCKING_RULES` is, by construction, only for rules that can fail a gate: its
+    ``__post_init__`` refuses any severity but ``error``. FMT-5.5's acceptance criterion —
+    "each rule has an id, severity, message, remediation text and a fixture" — applies to a
+    pack whose rules are all advisory, so a pack that carries the same metadata beside its
+    own catalogue publishes it through here instead. The blocking catalogue still wins for
+    any id it holds, so this can never weaken a gate rule's published contract.
+
+    Imported inside the function: :mod:`app.data_contract_lint` imports the lint engine,
+    which imports the rule registry, which imports this module.
+
+    Returns:
+        The pack-supplied transparency map, keyed by rule id.
+    """
+    from .data_contract_lint import DATA_CONTRACT_RULES
+
+    return {
+        rule_id: {
+            "remediation": meta.remediation,
+            "fixture_id": meta.fixture_id,
+            "docs_page": "docs/guide/lint-rules.md",
+            "docs_anchor": docs_anchor_for(rule_id),
+            "reference": _SCHEMA_REF + "#" + docs_anchor_for(rule_id),
+        }
+        for rule_id, meta in DATA_CONTRACT_RULES.items()
+    }
+
+
 def enrich_rule_dict(payload: Mapping[str, Any], rule_id: Optional[str] = None) -> Dict[str, Any]:
-    """Merge transparency fields onto a rule-catalog payload dict when the rule is blocking.
+    """Merge transparency fields onto a rule-catalog payload dict.
 
     Existing keys in ``payload`` win for identity fields; transparency fills remediation,
-    reference (when absent), false-positive guidance, fixture id, and scan modes.
+    reference (when absent), false-positive guidance, fixture id, and scan modes. Blocking
+    rules are served from :data:`BLOCKING_RULES`; a non-blocking rule whose pack publishes
+    its own remediation and fixture (FMT-5.5) is served from :func:`_pack_transparency`.
     """
     out = dict(payload)
     rid = rule_id or str(out.get("rule_id") or out.get("ruleId") or "")
     meta = BLOCKING_RULES.get(rid)
     if meta is None:
+        supplied = _pack_transparency().get(rid)
+        if supplied is None:
+            return out
+        out.setdefault("reference", supplied["reference"])
+        out["remediation"] = supplied["remediation"]
+        out["fixture_id"] = supplied["fixture_id"]
+        out.setdefault("docs_page", supplied["docs_page"])
+        out.setdefault("docs_anchor", supplied["docs_anchor"])
         return out
     out.setdefault("reference", meta.reference)
     out["remediation"] = meta.remediation

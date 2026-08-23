@@ -556,14 +556,14 @@
   },
   "fingerprint": "sha256:a6e97d868b96eef7d0061608fd88b323206e0513db549e8ec68c46684737ef37",
   "lint": {
-    "findings": 6,
+    "findings": 7,
     "grade": "A",
-    "report_fingerprint": "d1b3121055d68d0720940716bc7396dac9aaaa90c59acd39e19609fc296df55b",
-    "score": 94,
+    "report_fingerprint": "6ab7b40fcce89a06bfe00776b2166949b8016531bfb07270cb34ef1300f40fd3",
+    "score": 90,
     "severity_counts": {
       "error": 0,
       "info": 6,
-      "warning": 0
+      "warning": 1
     }
   },
   "snapshot_version": 1

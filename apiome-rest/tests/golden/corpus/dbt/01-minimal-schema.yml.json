@@ -113,14 +113,14 @@
   },
   "fingerprint": "sha256:403719b536d44dce98a39105cb9fb5034cd55740c8c892e9956eabbc259cd298",
   "lint": {
-    "findings": 1,
-    "grade": "A",
-    "report_fingerprint": "d40abeffb40525b211a2d4744383f8fb6dc1f14079e584833c882868f78eb27d",
-    "score": 99,
+    "findings": 10,
+    "grade": "C",
+    "report_fingerprint": "9565b8be984b4fa430d678375a8b4816351f22a6395aae792cccc120c2280c84",
+    "score": 75,
     "severity_counts": {
       "error": 0,
-      "info": 1,
-      "warning": 0
+      "info": 5,
+      "warning": 5
     }
   },
   "snapshot_version": 1

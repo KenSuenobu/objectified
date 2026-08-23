@@ -70,8 +70,30 @@ X-API-Key: <your-api-key>
 Returns every registered built-in rule with its stable id, pack, category, default severity,
 one-line rationale, and a docs anchor into [lint-rules.md](lint-rules.md). Blocking (`error`)
 rules also include reference, remediation, false-positive guidance, and corpus fixture ids
-(CLX-4.3). The catalog is the same for every tenant; style guides layer per-tenant overrides
-on top of it.
+(CLX-4.3); so do the rules of the `data-contract` pack, which publishes its own remediation
+and fixture for every rule even though none of them blocks. The catalog is the same for every
+tenant; style guides layer per-tenant overrides on top of it.
+
+### Data contracts score against their own rules
+
+A catalog item imported from ODCS or dbt is a *data contract*, and its quality is a different
+set of questions from an API description's. The `data-contract` pack asks them: is there a
+reachable owner, a stated service level, a freshness expectation, a documented retention
+window, are the columns described, is a row identifiable, are the columns that carry personal
+data marked, is there a declared check on the ones that matter, is it versioned, does it say
+whether it is draft or active, and does it say where it is served. Findings land in the
+`governance` category and score the **supportability** axis (see
+[axis-score.md](axis-score.md)).
+
+The pack runs on the `data_schema` *paradigm* rather than on a format key, so a new
+data-contract format is covered without a new pack — and it deliberately does **not** run for
+a schema language (Avro, XSD, RELAX NG, CDDL, a Kafka Connect schema), which has no syntax in
+which to state an owner or an SLA.
+
+Every rule ships at `warning` or `info`: a rule pack does not get to fail every existing
+item's gate on upgrade. A tenant that wants a data contract **required before publish**
+enables the `data-contract.*` ids in a style guide at `error`, and assigns that guide to the
+project — re-scoring under the guide is what makes the requirement binding.
 
 Multi-axis evaluations display algorithm `clx-axis-v1` — see [axis-score.md](axis-score.md).
 Scanner-evaluation corpus and adapter deprecation policy:

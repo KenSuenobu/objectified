@@ -475,14 +475,14 @@
   },
   "fingerprint": "sha256:f78c00e8973c199a88fee8da7d3acf8117a7f4a048a3b525df9d4d2801e6d98b",
   "lint": {
-    "findings": 14,
-    "grade": "B",
-    "report_fingerprint": "7e13f7bc6ebac228a0120b50e087509a567482d1776ffe103d9a9a1b5fe20f5c",
-    "score": 80,
+    "findings": 24,
+    "grade": "F",
+    "report_fingerprint": "15a815f03f5f1d065cc49745ba5758bf2ed1739d28542874dd84cf27ce208636",
+    "score": 46,
     "severity_counts": {
       "error": 0,
-      "info": 12,
-      "warning": 2
+      "info": 14,
+      "warning": 10
     }
   },
   "snapshot_version": 1

@@ -1,0 +1,94 @@
+{
+  "kind": "catalog_data_contract",
+  "id": "catalog/data-contract-server-missing",
+  "source_format": "odcs",
+  "description": "Compliant ODCS data contract with exactly one defect: data-contract.server-missing.",
+  "document": {
+    "apiVersion": "v3.1.0",
+    "kind": "DataContract",
+    "id": "5f6b1c22-0000-4000-8000-00000000f55a",
+    "name": "orders",
+    "version": "1.2.0",
+    "status": "active",
+    "domain": "commerce",
+    "description": {
+      "purpose": "Order facts, one row per order."
+    },
+    "team": [
+      {
+        "username": "commerce-analytics",
+        "name": "Commerce Analytics",
+        "role": "owner"
+      }
+    ],
+    "support": [
+      {
+        "channel": "#commerce-data",
+        "url": "https://slack.example.com/commerce-data"
+      }
+    ],
+    "slaProperties": [
+      {
+        "property": "frequency",
+        "value": 1,
+        "unit": "d",
+        "element": "orders.placed_at"
+      },
+      {
+        "property": "retention",
+        "value": 400,
+        "unit": "d",
+        "element": "orders.placed_at"
+      }
+    ],
+    "schema": [
+      {
+        "name": "orders",
+        "logicalType": "object",
+        "physicalType": "table",
+        "description": "Order facts.",
+        "properties": [
+          {
+            "name": "order_id",
+            "logicalType": "string",
+            "description": "Business identifier of the order.",
+            "required": true,
+            "primaryKey": true,
+            "primaryKeyPosition": 1
+          },
+          {
+            "name": "customer_email",
+            "logicalType": "string",
+            "description": "Contact address for the order.",
+            "classification": "restricted",
+            "criticalDataElement": true,
+            "quality": [
+              {
+                "type": "library",
+                "rule": "nullCount",
+                "mustBe": 0,
+                "dimension": "completeness"
+              }
+            ]
+          },
+          {
+            "name": "placed_at",
+            "logicalType": "date",
+            "description": "When the order was placed, UTC.",
+            "required": true
+          },
+          {
+            "name": "total_amount",
+            "logicalType": "number",
+            "description": "Order total in the order currency."
+          },
+          {
+            "name": "currency",
+            "logicalType": "string",
+            "description": "ISO 4217 currency code."
+          }
+        ]
+      }
+    ]
+  }
+}

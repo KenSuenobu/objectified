@@ -28,6 +28,8 @@ We continue to improve the platform based on your feedback with improvements and
     - Kafka Connect schema import and export
     - dbt model and semantic-manifest import
   - Linting rule pack updates for scoring new import types
+    - Data contracts are now scored on their own terms: ownership, service levels, freshness,
+      retention, column documentation, row identity, classification and declared quality checks
   - Added pills to supported format list to show the source and type that the API format provides
   - Every format now declares which versions it reads and writes, and which version an export produces by default
 
