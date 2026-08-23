@@ -1630,6 +1630,21 @@ async def run_adapter_import_job(
 
     # --- init -----------------------------------------------------------------
     state.event("ADAPTER_INIT", f"Importing via the {adapter.label!r} source ({adapter.key})")
+    # An adapter whose *reading* of a document is genuinely ambiguous can be steered by the
+    # request's options (FMT-5.6: `sql_dialect`). The default hook returns the adapter
+    # unchanged, so this is a no-op for every other source. An option the adapter owns and
+    # cannot honour is refused here, before any bytes are read, with its own taxonomy code.
+    try:
+        adapter = adapter.configure(options if isinstance(options, dict) else {})
+    except ImportSourceError as exc:
+        error_code = resolve_intake_error_code(getattr(exc, "code", None)) or "INPUT_SEMANTIC_INVALID"
+        state.event("ADAPTER_OPTION_ERROR", str(exc), level="error", context={"error_code": error_code})
+        cleanup_intake_tempfile(payload.get("document_path"))
+        return state.snapshot(
+            state="failed",
+            percent=_PCT_INIT,
+            error=build_job_error(error_code, str(exc), correlation_id=correlation_id),
+        )
     if options.get("incremental_mode"):
         state.event(
             "INCREMENTAL_MODE",

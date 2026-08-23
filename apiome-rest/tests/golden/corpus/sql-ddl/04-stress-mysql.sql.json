@@ -1,0 +1,943 @@
+{
+  "adapter": "sql-ddl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "sql_ddl": {
+        "capability_limits": [
+          {
+            "construct": "sql.check_constraint",
+            "count": 2,
+            "detail": "A `CHECK` constraint states a predicate over a row's values. The canonical constraint vocabulary has no predicate facet, so the expression is carried verbatim on the type or the column that declared it (`extras['sql_checks']`) and is never evaluated. The one shape with an exact analogue is decoded as well as carried: `col IN (<literals>)` also becomes the column's `enum`.",
+            "locations": [
+              "shop.product",
+              "shop.stock"
+            ]
+          },
+          {
+            "construct": "sql.column_clause",
+            "count": 2,
+            "detail": "A column clause this reader does not decode — a vendor storage attribute, a `SPARSE`/`FILESTREAM`/`ROWGUIDCOL` marker, an encryption or masking clause. It is skipped without changing the column's shape and counted here, so a document that leans on one is visible rather than silently simplified.",
+            "locations": [
+              "shop.product"
+            ]
+          },
+          {
+            "construct": "sql.computed_column",
+            "count": 2,
+            "detail": "A computed / generated column (`AS (<expr>) STORED|VIRTUAL|PERSISTED`, `GENERATED ALWAYS AS`) derives its value from other columns. The expression is carried in `extras['sql_generated']`; it is never evaluated, and where the declaration states no type the column is projected as a string, because the document did not say what the expression returns.",
+            "locations": [
+              "shop.product",
+              "shop.stock"
+            ]
+          },
+          {
+            "construct": "sql.default_expression",
+            "count": 2,
+            "detail": "A `DEFAULT` that is not a literal — `now()`, `SYSDATE`, `CURRENT_TIMESTAMP`, `NEXTVAL('seq')`, a `CASE` — is a value the *database* computes at insert time. The canonical `default` holds literals only, so the expression is carried verbatim in `extras['sql_default_expression']` rather than recorded as a value the document does not state.",
+            "locations": [
+              "shop.product"
+            ]
+          },
+          {
+            "construct": "sql.foreign_key",
+            "count": 1,
+            "detail": "A `FOREIGN KEY` names the table and columns a column points at. The canonical model has no edge vocabulary, so the edge is recorded on the field in `extras['sql_relationship']` — in the ODCS v3.1 property-level relationship shape (`type: foreignKey`, `to: <table>.<column>`), beside the canonical type and field keys it resolved to — and no canonical feature traverses it. A foreign key that names a table the import does not contain is refused rather than carried, because this is an edge the reader writes down.",
+            "locations": [
+              "shop.stock"
+            ]
+          },
+          {
+            "construct": "sql.identity",
+            "count": 1,
+            "detail": "`IDENTITY`, `AUTO_INCREMENT`, `GENERATED … AS IDENTITY` and the `SERIAL` family declare that the database assigns the value. The canonical model has no server-assigned facet — a default it cannot state is not a default — so the declaration is carried in `extras['sql_identity']` and the column keeps the scalar its type names.",
+            "locations": [
+              "shop.product"
+            ]
+          },
+          {
+            "construct": "sql.index",
+            "count": 3,
+            "detail": "An index — ordinary, `UNIQUE`, expression-based, filtered/partial, covering, `FULLTEXT` or `CLUSTERED` — states how a relation is *accessed*, not what shape it has. The declaration is carried in `extras['sql_indexes']` on the table it belongs to and creates no canonical structure.",
+            "locations": [
+              "shop.product"
+            ]
+          },
+          {
+            "construct": "sql.partitioning",
+            "count": 1,
+            "detail": "`PARTITION BY`, a partition list, and PostgreSQL's `PARTITION OF` state how a relation is *physically divided*. The canonical model describes one logical shape, so the clause is carried in `extras['sql_partitioning']`. A declarative partition child is still modelled as a relation, with the columns it inherits from its parent, because that is the shape a row in it has.",
+            "locations": [
+              "shop.price_history"
+            ]
+          },
+          {
+            "construct": "sql.schema_definition",
+            "count": 2,
+            "detail": "`CREATE SCHEMA`, `CREATE DATABASE` and `USE` establish the namespace later statements resolve against. The namespace *is* modelled — it is a type's `namespace` — but the statement's own options (owner, character set, collation, authorization) are carried in `extras['sql_schemas']`.",
+            "locations": []
+          },
+          {
+            "construct": "sql.set_type",
+            "count": 1,
+            "detail": "MySQL's `SET('a','b','c')` is a multi-valued column: zero or more members of a fixed list stored in one field. It is projected as a list of strings constrained to the declared members, which is its shape; that the database stores it as a single packed value, and orders the members by declaration, is not modelled.",
+            "locations": [
+              "shop.product"
+            ]
+          },
+          {
+            "construct": "sql.storage_clause",
+            "count": 4,
+            "detail": "`ENGINE`, `DEFAULT CHARSET`, `TABLESPACE`, `COMPRESS`, `WITH (...)` and the rest of a table's physical options describe storage, not structure, and are carried verbatim in `extras['sql_table_options']`.",
+            "locations": [
+              "shop.price_history",
+              "shop.product",
+              "shop.stock"
+            ]
+          },
+          {
+            "construct": "sql.type_parameters",
+            "count": 2,
+            "detail": "A type's parameters beyond a character length — `numeric(13,2)`, `TIMESTAMP(6)`, `FLOAT(24)`, `INTERVAL DAY(2) TO SECOND(6)` — have no canonical facet. The scalar comes from the type's base name and the full declared spelling is carried in `extras['sql_data_type']`, so nothing is lost and nothing is invented.",
+            "locations": [
+              "shop.product"
+            ]
+          },
+          {
+            "construct": "sql.uniqueness",
+            "count": 4,
+            "detail": "`PRIMARY KEY` and `UNIQUE` declare identity over the *rows* of a table. The canonical constraint vocabulary has no identity facet (`unique_items` is about the members of one array), so the declaration is carried on the type in `extras['sql_key']` and is not enforced. A primary key's columns *are* modelled as non-nullable, because SQL says they are.",
+            "locations": [
+              "shop.price_history",
+              "shop.product",
+              "shop.stock"
+            ]
+          }
+        ],
+        "current_schema": "shop",
+        "dialect": "mysql",
+        "dialect_evidence": [
+          "auto-increment",
+          "backtick-identifier",
+          "charset-clause",
+          "engine-clause",
+          "fulltext-key",
+          "inline-enum",
+          "mediumint",
+          "on-update-timestamp",
+          "set-type",
+          "unsigned-type",
+          "use-database"
+        ],
+        "dialect_label": "MySQL",
+        "dialect_source": "detected",
+        "relations": [
+          {
+            "key": "shop.price_history",
+            "kind": "table",
+            "name": "price_history"
+          },
+          {
+            "key": "shop.product",
+            "kind": "table",
+            "name": "product"
+          },
+          {
+            "key": "shop.stock",
+            "kind": "table",
+            "name": "stock"
+          }
+        ],
+        "relationships": [
+          {
+            "from": "shop.stock",
+            "from_column": "product_id",
+            "name": "stock_product_fk",
+            "to": "shop.product",
+            "to_column": "product_id"
+          }
+        ],
+        "statements": {
+          "ALTER TABLE": 2,
+          "CREATE SCHEMA": 1,
+          "CREATE TABLE": 3,
+          "USE": 1
+        }
+      },
+      "sql_schemas": [
+        {
+          "name": "shop",
+          "options": "DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_0900_ai_ci"
+        }
+      ]
+    },
+    "format": "sql-ddl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "shop",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "shop",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "product_id",
+                "valid_from"
+              ]
+            }
+          },
+          "sql_kind": "table",
+          "sql_partitioning": {
+            "clause": "PARTITION BY RANGE(YEAR(`valid_from`)) (PARTITION p2024 VALUES LESS THAN(2025), PARTITION p2025 VALUES LESS THAN(2026), PARTITION pmax VALUES LESS THAN MAXVALUE)"
+          },
+          "sql_position": 3,
+          "sql_table_options": {
+            "ENGINE": "InnoDB"
+          }
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "INT",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "shop.price_history.price_minor",
+            "name": "price_minor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "BIGINT UNSIGNED",
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "shop.price_history.product_id",
+            "name": "product_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "DATE",
+              "sql_position": 1
+            },
+            "field_number": null,
+            "key": "shop.price_history.valid_from",
+            "name": "valid_from",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "date",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "shop.price_history",
+        "key_type": null,
+        "kind": "record",
+        "name": "price_history",
+        "namespace": "shop",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Sellable products",
+        "enum_values": [],
+        "extras": {
+          "sql_checks": [
+            {
+              "expression": "`price_minor` >= 0",
+              "name": "product_price_non_negative"
+            }
+          ],
+          "sql_indexes": [
+            {
+              "columns": [
+                "kind",
+                "discontinued"
+              ],
+              "name": "product_kind_idx"
+            },
+            {
+              "columns": [
+                "name",
+                "search_blob"
+              ],
+              "kind": "fulltext",
+              "name": "product_search_ft"
+            },
+            {
+              "columns": [
+                "brand"
+              ],
+              "name": "product_brand_idx"
+            }
+          ],
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "product_id"
+              ]
+            },
+            "unique": [
+              {
+                "columns": [
+                  "sku"
+                ],
+                "name": "product_sku_uq"
+              }
+            ]
+          },
+          "sql_kind": "table",
+          "sql_position": 1,
+          "sql_table_options": {
+            "DEFAULT CHARSET": "utf8mb4",
+            "ENGINE": "InnoDB"
+          }
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "JSON",
+              "sql_position": 8
+            },
+            "field_number": null,
+            "key": "shop.product.attributes",
+            "name": "attributes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "json",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 60,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "VARCHAR(60)",
+              "sql_position": 14
+            },
+            "field_number": null,
+            "key": "shop.product.brand",
+            "name": "brand",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "web",
+                "store",
+                "partner"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "SET('web', 'store', 'partner')",
+              "sql_position": 4
+            },
+            "field_number": null,
+            "key": "shop.product.channels",
+            "name": "channels",
+            "type": {
+              "extras": {},
+              "item": {
+                "extras": {},
+                "item": null,
+                "name": "string",
+                "nullable": true
+              },
+              "name": null,
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "DATETIME",
+              "sql_default_expression": "CURRENT_TIMESTAMP",
+              "sql_position": 12
+            },
+            "field_number": null,
+            "key": "shop.product.created_at",
+            "name": "created_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 3,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": "EUR",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "CHAR(3)",
+              "sql_position": 6
+            },
+            "field_number": null,
+            "key": "shop.product.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": 0,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "TINYINT(1)",
+              "sql_position": 11
+            },
+            "field_number": null,
+            "key": "shop.product.discontinued",
+            "name": "discontinued",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int8",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "physical",
+                "digital",
+                "service"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": "physical",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "ENUM('physical', 'digital', 'service')",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "shop.product.kind",
+            "name": "kind",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 120,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "VARCHAR(120)",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "shop.product.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "DECIMAL(13, 2)",
+              "sql_generated": {
+                "expression": "`price_minor` / 100",
+                "mode": "always",
+                "storage": "stored"
+              },
+              "sql_position": 7
+            },
+            "field_number": null,
+            "key": "shop.product.price_major",
+            "name": "price_major",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": 0,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "INT",
+              "sql_position": 5
+            },
+            "field_number": null,
+            "key": "shop.product.price_minor",
+            "name": "price_minor",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "BIGINT UNSIGNED",
+              "sql_identity": {
+                "kind": "auto_increment"
+              },
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "shop.product.product_id",
+            "name": "product_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "TEXT",
+              "sql_position": 9
+            },
+            "field_number": null,
+            "key": "shop.product.search_blob",
+            "name": "search_blob",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 18,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "VARCHAR(18)",
+              "sql_position": 1
+            },
+            "field_number": null,
+            "key": "shop.product.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "DATETIME",
+              "sql_default_expression": "CURRENT_TIMESTAMP",
+              "sql_extra": {
+                "on_update": "CURRENT_TIMESTAMP"
+              },
+              "sql_position": 13
+            },
+            "field_number": null,
+            "key": "shop.product.updated_at",
+            "name": "updated_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "MEDIUMINT UNSIGNED",
+              "sql_position": 10
+            },
+            "field_number": null,
+            "key": "shop.product.weight_g",
+            "name": "weight_g",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "shop.product",
+        "key_type": null,
+        "kind": "record",
+        "name": "product",
+        "namespace": "shop",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_checks": [
+            {
+              "expression": "`on_hand` >= 0 AND `reserved` >= 0",
+              "name": "stock_non_negative"
+            }
+          ],
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "product_id",
+                "warehouse"
+              ]
+            }
+          },
+          "sql_kind": "table",
+          "sql_position": 2,
+          "sql_table_options": {
+            "ENGINE": "InnoDB"
+          }
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "INT",
+              "sql_generated": {
+                "expression": "`on_hand` - `reserved`",
+                "mode": "always",
+                "storage": "virtual"
+              },
+              "sql_position": 4
+            },
+            "field_number": null,
+            "key": "shop.stock.available",
+            "name": "available",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": 0,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "INT",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "shop.stock.on_hand",
+            "name": "on_hand",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "BIGINT UNSIGNED",
+              "sql_position": 0,
+              "sql_relationship": [
+                {
+                  "name": "stock_product_fk",
+                  "on_delete": "CASCADE",
+                  "on_update": "RESTRICT",
+                  "to": "shop.product.product_id",
+                  "to_columns": [
+                    "product_id"
+                  ],
+                  "to_field": "shop.product.product_id",
+                  "to_type": "shop.product",
+                  "type": "foreignKey"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "shop.stock.product_id",
+            "name": "product_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": 0,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "INT",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "shop.stock.reserved",
+            "name": "reserved",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 3,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "CHAR(3)",
+              "sql_position": 1
+            },
+            "field_number": null,
+            "key": "shop.stock.warehouse",
+            "name": "warehouse",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "shop.stock",
+        "key_type": null,
+        "kind": "record",
+        "name": "stock",
+        "namespace": "shop",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "sql-ddl/04-stress-mysql.sql",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.94,
+    "format": "sql-ddl"
+  },
+  "fingerprint": "sha256:fe3c5a921a567d80c32253e8b200275c6e4bac18150049c027f88430c42163ff",
+  "lint": {
+    "findings": 26,
+    "grade": "C",
+    "report_fingerprint": "38b5083bfe3b1e938fb60b42b8cf638133461bd9dd091848e08a0fa776e6646e",
+    "score": 71,
+    "severity_counts": {
+      "error": 0,
+      "info": 24,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

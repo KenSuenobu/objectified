@@ -1,0 +1,873 @@
+{
+  "adapter": "sql-ddl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "sql_ddl": {
+        "capability_limits": [
+          {
+            "construct": "sql.check_constraint",
+            "count": 3,
+            "detail": "A `CHECK` constraint states a predicate over a row's values. The canonical constraint vocabulary has no predicate facet, so the expression is carried verbatim on the type or the column that declared it (`extras['sql_checks']`) and is never evaluated. The one shape with an exact analogue is decoded as well as carried: `col IN (<literals>)` also becomes the column's `enum`.",
+            "locations": [
+              "commerce.customer",
+              "commerce.order",
+              "commerce.order_line"
+            ]
+          },
+          {
+            "construct": "sql.default_expression",
+            "count": 2,
+            "detail": "A `DEFAULT` that is not a literal — `now()`, `SYSDATE`, `CURRENT_TIMESTAMP`, `NEXTVAL('seq')`, a `CASE` — is a value the *database* computes at insert time. The canonical `default` holds literals only, so the expression is carried verbatim in `extras['sql_default_expression']` rather than recorded as a value the document does not state.",
+            "locations": [
+              "commerce.customer",
+              "commerce.order"
+            ]
+          },
+          {
+            "construct": "sql.foreign_key",
+            "count": 2,
+            "detail": "A `FOREIGN KEY` names the table and columns a column points at. The canonical model has no edge vocabulary, so the edge is recorded on the field in `extras['sql_relationship']` — in the ODCS v3.1 property-level relationship shape (`type: foreignKey`, `to: <table>.<column>`), beside the canonical type and field keys it resolved to — and no canonical feature traverses it. A foreign key that names a table the import does not contain is refused rather than carried, because this is an edge the reader writes down.",
+            "locations": [
+              "commerce.order",
+              "commerce.order_line"
+            ]
+          },
+          {
+            "construct": "sql.index",
+            "count": 3,
+            "detail": "An index — ordinary, `UNIQUE`, expression-based, filtered/partial, covering, `FULLTEXT` or `CLUSTERED` — states how a relation is *accessed*, not what shape it has. The declaration is carried in `extras['sql_indexes']` on the table it belongs to and creates no canonical structure.",
+            "locations": [
+              "commerce.customer",
+              "commerce.order"
+            ]
+          },
+          {
+            "construct": "sql.schema_definition",
+            "count": 1,
+            "detail": "`CREATE SCHEMA`, `CREATE DATABASE` and `USE` establish the namespace later statements resolve against. The namespace *is* modelled — it is a type's `namespace` — but the statement's own options (owner, character set, collation, authorization) are carried in `extras['sql_schemas']`.",
+            "locations": []
+          },
+          {
+            "construct": "sql.type_parameters",
+            "count": 3,
+            "detail": "A type's parameters beyond a character length — `numeric(13,2)`, `TIMESTAMP(6)`, `FLOAT(24)`, `INTERVAL DAY(2) TO SECOND(6)` — have no canonical facet. The scalar comes from the type's base name and the full declared spelling is carried in `extras['sql_data_type']`, so nothing is lost and nothing is invented.",
+            "locations": [
+              "commerce.order",
+              "commerce.order_line"
+            ]
+          },
+          {
+            "construct": "sql.uniqueness",
+            "count": 4,
+            "detail": "`PRIMARY KEY` and `UNIQUE` declare identity over the *rows* of a table. The canonical constraint vocabulary has no identity facet (`unique_items` is about the members of one array), so the declaration is carried on the type in `extras['sql_key']` and is not enforced. A primary key's columns *are* modelled as non-nullable, because SQL says they are.",
+            "locations": [
+              "commerce.customer",
+              "commerce.order",
+              "commerce.order_line"
+            ]
+          },
+          {
+            "construct": "sql.view_definition",
+            "count": 1,
+            "detail": "A view's `SELECT` is carried verbatim in `extras['sql_view']` and is never executed, planned or otherwise interpreted. The reader reads it only far enough to name the columns the view projects and to resolve the ones that are plain column references.",
+            "locations": [
+              "commerce.open_orders"
+            ]
+          }
+        ],
+        "dialect": "postgres",
+        "dialect_evidence": [
+          "enum-type",
+          "timestamptz",
+          "now-default"
+        ],
+        "dialect_label": "PostgreSQL",
+        "dialect_source": "detected",
+        "relations": [
+          {
+            "key": "commerce.customer",
+            "kind": "table",
+            "name": "customer"
+          },
+          {
+            "key": "commerce.open_orders",
+            "kind": "view",
+            "name": "open_orders"
+          },
+          {
+            "key": "commerce.order",
+            "kind": "table",
+            "name": "order"
+          },
+          {
+            "key": "commerce.order_line",
+            "kind": "table",
+            "name": "order_line"
+          }
+        ],
+        "relationships": [
+          {
+            "from": "commerce.order",
+            "from_column": "customer_id",
+            "name": "order_customer_fk",
+            "to": "commerce.customer",
+            "to_column": "customer_id"
+          },
+          {
+            "from": "commerce.order_line",
+            "from_column": "order_id",
+            "to": "commerce.order",
+            "to_column": "order_id"
+          }
+        ],
+        "statements": {
+          "COMMENT ON": 2,
+          "CREATE INDEX": 3,
+          "CREATE SCHEMA": 1,
+          "CREATE TABLE": 3,
+          "CREATE TYPE": 1,
+          "CREATE VIEW": 1
+        }
+      },
+      "sql_schemas": [
+        {
+          "name": "commerce"
+        }
+      ]
+    },
+    "format": "sql-ddl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "commerce",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "commerce",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "One row per customer account.",
+        "enum_values": [],
+        "extras": {
+          "sql_checks": [
+            {
+              "expression": "country_code = upper(country_code)",
+              "name": "customer_country_code_upper"
+            }
+          ],
+          "sql_indexes": [
+            {
+              "columns": [
+                "lower(email)"
+              ],
+              "name": "customer_email_lower_idx",
+              "unique": true
+            }
+          ],
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "customer_id"
+              ]
+            },
+            "unique": [
+              {
+                "columns": [
+                  "email"
+                ]
+              }
+            ]
+          },
+          "sql_kind": "table",
+          "sql_position": 2
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 2,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "char(2)",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "commerce.customer.country_code",
+            "name": "country_code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "timestamptz",
+              "sql_default_expression": "now()",
+              "sql_position": 4
+            },
+            "field_number": null,
+            "key": "commerce.customer.created_at",
+            "name": "created_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "commerce.customer.customer_id",
+            "name": "customer_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 1
+            },
+            "field_number": null,
+            "key": "commerce.customer.display_name",
+            "name": "display_name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Login address; unique across the tenant.",
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "commerce.customer.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "commerce.customer",
+        "key_type": null,
+        "kind": "record",
+        "name": "customer",
+        "namespace": "commerce",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_kind": "view",
+          "sql_position": 5,
+          "sql_view": {
+            "columns": [
+              {
+                "expression": "order_id",
+                "name": "order_id",
+                "source_column": "order_id",
+                "source_table": "commerce.order"
+              },
+              {
+                "expression": "customer_id",
+                "name": "customer_id",
+                "source_column": "customer_id",
+                "source_table": "commerce.order"
+              },
+              {
+                "expression": "placed_at",
+                "name": "placed_at",
+                "source_column": "placed_at",
+                "source_table": "commerce.order"
+              },
+              {
+                "expression": "total_amount",
+                "name": "total_amount",
+                "source_column": "total_amount",
+                "source_table": "commerce.order"
+              }
+            ],
+            "definition": "SELECT order_id, customer_id, placed_at, total_amount FROM commerce.\"order\" WHERE status IN ('new', 'paid')"
+          }
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 1,
+              "sql_source": "commerce.order.customer_id"
+            },
+            "field_number": null,
+            "key": "commerce.open_orders.customer_id",
+            "name": "customer_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 0,
+              "sql_source": "commerce.order.order_id"
+            },
+            "field_number": null,
+            "key": "commerce.open_orders.order_id",
+            "name": "order_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "timestamptz",
+              "sql_position": 2,
+              "sql_source": "commerce.order.placed_at"
+            },
+            "field_number": null,
+            "key": "commerce.open_orders.placed_at",
+            "name": "placed_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "numeric(13, 2)",
+              "sql_position": 3,
+              "sql_source": "commerce.order.total_amount"
+            },
+            "field_number": null,
+            "key": "commerce.open_orders.total_amount",
+            "name": "total_amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "commerce.open_orders",
+        "key_type": null,
+        "kind": "record",
+        "name": "open_orders",
+        "namespace": "commerce",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_checks": [
+            {
+              "expression": "total_amount >= 0",
+              "name": "order_total_non_negative"
+            }
+          ],
+          "sql_indexes": [
+            {
+              "columns": [
+                "customer_id"
+              ],
+              "name": "order_customer_idx"
+            },
+            {
+              "columns": [
+                "placed_at"
+              ],
+              "name": "order_placed_at_idx"
+            }
+          ],
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "order_id"
+              ]
+            }
+          },
+          "sql_kind": "table",
+          "sql_position": 3
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 3,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "char(3)",
+              "sql_position": 5
+            },
+            "field_number": null,
+            "key": "commerce.order.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 1,
+              "sql_relationship": [
+                {
+                  "name": "order_customer_fk",
+                  "on_delete": "RESTRICT",
+                  "to": "commerce.customer.customer_id",
+                  "to_columns": [
+                    "customer_id"
+                  ],
+                  "to_field": "commerce.customer.customer_id",
+                  "to_type": "commerce.customer",
+                  "type": "foreignKey"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "commerce.order.customer_id",
+            "name": "customer_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 6
+            },
+            "field_number": null,
+            "key": "commerce.order.note",
+            "name": "note",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "commerce.order.order_id",
+            "name": "order_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "timestamptz",
+              "sql_default_expression": "now()",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "commerce.order.placed_at",
+            "name": "placed_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "new",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "commerce.order_status",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "commerce.order.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "commerce.order_status",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": 0,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "numeric(13, 2)",
+              "sql_position": 4
+            },
+            "field_number": null,
+            "key": "commerce.order.total_amount",
+            "name": "total_amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "commerce.order",
+        "key_type": null,
+        "kind": "record",
+        "name": "order",
+        "namespace": "commerce",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_checks": [
+            {
+              "expression": "quantity > 0",
+              "name": null
+            }
+          ],
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "order_id",
+                "line_number"
+              ]
+            }
+          },
+          "sql_kind": "table",
+          "sql_position": 4
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "integer",
+              "sql_position": 1
+            },
+            "field_number": null,
+            "key": "commerce.order_line.line_number",
+            "name": "line_number",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 0,
+              "sql_relationship": [
+                {
+                  "on_delete": "CASCADE",
+                  "to": "commerce.order.order_id",
+                  "to_columns": [
+                    "order_id"
+                  ],
+                  "to_field": "commerce.order.order_id",
+                  "to_type": "commerce.order",
+                  "type": "foreignKey"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "commerce.order_line.order_id",
+            "name": "order_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "numeric(9, 3)",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "commerce.order_line.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "commerce.order_line.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "numeric(13, 4)",
+              "sql_position": 4
+            },
+            "field_number": null,
+            "key": "commerce.order_line.unit_price",
+            "name": "unit_price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "commerce.order_line",
+        "key_type": null,
+        "kind": "record",
+        "name": "order_line",
+        "namespace": "commerce",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "commerce.order_status.new",
+            "name": "new",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "commerce.order_status.paid",
+            "name": "paid",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "commerce.order_status.shipped",
+            "name": "shipped",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "commerce.order_status.cancelled",
+            "name": "cancelled",
+            "value": null
+          }
+        ],
+        "extras": {
+          "sql_kind": "enum",
+          "sql_position": 1
+        },
+        "fields": [],
+        "key": "commerce.order_status",
+        "key_type": null,
+        "kind": "enum",
+        "name": "order_status",
+        "namespace": "commerce",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "sql-ddl/02-typical-postgres.sql",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 5
+  },
+  "detection": {
+    "confidence": 0.94,
+    "format": "sql-ddl"
+  },
+  "fingerprint": "sha256:ab34a13dfc2fec0e3fd5b5ef973907eb57c70960b39894a4faaa3b48e70d6189",
+  "lint": {
+    "findings": 25,
+    "grade": "D",
+    "report_fingerprint": "0ff880a197dc70c037ebe1e239c548af8c99492c4f69a746233baf56d7b94915",
+    "score": 63,
+    "severity_counts": {
+      "error": 0,
+      "info": 21,
+      "warning": 4
+    }
+  },
+  "snapshot_version": 1
+}

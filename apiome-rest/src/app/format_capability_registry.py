@@ -141,7 +141,7 @@ __all__ = [
 #: The registry contract version. Bumped whenever an entry, a reviewed seed, an absence
 #: explanation, or a vocabulary member changes, so a consumer can detect a stale contract and
 #: a cached snapshot can be keyed by it. Mirrored in the committed vocabulary snapshot.
-REGISTRY_VERSION = "13"
+REGISTRY_VERSION = "14"
 
 #: The date the current seeds and absence explanations were last reviewed. Recorded as
 #: provenance on every entry, so a claim about a format carries the date somebody checked it.
@@ -1515,6 +1515,122 @@ _CAPABILITY_SEED: Dict[str, _Seed] = {
             "files, they are under version control, and writing one back would put a second "
             "author on a directory that already has one. A project imported here is exported "
             "through another target's emitter.",
+        ],
+    ),
+    "sql-ddl": _Seed(
+        # SQL DDL's payload analysis is the format-blind walk, so the first three fields
+        # restate what derivation produces. The reviewed judgement is the projection
+        # statement below: FMT-5.6's acceptance criterion is that vendor constructs which
+        # cannot be modelled are *declared parsing limits*, and this is where a reader is
+        # told which of a script's constructs is modelled, which is carried, and why.
+        native_hierarchy=NativeHierarchy.GENERIC,
+        native_hierarchy_note=(
+            "The format-blind walk records containers, ordered collections and leaves. Nesting "
+            "and ordering survive; this format's own semantics are not named, and their absence "
+            "from the tree says nothing about the source."
+        ),
+        source_location=SourceLocationSupport(
+            quality=SourceLocationQuality.PATH_ONLY,
+            note=(
+                "Tables and columns locate by name and structural path only. A script is read "
+                "as a *sequence of edits* and the model is the state they leave behind, so a "
+                "column that a later `ALTER TABLE` renamed, widened or constrained no longer "
+                "corresponds to any single span of the source. A migrations directory makes "
+                "that explicit: the shape imported is in none of its files."
+            ),
+        ),
+        value_visibility=ValueVisibilitySupport(
+            default=ValueVisibility.DEFAULT,
+            maximum=ValueVisibility.NONE,
+            note=(
+                "A DDL script describes a database, it does not contain one: the analyzer "
+                "observes no rows at any policy level. 'No value here' is the absence of data "
+                "to observe, not a redaction. The values a script *states* — a `DEFAULT` "
+                "literal, an `ENUM`'s members, a `CHECK … IN (…)` list — are part of the "
+                "schema and become defaults and constraints."
+            ),
+        ),
+        canonical_projection=CanonicalProjectionSupport(
+            coverage=ProjectionCoverage.PARTIAL,
+            dropped_constructs=[
+                "sql.check_constraint",
+                "sql.collation",
+                "sql.column_clause",
+                "sql.computed_column",
+                "sql.default_expression",
+                "sql.foreign_key",
+                "sql.identity",
+                "sql.index",
+                "sql.length_semantics",
+                "sql.partitioning",
+                "sql.schema_definition",
+                "sql.sequence",
+                "sql.set_type",
+                "sql.storage_clause",
+                "sql.table_inheritance",
+                "sql.type_parameters",
+                "sql.uniqueness",
+                "sql.unsupported_statement",
+                "sql.vendor_type",
+                "sql.view_definition",
+                "sql.view_derived_column",
+            ],
+            note=(
+                "Every relation that has rows is modelled: a table and a view each become one "
+                "canonical `RECORD`, and each column becomes one member. A view is modelled "
+                "because it has a shape — its `SELECT` is read only far enough to name the "
+                "columns it projects, and a column that is a plain reference takes the source "
+                "column's type. A schema's own vocabulary survives as named types: `CREATE TYPE "
+                "… AS ENUM` becomes an `ENUM`, `CREATE DOMAIN` an `ALIAS` with its constraints, "
+                "and a composite `CREATE TYPE` a `RECORD`, so a column declared with one "
+                "references it rather than flattening to a string. A column's type is projected "
+                "from its **base name** through one dialect-agnostic table; a character "
+                "length does become `maxLength`, because the dialect has been resolved and the "
+                "unit is then unambiguous — except under Oracle, where `VARCHAR2(40)` is forty "
+                "bytes or forty characters depending on a session setting the script does not "
+                "state. `NOT NULL`, a primary key's columns, a literal `DEFAULT`, an inline "
+                "`ENUM` and a `CHECK … IN (…)` list all have exact canonical facets and are "
+                "modelled. Everything the listed constructs name — identity declarations, "
+                "computed columns, `CHECK` predicates, indexes, partitioning, storage clauses, "
+                "inheritance links, sequences and the statements this reader does not model — "
+                "is **carried but not modelled** under the documented `sql_*` extras namespace, "
+                "on whichever node declared it, and counted and located in "
+                "`extras['sql_ddl']['capability_limits']`."
+            ),
+        ),
+        notes=[
+            "A DDL script is a sequence of *edits*, and the import is the state they leave "
+            "behind. `CREATE TABLE` introduces a relation, `ALTER TABLE` changes one, `DROP` "
+            "removes one, and a migrations directory is simply more of the same statements in "
+            "later files, applied in path order. That is why a migrations set imports as its "
+            "final state rather than its first, and why the same code path reads one script "
+            "with `ALTER` statements in it.",
+            "The dialect is detected from the script's own markers — backticks and "
+            "`AUTO_INCREMENT` for MySQL, a bare `GO` and `IDENTITY(1,1)` for SQL Server, "
+            "`VARCHAR2` and `NOCACHE` for Oracle, `timestamptz` and `INHERITS` for PostgreSQL "
+            "— and is recorded in provenance with the markers that decided it. A script with no "
+            "vendor marker is read as ANSI, which is a verdict rather than a guess. The "
+            "`sql_dialect` import option forces one, for the cases a user can see and a "
+            "marker cannot.",
+            "Live introspection against a connection string is **out of scope and not "
+            "planned**. An import is a file or a file set; no driver is loaded and no socket "
+            "is opened. That keeps the security surface of 'read my schema' to the surface of "
+            "'read my file'.",
+            "A foreign key is an edge this reader writes down, so one that names a table the "
+            "import does not contain is refused as `INPUT_REFERENCE_UNRESOLVED` rather than "
+            "silently dropped — the same rule FMT-5.4 applies to a dangling `relationships` "
+            "test. Import the whole schema dump or the whole migrations directory so the "
+            "referenced table is present.",
+            "A script in which *nothing* has a shape — every `CREATE TABLE` has an empty "
+            "column list, or there is no relation at all — is refused rather than imported: "
+            "it would produce a catalog entry that reads as 'this database has no tables' "
+            "rather than as 'this document did not say'. A single column-less table beside "
+            "real ones is kept as an empty record, because PostgreSQL allows "
+            "`CREATE TABLE t ()` and the script did declare the relation.",
+            "SQL DDL *output* is filed separately as #4311. This adapter is the import half "
+            "only, and the two share one type-mapping table (`app.sql_ddl_dialects."
+            "SQL_TYPE_SCALARS`) so a round trip cannot disagree with itself about what a "
+            "`VARCHAR` is.",
         ],
     ),
     "cddl": _Seed(

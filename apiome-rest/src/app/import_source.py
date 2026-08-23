@@ -597,6 +597,38 @@ class ImportSource(ABC):
 
     # --- format-specific steps (each adapter implements these) --------------
 
+    def configure(self, options: Dict[str, Any]) -> "ImportSource":
+        """Return the adapter this import's options ask for (MFI-1.1 / FMT-5.6).
+
+        The import pipeline calls this once, between resolving the adapter and parsing, so
+        an adapter whose *reading* of a document is genuinely ambiguous can be steered by
+        the caller. The default returns ``self``: an adapter with nothing to configure is
+        unaffected, and the option bag stays the pipeline's concern rather than every
+        adapter's.
+
+        The one adapter that uses it today is ``sql-ddl`` (FMT-5.6), whose ``sql_dialect``
+        option forces the SQL dialect a script is read under instead of letting detection
+        choose. That knob belongs to the adapter — the pipeline has no business knowing
+        what a SQL dialect is — which is why this is a hook rather than a pipeline branch.
+
+        Args:
+            options: The import request's ``options`` mapping, verbatim. An adapter must
+                ignore keys it does not own, and must not mutate the mapping.
+
+        Returns:
+            An adapter to run this import with. Returning a *new* instance rather than
+            mutating ``self`` is required: :func:`get_import_source` hands out a fresh
+            instance per lookup, but nothing stops a caller from holding one, and two
+            concurrent imports must not be able to read each other's setting.
+
+        Raises:
+            ImportSourceError: When an option this adapter owns names something it cannot
+                honour. Refusing is better than silently ignoring it, because the import
+                would then report a setting the user did not ask for.
+        """
+        _ = options
+        return self
+
     @abstractmethod
     def detect(self, payload: DetectionInput) -> DetectionResult:
         """Return this adapter's confidence that it recognizes ``payload``.
@@ -1132,6 +1164,11 @@ def load_builtin_import_sources() -> None:
     # properties file, a compiled `manifest.json`, or a whole project directory — and, via
     # its own imports, the dbt normalizer under ``dbt``.
     from . import dbt_import_source as _dbt  # noqa: F401
+
+    # ``sql_ddl_import_source`` (FMT-5.6) self-registers the ``sql-ddl`` adapter — one DDL
+    # script or a whole migrations directory, across ANSI plus four vendor dialects — and,
+    # via its own imports, the SQL DDL normalizer under ``sql-ddl``.
+    from . import sql_ddl_import_source as _sql_ddl  # noqa: F401
 
     # ``arrow_import_source`` (FMT-4.5) self-registers the ``arrow`` adapter — the JSON
     # integration form, a binary IPC payload, a captured Flight fileset and a live Flight

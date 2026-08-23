@@ -1,0 +1,1138 @@
+{
+  "adapter": "sql-ddl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "sql_ddl": {
+        "capability_limits": [
+          {
+            "construct": "sql.check_constraint",
+            "count": 3,
+            "detail": "A `CHECK` constraint states a predicate over a row's values. The canonical constraint vocabulary has no predicate facet, so the expression is carried verbatim on the type or the column that declared it (`extras['sql_checks']`) and is never evaluated. The one shape with an exact analogue is decoded as well as carried: `col IN (<literals>)` also becomes the column's `enum`.",
+            "locations": [
+              "claims.Claim",
+              "claims.ClaimPayment",
+              "claims.Policy"
+            ]
+          },
+          {
+            "construct": "sql.computed_column",
+            "count": 1,
+            "detail": "A computed / generated column (`AS (<expr>) STORED|VIRTUAL|PERSISTED`, `GENERATED ALWAYS AS`) derives its value from other columns. The expression is carried in `extras['sql_generated']`; it is never evaluated, and where the declaration states no type the column is projected as a string, because the document did not say what the expression returns.",
+            "locations": [
+              "claims.Policy"
+            ]
+          },
+          {
+            "construct": "sql.default_expression",
+            "count": 1,
+            "detail": "A `DEFAULT` that is not a literal — `now()`, `SYSDATE`, `CURRENT_TIMESTAMP`, `NEXTVAL('seq')`, a `CASE` — is a value the *database* computes at insert time. The canonical `default` holds literals only, so the expression is carried verbatim in `extras['sql_default_expression']` rather than recorded as a value the document does not state.",
+            "locations": [
+              "claims.Claim"
+            ]
+          },
+          {
+            "construct": "sql.foreign_key",
+            "count": 2,
+            "detail": "A `FOREIGN KEY` names the table and columns a column points at. The canonical model has no edge vocabulary, so the edge is recorded on the field in `extras['sql_relationship']` — in the ODCS v3.1 property-level relationship shape (`type: foreignKey`, `to: <table>.<column>`), beside the canonical type and field keys it resolved to — and no canonical feature traverses it. A foreign key that names a table the import does not contain is refused rather than carried, because this is an edge the reader writes down.",
+            "locations": [
+              "claims.Claim",
+              "claims.ClaimPayment"
+            ]
+          },
+          {
+            "construct": "sql.identity",
+            "count": 3,
+            "detail": "`IDENTITY`, `AUTO_INCREMENT`, `GENERATED … AS IDENTITY` and the `SERIAL` family declare that the database assigns the value. The canonical model has no server-assigned facet — a default it cannot state is not a default — so the declaration is carried in `extras['sql_identity']` and the column keeps the scalar its type names.",
+            "locations": [
+              "claims.Claim",
+              "claims.ClaimPayment",
+              "claims.Policy"
+            ]
+          },
+          {
+            "construct": "sql.index",
+            "count": 2,
+            "detail": "An index — ordinary, `UNIQUE`, expression-based, filtered/partial, covering, `FULLTEXT` or `CLUSTERED` — states how a relation is *accessed*, not what shape it has. The declaration is carried in `extras['sql_indexes']` on the table it belongs to and creates no canonical structure.",
+            "locations": [
+              "claims.Claim"
+            ]
+          },
+          {
+            "construct": "sql.schema_definition",
+            "count": 1,
+            "detail": "`CREATE SCHEMA`, `CREATE DATABASE` and `USE` establish the namespace later statements resolve against. The namespace *is* modelled — it is a type's `namespace` — but the statement's own options (owner, character set, collation, authorization) are carried in `extras['sql_schemas']`.",
+            "locations": []
+          },
+          {
+            "construct": "sql.type_parameters",
+            "count": 6,
+            "detail": "A type's parameters beyond a character length — `numeric(13,2)`, `TIMESTAMP(6)`, `FLOAT(24)`, `INTERVAL DAY(2) TO SECOND(6)` — have no canonical facet. The scalar comes from the type's base name and the full declared spelling is carried in `extras['sql_data_type']`, so nothing is lost and nothing is invented.",
+            "locations": [
+              "claims.Claim",
+              "claims.ClaimPayment",
+              "claims.Policy"
+            ]
+          },
+          {
+            "construct": "sql.uniqueness",
+            "count": 5,
+            "detail": "`PRIMARY KEY` and `UNIQUE` declare identity over the *rows* of a table. The canonical constraint vocabulary has no identity facet (`unique_items` is about the members of one array), so the declaration is carried on the type in `extras['sql_key']` and is not enforced. A primary key's columns *are* modelled as non-nullable, because SQL says they are.",
+            "locations": [
+              "claims.Claim",
+              "claims.ClaimPayment",
+              "claims.Policy"
+            ]
+          },
+          {
+            "construct": "sql.vendor_type",
+            "count": 1,
+            "detail": "A vendor type with no portable meaning — SQL Server's `ROWVERSION`, Oracle's `ROWID`/`BFILE`, MySQL's `YEAR`, PostGIS geometry — is projected onto the nearest canonical scalar so the column still has a shape, and the declared spelling is carried. The semantics the vendor attaches to it (auto-maintained, storage-locating, externally-referencing) are not modelled.",
+            "locations": [
+              "claims.Policy"
+            ]
+          },
+          {
+            "construct": "sql.view_definition",
+            "count": 1,
+            "detail": "A view's `SELECT` is carried verbatim in `extras['sql_view']` and is never executed, planned or otherwise interpreted. The reader reads it only far enough to name the columns the view projects and to resolve the ones that are plain column references.",
+            "locations": [
+              "claims.vOutstandingClaims"
+            ]
+          },
+          {
+            "construct": "sql.view_derived_column",
+            "count": 1,
+            "detail": "A view column produced by an expression — an aggregate, an arithmetic term, a `CASE` — has no declared type, and the reader does not evaluate SQL to infer one. The column is modelled with its projected name and a string type, and the expression is carried, because 'the document did not say' is the honest answer.",
+            "locations": [
+              "claims.vOutstandingClaims"
+            ]
+          }
+        ],
+        "dialect": "sqlserver",
+        "dialect_evidence": [
+          "clustered-index",
+          "datetime2",
+          "go-batch",
+          "identity-clause",
+          "nvarchar-max",
+          "persisted-computed",
+          "rowversion",
+          "nvarchar",
+          "unicode-literal"
+        ],
+        "dialect_label": "SQL Server",
+        "dialect_source": "detected",
+        "relations": [
+          {
+            "key": "claims.Claim",
+            "kind": "table",
+            "name": "Claim"
+          },
+          {
+            "key": "claims.ClaimPayment",
+            "kind": "table",
+            "name": "ClaimPayment"
+          },
+          {
+            "key": "claims.Policy",
+            "kind": "table",
+            "name": "Policy"
+          },
+          {
+            "key": "claims.vOutstandingClaims",
+            "kind": "view",
+            "name": "vOutstandingClaims"
+          }
+        ],
+        "relationships": [
+          {
+            "from": "claims.Claim",
+            "from_column": "PolicyId",
+            "name": "FK_Claim_Policy",
+            "to": "claims.Policy",
+            "to_column": "PolicyId"
+          },
+          {
+            "from": "claims.ClaimPayment",
+            "from_column": "ClaimId",
+            "name": "FK_ClaimPayment_Claim",
+            "to": "claims.Claim",
+            "to_column": "ClaimId"
+          }
+        ],
+        "statements": {
+          "ALTER TABLE": 1,
+          "CREATE INDEX": 2,
+          "CREATE SCHEMA": 1,
+          "CREATE TABLE": 3,
+          "CREATE VIEW": 1
+        }
+      },
+      "sql_schemas": [
+        {
+          "name": "claims"
+        }
+      ]
+    },
+    "format": "sql-ddl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "claims",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "claims",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_checks": [
+            {
+              "expression": "Status IN (N'open', N'assessing', N'settled', N'rejected')",
+              "name": "CK_Claim_Status"
+            }
+          ],
+          "sql_indexes": [
+            {
+              "columns": [
+                "PolicyId"
+              ],
+              "include": [
+                "Status",
+                "ReserveAmount"
+              ],
+              "kind": "nonclustered",
+              "name": "IX_Claim_Policy"
+            },
+            {
+              "columns": [
+                "ReportedAt"
+              ],
+              "kind": "nonclustered",
+              "name": "IX_Claim_Open",
+              "predicate": "Status IN (N'open', N'assessing')"
+            }
+          ],
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "ClaimId"
+              ],
+              "name": "PK_Claim"
+            },
+            "unique": [
+              {
+                "columns": [
+                  "ClaimReference"
+                ],
+                "name": "UQ_Claim_Reference"
+              }
+            ]
+          },
+          "sql_kind": "table",
+          "sql_position": 2
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "VARBINARY(MAX)",
+              "sql_position": 9
+            },
+            "field_number": null,
+            "key": "claims.Claim.Attachment",
+            "name": "Attachment",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "BIGINT",
+              "sql_identity": {
+                "arguments": [
+                  "1",
+                  "1"
+                ],
+                "kind": "identity"
+              },
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "claims.Claim.ClaimId",
+            "name": "ClaimId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 24,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "NVARCHAR(24)",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "claims.Claim.ClaimReference",
+            "name": "ClaimReference",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "NVARCHAR(MAX)",
+              "sql_position": 8
+            },
+            "field_number": null,
+            "key": "claims.Claim.Description",
+            "name": "Description",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "DATE",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "claims.Claim.IncidentDate",
+            "name": "IncidentDate",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "date",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "INT",
+              "sql_position": 10
+            },
+            "field_number": null,
+            "key": "claims.Claim.LossAdjusterId",
+            "name": "LossAdjusterId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": 0,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "DECIMAL(15, 2)",
+              "sql_position": 7
+            },
+            "field_number": null,
+            "key": "claims.Claim.PaidAmount",
+            "name": "PaidAmount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "INT",
+              "sql_position": 1,
+              "sql_relationship": [
+                {
+                  "name": "FK_Claim_Policy",
+                  "on_delete": "NO ACTION",
+                  "to": "claims.Policy.PolicyId",
+                  "to_columns": [
+                    "PolicyId"
+                  ],
+                  "to_field": "claims.Policy.PolicyId",
+                  "to_type": "claims.Policy",
+                  "type": "foreignKey"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "claims.Claim.PolicyId",
+            "name": "PolicyId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "DATETIME2(3)",
+              "sql_default_expression": "SYSUTCDATETIME()",
+              "sql_position": 4
+            },
+            "field_number": null,
+            "key": "claims.Claim.ReportedAt",
+            "name": "ReportedAt",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": 0,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "DECIMAL(15, 2)",
+              "sql_position": 6
+            },
+            "field_number": null,
+            "key": "claims.Claim.ReserveAmount",
+            "name": "ReserveAmount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "open",
+                "assessing",
+                "settled",
+                "rejected"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 16,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": "open",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "NVARCHAR(16)",
+              "sql_position": 5
+            },
+            "field_number": null,
+            "key": "claims.Claim.Status",
+            "name": "Status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "claims.Claim",
+        "key_type": null,
+        "kind": "record",
+        "name": "Claim",
+        "namespace": "claims",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_checks": [
+            {
+              "expression": "Amount > 0",
+              "name": "CK_ClaimPayment_Amount"
+            }
+          ],
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "PaymentId"
+              ],
+              "name": "PK_ClaimPayment"
+            }
+          },
+          "sql_kind": "table",
+          "sql_position": 3
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "DECIMAL(15, 2)",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "claims.ClaimPayment.Amount",
+            "name": "Amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "BIGINT",
+              "sql_position": 1,
+              "sql_relationship": [
+                {
+                  "name": "FK_ClaimPayment_Claim",
+                  "on_delete": "CASCADE",
+                  "to": "claims.Claim.ClaimId",
+                  "to_columns": [
+                    "ClaimId"
+                  ],
+                  "to_field": "claims.Claim.ClaimId",
+                  "to_type": "claims.Claim",
+                  "type": "foreignKey"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "claims.ClaimPayment.ClaimId",
+            "name": "ClaimId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 20,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "NVARCHAR(20)",
+              "sql_position": 4
+            },
+            "field_number": null,
+            "key": "claims.ClaimPayment.Method",
+            "name": "Method",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "DATE",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "claims.ClaimPayment.PaidOn",
+            "name": "PaidOn",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "date",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "BIGINT",
+              "sql_identity": {
+                "arguments": [
+                  "1",
+                  "1"
+                ],
+                "kind": "identity"
+              },
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "claims.ClaimPayment.PaymentId",
+            "name": "PaymentId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "claims.ClaimPayment",
+        "key_type": null,
+        "kind": "record",
+        "name": "ClaimPayment",
+        "namespace": "claims",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_checks": [
+            {
+              "expression": "EffectiveTo IS NULL OR EffectiveTo > EffectiveFrom",
+              "name": "CK_Policy_Period"
+            }
+          ],
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "PolicyId"
+              ],
+              "name": "PK_Policy"
+            },
+            "unique": [
+              {
+                "columns": [
+                  "PolicyNumber"
+                ],
+                "name": "UQ_Policy_Number"
+              }
+            ]
+          },
+          "sql_kind": "table",
+          "sql_position": 1
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": 0,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "DECIMAL(13, 2)",
+              "sql_position": 6
+            },
+            "field_number": null,
+            "key": "claims.Policy.AnnualPremium",
+            "name": "AnnualPremium",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "DATE",
+              "sql_position": 4
+            },
+            "field_number": null,
+            "key": "claims.Policy.EffectiveFrom",
+            "name": "EffectiveFrom",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "date",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "DATE",
+              "sql_position": 5
+            },
+            "field_number": null,
+            "key": "claims.Policy.EffectiveTo",
+            "name": "EffectiveTo",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "date",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 120,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "NVARCHAR(120)",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "claims.Policy.HolderName",
+            "name": "HolderName",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_generated": {
+                "expression": "CASE WHEN EffectiveTo IS NULL OR EffectiveTo >= CAST(GETDATE() AS DATE) THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END",
+                "mode": "always",
+                "storage": "persisted"
+              },
+              "sql_position": 7
+            },
+            "field_number": null,
+            "key": "claims.Policy.IsActive",
+            "name": "IsActive",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "INT",
+              "sql_identity": {
+                "arguments": [
+                  "1",
+                  "1"
+                ],
+                "kind": "identity"
+              },
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "claims.Policy.PolicyId",
+            "name": "PolicyId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 20,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "NVARCHAR(20)",
+              "sql_position": 1
+            },
+            "field_number": null,
+            "key": "claims.Policy.PolicyNumber",
+            "name": "PolicyNumber",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 6,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "CHAR(6)",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "claims.Policy.ProductCode",
+            "name": "ProductCode",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "ROWVERSION",
+              "sql_position": 8
+            },
+            "field_number": null,
+            "key": "claims.Policy.RowVersion",
+            "name": "RowVersion",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "claims.Policy",
+        "key_type": null,
+        "kind": "record",
+        "name": "Policy",
+        "namespace": "claims",
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_kind": "view",
+          "sql_position": 4,
+          "sql_view": {
+            "columns": [
+              {
+                "expression": "c.ClaimId",
+                "name": "ClaimId",
+                "source_column": "ClaimId",
+                "source_table": "claims.Claim"
+              },
+              {
+                "expression": "c.ClaimReference",
+                "name": "ClaimReference",
+                "source_column": "ClaimReference",
+                "source_table": "claims.Claim"
+              },
+              {
+                "expression": "p.PolicyNumber",
+                "name": "PolicyNumber",
+                "source_column": "PolicyNumber",
+                "source_table": "claims.Policy"
+              },
+              {
+                "expression": "c.ReserveAmount - c.PaidAmount AS Outstanding",
+                "name": "Outstanding"
+              }
+            ],
+            "definition": "SELECT c.ClaimId, c.ClaimReference, p.PolicyNumber, c.ReserveAmount - c.PaidAmount AS Outstanding FROM claims.Claim AS c JOIN claims.Policy AS p ON p.PolicyId = c.PolicyId WHERE c.Status IN (N'open', N'assessing')"
+          }
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "BIGINT",
+              "sql_position": 0,
+              "sql_source": "claims.Claim.ClaimId"
+            },
+            "field_number": null,
+            "key": "claims.vOutstandingClaims.ClaimId",
+            "name": "ClaimId",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 24,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "NVARCHAR(24)",
+              "sql_position": 1,
+              "sql_source": "claims.Claim.ClaimReference"
+            },
+            "field_number": null,
+            "key": "claims.vOutstandingClaims.ClaimReference",
+            "name": "ClaimReference",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_expression": "c.ReserveAmount - c.PaidAmount AS Outstanding",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "claims.vOutstandingClaims.Outstanding",
+            "name": "Outstanding",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 20,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "NVARCHAR(20)",
+              "sql_position": 2,
+              "sql_source": "claims.Policy.PolicyNumber"
+            },
+            "field_number": null,
+            "key": "claims.vOutstandingClaims.PolicyNumber",
+            "name": "PolicyNumber",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "claims.vOutstandingClaims",
+        "key_type": null,
+        "kind": "record",
+        "name": "vOutstandingClaims",
+        "namespace": "claims",
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "sql-ddl/05-real-world-sqlserver.sql",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 4
+  },
+  "detection": {
+    "confidence": 0.94,
+    "format": "sql-ddl"
+  },
+  "fingerprint": "sha256:6b63b801ae8031a4bd622851a5ab6fc7f133c772fb569b2cbcdeb52b49954593",
+  "lint": {
+    "findings": 34,
+    "grade": "D",
+    "report_fingerprint": "d3729f256122a6b3843e5d95c9c7aa84f1a752adf76ff5040cd68a01a78fb6c4",
+    "score": 63,
+    "severity_counts": {
+      "error": 0,
+      "info": 30,
+      "warning": 4
+    }
+  },
+  "snapshot_version": 1
+}
