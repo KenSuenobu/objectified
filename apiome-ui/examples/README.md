@@ -120,7 +120,7 @@ The corpus holds **1421 files** across **103 format directories**. Every file ha
 | `relaxng/` | RELAX NG (pending #5434) | data_schema | `grammar`/`element` root in the RELAX NG namespace, or a `.rnc` compact grammar | 15 |
 | `schematron/` | Schematron rules | data_schema | `schema`/`pattern` root in `http://purl.oclc.org/dsdl/schematron` | 13 |
 | `shacl/` | SHACL shapes (pending #5471) | data_schema | `sh:NodeShape`/`sh:property` in the SHACL namespace (Turtle or JSON-LD) | 15 |
-| `sql-ddl/` | SQL DDL (pending #5444) | data_schema | `CREATE TABLE`/`CREATE VIEW`/`ALTER TABLE … ADD CONSTRAINT` | 15 |
+| `sql-ddl/` | SQL DDL schemas and migrations | data_schema | `CREATE TABLE`/`CREATE VIEW`/`ALTER TABLE … ADD CONSTRAINT` | 15 |
 | `typescript-types/` | TypeScript type declarations (pending #5462) | data_schema | `export interface`/`export type`/`export enum` declarations in `.ts`/`.d.ts` | 15 |
 | `vsam-idcams/` | VSAM cluster definitions (pending #5484) | data_schema | `DEFINE CLUSTER`/`AIX`/`PATH` with parenthesised parameters, or `LISTCAT` output | 14 |
 | `xsd/` | XML Schema (XSD) | data_schema | `xs:schema` root element | 13 |
@@ -2114,25 +2114,25 @@ Ladder rungs (IXH-1.2): `minimal` canonical hello-world · `typical` realistic s
 
 > ⚠ **`negative/04-wrong-format-protobuf-schema.proto`** — The Sparkplug payload *schema* rather than a payload: the shipped grpc adapter's input, not this one's.
 
-### `sql-ddl/` — SQL DDL (pending #5444)
+### `sql-ddl/` — SQL DDL schemas and migrations
 
 | File | Rung | Expected detection | Class | Features |
 | --- | --- | --- | --- | --- |
-| `01-minimal-ansi.sql` | minimal | `sql-ddl` ≥ 0.85 | valid | `ansi`, `create-table`, `primary-key`, `pending-adapter` |
-| `02-typical-postgres.sql` | typical | `sql-ddl` ≥ 0.85 | valid | `postgres`, `enum-type`, `foreign-key`, `check-constraint`, `expression-index`, `comment-on`, `view`, `pending-adapter` |
-| `03-migrations-set/V1__create_core.sql` ⚠ | multi-file (root) | `sql-ddl` ≥ 0.85 | valid | `multi-file`, `migrations`, `postgres`, `final-state`, `pending-adapter` |
-| `03-migrations-set/V2__widen_and_rename.sql` | multi-file (member) | `sql-ddl` (no guarantee) | valid | `multi-file`, `migrations`, `rename-column`, `alter-type`, `pending-adapter` |
-| `03-migrations-set/V3__constraints_and_indexes.sql` | multi-file (member) | `sql-ddl` (no guarantee) | valid | `multi-file`, `migrations`, `constraints`, `index`, `pending-adapter` |
-| `04-stress-mysql.sql` ⚠ | stress | `sql-ddl` ≥ 0.85 | valid | `mysql`, `auto-increment`, `enum`, `set`, `json`, `generated-column`, `fulltext`, `partitions`, `alter-table`, `pending-adapter` |
-| `05-real-world-sqlserver.sql` | real-world | `sql-ddl` ≥ 0.85 | valid | `sqlserver`, `identity`, `computed-column`, `filtered-index`, `rowversion`, `go-batches`, `view`, `pending-adapter` |
-| `06-typical-oracle.sql` | typical | `sql-ddl` ≥ 0.85 | valid | `oracle`, `varchar2`, `number`, `clob`, `sequence`, `partitions`, `comment-on`, `pending-adapter` |
-| `07-composition-inheritance-and-views.sql` | composition | `sql-ddl` ≥ 0.85 | valid | `domain`, `composite-type`, `table-inheritance`, `partitioning`, `view`, `materialized-view`, `postgres`, `pending-adapter` |
-| `negative/01-syntactic-missing-paren.sql` | — | `sql-ddl` (no guarantee) | invalid | `negative`, `syntactic`, `missing-paren`, `pending-adapter` |
-| `negative/02-semantic-table-without-columns.sql` | — | `sql-ddl` (no guarantee) | invalid | `negative`, `semantic`, `no-columns`, `pending-adapter` |
-| `negative/03-truncated-mid-statement.sql` | — | `sql-ddl` (no guarantee) | invalid | `negative`, `truncated`, `mid-column`, `pending-adapter` |
-| `negative/04-wrong-format-dbml.dbml` | — | `sql-ddl` (no guarantee) | invalid | `negative`, `wrong-format`, `dbml`, `pending-adapter` |
-| `negative/05-encoding-utf16.sql` | — | `sql-ddl` (no guarantee) | invalid | `negative`, `encoding`, `utf-16`, `pending-adapter` |
-| `negative/06-unresolvable-foreign-key.sql` | — | `sql-ddl` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-referenced-table`, `pending-adapter` |
+| `01-minimal-ansi.sql` | minimal | `sql-ddl` ≥ 0.85 | valid | `ansi`, `create-table`, `primary-key` |
+| `02-typical-postgres.sql` | typical | `sql-ddl` ≥ 0.85 | valid | `postgres`, `enum-type`, `foreign-key`, `check-constraint`, `expression-index`, `comment-on`, `view` |
+| `03-migrations-set/V1__create_core.sql` ⚠ | multi-file (root) | `sql-ddl` ≥ 0.85 | valid | `multi-file`, `migrations`, `postgres`, `final-state` |
+| `03-migrations-set/V2__widen_and_rename.sql` | multi-file (member) | `sql-ddl` (no guarantee) | valid | `multi-file`, `migrations`, `rename-column`, `alter-type` |
+| `03-migrations-set/V3__constraints_and_indexes.sql` | multi-file (member) | `sql-ddl` (no guarantee) | valid | `multi-file`, `migrations`, `constraints`, `index` |
+| `04-stress-mysql.sql` ⚠ | stress | `sql-ddl` ≥ 0.85 | valid | `mysql`, `auto-increment`, `enum`, `set`, `json`, `generated-column`, `fulltext`, `partitions`, `alter-table` |
+| `05-real-world-sqlserver.sql` | real-world | `sql-ddl` ≥ 0.85 | valid | `sqlserver`, `identity`, `computed-column`, `filtered-index`, `rowversion`, `go-batches`, `view` |
+| `06-typical-oracle.sql` | typical | `sql-ddl` ≥ 0.85 | valid | `oracle`, `varchar2`, `number`, `clob`, `sequence`, `partitions`, `comment-on` |
+| `07-composition-inheritance-and-views.sql` | composition | `sql-ddl` ≥ 0.85 | valid | `domain`, `composite-type`, `table-inheritance`, `partitioning`, `view`, `materialized-view`, `postgres` |
+| `negative/01-syntactic-missing-paren.sql` | — | `sql-ddl` (no guarantee) | invalid | `negative`, `syntactic`, `missing-paren` |
+| `negative/02-semantic-table-without-columns.sql` | — | `sql-ddl` (no guarantee) | invalid | `negative`, `semantic`, `no-columns` |
+| `negative/03-truncated-mid-statement.sql` | — | `sql-ddl` (no guarantee) | invalid | `negative`, `truncated`, `mid-column` |
+| `negative/04-wrong-format-dbml.dbml` | — | `sql-ddl` (no guarantee) | invalid | `negative`, `wrong-format`, `dbml` |
+| `negative/05-encoding-utf16.sql` | — | `sql-ddl` (no guarantee) | invalid | `negative`, `encoding`, `utf-16` |
+| `negative/06-unresolvable-foreign-key.sql` | — | `sql-ddl` (no guarantee) | invalid | `negative`, `unresolvable-ref`, `missing-referenced-table` |
 
 > ⚠ **`03-migrations-set/V1__create_core.sql`** — Set root: the migration series imports as its final state, so V1's shape is deliberately not what the canonical model should contain.
 

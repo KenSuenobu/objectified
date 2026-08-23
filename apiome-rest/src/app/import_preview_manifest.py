@@ -150,6 +150,7 @@ from .proto_editions import (
     EDITIONS_PROVENANCE_EXTRA_KEY as PROTO_EDITIONS_EXTRA_KEY,
 )
 from .relaxng_normalizer import RELAXNG_EXTRAS_KEY
+from .sql_ddl_normalizer import SQL_DDL_EXTRAS_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -251,6 +252,13 @@ PROVENANCE_EXTRA_KEYS = frozenset(SOURCE_LOCATION_EXTRA_KEYS) | frozenset(NATIVE
         # neither is listed here, because they are source constructs the canonical model does
         # not hold and must read as partial.
         DBT_EXTRAS_KEY,
+        # FMT-5.6: the SQL DDL projection record (the resolved dialect and how it was
+        # resolved, the relation list, the statement counts, the recorded foreign-key
+        # relationships, declared limits, the composed migrations set). Our own reading of
+        # the script, not a construct the script names — the script's own blocks live under
+        # their own `sql_*` keys and are deliberately NOT listed here, because they are
+        # source constructs the canonical model does not hold and must read as partial.
+        SQL_DDL_EXTRAS_KEY,
         # FMT-3.7: the resolved Protobuf Editions record (per-file edition, syntax and feature
         # set). It is our own resolution of the document, not a construct the document names.
         # Spelled by its owning module rather than repeated as a literal.
@@ -1090,6 +1098,7 @@ def _document_scope_rows(
     ledger.extend(_odcs_capability_rows(api))
     ledger.extend(_kafka_connect_capability_rows(api))
     ledger.extend(_dbt_capability_rows(api))
+    ledger.extend(_sql_ddl_capability_rows(api))
 
     return nodes, edges, ledger
 
@@ -1549,6 +1558,32 @@ def _dbt_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
         extras_key=DBT_EXTRAS_KEY,
         location_label="Resource(s)",
         normalized_noun="resource",
+    )
+
+
+def _sql_ddl_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
+    """Render the FMT-5.6 SQL DDL declared limits as document-scoped ledger rows.
+
+    Everything a DDL script states that the canonical model has no facet for — `CHECK`
+    predicates, identity declarations, computed columns, indexes, partitioning, storage
+    clauses, inheritance links, sequences, collations, type parameters beyond a character
+    length, and the statements this reader does not model — is stated as
+    ``partially-mapped``: the relation and its columns *are* normalized, and only the part
+    with no canonical analogue moves to extras. A foreign key appears here for the same
+    reason it does for dbt — the canonical model has no edge vocabulary — even though the
+    edge itself is fully resolved and refused when it dangles.
+
+    Args:
+        api: The normalized model.
+
+    Returns:
+        One ledger row per declared limit, or an empty list for a script that met none.
+    """
+    return _declared_limit_rows(
+        api,
+        extras_key=SQL_DDL_EXTRAS_KEY,
+        location_label="Relation(s)",
+        normalized_noun="relation",
     )
 
 

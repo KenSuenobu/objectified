@@ -1,0 +1,155 @@
+{
+  "adapter": "sql-ddl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "sql_ddl": {
+        "capability_limits": [
+          {
+            "construct": "sql.uniqueness",
+            "count": 1,
+            "detail": "`PRIMARY KEY` and `UNIQUE` declare identity over the *rows* of a table. The canonical constraint vocabulary has no identity facet (`unique_items` is about the members of one array), so the declaration is carried on the type in `extras['sql_key']` and is not enforced. A primary key's columns *are* modelled as non-nullable, because SQL says they are.",
+            "locations": [
+              "beacon"
+            ]
+          }
+        ],
+        "dialect": "ansi",
+        "dialect_label": "ANSI SQL",
+        "dialect_source": "default",
+        "relations": [
+          {
+            "key": "beacon",
+            "kind": "table",
+            "name": "beacon"
+          }
+        ],
+        "statements": {
+          "CREATE TABLE": 1
+        }
+      }
+    },
+    "format": "sql-ddl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "01-minimal-ansi",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "01-minimal-ansi",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "beacon_id"
+              ]
+            }
+          },
+          "sql_kind": "table",
+          "sql_position": 1
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 16,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "VARCHAR(16)",
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "beacon.beacon_id",
+            "name": "beacon_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "TIMESTAMP",
+              "sql_position": 1
+            },
+            "field_number": null,
+            "key": "beacon.seen_at",
+            "name": "seen_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "beacon",
+        "key_type": null,
+        "kind": "record",
+        "name": "beacon",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "sql-ddl/01-minimal-ansi.sql",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.94,
+    "format": "sql-ddl"
+  },
+  "fingerprint": "sha256:514f537dc33e04e6b32930114cd97c31edfdcb70bb365be6154e9ddd76ff3594",
+  "lint": {
+    "findings": 4,
+    "grade": "A",
+    "report_fingerprint": "3f42151137af6e207e4cc6d50dc3067bd46b18f85c6ee3624cee29c73a58a291",
+    "score": 93,
+    "severity_counts": {
+      "error": 0,
+      "info": 3,
+      "warning": 1
+    }
+  },
+  "snapshot_version": 1
+}

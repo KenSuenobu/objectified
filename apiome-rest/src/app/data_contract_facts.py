@@ -75,12 +75,16 @@ CONTRACT_FORMATS: frozenset = frozenset(
 #: Source formats that describe a dataset's **shape** and nothing else.
 #:
 #: Avro, XSD, RELAX NG, ASN.1, CDDL, DTD, FlatBuffers, JSON Schema, JTD, Arrow, a Kafka
-#: Connect schema, a COBOL copybook and the EDI/HL7/ISO wire grammars are schema languages:
-#: there is no place in any of them to write down an owner, a service level or a retention
-#: window. Asking one of them for those facts reports a **capability limit of the format** as
-#: a defect of the document — the exact mistake the declared-limits ledger exists elsewhere
-#: in this service to avoid — so the FMT-5.5 pack self-gates to nothing for them, exactly as
-#: the IXH-5.4 example-conformance pack self-gates on an artifact with no walkable document.
+#: Connect schema, a SQL DDL script, a COBOL copybook and the EDI/HL7/ISO wire grammars are
+#: schema languages: there is no place in any of them to write down an owner, a service
+#: level or a retention window. SQL DDL is the one worth spelling out, because it is the
+#: closest call in the set — a `COMMENT ON` can *describe* a table and a `CHECK` can
+#: constrain it, but neither is a governance statement, and there is no DDL syntax at all
+#: for an owner, an SLA or a retention window. Asking one of them for those facts reports a
+#: **capability limit of the format** as a defect of the document — the exact mistake the
+#: declared-limits ledger exists elsewhere in this service to avoid — so the FMT-5.5 pack
+#: self-gates to nothing for them, exactly as the IXH-5.4 example-conformance pack
+#: self-gates on an artifact with no walkable document.
 #:
 #: Listed rather than derived so a *new* data-schema reader has to be triaged into one set or
 #: the other: ``test_every_data_schema_format_is_classified`` fails until it is.
@@ -104,6 +108,7 @@ SCHEMA_ONLY_FORMATS: frozenset = frozenset(
         "kafka-connect",
         "relaxng",
         "sample",
+        "sql-ddl",
         "xsd",
     }
 )

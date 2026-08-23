@@ -495,7 +495,7 @@
       "marker": "`spBv1.0/...` topic namespace, or a Sparkplug protobuf `Payload` on the binary intake path"
     },
     "sql-ddl": {
-      "label": "SQL DDL (pending #5444)",
+      "label": "SQL DDL schemas and migrations",
       "category": "data-schema",
       "paradigm": "data_schema",
       "marker": "`CREATE TABLE`/`CREATE VIEW`/`ALTER TABLE \u2026 ADD CONSTRAINT`"
@@ -25932,7 +25932,7 @@
     {
       "path": "sql-ddl/01-minimal-ansi.sql",
       "format": "sql-ddl",
-      "adapter_key": null,
+      "adapter_key": "sql-ddl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "sql-ddl",
@@ -25941,8 +25941,7 @@
       "features": [
         "ansi",
         "create-table",
-        "primary-key",
-        "pending-adapter"
+        "primary-key"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -25953,7 +25952,7 @@
     {
       "path": "sql-ddl/02-typical-postgres.sql",
       "format": "sql-ddl",
-      "adapter_key": null,
+      "adapter_key": "sql-ddl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "sql-ddl",
@@ -25966,8 +25965,7 @@
         "check-constraint",
         "expression-index",
         "comment-on",
-        "view",
-        "pending-adapter"
+        "view"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -25978,7 +25976,7 @@
     {
       "path": "sql-ddl/03-migrations-set/V1__create_core.sql",
       "format": "sql-ddl",
-      "adapter_key": null,
+      "adapter_key": "sql-ddl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "sql-ddl",
@@ -25988,8 +25986,7 @@
         "multi-file",
         "migrations",
         "postgres",
-        "final-state",
-        "pending-adapter"
+        "final-state"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -26002,7 +25999,7 @@
     {
       "path": "sql-ddl/03-migrations-set/V2__widen_and_rename.sql",
       "format": "sql-ddl",
-      "adapter_key": null,
+      "adapter_key": "sql-ddl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "sql-ddl",
@@ -26012,8 +26009,7 @@
         "multi-file",
         "migrations",
         "rename-column",
-        "alter-type",
-        "pending-adapter"
+        "alter-type"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -26025,7 +26021,7 @@
     {
       "path": "sql-ddl/03-migrations-set/V3__constraints_and_indexes.sql",
       "format": "sql-ddl",
-      "adapter_key": null,
+      "adapter_key": "sql-ddl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "sql-ddl",
@@ -26035,8 +26031,7 @@
         "multi-file",
         "migrations",
         "constraints",
-        "index",
-        "pending-adapter"
+        "index"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -26048,7 +26043,7 @@
     {
       "path": "sql-ddl/04-stress-mysql.sql",
       "format": "sql-ddl",
-      "adapter_key": null,
+      "adapter_key": "sql-ddl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "sql-ddl",
@@ -26063,8 +26058,7 @@
         "generated-column",
         "fulltext",
         "partitions",
-        "alter-table",
-        "pending-adapter"
+        "alter-table"
       ],
       "expected_outcome": "imports_with_warnings",
       "source": "hand-authored",
@@ -26076,7 +26070,7 @@
     {
       "path": "sql-ddl/05-real-world-sqlserver.sql",
       "format": "sql-ddl",
-      "adapter_key": null,
+      "adapter_key": "sql-ddl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "sql-ddl",
@@ -26089,8 +26083,7 @@
         "filtered-index",
         "rowversion",
         "go-batches",
-        "view",
-        "pending-adapter"
+        "view"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -26101,7 +26094,7 @@
     {
       "path": "sql-ddl/06-typical-oracle.sql",
       "format": "sql-ddl",
-      "adapter_key": null,
+      "adapter_key": "sql-ddl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "sql-ddl",
@@ -26114,8 +26107,7 @@
         "clob",
         "sequence",
         "partitions",
-        "comment-on",
-        "pending-adapter"
+        "comment-on"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -26126,7 +26118,7 @@
     {
       "path": "sql-ddl/07-composition-inheritance-and-views.sql",
       "format": "sql-ddl",
-      "adapter_key": null,
+      "adapter_key": "sql-ddl",
       "validity_class": "valid",
       "expected_detection": {
         "format": "sql-ddl",
@@ -26139,8 +26131,7 @@
         "partitioning",
         "view",
         "materialized-view",
-        "postgres",
-        "pending-adapter"
+        "postgres"
       ],
       "expected_outcome": "imports",
       "source": "hand-authored",
@@ -26151,7 +26142,7 @@
     {
       "path": "sql-ddl/negative/01-syntactic-missing-paren.sql",
       "format": "sql-ddl",
-      "adapter_key": null,
+      "adapter_key": "sql-ddl",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "sql-ddl",
@@ -26160,8 +26151,7 @@
       "features": [
         "negative",
         "syntactic",
-        "missing-paren",
-        "pending-adapter"
+        "missing-paren"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -26173,7 +26163,7 @@
     {
       "path": "sql-ddl/negative/02-semantic-table-without-columns.sql",
       "format": "sql-ddl",
-      "adapter_key": null,
+      "adapter_key": "sql-ddl",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "sql-ddl",
@@ -26182,8 +26172,7 @@
       "features": [
         "negative",
         "semantic",
-        "no-columns",
-        "pending-adapter"
+        "no-columns"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -26195,7 +26184,7 @@
     {
       "path": "sql-ddl/negative/03-truncated-mid-statement.sql",
       "format": "sql-ddl",
-      "adapter_key": null,
+      "adapter_key": "sql-ddl",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "sql-ddl",
@@ -26204,8 +26193,7 @@
       "features": [
         "negative",
         "truncated",
-        "mid-column",
-        "pending-adapter"
+        "mid-column"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -26217,7 +26205,7 @@
     {
       "path": "sql-ddl/negative/04-wrong-format-dbml.dbml",
       "format": "sql-ddl",
-      "adapter_key": null,
+      "adapter_key": "sql-ddl",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "sql-ddl",
@@ -26226,8 +26214,7 @@
       "features": [
         "negative",
         "wrong-format",
-        "dbml",
-        "pending-adapter"
+        "dbml"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -26239,7 +26226,7 @@
     {
       "path": "sql-ddl/negative/05-encoding-utf16.sql",
       "format": "sql-ddl",
-      "adapter_key": null,
+      "adapter_key": "sql-ddl",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "sql-ddl",
@@ -26248,8 +26235,7 @@
       "features": [
         "negative",
         "encoding",
-        "utf-16",
-        "pending-adapter"
+        "utf-16"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",
@@ -26261,7 +26247,7 @@
     {
       "path": "sql-ddl/negative/06-unresolvable-foreign-key.sql",
       "format": "sql-ddl",
-      "adapter_key": null,
+      "adapter_key": "sql-ddl",
       "validity_class": "invalid",
       "expected_detection": {
         "format": "sql-ddl",
@@ -26270,8 +26256,7 @@
       "features": [
         "negative",
         "unresolvable-ref",
-        "missing-referenced-table",
-        "pending-adapter"
+        "missing-referenced-table"
       ],
       "expected_outcome": "rejects",
       "source": "hand-authored",

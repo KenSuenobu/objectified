@@ -1,0 +1,610 @@
+{
+  "adapter": "sql-ddl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "sql_ddl": {
+        "capability_limits": [
+          {
+            "construct": "sql.check_constraint",
+            "count": 2,
+            "detail": "A `CHECK` constraint states a predicate over a row's values. The canonical constraint vocabulary has no predicate facet, so the expression is carried verbatim on the type or the column that declared it (`extras['sql_checks']`) and is never evaluated. The one shape with an exact analogue is decoded as well as carried: `col IN (<literals>)` also becomes the column's `enum`.",
+            "locations": [
+              "account",
+              "ledger_entry"
+            ]
+          },
+          {
+            "construct": "sql.default_expression",
+            "count": 1,
+            "detail": "A `DEFAULT` that is not a literal — `now()`, `SYSDATE`, `CURRENT_TIMESTAMP`, `NEXTVAL('seq')`, a `CASE` — is a value the *database* computes at insert time. The canonical `default` holds literals only, so the expression is carried verbatim in `extras['sql_default_expression']` rather than recorded as a value the document does not state.",
+            "locations": [
+              "account"
+            ]
+          },
+          {
+            "construct": "sql.foreign_key",
+            "count": 2,
+            "detail": "A `FOREIGN KEY` names the table and columns a column points at. The canonical model has no edge vocabulary, so the edge is recorded on the field in `extras['sql_relationship']` — in the ODCS v3.1 property-level relationship shape (`type: foreignKey`, `to: <table>.<column>`), beside the canonical type and field keys it resolved to — and no canonical feature traverses it. A foreign key that names a table the import does not contain is refused rather than carried, because this is an edge the reader writes down.",
+            "locations": [
+              "ledger_entry",
+              "ledger_entry_tag"
+            ]
+          },
+          {
+            "construct": "sql.identity",
+            "count": 2,
+            "detail": "`IDENTITY`, `AUTO_INCREMENT`, `GENERATED … AS IDENTITY` and the `SERIAL` family declare that the database assigns the value. The canonical model has no server-assigned facet — a default it cannot state is not a default — so the declaration is carried in `extras['sql_identity']` and the column keeps the scalar its type names.",
+            "locations": [
+              "account",
+              "ledger_entry"
+            ]
+          },
+          {
+            "construct": "sql.index",
+            "count": 1,
+            "detail": "An index — ordinary, `UNIQUE`, expression-based, filtered/partial, covering, `FULLTEXT` or `CLUSTERED` — states how a relation is *accessed*, not what shape it has. The declaration is carried in `extras['sql_indexes']` on the table it belongs to and creates no canonical structure.",
+            "locations": [
+              "ledger_entry"
+            ]
+          },
+          {
+            "construct": "sql.type_parameters",
+            "count": 1,
+            "detail": "A type's parameters beyond a character length — `numeric(13,2)`, `TIMESTAMP(6)`, `FLOAT(24)`, `INTERVAL DAY(2) TO SECOND(6)` — have no canonical facet. The scalar comes from the type's base name and the full declared spelling is carried in `extras['sql_data_type']`, so nothing is lost and nothing is invented.",
+            "locations": [
+              "ledger_entry"
+            ]
+          },
+          {
+            "construct": "sql.uniqueness",
+            "count": 4,
+            "detail": "`PRIMARY KEY` and `UNIQUE` declare identity over the *rows* of a table. The canonical constraint vocabulary has no identity facet (`unique_items` is about the members of one array), so the declaration is carried on the type in `extras['sql_key']` and is not enforced. A primary key's columns *are* modelled as non-nullable, because SQL says they are.",
+            "locations": [
+              "account",
+              "ledger_entry",
+              "ledger_entry_tag"
+            ]
+          }
+        ],
+        "dialect": "postgres",
+        "dialect_evidence": [
+          "serial-type",
+          "now-default"
+        ],
+        "dialect_label": "PostgreSQL",
+        "dialect_source": "detected",
+        "fileset": {
+          "applied": [
+            "V1__create_core.sql",
+            "V2__widen_and_rename.sql",
+            "V3__constraints_and_indexes.sql"
+          ],
+          "root": "V1__create_core.sql"
+        },
+        "relations": [
+          {
+            "key": "account",
+            "kind": "table",
+            "name": "account"
+          },
+          {
+            "key": "ledger_entry",
+            "kind": "table",
+            "name": "ledger_entry"
+          },
+          {
+            "key": "ledger_entry_tag",
+            "kind": "table",
+            "name": "ledger_entry_tag"
+          }
+        ],
+        "relationships": [
+          {
+            "from": "ledger_entry",
+            "from_column": "account_id",
+            "to": "account",
+            "to_column": "account_id"
+          },
+          {
+            "from": "ledger_entry_tag",
+            "from_column": "entry_id",
+            "to": "ledger_entry",
+            "to_column": "entry_id"
+          }
+        ],
+        "statements": {
+          "ALTER TABLE": 8,
+          "CREATE INDEX": 1,
+          "CREATE TABLE": 3
+        }
+      }
+    },
+    "format": "sql-ddl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "V1__create_core",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "V1__create_core",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_checks": [
+            {
+              "expression": "country_code IS NULL OR country_code = upper(country_code)",
+              "name": "account_country_upper"
+            }
+          ],
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "account_id"
+              ]
+            },
+            "unique": [
+              {
+                "columns": [
+                  "username"
+                ],
+                "name": "account_username_uq"
+              }
+            ]
+          },
+          "sql_kind": "table",
+          "sql_position": 1
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "SERIAL",
+              "sql_identity": {
+                "kind": "serial"
+              },
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "account.account_id",
+            "name": "account_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 2,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "CHAR(2)",
+              "sql_position": 4
+            },
+            "field_number": null,
+            "key": "account.country_code",
+            "name": "country_code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "TIMESTAMP",
+              "sql_default_expression": "now()",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "account.created_at",
+            "name": "created_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 255,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "VARCHAR(255)",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "account.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 40,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "VARCHAR(40)",
+              "sql_position": 1
+            },
+            "field_number": null,
+            "key": "account.username",
+            "name": "username",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "account",
+        "key_type": null,
+        "kind": "record",
+        "name": "account",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_checks": [
+            {
+              "expression": "amount <> 0",
+              "name": "ledger_entry_amount_nonzero"
+            }
+          ],
+          "sql_indexes": [
+            {
+              "columns": [
+                "account_id",
+                "booked_at"
+              ],
+              "name": "ledger_entry_account_idx"
+            }
+          ],
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "entry_id"
+              ]
+            }
+          },
+          "sql_kind": "table",
+          "sql_position": 2
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "INTEGER",
+              "sql_position": 1,
+              "sql_relationship": [
+                {
+                  "to": "account.account_id",
+                  "to_columns": [
+                    "account_id"
+                  ],
+                  "to_field": "account.account_id",
+                  "to_type": "account",
+                  "type": "foreignKey"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "ledger_entry.account_id",
+            "name": "account_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "NUMERIC(12, 2)",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "ledger_entry.amount",
+            "name": "amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "TIMESTAMP",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "ledger_entry.booked_at",
+            "name": "booked_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 3,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": "EUR",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "CHAR(3)",
+              "sql_position": 4
+            },
+            "field_number": null,
+            "key": "ledger_entry.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "BIGSERIAL",
+              "sql_identity": {
+                "kind": "serial"
+              },
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "ledger_entry.entry_id",
+            "name": "entry_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ledger_entry",
+        "key_type": null,
+        "kind": "record",
+        "name": "ledger_entry",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "entry_id",
+                "tag"
+              ]
+            }
+          },
+          "sql_kind": "table",
+          "sql_position": 3
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "BIGINT",
+              "sql_position": 0,
+              "sql_relationship": [
+                {
+                  "on_delete": "CASCADE",
+                  "to": "ledger_entry.entry_id",
+                  "to_columns": [
+                    "entry_id"
+                  ],
+                  "to_field": "ledger_entry.entry_id",
+                  "to_type": "ledger_entry",
+                  "type": "foreignKey"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "ledger_entry_tag.entry_id",
+            "name": "entry_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 40,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "VARCHAR(40)",
+              "sql_position": 1
+            },
+            "field_number": null,
+            "key": "ledger_entry_tag.tag",
+            "name": "tag",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "ledger_entry_tag",
+        "key_type": null,
+        "kind": "record",
+        "name": "ledger_entry_tag",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "sql-ddl/03-migrations-set/V1__create_core.sql",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.94,
+    "format": "sql-ddl"
+  },
+  "fingerprint": "sha256:76ec1acebb7367945e7bd7a5b8fd2cd8bbaebbc5320cec9c97b2e5f0297b71cc",
+  "lint": {
+    "findings": 16,
+    "grade": "C",
+    "report_fingerprint": "940b155ff568d9b23e6c807cb3c10e71d384be419a7e3dc563d6bd72c7412677",
+    "score": 75,
+    "severity_counts": {
+      "error": 0,
+      "info": 13,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

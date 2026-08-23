@@ -1,0 +1,719 @@
+{
+  "adapter": "sql-ddl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "sql_ddl": {
+        "capability_limits": [
+          {
+            "construct": "sql.check_constraint",
+            "count": 1,
+            "detail": "A `CHECK` constraint states a predicate over a row's values. The canonical constraint vocabulary has no predicate facet, so the expression is carried verbatim on the type or the column that declared it (`extras['sql_checks']`) and is never evaluated. The one shape with an exact analogue is decoded as well as carried: `col IN (<literals>)` also becomes the column's `enum`.",
+            "locations": [
+              "hr_employee"
+            ]
+          },
+          {
+            "construct": "sql.default_expression",
+            "count": 1,
+            "detail": "A `DEFAULT` that is not a literal — `now()`, `SYSDATE`, `CURRENT_TIMESTAMP`, `NEXTVAL('seq')`, a `CASE` — is a value the *database* computes at insert time. The canonical `default` holds literals only, so the expression is carried verbatim in `extras['sql_default_expression']` rather than recorded as a value the document does not state.",
+            "locations": [
+              "hr_employee"
+            ]
+          },
+          {
+            "construct": "sql.foreign_key",
+            "count": 2,
+            "detail": "A `FOREIGN KEY` names the table and columns a column points at. The canonical model has no edge vocabulary, so the edge is recorded on the field in `extras['sql_relationship']` — in the ODCS v3.1 property-level relationship shape (`type: foreignKey`, `to: <table>.<column>`), beside the canonical type and field keys it resolved to — and no canonical feature traverses it. A foreign key that names a table the import does not contain is refused rather than carried, because this is an edge the reader writes down.",
+            "locations": [
+              "hr_employee",
+              "hr_payslip"
+            ]
+          },
+          {
+            "construct": "sql.identity",
+            "count": 1,
+            "detail": "`IDENTITY`, `AUTO_INCREMENT`, `GENERATED … AS IDENTITY` and the `SERIAL` family declare that the database assigns the value. The canonical model has no server-assigned facet — a default it cannot state is not a default — so the declaration is carried in `extras['sql_identity']` and the column keeps the scalar its type names.",
+            "locations": [
+              "hr_employee"
+            ]
+          },
+          {
+            "construct": "sql.index",
+            "count": 1,
+            "detail": "An index — ordinary, `UNIQUE`, expression-based, filtered/partial, covering, `FULLTEXT` or `CLUSTERED` — states how a relation is *accessed*, not what shape it has. The declaration is carried in `extras['sql_indexes']` on the table it belongs to and creates no canonical structure.",
+            "locations": [
+              "hr_employee"
+            ]
+          },
+          {
+            "construct": "sql.length_semantics",
+            "count": 6,
+            "detail": "An Oracle `VARCHAR2(40)` is forty *bytes* or forty *characters* depending on the session's `NLS_LENGTH_SEMANTICS`, which a script does not state. Rather than guess, the length is carried in `extras['sql_data_type']` and no `maxLength` is claimed. A declaration that says `VARCHAR2(40 CHAR)` *is* unambiguous and does project onto `maxLength`.",
+            "locations": [
+              "hr_department",
+              "hr_employee"
+            ]
+          },
+          {
+            "construct": "sql.partitioning",
+            "count": 1,
+            "detail": "`PARTITION BY`, a partition list, and PostgreSQL's `PARTITION OF` state how a relation is *physically divided*. The canonical model describes one logical shape, so the clause is carried in `extras['sql_partitioning']`. A declarative partition child is still modelled as a relation, with the columns it inherits from its parent, because that is the shape a row in it has.",
+            "locations": [
+              "hr_payslip"
+            ]
+          },
+          {
+            "construct": "sql.sequence",
+            "count": 1,
+            "detail": "`CREATE SEQUENCE` declares a number generator, not a shape. The declaration is carried in `extras['sql_sequences']` at the document level; a column that draws from it keeps the scalar its own type names.",
+            "locations": []
+          },
+          {
+            "construct": "sql.type_parameters",
+            "count": 10,
+            "detail": "A type's parameters beyond a character length — `numeric(13,2)`, `TIMESTAMP(6)`, `FLOAT(24)`, `INTERVAL DAY(2) TO SECOND(6)` — have no canonical facet. The scalar comes from the type's base name and the full declared spelling is carried in `extras['sql_data_type']`, so nothing is lost and nothing is invented.",
+            "locations": [
+              "hr_department",
+              "hr_employee",
+              "hr_payslip"
+            ]
+          },
+          {
+            "construct": "sql.uniqueness",
+            "count": 4,
+            "detail": "`PRIMARY KEY` and `UNIQUE` declare identity over the *rows* of a table. The canonical constraint vocabulary has no identity facet (`unique_items` is about the members of one array), so the declaration is carried on the type in `extras['sql_key']` and is not enforced. A primary key's columns *are* modelled as non-nullable, because SQL says they are.",
+            "locations": [
+              "hr_department",
+              "hr_employee",
+              "hr_payslip"
+            ]
+          }
+        ],
+        "dialect": "oracle",
+        "dialect_evidence": [
+          "number-type",
+          "sequence-cache",
+          "sysdate",
+          "varchar2",
+          "date-literal",
+          "identity-standard"
+        ],
+        "dialect_label": "Oracle",
+        "dialect_source": "detected",
+        "relations": [
+          {
+            "key": "hr_department",
+            "kind": "table",
+            "name": "hr_department"
+          },
+          {
+            "key": "hr_employee",
+            "kind": "table",
+            "name": "hr_employee"
+          },
+          {
+            "key": "hr_payslip",
+            "kind": "table",
+            "name": "hr_payslip"
+          }
+        ],
+        "relationships": [
+          {
+            "from": "hr_employee",
+            "from_column": "department_id",
+            "name": "hr_employee_dept_fk",
+            "to": "hr_department",
+            "to_column": "department_id"
+          },
+          {
+            "from": "hr_payslip",
+            "from_column": "employee_id",
+            "name": "hr_payslip_emp_fk",
+            "to": "hr_employee",
+            "to_column": "employee_id"
+          }
+        ],
+        "statements": {
+          "ALTER TABLE": 1,
+          "COMMENT ON": 2,
+          "CREATE INDEX": 1,
+          "CREATE SEQUENCE": 1,
+          "CREATE TABLE": 3
+        }
+      },
+      "sql_sequences": [
+        {
+          "key": "hr_department_seq",
+          "name": "hr_department_seq",
+          "options": {
+            "INCREMENT BY": "10",
+            "NOCACHE": true,
+            "START WITH": "100"
+          }
+        }
+      ]
+    },
+    "format": "sql-ddl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "06-typical-oracle",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "06-typical-oracle",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "department_id"
+              ],
+              "name": "hr_department_pk"
+            }
+          },
+          "sql_kind": "table",
+          "sql_position": 2
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "VARCHAR2(10)",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "hr_department.cost_centre",
+            "name": "cost_centre",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "NUMBER(6)",
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "hr_department.department_id",
+            "name": "department_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "VARCHAR2(60)",
+              "sql_position": 1
+            },
+            "field_number": null,
+            "key": "hr_department.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "hr_department",
+        "key_type": null,
+        "kind": "record",
+        "name": "hr_department",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Employee master record.",
+        "enum_values": [],
+        "extras": {
+          "sql_checks": [
+            {
+              "expression": "salary IS NULL OR salary > 0",
+              "name": "hr_employee_salary_ck"
+            }
+          ],
+          "sql_indexes": [
+            {
+              "columns": [
+                "department_id"
+              ],
+              "name": "hr_employee_dept_ix"
+            }
+          ],
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "employee_id"
+              ],
+              "name": "hr_employee_pk"
+            },
+            "unique": [
+              {
+                "columns": [
+                  "employee_no"
+                ],
+                "name": "hr_employee_no_uq"
+              }
+            ]
+          },
+          "sql_kind": "table",
+          "sql_position": 1
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Fraction, not percent: 0.15 means 15%.",
+            "extras": {
+              "sql_data_type": "NUMBER(3, 2)",
+              "sql_position": 8
+            },
+            "field_number": null,
+            "key": "hr_employee.commission_pct",
+            "name": "commission_pct",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "NUMBER(6)",
+              "sql_position": 6,
+              "sql_relationship": [
+                {
+                  "name": "hr_employee_dept_fk",
+                  "on_delete": "SET NULL",
+                  "to": "hr_department.department_id",
+                  "to_columns": [
+                    "department_id"
+                  ],
+                  "to_field": "hr_department.department_id",
+                  "to_type": "hr_department",
+                  "type": "foreignKey"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "hr_employee.department_id",
+            "name": "department_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "VARCHAR2(255)",
+              "sql_position": 4
+            },
+            "field_number": null,
+            "key": "hr_employee.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "NUMBER(10)",
+              "sql_identity": {
+                "kind": "identity",
+                "mode": "by default"
+              },
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "hr_employee.employee_id",
+            "name": "employee_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "VARCHAR2(12)",
+              "sql_position": 1
+            },
+            "field_number": null,
+            "key": "hr_employee.employee_no",
+            "name": "employee_no",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "VARCHAR2(40)",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "hr_employee.first_name",
+            "name": "first_name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "DATE",
+              "sql_default_expression": "SYSDATE",
+              "sql_position": 5
+            },
+            "field_number": null,
+            "key": "hr_employee.hire_date",
+            "name": "hire_date",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "date",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "VARCHAR2(60)",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "hr_employee.last_name",
+            "name": "last_name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "CLOB",
+              "sql_position": 9
+            },
+            "field_number": null,
+            "key": "hr_employee.notes",
+            "name": "notes",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "BLOB",
+              "sql_position": 10
+            },
+            "field_number": null,
+            "key": "hr_employee.photo",
+            "name": "photo",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "bytes",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "NUMBER(11, 2)",
+              "sql_position": 7
+            },
+            "field_number": null,
+            "key": "hr_employee.salary",
+            "name": "salary",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "TIMESTAMP(6) WITH TIME ZONE",
+              "sql_position": 11
+            },
+            "field_number": null,
+            "key": "hr_employee.updated_at",
+            "name": "updated_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "hr_employee",
+        "key_type": null,
+        "kind": "record",
+        "name": "hr_employee",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "payslip_id"
+              ],
+              "name": "hr_payslip_pk"
+            }
+          },
+          "sql_kind": "table",
+          "sql_partitioning": {
+            "clause": "PARTITION BY RANGE(period_start) (PARTITION p2025 VALUES LESS THAN(DATE '2026-01-01'), PARTITION p2026 VALUES LESS THAN(DATE '2027-01-01'), PARTITION pmax VALUES LESS THAN(MAXVALUE))"
+          },
+          "sql_position": 3
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "NUMBER(10)",
+              "sql_position": 1,
+              "sql_relationship": [
+                {
+                  "name": "hr_payslip_emp_fk",
+                  "to": "hr_employee.employee_id",
+                  "to_columns": [
+                    "employee_id"
+                  ],
+                  "to_field": "hr_employee.employee_id",
+                  "to_type": "hr_employee",
+                  "type": "foreignKey"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "hr_payslip.employee_id",
+            "name": "employee_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "NUMBER(11, 2)",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "hr_payslip.gross_amount",
+            "name": "gross_amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "NUMBER(11, 2)",
+              "sql_position": 4
+            },
+            "field_number": null,
+            "key": "hr_payslip.net_amount",
+            "name": "net_amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "NUMBER(12)",
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "hr_payslip.payslip_id",
+            "name": "payslip_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "DATE",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "hr_payslip.period_start",
+            "name": "period_start",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "date",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "hr_payslip",
+        "key_type": null,
+        "kind": "record",
+        "name": "hr_payslip",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "sql-ddl/06-typical-oracle.sql",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.94,
+    "format": "sql-ddl"
+  },
+  "fingerprint": "sha256:bbb2e1b9f5fdc03f2794d944494f4dd21436cc8773ab841108da04551f951337",
+  "lint": {
+    "findings": 22,
+    "grade": "C",
+    "report_fingerprint": "f34ad15a2727d47090ed882e4c2c0f118d5fbe5a51c5aa8e6b6cab35cf48988b",
+    "score": 72,
+    "severity_counts": {
+      "error": 0,
+      "info": 20,
+      "warning": 2
+    }
+  },
+  "snapshot_version": 1
+}

@@ -996,6 +996,28 @@ _VERSION_COVERAGE: Dict[str, VersionCoverage] = {
         writes=[],
         default_write=None,
     ),
+    "sql-ddl": VersionCoverage(
+        reads=[
+            FormatVersion(
+                version="SQL DDL (ANSI plus PostgreSQL, MySQL, SQL Server, Oracle)",
+                format_key="sql-ddl",
+                support=VersionSupport.UNGATED,
+                note="A DDL script carries no version marker of its own. It does not "
+                "declare which SQL it is written in, and the ISO revisions (SQL:1999 "
+                "through SQL:2023) add syntax without renumbering anything a `CREATE "
+                "TABLE` says, so there is no version for a reader to branch on. What a "
+                "script does carry is a *vendor accent*, and that is resolved instead: "
+                "the dialect is detected from the script's own markers, recorded in "
+                "provenance beside the markers that decided it, and forced by the "
+                "`sql_dialect` import option when a user knows better. A script with no "
+                "vendor marker is read as ANSI. The vendor constructs one dialect has and "
+                "the others do not are construct-level boundaries, so they are declared "
+                "in the capability registry's `unsupported_constructs`, not here.",
+            ),
+        ],
+        writes=[],
+        default_write=None,
+    ),
     "dtd": VersionCoverage(
         reads=[
             FormatVersion(

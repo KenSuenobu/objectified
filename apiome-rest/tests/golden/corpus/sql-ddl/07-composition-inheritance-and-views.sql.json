@@ -1,0 +1,1570 @@
+{
+  "adapter": "sql-ddl",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "sql_ddl": {
+        "capability_limits": [
+          {
+            "construct": "sql.check_constraint",
+            "count": 2,
+            "detail": "A `CHECK` constraint states a predicate over a row's values. The canonical constraint vocabulary has no predicate facet, so the expression is carried verbatim on the type or the column that declared it (`extras['sql_checks']`) and is never evaluated. The one shape with an exact analogue is decoded as well as carried: `col IN (<literals>)` also becomes the column's `enum`.",
+            "locations": [
+              "sales_order_line",
+              "sku_code"
+            ]
+          },
+          {
+            "construct": "sql.default_expression",
+            "count": 1,
+            "detail": "A `DEFAULT` that is not a literal — `now()`, `SYSDATE`, `CURRENT_TIMESTAMP`, `NEXTVAL('seq')`, a `CASE` — is a value the *database* computes at insert time. The canonical `default` holds literals only, so the expression is carried verbatim in `extras['sql_default_expression']` rather than recorded as a value the document does not state.",
+            "locations": [
+              "audited"
+            ]
+          },
+          {
+            "construct": "sql.foreign_key",
+            "count": 2,
+            "detail": "A `FOREIGN KEY` names the table and columns a column points at. The canonical model has no edge vocabulary, so the edge is recorded on the field in `extras['sql_relationship']` — in the ODCS v3.1 property-level relationship shape (`type: foreignKey`, `to: <table>.<column>`), beside the canonical type and field keys it resolved to — and no canonical feature traverses it. A foreign key that names a table the import does not contain is refused rather than carried, because this is an edge the reader writes down.",
+            "locations": [
+              "sales_order_line"
+            ]
+          },
+          {
+            "construct": "sql.partitioning",
+            "count": 3,
+            "detail": "`PARTITION BY`, a partition list, and PostgreSQL's `PARTITION OF` state how a relation is *physically divided*. The canonical model describes one logical shape, so the clause is carried in `extras['sql_partitioning']`. A declarative partition child is still modelled as a relation, with the columns it inherits from its parent, because that is the shape a row in it has.",
+            "locations": [
+              "sales_order",
+              "sales_order_2025",
+              "sales_order_2026"
+            ]
+          },
+          {
+            "construct": "sql.table_inheritance",
+            "count": 2,
+            "detail": "PostgreSQL's `INHERITS (parent)` copies the parent's columns into the child and keeps a catalog link between them. The copied columns *are* modelled — they are columns of the child — but the link is not: the canonical model has no type hierarchy for records, so the parent is named in `extras['sql_inherits']`.",
+            "locations": [
+              "product",
+              "service"
+            ]
+          },
+          {
+            "construct": "sql.type_parameters",
+            "count": 1,
+            "detail": "A type's parameters beyond a character length — `numeric(13,2)`, `TIMESTAMP(6)`, `FLOAT(24)`, `INTERVAL DAY(2) TO SECOND(6)` — have no canonical facet. The scalar comes from the type's base name and the full declared spelling is carried in `extras['sql_data_type']`, so nothing is lost and nothing is invented.",
+            "locations": [
+              "sales_order_line"
+            ]
+          },
+          {
+            "construct": "sql.uniqueness",
+            "count": 6,
+            "detail": "`PRIMARY KEY` and `UNIQUE` declare identity over the *rows* of a table. The canonical constraint vocabulary has no identity facet (`unique_items` is about the members of one array), so the declaration is carried on the type in `extras['sql_key']` and is not enforced. A primary key's columns *are* modelled as non-nullable, because SQL says they are.",
+            "locations": [
+              "product",
+              "sales_order",
+              "sales_order_2025",
+              "sales_order_2026",
+              "sales_order_line",
+              "service"
+            ]
+          },
+          {
+            "construct": "sql.view_definition",
+            "count": 2,
+            "detail": "A view's `SELECT` is carried verbatim in `extras['sql_view']` and is never executed, planned or otherwise interpreted. The reader reads it only far enough to name the columns the view projects and to resolve the ones that are plain column references.",
+            "locations": [
+              "order_summary",
+              "order_summary_daily"
+            ]
+          },
+          {
+            "construct": "sql.view_derived_column",
+            "count": 5,
+            "detail": "A view column produced by an expression — an aggregate, an arithmetic term, a `CASE` — has no declared type, and the reader does not evaluate SQL to infer one. The column is modelled with its projected name and a string type, and the expression is carried, because 'the document did not say' is the honest answer.",
+            "locations": [
+              "order_summary",
+              "order_summary_daily"
+            ]
+          }
+        ],
+        "dialect": "postgres",
+        "dialect_evidence": [
+          "create-domain",
+          "declarative-partition",
+          "enum-type",
+          "table-inheritance",
+          "timestamptz",
+          "materialized-view",
+          "now-default"
+        ],
+        "dialect_label": "PostgreSQL",
+        "dialect_source": "detected",
+        "relations": [
+          {
+            "key": "audited",
+            "kind": "table",
+            "name": "audited"
+          },
+          {
+            "key": "order_summary",
+            "kind": "view",
+            "name": "order_summary"
+          },
+          {
+            "key": "order_summary_daily",
+            "kind": "materialized_view",
+            "name": "order_summary_daily"
+          },
+          {
+            "key": "product",
+            "kind": "table",
+            "name": "product"
+          },
+          {
+            "key": "sales_order",
+            "kind": "table",
+            "name": "sales_order"
+          },
+          {
+            "key": "sales_order_2025",
+            "kind": "table",
+            "name": "sales_order_2025"
+          },
+          {
+            "key": "sales_order_2026",
+            "kind": "table",
+            "name": "sales_order_2026"
+          },
+          {
+            "key": "sales_order_line",
+            "kind": "table",
+            "name": "sales_order_line"
+          },
+          {
+            "key": "service",
+            "kind": "table",
+            "name": "service"
+          }
+        ],
+        "relationships": [
+          {
+            "from": "sales_order_line",
+            "from_column": "order_id",
+            "to": "sales_order",
+            "to_column": "order_id"
+          },
+          {
+            "from": "sales_order_line",
+            "from_column": "placed_at",
+            "to": "sales_order",
+            "to_column": "placed_at"
+          },
+          {
+            "from": "sales_order_line",
+            "from_column": "sku",
+            "to": "product",
+            "to_column": "sku"
+          }
+        ],
+        "statements": {
+          "CREATE DOMAIN": 1,
+          "CREATE TABLE": 7,
+          "CREATE TYPE": 2,
+          "CREATE VIEW": 2
+        }
+      }
+    },
+    "format": "sql-ddl",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "07-composition-inheritance-and-views",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "07-composition-inheritance-and-views",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_kind": "table",
+          "sql_position": 4
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "timestamptz",
+              "sql_default_expression": "now()",
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "audited.created_at",
+            "name": "created_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 1
+            },
+            "field_number": null,
+            "key": "audited.created_by",
+            "name": "created_by",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "timestamptz",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "audited.updated_at",
+            "name": "updated_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "audited.updated_by",
+            "name": "updated_by",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "audited",
+        "key_type": null,
+        "kind": "record",
+        "name": "audited",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_kind": "composite",
+          "sql_position": 2
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 3,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "char(3)",
+              "sql_position": 1
+            },
+            "field_number": null,
+            "key": "money_amount.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "bigint",
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "money_amount.minor_units",
+            "name": "minor_units",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int64",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "money_amount",
+        "key_type": null,
+        "kind": "record",
+        "name": "money_amount",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "order_status.new",
+            "name": "new",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "order_status.paid",
+            "name": "paid",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "order_status.shipped",
+            "name": "shipped",
+            "value": null
+          },
+          {
+            "deprecated": false,
+            "description": null,
+            "extras": {},
+            "key": "order_status.cancelled",
+            "name": "cancelled",
+            "value": null
+          }
+        ],
+        "extras": {
+          "sql_kind": "enum",
+          "sql_position": 3
+        },
+        "fields": [],
+        "key": "order_status",
+        "key_type": null,
+        "kind": "enum",
+        "name": "order_status",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_kind": "view",
+          "sql_position": 11,
+          "sql_view": {
+            "columns": [
+              {
+                "expression": "o.order_id",
+                "name": "order_id",
+                "source_column": "order_id",
+                "source_table": "sales_order"
+              },
+              {
+                "expression": "o.placed_at",
+                "name": "placed_at",
+                "source_column": "placed_at",
+                "source_table": "sales_order"
+              },
+              {
+                "expression": "o.status",
+                "name": "status",
+                "source_column": "status",
+                "source_table": "sales_order"
+              },
+              {
+                "expression": "count(l.line_number) AS line_count",
+                "name": "line_count"
+              },
+              {
+                "expression": "sum( (l.unit_price).minor_units * l.quantity) AS computed_minor_units",
+                "name": "computed_minor_units"
+              },
+              {
+                "expression": "max(p.name) AS sample_product",
+                "name": "sample_product"
+              }
+            ],
+            "definition": "SELECT o.order_id, o.placed_at, o.status, count(l.line_number) AS line_count, sum( (l.unit_price).minor_units * l.quantity) AS computed_minor_units, max(p.name) AS sample_product FROM sales_order o JOIN sales_order_line l ON l.order_id = o.order_id AND l.placed_at = o.placed_at JOIN product p ON p.sku = l.sku GROUP BY o.order_id, o.placed_at, o.status"
+          }
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_expression": "sum( (l.unit_price).minor_units * l.quantity) AS computed_minor_units",
+              "sql_position": 4
+            },
+            "field_number": null,
+            "key": "order_summary.computed_minor_units",
+            "name": "computed_minor_units",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_expression": "count(l.line_number) AS line_count",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "order_summary.line_count",
+            "name": "line_count",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 0,
+              "sql_source": "sales_order.order_id"
+            },
+            "field_number": null,
+            "key": "order_summary.order_id",
+            "name": "order_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "timestamptz",
+              "sql_position": 1,
+              "sql_source": "sales_order.placed_at"
+            },
+            "field_number": null,
+            "key": "order_summary.placed_at",
+            "name": "placed_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_expression": "max(p.name) AS sample_product",
+              "sql_position": 5
+            },
+            "field_number": null,
+            "key": "order_summary.sample_product",
+            "name": "sample_product",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "order_status",
+              "sql_position": 2,
+              "sql_source": "sales_order.status"
+            },
+            "field_number": null,
+            "key": "order_summary.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "order_status",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "order_summary",
+        "key_type": null,
+        "kind": "record",
+        "name": "order_summary",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_kind": "materialized_view",
+          "sql_position": 12,
+          "sql_view": {
+            "columns": [
+              {
+                "expression": "date_trunc('day', placed_at) AS day",
+                "name": "day"
+              },
+              {
+                "expression": "count(*) AS orders",
+                "name": "orders"
+              }
+            ],
+            "definition": "SELECT date_trunc('day', placed_at) AS day, count(*) AS orders FROM sales_order GROUP BY 1"
+          }
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_expression": "date_trunc('day', placed_at) AS day",
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "order_summary_daily.day",
+            "name": "day",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_expression": "count(*) AS orders",
+              "sql_position": 1
+            },
+            "field_number": null,
+            "key": "order_summary_daily.orders",
+            "name": "orders",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "order_summary_daily",
+        "key_type": null,
+        "kind": "record",
+        "name": "order_summary_daily",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_inherits": [
+            "audited"
+          ],
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "sku"
+              ]
+            }
+          },
+          "sql_kind": "table",
+          "sql_position": 5
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "timestamptz",
+              "sql_default_expression": "now()",
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "product.created_at",
+            "name": "created_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 1
+            },
+            "field_number": null,
+            "key": "product.created_by",
+            "name": "created_by",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 5
+            },
+            "field_number": null,
+            "key": "product.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "money_amount",
+              "sql_position": 6
+            },
+            "field_number": null,
+            "key": "product.price",
+            "name": "price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "money_amount",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "sku_code",
+              "sql_position": 4
+            },
+            "field_number": null,
+            "key": "product.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "sku_code",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "timestamptz",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "product.updated_at",
+            "name": "updated_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "product.updated_by",
+            "name": "updated_by",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "product",
+        "key_type": null,
+        "kind": "record",
+        "name": "product",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "order_id",
+                "placed_at"
+              ]
+            }
+          },
+          "sql_kind": "table",
+          "sql_partitioning": {
+            "clause": "PARTITION BY RANGE(placed_at)"
+          },
+          "sql_position": 7
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "sales_order.order_id",
+            "name": "order_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "timestamptz",
+              "sql_position": 1
+            },
+            "field_number": null,
+            "key": "sales_order.placed_at",
+            "name": "placed_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "new",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "order_status",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "sales_order.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "order_status",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "money_amount",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "sales_order.total",
+            "name": "total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "money_amount",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "sales_order",
+        "key_type": null,
+        "kind": "record",
+        "name": "sales_order",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "order_id",
+                "placed_at"
+              ]
+            }
+          },
+          "sql_kind": "table",
+          "sql_partitioning": {
+            "clause": "FOR VALUES FROM ('2025-01-01') TO('2026-01-01')",
+            "partition_of": "sales_order"
+          },
+          "sql_position": 8
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "sales_order_2025.order_id",
+            "name": "order_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "timestamptz",
+              "sql_position": 1
+            },
+            "field_number": null,
+            "key": "sales_order_2025.placed_at",
+            "name": "placed_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "new",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "order_status",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "sales_order_2025.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "order_status",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "money_amount",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "sales_order_2025.total",
+            "name": "total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "money_amount",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "sales_order_2025",
+        "key_type": null,
+        "kind": "record",
+        "name": "sales_order_2025",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "order_id",
+                "placed_at"
+              ]
+            }
+          },
+          "sql_kind": "table",
+          "sql_partitioning": {
+            "clause": "FOR VALUES FROM ('2026-01-01') TO('2027-01-01')",
+            "partition_of": "sales_order"
+          },
+          "sql_position": 9
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "sales_order_2026.order_id",
+            "name": "order_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "timestamptz",
+              "sql_position": 1
+            },
+            "field_number": null,
+            "key": "sales_order_2026.placed_at",
+            "name": "placed_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": "new",
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "order_status",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "sales_order_2026.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "order_status",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "money_amount",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "sales_order_2026.total",
+            "name": "total",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "money_amount",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "sales_order_2026",
+        "key_type": null,
+        "kind": "record",
+        "name": "sales_order_2026",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_checks": [
+            {
+              "expression": "quantity > 0",
+              "name": null
+            }
+          ],
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "order_id",
+                "placed_at",
+                "line_number"
+              ]
+            }
+          },
+          "sql_kind": "table",
+          "sql_position": 10
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "integer",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "sales_order_line.line_number",
+            "name": "line_number",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "int32",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 0,
+              "sql_relationship": [
+                {
+                  "on_delete": "CASCADE",
+                  "to": "sales_order.order_id",
+                  "to_columns": [
+                    "order_id",
+                    "placed_at"
+                  ],
+                  "to_field": "sales_order.order_id",
+                  "to_type": "sales_order",
+                  "type": "foreignKey"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "sales_order_line.order_id",
+            "name": "order_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "timestamptz",
+              "sql_position": 1,
+              "sql_relationship": [
+                {
+                  "on_delete": "CASCADE",
+                  "to": "sales_order.placed_at",
+                  "to_columns": [
+                    "order_id",
+                    "placed_at"
+                  ],
+                  "to_field": "sales_order.placed_at",
+                  "to_type": "sales_order",
+                  "type": "foreignKey"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "sales_order_line.placed_at",
+            "name": "placed_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_checks": [
+                "quantity > 0"
+              ],
+              "sql_data_type": "numeric(9, 3)",
+              "sql_position": 4
+            },
+            "field_number": null,
+            "key": "sales_order_line.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "sku_code",
+              "sql_position": 3,
+              "sql_relationship": [
+                {
+                  "to": "product.sku",
+                  "to_columns": [
+                    "sku"
+                  ],
+                  "to_field": "product.sku",
+                  "to_type": "product",
+                  "type": "foreignKey"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "sales_order_line.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "sku_code",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "money_amount",
+              "sql_position": 5
+            },
+            "field_number": null,
+            "key": "sales_order_line.unit_price",
+            "name": "unit_price",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "money_amount",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "sales_order_line",
+        "key_type": null,
+        "kind": "record",
+        "name": "sales_order_line",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_inherits": [
+            "audited"
+          ],
+          "sql_key": {
+            "primary_key": {
+              "columns": [
+                "code"
+              ]
+            }
+          },
+          "sql_kind": "table",
+          "sql_position": 6
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": null,
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": 12,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "varchar(12)",
+              "sql_position": 4
+            },
+            "field_number": null,
+            "key": "service.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "timestamptz",
+              "sql_default_expression": "now()",
+              "sql_position": 0
+            },
+            "field_number": null,
+            "key": "service.created_at",
+            "name": "created_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 1
+            },
+            "field_number": null,
+            "key": "service.created_by",
+            "name": "created_by",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "money_amount",
+              "sql_position": 6
+            },
+            "field_number": null,
+            "key": "service.hourly",
+            "name": "hourly",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "money_amount",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 5
+            },
+            "field_number": null,
+            "key": "service.name",
+            "name": "name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "timestamptz",
+              "sql_position": 2
+            },
+            "field_number": null,
+            "key": "service.updated_at",
+            "name": "updated_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "sql_data_type": "text",
+              "sql_position": 3
+            },
+            "field_number": null,
+            "key": "service.updated_by",
+            "name": "updated_by",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "service",
+        "key_type": null,
+        "kind": "record",
+        "name": "service",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": {
+          "extras": {},
+          "item": null,
+          "name": "string",
+          "nullable": true
+        },
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "sql_checks": [
+            "VALUE ~ '^[A-Z]{3}-[0-9]{4}$'"
+          ],
+          "sql_data_type": "varchar(18)",
+          "sql_kind": "domain",
+          "sql_position": 1
+        },
+        "fields": [],
+        "key": "sku_code",
+        "key_type": null,
+        "kind": "alias",
+        "name": "sku_code",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "sql-ddl/07-composition-inheritance-and-views.sql",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 12
+  },
+  "detection": {
+    "confidence": 0.94,
+    "format": "sql-ddl"
+  },
+  "fingerprint": "sha256:0bb94736eae5c38bb9748d33d0c7aec38f7989d4a91470f09e5baca724252d70",
+  "lint": {
+    "findings": 59,
+    "grade": "F",
+    "report_fingerprint": "8c56465ef71f91613c4d683c3dfbfd2e6af984abd8b6515b3f4b64f7362f5b31",
+    "score": 59,
+    "severity_counts": {
+      "error": 0,
+      "info": 47,
+      "warning": 12
+    }
+  },
+  "snapshot_version": 1
+}

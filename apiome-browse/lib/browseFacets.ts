@@ -130,6 +130,7 @@ const FORMAT_LABELS: Readonly<Record<string, string>> = {
   dbt: 'dbt Project',
   odcs: 'ODCS Data Contract',
   'kafka-connect': 'Kafka Connect Schema',
+  'sql-ddl': 'SQL DDL',
   cobolcopybook: 'COBOL Copybook',
   fhir: 'FHIR',
   hl7v2: 'HL7 v2',
