@@ -27,6 +27,7 @@ We continue to improve the platform based on your feedback with improvements and
     - Open Data Contract Standard (ODCS v3.1) import and export
     - Kafka Connect schema import and export
     - dbt model and semantic-manifest import
+  - Linting rule pack updates for scoring new import types
   - Added pills to supported format list to show the source and type that the API format provides
   - Every format now declares which versions it reads and writes, and which version an export produces by default
 
