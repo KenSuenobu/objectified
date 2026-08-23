@@ -27,6 +27,7 @@ We continue to improve the platform based on your feedback with improvements and
     - Open Data Contract Standard (ODCS v3.1) import and export
     - Kafka Connect schema import and export
     - dbt model and semantic-manifest import
+    - SQL DDL import
   - Linting rule pack updates for scoring new import types
     - Data contracts are now scored on their own terms: ownership, service levels, freshness,
       retention, column documentation, row identity, classification and declared quality checks
