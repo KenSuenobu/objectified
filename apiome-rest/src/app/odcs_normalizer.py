@@ -99,6 +99,7 @@ from .odcs_contract import (
 __all__ = [
     "ODCS_EXTRAS_KEY",
     "ODCS_LOGICAL_SCALARS",
+    "ODCS_QUALITY_EXTRAS_KEY",
     "OdcsNormalizer",
 ]
 
@@ -106,6 +107,14 @@ _FORMAT_KEY = "odcs"
 
 #: The root extras key holding the reader's own projection record.
 ODCS_EXTRAS_KEY = "odcs"
+
+#: The extras key a node's quality rules are carried under — the *shared* data-quality
+#: namespace of this fleet, not ODCS's alone. FMT-5.4's dbt reader projects the data tests
+#: it cannot turn into constraints into this same key, in the ODCS ``type: custom`` rule
+#: shape, so a dbt project and an ODCS contract describing the same table put their
+#: expectations in the same place. Spelled once here and imported by every reader that
+#: writes into it, so the namespace cannot drift.
+ODCS_QUALITY_EXTRAS_KEY = "odcs_quality"
 
 #: ODCS ``logicalType`` → canonical scalar name. The v3 vocabulary is closed and maps
 #: one-for-one onto names :data:`app.canonical_json_schema.CANONICAL_SCALAR_SCHEMAS`
@@ -429,7 +438,7 @@ class _TypeGraph:
         """Carry a node's quality rules verbatim, one declared limit per rule."""
         if not rules:
             return
-        extras["odcs_quality"] = _quality_payload(rules)
+        extras[ODCS_QUALITY_EXTRAS_KEY] = _quality_payload(rules)
         for _ in rules:
             self._limits.record("odcs.quality_rule", location=location)
 
@@ -502,7 +511,7 @@ def _root_extras(contract: OdcsContract, recorder: LimitRecorder) -> Dict[str, A
             recorder.record(limit)
     contract_quality = governance.pop("quality", None)
     if contract_quality is not None:
-        extras["odcs_quality"] = contract_quality
+        extras[ODCS_QUALITY_EXTRAS_KEY] = contract_quality
         occurrences = len(contract_quality) if isinstance(contract_quality, list) else 1
         for _ in range(max(occurrences, 1)):
             recorder.record("odcs.quality_rule")

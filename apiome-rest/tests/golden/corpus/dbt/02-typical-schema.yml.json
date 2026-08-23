@@ -1,0 +1,376 @@
+{
+  "adapter": "dbt",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "dbt": {
+        "capability_limits": [
+          {
+            "construct": "dbt.declaration_order",
+            "count": 2,
+            "detail": "A model's column order is physical: it is the order the relation actually presents. Canonical entities are keyed and sorted by key, so declaration order is not a canonical property; the source index is recorded on every resource and every column as `extras['dbt_position']` and the canonical ordering does not follow it.",
+            "locations": [
+              "customers",
+              "orders"
+            ]
+          },
+          {
+            "construct": "dbt.lineage_relationship",
+            "count": 1,
+            "detail": "A `relationships` test and a `foreign_key` constraint name the model a column points at. The canonical model has no edge vocabulary, so the edge is recorded on the field in `extras['dbt_relationship']` — in the ODCS v3.1 property-level relationship shape (`type: foreignKey`, `to: <model>.<column>`), beside the canonical type and field keys it resolved to — and no canonical feature traverses it.",
+            "locations": [
+              "orders"
+            ]
+          },
+          {
+            "construct": "dbt.meta",
+            "count": 1,
+            "detail": "`meta` is dbt's own extension point: publisher-defined keys on a model, a source, a column or a test (`owner`, `maturity`, `pii`). It is carried verbatim in `extras['dbt_meta']` on whichever node declared it, and no meaning is assigned to any key.",
+            "locations": [
+              "orders"
+            ]
+          },
+          {
+            "construct": "dbt.tag",
+            "count": 1,
+            "detail": "`tags[]` labels a resource or a column with free-form keywords that dbt uses for selection (`dbt run --select tag:nightly`). The canonical model tags *operations*, not data-schema entities, so the list is carried verbatim in `extras['dbt_tags']` on whichever node declared it.",
+            "locations": [
+              "orders"
+            ]
+          },
+          {
+            "construct": "dbt.uniqueness",
+            "count": 2,
+            "detail": "A `unique` test, a `primary_key` constraint and a `unique` constraint declare identity over the *rows* of a model. The canonical constraint vocabulary has no identity facet (`unique_items` is about the members of one array), so the declaration is carried on the field or the type in `extras['dbt_key']` and is not enforced.",
+            "locations": [
+              "customers",
+              "orders"
+            ]
+          }
+        ],
+        "lineage": [
+          {
+            "from": "orders",
+            "from_columns": [
+              "customer_id"
+            ],
+            "origin": "relationships_test",
+            "to": "customers",
+            "to_columns": [
+              "customer_id"
+            ]
+          }
+        ],
+        "properties_version": 2,
+        "resources": [
+          {
+            "key": "customers",
+            "kind": "model",
+            "name": "customers"
+          },
+          {
+            "key": "orders",
+            "kind": "model",
+            "name": "orders"
+          }
+        ],
+        "surface": "properties"
+      }
+    },
+    "format": "dbt",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "02-typical-schema",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "02-typical-schema",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "One row per customer.",
+        "enum_values": [],
+        "extras": {
+          "dbt_position": 1,
+          "dbt_resource_type": "model"
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": [
+                "NL",
+                "BE",
+                "DE",
+                "FR",
+                "GB",
+                "US"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 2
+            },
+            "field_number": null,
+            "key": "customers.country_code",
+            "name": "country_code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_key": {
+                "unique": true
+              },
+              "dbt_position": 0
+            },
+            "field_number": null,
+            "key": "customers.customer_id",
+            "name": "customer_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Contact address; hashed downstream.",
+            "extras": {
+              "dbt_position": 1
+            },
+            "field_number": null,
+            "key": "customers.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "customers",
+        "key_type": null,
+        "kind": "record",
+        "name": "customers",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Order facts, one row per order.",
+        "enum_values": [],
+        "extras": {
+          "dbt_meta": {
+            "maturity": "production",
+            "owner": "commerce-analytics"
+          },
+          "dbt_position": 0,
+          "dbt_resource_type": "model",
+          "dbt_tags": [
+            "commerce",
+            "nightly"
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Foreign key into customers.",
+            "extras": {
+              "dbt_position": 1,
+              "dbt_relationship": [
+                {
+                  "origin": "relationships_test",
+                  "ref": "ref('customers')",
+                  "to": "customers.customer_id",
+                  "to_columns": [
+                    "customer_id"
+                  ],
+                  "to_field": "customers.customer_id",
+                  "to_type": "customers",
+                  "type": "foreignKey"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "orders.customer_id",
+            "name": "customer_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Business identifier of the order.",
+            "extras": {
+              "dbt_key": {
+                "unique": true
+              },
+              "dbt_position": 0
+            },
+            "field_number": null,
+            "key": "orders.order_id",
+            "name": "order_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "When the order was placed, UTC.",
+            "extras": {
+              "dbt_position": 3
+            },
+            "field_number": null,
+            "key": "orders.placed_at",
+            "name": "placed_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "new",
+                "paid",
+                "shipped",
+                "cancelled"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": "Order lifecycle status.",
+            "extras": {
+              "dbt_position": 2
+            },
+            "field_number": null,
+            "key": "orders.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Order total in the order currency.",
+            "extras": {
+              "dbt_position": 4
+            },
+            "field_number": null,
+            "key": "orders.total_amount",
+            "name": "total_amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "orders",
+        "key_type": null,
+        "kind": "record",
+        "name": "orders",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "dbt/02-typical-schema.yml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 2
+  },
+  "detection": {
+    "confidence": 0.93,
+    "format": "dbt"
+  },
+  "fingerprint": "sha256:bafcd8b3895665e89df067ff8144770cb8e147f5d9c2a55349bce75cc82bdafe",
+  "lint": {
+    "findings": 3,
+    "grade": "A",
+    "report_fingerprint": "d2665e78b60e3a2285e2984374578390d9ea48a366a1b773a324483908f8dcbf",
+    "score": 97,
+    "severity_counts": {
+      "error": 0,
+      "info": 3,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

@@ -127,6 +127,7 @@ const FORMAT_LABELS: Readonly<Record<string, string>> = {
   asn1: 'ASN.1',
   cddl: 'CDDL',
   arrow: 'Apache Arrow',
+  dbt: 'dbt Project',
   odcs: 'ODCS Data Contract',
   'kafka-connect': 'Kafka Connect Schema',
   cobolcopybook: 'COBOL Copybook',

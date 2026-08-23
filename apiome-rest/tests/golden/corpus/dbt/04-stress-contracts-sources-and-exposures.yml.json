@@ -1,0 +1,775 @@
+{
+  "adapter": "dbt",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "dbt": {
+        "capability_limits": [
+          {
+            "construct": "dbt.check_constraint",
+            "count": 1,
+            "detail": "A `check` constraint carries a SQL expression (`total_amount >= 0`) evaluated by the warehouse. The canonical constraint vocabulary is JSON-Schema-shaped and has no expression facet, so the constraint is carried verbatim in `extras['dbt_constraints']` and is never parsed, translated or evaluated.",
+            "locations": [
+              "fct_orders"
+            ]
+          },
+          {
+            "construct": "dbt.data_test",
+            "count": 1,
+            "detail": "A data test states an expectation about the *rows* of a model — a package test (`dbt_utils.expression_is_true`), a singular test, or a generic test with no canonical analogue. The canonical model constrains shape, so the test is projected into the shared quality namespace FMT-5.1 defined (`extras['odcs_quality']`, in the ODCS `type: custom` rule shape with `engine: dbt`) on the model or the column that declared it, and is never executed, compiled, or turned into a constraint.",
+            "locations": [
+              "fct_orders"
+            ]
+          },
+          {
+            "construct": "dbt.data_type",
+            "count": 9,
+            "detail": "`data_type` is the column's type *in the warehouse* (`varchar(20)`, `numeric(13,2)`, `TIMESTAMP_NTZ`, `VARIANT`). Its base name selects a canonical scalar, but its parameters are deliberately not interpreted — `varchar(20)` does **not** become `maxLength: 20`, because the unit differs by dialect and by encoding — and the declared spelling is carried verbatim in `extras['dbt_data_type']`.",
+            "locations": [
+              "dim_customers",
+              "fct_orders"
+            ]
+          },
+          {
+            "construct": "dbt.declaration_order",
+            "count": 6,
+            "detail": "A model's column order is physical: it is the order the relation actually presents. Canonical entities are keyed and sorted by key, so declaration order is not a canonical property; the source index is recorded on every resource and every column as `extras['dbt_position']` and the canonical ordering does not follow it.",
+            "locations": [
+              "country_codes",
+              "dim_customers",
+              "fct_orders",
+              "orders_snapshot",
+              "raw_commerce.customers_raw",
+              "raw_commerce.orders_raw"
+            ]
+          },
+          {
+            "construct": "dbt.exposure",
+            "count": 1,
+            "detail": "An `exposure` names a dashboard, an application or a report that *consumes* the project's models. It describes downstream use, not structure, so no canonical type is synthesized for it and the entries are carried verbatim in `extras['dbt_exposures']`.",
+            "locations": []
+          },
+          {
+            "construct": "dbt.freshness",
+            "count": 2,
+            "detail": "A source's `freshness` block states `warn_after`/`error_after` windows against `loaded_at_field`. That is a service level over the loading pipeline, not a property of the schema, so it is carried verbatim in `extras['dbt_freshness']` beside the field it is measured on.",
+            "locations": [
+              "raw_commerce.customers_raw",
+              "raw_commerce.orders_raw"
+            ]
+          },
+          {
+            "construct": "dbt.lineage_relationship",
+            "count": 2,
+            "detail": "A `relationships` test and a `foreign_key` constraint name the model a column points at. The canonical model has no edge vocabulary, so the edge is recorded on the field in `extras['dbt_relationship']` — in the ODCS v3.1 property-level relationship shape (`type: foreignKey`, `to: <model>.<column>`), beside the canonical type and field keys it resolved to — and no canonical feature traverses it.",
+            "locations": [
+              "fct_orders"
+            ]
+          },
+          {
+            "construct": "dbt.materialization",
+            "count": 2,
+            "detail": "`config` states how dbt *builds* the relation — `materialized`, `unique_key`, `incremental_strategy`, `partition_by`, `contract.enforced`, and every adapter- specific key beside them. The canonical model describes shape, not build strategy, so the block is carried verbatim in `extras['dbt_config']`.",
+            "locations": [
+              "dim_customers",
+              "fct_orders"
+            ]
+          },
+          {
+            "construct": "dbt.model_version",
+            "count": 1,
+            "detail": "`versions[]` and `latest_version` declare several shapes of one model at once, each an `include`/`exclude` projection over the model's columns. The canonical model holds one shape per type, so the *latest* version's columns are the ones modelled and the version list is carried verbatim in `extras['dbt_versions']`; no per-version type is synthesized.",
+            "locations": [
+              "dim_customers"
+            ]
+          },
+          {
+            "construct": "dbt.relation_name",
+            "count": 2,
+            "detail": "`database`, `schema`, `alias` and a source table's `identifier` say what the relation is actually called in the warehouse. The canonical model names the logical resource, so the physical location is carried verbatim in `extras['dbt_relation']` and the type keeps the name the project gave it.",
+            "locations": [
+              "raw_commerce.customers_raw",
+              "raw_commerce.orders_raw"
+            ]
+          },
+          {
+            "construct": "dbt.uniqueness",
+            "count": 5,
+            "detail": "A `unique` test, a `primary_key` constraint and a `unique` constraint declare identity over the *rows* of a model. The canonical constraint vocabulary has no identity facet (`unique_items` is about the members of one array), so the declaration is carried on the field or the type in `extras['dbt_key']` and is not enforced.",
+            "locations": [
+              "country_codes",
+              "dim_customers",
+              "fct_orders",
+              "raw_commerce.orders_raw"
+            ]
+          }
+        ],
+        "lineage": [
+          {
+            "from": "fct_orders",
+            "from_columns": [
+              "customer_id"
+            ],
+            "origin": "foreign_key_constraint",
+            "to": "dim_customers",
+            "to_columns": [
+              "customer_id"
+            ]
+          }
+        ],
+        "properties_version": 2,
+        "resources": [
+          {
+            "key": "country_codes",
+            "kind": "seed",
+            "name": "country_codes"
+          },
+          {
+            "key": "dim_customers",
+            "kind": "model",
+            "name": "dim_customers"
+          },
+          {
+            "key": "fct_orders",
+            "kind": "model",
+            "name": "fct_orders"
+          },
+          {
+            "key": "orders_snapshot",
+            "kind": "snapshot",
+            "name": "orders_snapshot"
+          },
+          {
+            "key": "raw_commerce.customers_raw",
+            "kind": "source",
+            "name": "customers_raw"
+          },
+          {
+            "key": "raw_commerce.orders_raw",
+            "kind": "source",
+            "name": "orders_raw"
+          }
+        ],
+        "surface": "properties"
+      },
+      "dbt_exposures": [
+        {
+          "depends_on": [
+            "ref('fct_orders')",
+            "ref('dim_customers')"
+          ],
+          "description": "Executive revenue view.",
+          "maturity": "high",
+          "name": "revenue_dashboard",
+          "owner": {
+            "email": "commerce-analytics@example.com",
+            "name": "Commerce Analytics"
+          },
+          "type": "dashboard",
+          "url": "https://bi.example.com/dashboards/revenue"
+        }
+      ]
+    },
+    "format": "dbt",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "04-stress-contracts-sources-and-exposures",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "04-stress-contracts-sources-and-exposures",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "ISO 3166-1 alpha-2 lookup.",
+        "enum_values": [],
+        "extras": {
+          "dbt_position": 2,
+          "dbt_resource_type": "seed"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_key": {
+                "unique": true
+              },
+              "dbt_position": 0
+            },
+            "field_number": null,
+            "key": "country_codes.code",
+            "name": "code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 1
+            },
+            "field_number": null,
+            "key": "country_codes.label",
+            "name": "label",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "country_codes",
+        "key_type": null,
+        "kind": "record",
+        "name": "country_codes",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dbt_config": {
+            "materialized": "table"
+          },
+          "dbt_position": 1,
+          "dbt_resource_type": "model",
+          "dbt_versions": {
+            "latest_version": 2,
+            "versions": [
+              {
+                "columns": [
+                  {
+                    "exclude": [
+                      "signup_channel"
+                    ],
+                    "include": "all"
+                  }
+                ],
+                "v": 1
+              },
+              {
+                "columns": [
+                  {
+                    "include": "all"
+                  }
+                ],
+                "v": 2
+              }
+            ]
+          }
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_data_type": "varchar(20)",
+              "dbt_key": {
+                "unique": true
+              },
+              "dbt_position": 0
+            },
+            "field_number": null,
+            "key": "dim_customers.customer_id",
+            "name": "customer_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_data_type": "varchar(255)",
+              "dbt_position": 1
+            },
+            "field_number": null,
+            "key": "dim_customers.email",
+            "name": "email",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_data_type": "varchar(20)",
+              "dbt_position": 2
+            },
+            "field_number": null,
+            "key": "dim_customers.signup_channel",
+            "name": "signup_channel",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "dim_customers",
+        "key_type": null,
+        "kind": "record",
+        "name": "dim_customers",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Contracted order fact table.",
+        "enum_values": [],
+        "extras": {
+          "dbt_config": {
+            "contract": {
+              "enforced": true
+            },
+            "incremental_strategy": "merge",
+            "materialized": "incremental",
+            "unique_key": "order_id"
+          },
+          "dbt_constraints": [
+            {
+              "columns": [
+                "order_id"
+              ],
+              "type": "primary_key"
+            },
+            {
+              "columns": [
+                "customer_id"
+              ],
+              "to": "ref('dim_customers')",
+              "to_columns": [
+                "customer_id"
+              ],
+              "type": "foreign_key"
+            },
+            {
+              "expression": "total_amount >= 0",
+              "name": "total_amount_non_negative",
+              "type": "check"
+            }
+          ],
+          "dbt_position": 0,
+          "dbt_resource_type": "model",
+          "odcs_quality": [
+            {
+              "description": "dbt data test `dbt_utils.expression_is_true` on `fct_orders`.",
+              "engine": "dbt",
+              "implementation": {
+                "arguments": {
+                  "expression": "total_amount >= 0"
+                },
+                "test": "dbt_utils.expression_is_true"
+              },
+              "name": "dbt_utils.expression_is_true",
+              "type": "custom"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_data_type": "char(3)",
+              "dbt_position": 5
+            },
+            "field_number": null,
+            "key": "fct_orders.currency",
+            "name": "currency",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_constraints": [
+                {
+                  "type": "not_null"
+                }
+              ],
+              "dbt_data_type": "varchar(20)",
+              "dbt_position": 1,
+              "dbt_relationship": [
+                {
+                  "origin": "foreign_key_constraint",
+                  "ref": "ref('dim_customers')",
+                  "to": "dim_customers.customer_id",
+                  "to_columns": [
+                    "customer_id"
+                  ],
+                  "to_field": "dim_customers.customer_id",
+                  "to_type": "dim_customers",
+                  "type": "foreignKey"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "fct_orders.customer_id",
+            "name": "customer_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_constraints": [
+                {
+                  "type": "not_null"
+                }
+              ],
+              "dbt_data_type": "varchar(20)",
+              "dbt_key": {
+                "unique": true
+              },
+              "dbt_position": 0
+            },
+            "field_number": null,
+            "key": "fct_orders.order_id",
+            "name": "order_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_data_type": "timestamp",
+              "dbt_position": 3
+            },
+            "field_number": null,
+            "key": "fct_orders.placed_at",
+            "name": "placed_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "timestamp",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": {
+              "enum": [
+                "new",
+                "paid",
+                "shipped",
+                "cancelled"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_data_type": "varchar(16)",
+              "dbt_position": 2
+            },
+            "field_number": null,
+            "key": "fct_orders.status",
+            "name": "status",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_data_type": "numeric(13,2)",
+              "dbt_position": 4
+            },
+            "field_number": null,
+            "key": "fct_orders.total_amount",
+            "name": "total_amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "decimal",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "fct_orders",
+        "key_type": null,
+        "kind": "record",
+        "name": "fct_orders",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Slowly changing dimension over the raw orders table.",
+        "enum_values": [],
+        "extras": {
+          "dbt_position": 3,
+          "dbt_resource_type": "snapshot"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 0
+            },
+            "field_number": null,
+            "key": "orders_snapshot.order_id",
+            "name": "order_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "orders_snapshot",
+        "key_type": null,
+        "kind": "record",
+        "name": "orders_snapshot",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dbt_freshness": {
+            "freshness": {
+              "warn_after": {
+                "count": 12,
+                "period": "hour"
+              }
+            },
+            "loaded_at_field": "_loaded_at"
+          },
+          "dbt_position": 5,
+          "dbt_relation": {
+            "database": "raw",
+            "schema": "commerce"
+          },
+          "dbt_resource_type": "source",
+          "dbt_source": "raw_commerce"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 0
+            },
+            "field_number": null,
+            "key": "raw_commerce.customers_raw.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          }
+        ],
+        "key": "raw_commerce.customers_raw",
+        "key_type": null,
+        "kind": "record",
+        "name": "customers_raw",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": null,
+        "enum_values": [],
+        "extras": {
+          "dbt_freshness": {
+            "freshness": {
+              "error_after": {
+                "count": 24,
+                "period": "hour"
+              },
+              "warn_after": {
+                "count": 6,
+                "period": "hour"
+              }
+            },
+            "loaded_at_field": "_loaded_at"
+          },
+          "dbt_position": 4,
+          "dbt_relation": {
+            "database": "raw",
+            "identifier": "orders",
+            "schema": "commerce"
+          },
+          "dbt_resource_type": "source",
+          "dbt_source": "raw_commerce"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_key": {
+                "unique": true
+              },
+              "dbt_position": 0
+            },
+            "field_number": null,
+            "key": "raw_commerce.orders_raw.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Untyped source payload.",
+            "extras": {
+              "dbt_position": 1
+            },
+            "field_number": null,
+            "key": "raw_commerce.orders_raw.payload",
+            "name": "payload",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "raw_commerce.orders_raw",
+        "key_type": null,
+        "kind": "record",
+        "name": "orders_raw",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "dbt/04-stress-contracts-sources-and-exposures.yml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 6
+  },
+  "detection": {
+    "confidence": 0.93,
+    "format": "dbt"
+  },
+  "fingerprint": "sha256:8ad6078441eaa802195c37547f39626089a43dbf90292da4f71a35f28a2517a5",
+  "lint": {
+    "findings": 18,
+    "grade": "C",
+    "report_fingerprint": "024e848e0808c6f5a4b5771ccb685a432fb6fba130bd4ee932fd032a6418a071",
+    "score": 73,
+    "severity_counts": {
+      "error": 0,
+      "info": 15,
+      "warning": 3
+    }
+  },
+  "snapshot_version": 1
+}

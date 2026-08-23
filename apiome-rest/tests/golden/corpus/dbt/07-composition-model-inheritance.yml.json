@@ -1,0 +1,725 @@
+{
+  "adapter": "dbt",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "dbt": {
+        "capability_limits": [
+          {
+            "construct": "dbt.data_test",
+            "count": 2,
+            "detail": "A data test states an expectation about the *rows* of a model — a package test (`dbt_utils.expression_is_true`), a singular test, or a generic test with no canonical analogue. The canonical model constrains shape, so the test is projected into the shared quality namespace FMT-5.1 defined (`extras['odcs_quality']`, in the ODCS `type: custom` rule shape with `engine: dbt`) on the model or the column that declared it, and is never executed, compiled, or turned into a constraint.",
+            "locations": [
+              "dim_customer",
+              "dim_product"
+            ]
+          },
+          {
+            "construct": "dbt.declaration_order",
+            "count": 3,
+            "detail": "A model's column order is physical: it is the order the relation actually presents. Canonical entities are keyed and sorted by key, so declaration order is not a canonical property; the source index is recorded on every resource and every column as `extras['dbt_position']` and the canonical ordering does not follow it.",
+            "locations": [
+              "dim_customer",
+              "dim_product",
+              "fct_order_line"
+            ]
+          },
+          {
+            "construct": "dbt.lineage_relationship",
+            "count": 2,
+            "detail": "A `relationships` test and a `foreign_key` constraint name the model a column points at. The canonical model has no edge vocabulary, so the edge is recorded on the field in `extras['dbt_relationship']` — in the ODCS v3.1 property-level relationship shape (`type: foreignKey`, `to: <model>.<column>`), beside the canonical type and field keys it resolved to — and no canonical feature traverses it.",
+            "locations": [
+              "fct_order_line"
+            ]
+          },
+          {
+            "construct": "dbt.model_version",
+            "count": 1,
+            "detail": "`versions[]` and `latest_version` declare several shapes of one model at once, each an `include`/`exclude` projection over the model's columns. The canonical model holds one shape per type, so the *latest* version's columns are the ones modelled and the version list is carried verbatim in `extras['dbt_versions']`; no per-version type is synthesized.",
+            "locations": [
+              "fct_order_line"
+            ]
+          },
+          {
+            "construct": "dbt.uniqueness",
+            "count": 4,
+            "detail": "A `unique` test, a `primary_key` constraint and a `unique` constraint declare identity over the *rows* of a model. The canonical constraint vocabulary has no identity facet (`unique_items` is about the members of one array), so the declaration is carried on the field or the type in `extras['dbt_key']` and is not enforced.",
+            "locations": [
+              "dim_customer",
+              "dim_product",
+              "fct_order_line"
+            ]
+          }
+        ],
+        "lineage": [
+          {
+            "from": "fct_order_line",
+            "from_columns": [
+              "customer_id"
+            ],
+            "origin": "relationships_test",
+            "to": "dim_customer",
+            "to_columns": [
+              "id"
+            ]
+          },
+          {
+            "from": "fct_order_line",
+            "from_columns": [
+              "product_id"
+            ],
+            "origin": "relationships_test",
+            "to": "dim_product",
+            "to_columns": [
+              "id"
+            ]
+          }
+        ],
+        "properties_version": 2,
+        "resources": [
+          {
+            "key": "dim_customer",
+            "kind": "model",
+            "name": "dim_customer"
+          },
+          {
+            "key": "dim_product",
+            "kind": "model",
+            "name": "dim_product"
+          },
+          {
+            "key": "fct_order_line",
+            "kind": "model",
+            "name": "fct_order_line"
+          }
+        ],
+        "surface": "properties"
+      },
+      "dbt_extra": {
+        "x-shared-columns": {
+          "audit": [
+            {
+              "description": "Row creation timestamp, UTC.",
+              "name": "created_at",
+              "tests": [
+                "not_null"
+              ]
+            },
+            {
+              "description": "Pipeline that wrote the row.",
+              "name": "created_by"
+            },
+            {
+              "description": "Last modification timestamp, UTC.",
+              "name": "updated_at"
+            }
+          ],
+          "identity": [
+            {
+              "description": "Surrogate key.",
+              "name": "id",
+              "tests": [
+                "unique",
+                "not_null"
+              ]
+            },
+            {
+              "description": "Business key from the source system.",
+              "name": "natural_key",
+              "tests": [
+                "not_null"
+              ]
+            }
+          ]
+        },
+        "x-shared-tests": {
+          "freshness": {
+            "dbt_utils.recency": {
+              "datepart": "day",
+              "field": "updated_at",
+              "interval": 2
+            }
+          }
+        }
+      }
+    },
+    "format": "dbt",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "07-composition-model-inheritance",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "07-composition-model-inheritance",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Customer dimension, built from the shared column groups.",
+        "enum_values": [],
+        "extras": {
+          "dbt_position": 0,
+          "dbt_resource_type": "model",
+          "odcs_quality": [
+            {
+              "description": "dbt data test `dbt_utils.recency` on `dim_customer`.",
+              "engine": "dbt",
+              "implementation": {
+                "arguments": {
+                  "datepart": "day",
+                  "field": "updated_at",
+                  "interval": 2
+                },
+                "test": "dbt_utils.recency"
+              },
+              "name": "dbt_utils.recency",
+              "type": "custom"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "constraints": {
+              "enum": [
+                "NL",
+                "BE",
+                "DE",
+                "FR",
+                "GB",
+                "US"
+              ],
+              "exclusive_maximum": null,
+              "exclusive_minimum": null,
+              "extras": {},
+              "format": null,
+              "max_items": null,
+              "max_length": null,
+              "maximum": null,
+              "min_items": null,
+              "min_length": null,
+              "minimum": null,
+              "multiple_of": null,
+              "pattern": null,
+              "unique_items": null
+            },
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 6
+            },
+            "field_number": null,
+            "key": "dim_customer.country_code",
+            "name": "country_code",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Row creation timestamp, UTC.",
+            "extras": {
+              "dbt_position": 2
+            },
+            "field_number": null,
+            "key": "dim_customer.created_at",
+            "name": "created_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Pipeline that wrote the row.",
+            "extras": {
+              "dbt_position": 3
+            },
+            "field_number": null,
+            "key": "dim_customer.created_by",
+            "name": "created_by",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 5
+            },
+            "field_number": null,
+            "key": "dim_customer.display_name",
+            "name": "display_name",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Surrogate key.",
+            "extras": {
+              "dbt_key": {
+                "unique": true
+              },
+              "dbt_position": 0
+            },
+            "field_number": null,
+            "key": "dim_customer.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Business key from the source system.",
+            "extras": {
+              "dbt_position": 1
+            },
+            "field_number": null,
+            "key": "dim_customer.natural_key",
+            "name": "natural_key",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Last modification timestamp, UTC.",
+            "extras": {
+              "dbt_position": 4
+            },
+            "field_number": null,
+            "key": "dim_customer.updated_at",
+            "name": "updated_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "dim_customer",
+        "key_type": null,
+        "kind": "record",
+        "name": "dim_customer",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Product dimension, composed the same way.",
+        "enum_values": [],
+        "extras": {
+          "dbt_position": 1,
+          "dbt_resource_type": "model",
+          "odcs_quality": [
+            {
+              "description": "dbt data test `dbt_utils.recency` on `dim_product`.",
+              "engine": "dbt",
+              "implementation": {
+                "arguments": {
+                  "datepart": "day",
+                  "field": "updated_at",
+                  "interval": 2
+                },
+                "test": "dbt_utils.recency"
+              },
+              "name": "dbt_utils.recency",
+              "type": "custom"
+            }
+          ]
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 6
+            },
+            "field_number": null,
+            "key": "dim_product.category",
+            "name": "category",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Row creation timestamp, UTC.",
+            "extras": {
+              "dbt_position": 2
+            },
+            "field_number": null,
+            "key": "dim_product.created_at",
+            "name": "created_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Pipeline that wrote the row.",
+            "extras": {
+              "dbt_position": 3
+            },
+            "field_number": null,
+            "key": "dim_product.created_by",
+            "name": "created_by",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Surrogate key.",
+            "extras": {
+              "dbt_key": {
+                "unique": true
+              },
+              "dbt_position": 0
+            },
+            "field_number": null,
+            "key": "dim_product.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Business key from the source system.",
+            "extras": {
+              "dbt_position": 1
+            },
+            "field_number": null,
+            "key": "dim_product.natural_key",
+            "name": "natural_key",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_key": {
+                "unique": true
+              },
+              "dbt_position": 5
+            },
+            "field_number": null,
+            "key": "dim_product.sku",
+            "name": "sku",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Last modification timestamp, UTC.",
+            "extras": {
+              "dbt_position": 4
+            },
+            "field_number": null,
+            "key": "dim_product.updated_at",
+            "name": "updated_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "dim_product",
+        "key_type": null,
+        "kind": "record",
+        "name": "dim_product",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      },
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "Fact table that references both dimensions.",
+        "enum_values": [],
+        "extras": {
+          "dbt_position": 2,
+          "dbt_resource_type": "model",
+          "dbt_versions": {
+            "latest_version": 2,
+            "versions": [
+              {
+                "columns": [
+                  {
+                    "exclude": [
+                      "line_amount"
+                    ],
+                    "include": "all"
+                  }
+                ],
+                "v": 1
+              },
+              {
+                "columns": [
+                  {
+                    "include": "all"
+                  }
+                ],
+                "v": 2
+              }
+            ]
+          }
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 2,
+              "dbt_relationship": [
+                {
+                  "origin": "relationships_test",
+                  "ref": "ref('dim_customer')",
+                  "to": "dim_customer.id",
+                  "to_columns": [
+                    "id"
+                  ],
+                  "to_field": "dim_customer.id",
+                  "to_type": "dim_customer",
+                  "type": "foreignKey"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "fct_order_line.customer_id",
+            "name": "customer_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Surrogate key.",
+            "extras": {
+              "dbt_key": {
+                "unique": true
+              },
+              "dbt_position": 0
+            },
+            "field_number": null,
+            "key": "fct_order_line.id",
+            "name": "id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 5
+            },
+            "field_number": null,
+            "key": "fct_order_line.line_amount",
+            "name": "line_amount",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Business key from the source system.",
+            "extras": {
+              "dbt_position": 1
+            },
+            "field_number": null,
+            "key": "fct_order_line.natural_key",
+            "name": "natural_key",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": false
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 3,
+              "dbt_relationship": [
+                {
+                  "origin": "relationships_test",
+                  "ref": "ref('dim_product')",
+                  "to": "dim_product.id",
+                  "to_columns": [
+                    "id"
+                  ],
+                  "to_field": "dim_product.id",
+                  "to_type": "dim_product",
+                  "type": "foreignKey"
+                }
+              ]
+            },
+            "field_number": null,
+            "key": "fct_order_line.product_id",
+            "name": "product_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": null,
+            "extras": {
+              "dbt_position": 4
+            },
+            "field_number": null,
+            "key": "fct_order_line.quantity",
+            "name": "quantity",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "fct_order_line",
+        "key_type": null,
+        "kind": "record",
+        "name": "fct_order_line",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "dbt/07-composition-model-inheritance.yml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 3
+  },
+  "detection": {
+    "confidence": 0.93,
+    "format": "dbt"
+  },
+  "fingerprint": "sha256:0d179a7e0676cd1ae7eb158bbe9765954c4435b50d11f5545ceeab6700eef93b",
+  "lint": {
+    "findings": 9,
+    "grade": "A",
+    "report_fingerprint": "7b33fd5d8fae1b3bdb58e9f039765553519ddbda6eadb7b8bf0fa97fc28223c1",
+    "score": 91,
+    "severity_counts": {
+      "error": 0,
+      "info": 9,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

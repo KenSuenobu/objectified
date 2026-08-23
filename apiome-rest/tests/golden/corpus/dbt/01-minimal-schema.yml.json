@@ -1,0 +1,127 @@
+{
+  "adapter": "dbt",
+  "canonical": {
+    "channels": [],
+    "description": null,
+    "extras": {
+      "dbt": {
+        "capability_limits": [
+          {
+            "construct": "dbt.declaration_order",
+            "count": 1,
+            "detail": "A model's column order is physical: it is the order the relation actually presents. Canonical entities are keyed and sorted by key, so declaration order is not a canonical property; the source index is recorded on every resource and every column as `extras['dbt_position']` and the canonical ordering does not follow it.",
+            "locations": [
+              "beacons"
+            ]
+          }
+        ],
+        "properties_version": 2,
+        "resources": [
+          {
+            "key": "beacons",
+            "kind": "model",
+            "name": "beacons"
+          }
+        ],
+        "surface": "properties"
+      }
+    },
+    "format": "dbt",
+    "identity": {
+      "extras": {},
+      "id": null,
+      "name": "01-minimal-schema",
+      "namespace": null
+    },
+    "paradigm": "data_schema",
+    "protocol": null,
+    "schema_version": 1,
+    "servers": [],
+    "services": [],
+    "title": "01-minimal-schema",
+    "types": [
+      {
+        "aliased": null,
+        "constraints": null,
+        "deprecated": false,
+        "description": "One row per beacon.",
+        "enum_values": [],
+        "extras": {
+          "dbt_position": 0,
+          "dbt_resource_type": "model"
+        },
+        "fields": [
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Primary key.",
+            "extras": {
+              "dbt_position": 0
+            },
+            "field_number": null,
+            "key": "beacons.beacon_id",
+            "name": "beacon_id",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          },
+          {
+            "constraints": null,
+            "default": null,
+            "deprecated": false,
+            "description": "Last time the beacon reported.",
+            "extras": {
+              "dbt_position": 1
+            },
+            "field_number": null,
+            "key": "beacons.seen_at",
+            "name": "seen_at",
+            "type": {
+              "extras": {},
+              "item": null,
+              "name": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "key": "beacons",
+        "key_type": null,
+        "kind": "record",
+        "name": "beacons",
+        "namespace": null,
+        "union_members": [],
+        "value_type": null
+      }
+    ],
+    "version": null
+  },
+  "corpus_path": "dbt/01-minimal-schema.yml",
+  "counts": {
+    "channels": 0,
+    "operations": 0,
+    "servers": 0,
+    "services": 0,
+    "types": 1
+  },
+  "detection": {
+    "confidence": 0.93,
+    "format": "dbt"
+  },
+  "fingerprint": "sha256:403719b536d44dce98a39105cb9fb5034cd55740c8c892e9956eabbc259cd298",
+  "lint": {
+    "findings": 1,
+    "grade": "A",
+    "report_fingerprint": "d40abeffb40525b211a2d4744383f8fb6dc1f14079e584833c882868f78eb27d",
+    "score": 99,
+    "severity_counts": {
+      "error": 0,
+      "info": 1,
+      "warning": 0
+    }
+  },
+  "snapshot_version": 1
+}

@@ -114,10 +114,11 @@ from typing import Any, Dict, List, Optional, Tuple
 from pydantic import BaseModel, ConfigDict, Field
 
 from . import __version__
+from .arrow_normalizer import ARROW_EXTRAS_KEY
 from .breaking_change import classify_models, get_breaking_change_classifier
 from .canonical_model import CanonicalApi
-from .arrow_normalizer import ARROW_EXTRAS_KEY
 from .cddl_normalizer import CDDL_EXTRAS_KEY
+from .dbt_normalizer import DBT_EXTRAS_KEY
 from .dtd_normalizer import DTD_EXTRAS_KEY
 from .export_projection import (
     NATIVE_ID_EXTRA_KEYS,
@@ -141,8 +142,8 @@ from .import_source import (
     load_builtin_import_sources,
 )
 from .import_source_pipeline import ImportRunArtifacts, _normalize_import_project_slug
-from .models import ImportPreflightCounts, ImportPreflightReport, ImportPreflightRequest
 from .kafka_connect_normalizer import KAFKA_CONNECT_EXTRAS_KEY
+from .models import ImportPreflightCounts, ImportPreflightReport, ImportPreflightRequest
 from .odcs_normalizer import ODCS_EXTRAS_KEY
 from .projection_taxonomy import ProjectionReason, ProjectionStatus
 from .proto_editions import (
@@ -242,6 +243,14 @@ PROVENANCE_EXTRA_KEYS = frozenset(SOURCE_LOCATION_EXTRA_KEYS) | frozenset(NATIVE
         # their own `odcs_*` keys and are deliberately NOT listed here, because they are
         # source constructs the canonical model does not hold and must read as partial.
         ODCS_EXTRAS_KEY,
+        # FMT-5.4: the dbt projection record (which of dbt's two descriptions was read, the
+        # declared properties/manifest versions, the resource list, the recorded lineage and
+        # the references that resolved to nothing, declared limits, the composed file set).
+        # Our own bookkeeping about the read — the project's *own* blocks live under their
+        # own `dbt_*` keys, and its data tests under the shared `odcs_quality` key, and
+        # neither is listed here, because they are source constructs the canonical model does
+        # not hold and must read as partial.
+        DBT_EXTRAS_KEY,
         # FMT-3.7: the resolved Protobuf Editions record (per-file edition, syntax and feature
         # set). It is our own resolution of the document, not a construct the document names.
         # Spelled by its owning module rather than repeated as a literal.
@@ -1080,6 +1089,7 @@ def _document_scope_rows(
     ledger.extend(_arrow_capability_rows(api))
     ledger.extend(_odcs_capability_rows(api))
     ledger.extend(_kafka_connect_capability_rows(api))
+    ledger.extend(_dbt_capability_rows(api))
 
     return nodes, edges, ledger
 
@@ -1513,6 +1523,32 @@ def _odcs_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
         extras_key=ODCS_EXTRAS_KEY,
         location_label="Schema object(s)",
         normalized_noun="declaration",
+    )
+
+
+def _dbt_capability_rows(api: CanonicalApi) -> List[CoverageEntry]:
+    """Render the FMT-5.4 dbt declared limits as document-scoped ledger rows.
+
+    Everything a dbt project states that the canonical model has no facet for — the data
+    tests with no analogue, `unique` identity, `ref()` lineage, build configuration,
+    warehouse type parameters, freshness windows, `meta`, `tags`, model versions,
+    exposures, metrics, the semantic layer's aggregation vocabulary and a manifest's build
+    graph — is stated as ``partially-mapped``: the resource and its columns *are*
+    normalized, and only the part with no canonical analogue moves to extras. Data tests
+    land in the shared quality namespace FMT-5.1 defined, which is what makes a dbt project
+    and an ODCS contract describing the same table comparable on this ledger.
+
+    Args:
+        api: The normalized model.
+
+    Returns:
+        One ledger row per declared limit, or an empty list for a project that met none.
+    """
+    return _declared_limit_rows(
+        api,
+        extras_key=DBT_EXTRAS_KEY,
+        location_label="Resource(s)",
+        normalized_noun="resource",
     )
 
 

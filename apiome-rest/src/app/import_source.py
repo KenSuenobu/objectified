@@ -1128,6 +1128,11 @@ def load_builtin_import_sources() -> None:
     # ``kafka-connect``.
     from . import kafka_connect_import_source as _kafka_connect  # noqa: F401
 
+    # ``dbt_import_source`` (FMT-5.4) self-registers the ``dbt`` adapter — a `schema.yml`
+    # properties file, a compiled `manifest.json`, or a whole project directory — and, via
+    # its own imports, the dbt normalizer under ``dbt``.
+    from . import dbt_import_source as _dbt  # noqa: F401
+
     # ``arrow_import_source`` (FMT-4.5) self-registers the ``arrow`` adapter — the JSON
     # integration form, a binary IPC payload, a captured Flight fileset and a live Flight
     # endpoint — and, via its own imports, the Arrow normalizer under ``arrow``.
