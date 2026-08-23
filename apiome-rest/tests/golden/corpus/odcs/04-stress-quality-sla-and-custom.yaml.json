@@ -604,14 +604,14 @@
   },
   "fingerprint": "sha256:d5728dbd495b1cf7ad76a8d0f75b1aac7b46dc5e7976d8f7bd96d619aa5a35ab",
   "lint": {
-    "findings": 6,
-    "grade": "A",
-    "report_fingerprint": "91383ceda94ab48ce3bbc43a654abbb375d6d329eb5f5c8035c099b374683566",
-    "score": 91,
+    "findings": 7,
+    "grade": "B",
+    "report_fingerprint": "cfe17d5678a06d6794f7fdaa3609e142864b247db258bfefde460c5c850187e3",
+    "score": 87,
     "severity_counts": {
       "error": 0,
       "info": 5,
-      "warning": 1
+      "warning": 2
     }
   },
   "snapshot_version": 1

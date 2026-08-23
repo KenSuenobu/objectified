@@ -4,6 +4,11 @@ The corpus lives under ``tests/fixtures/scanner_evaluation/``. Each fixture is a
 document with a ``kind`` that selects how to build engine inputs and which engine to run.
 The ``manifest.json`` indexes fixtures, expected blocking rule ids, and operational-failure
 inventory paths reused from the external-linter fixture tree.
+
+A fixture may also declare ``expected_rule_ids`` — rules that must *fire* without being
+blocking. That is what the FMT-5.5 ``catalog_data_contract`` fixtures use: the data-contract
+pack is advisory by default (a tenant makes it binding through a style guide), so its
+fixtures prove the rule fires rather than that it blocks.
 """
 
 from __future__ import annotations
@@ -204,6 +209,17 @@ def run_fixture(data: Mapping[str, Any]) -> Tuple[Set[str], List[Dict[str, Any]]
             f.as_dict() if hasattr(f, "as_dict") else {"rule": f.rule, "severity": f.severity, "path": getattr(f, "path", ""), "id": getattr(f, "id", ""), "message": getattr(f, "message", "")}
             for f in report.findings
         ]
+        return _blocking_rule_ids(findings), findings
+
+    if kind == "catalog_data_contract":
+        from .import_source import get_import_source, load_builtin_import_sources
+        from .lint_engine import lint_canonical_model
+
+        load_builtin_import_sources()
+        adapter = get_import_source(str(data.get("source_format") or "odcs"))
+        document = json.dumps(data.get("document") or {})
+        model = adapter.normalize(adapter.parse(document, source_label=str(data.get("id") or "fixture")))
+        findings = [f.as_dict() for f in lint_canonical_model(model).findings]
         return _blocking_rule_ids(findings), findings
 
     if kind == "catalog_compatibility":

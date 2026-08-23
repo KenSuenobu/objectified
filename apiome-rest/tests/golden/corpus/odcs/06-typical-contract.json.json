@@ -280,14 +280,14 @@
   },
   "fingerprint": "sha256:21b77eeffec67e2131e4bfcf96246c8c771d9cb8b5a8a30d2dcf9612d4fadbe8",
   "lint": {
-    "findings": 6,
-    "grade": "A",
-    "report_fingerprint": "ff9981869c9d068f2eebf2b09aa99e3592dc2cd29a6445ecdc6ea8d45c8ff7eb",
-    "score": 91,
+    "findings": 9,
+    "grade": "B",
+    "report_fingerprint": "e40c3914640b15b7018761674e5f582e42eec571eedb6b1db3f7a9aef9516cbe",
+    "score": 85,
     "severity_counts": {
       "error": 0,
-      "info": 5,
-      "warning": 1
+      "info": 7,
+      "warning": 2
     }
   },
   "snapshot_version": 1

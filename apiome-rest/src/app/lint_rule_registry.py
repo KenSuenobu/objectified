@@ -30,6 +30,9 @@ Sources aggregated (all derived from the live engines, so the registry cannot dr
   IXH-5.4 ``examples`` pack);
 * every registered per-format :class:`app.lint_engine.RulePack` (AsyncAPI, GraphQL,
   protobuf, Arazzo, …), loaded through the same lazy loader the lint engine uses;
+* every registered per-*paradigm* pack (FMT-5.5's ``data-contract`` pack, which runs for
+  every ``data_schema`` artifact rather than for one format key) — catalogued here so a
+  style guide can govern its rules exactly like any other built-in rule;
 * the intake-stage catalogue (:data:`app.intake_lint_rules.INTAKE_RULES`) — rules that
   describe the *source document as it arrived* rather than the model it produced (MFI-29.4's
   unresolved external references), which no model-driven pack can emit.
@@ -47,6 +50,8 @@ from typing import Any, Dict, List, Tuple
 from .intake_lint_rules import INTAKE_PACK, INTAKE_RULES
 from .lint_engine import (
     available_lint_formats,
+    available_lint_paradigms,
+    get_paradigm_rule_pack,
     get_rule_pack,
     load_format_rule_packs,
     unconditional_rule_packs,
@@ -170,9 +175,24 @@ def builtin_rule_descriptors() -> Tuple[LintRuleDescriptor, ...]:
     for rule_id, (category, severity, rationale) in INTAKE_RULES.items():
         by_id[rule_id] = _descriptor(rule_id, INTAKE_PACK, category, severity, rationale)
 
-    # 4. Every registered per-format pack. Subclass registrations under extra format keys
-    #    (same rules, different key) dedupe naturally through the by-id dict.
+    # 4. Every registered per-*paradigm* pack (FMT-5.5). A paradigm pack runs for a whole
+    #    family of formats rather than one syntax — the data-contract pack for every
+    #    ``data_schema`` artifact — so its rules are catalogued once, here, and a style
+    #    guide can enable, disable or re-severity them exactly like any other built-in rule.
     load_format_rule_packs()
+    for paradigm_key in available_lint_paradigms():
+        paradigm_cls = get_paradigm_rule_pack(paradigm_key)
+        if paradigm_cls is None:  # pragma: no cover - registry keys always resolve
+            continue
+        pack_label = paradigm_cls.pack_id or paradigm_cls.__name__
+        for rule in paradigm_cls().rules():
+            by_id.setdefault(
+                rule.rule_id,
+                _descriptor(rule.rule_id, pack_label, rule.category, rule.severity, rule.description),
+            )
+
+    # 5. Every registered per-format pack. Subclass registrations under extra format keys
+    #    (same rules, different key) dedupe naturally through the by-id dict.
     for format_key in available_lint_formats():
         pack_cls = get_rule_pack(format_key)
         if pack_cls is None:  # pragma: no cover - registry keys always resolve

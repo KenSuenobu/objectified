@@ -47,30 +47,105 @@
       ]
     },
     {
-      "id": "catalog/multi-format-index",
-      "kind": "catalog_pointer_index",
+      "id": "catalog/data-contract-classification-missing",
+      "kind": "catalog_data_contract",
       "expected_blocking_rule_ids": [],
-      "pointers": [
-        {
-          "format": "openapi",
-          "path": "../../openapi_family/openapi-3.1-petstore.yaml"
-        },
-        {
-          "format": "asyncapi",
-          "path": "../../asyncapi/suite/api.yaml"
-        },
-        {
-          "format": "graphql",
-          "path": "../../graphql/schema.query.graphql"
-        },
-        {
-          "format": "protobuf",
-          "path": "../../proto/grpc/echo.proto"
-        },
-        {
-          "format": "external_linter",
-          "path": "../../external_linter/findings.sarif.json"
-        }
+      "expected_rule_ids": [
+        "data-contract.classification-missing"
+      ]
+    },
+    {
+      "id": "catalog/data-contract-clean",
+      "kind": "catalog_data_contract",
+      "expected_blocking_rule_ids": [],
+      "expected_rule_ids": []
+    },
+    {
+      "id": "catalog/data-contract-column-description-coverage",
+      "kind": "catalog_data_contract",
+      "expected_blocking_rule_ids": [],
+      "expected_rule_ids": [
+        "data-contract.column-description-coverage"
+      ]
+    },
+    {
+      "id": "catalog/data-contract-freshness-missing",
+      "kind": "catalog_data_contract",
+      "expected_blocking_rule_ids": [],
+      "expected_rule_ids": [
+        "data-contract.freshness-missing"
+      ]
+    },
+    {
+      "id": "catalog/data-contract-owner-missing",
+      "kind": "catalog_data_contract",
+      "expected_blocking_rule_ids": [],
+      "expected_rule_ids": [
+        "data-contract.owner-missing"
+      ]
+    },
+    {
+      "id": "catalog/data-contract-owner-unresolvable",
+      "kind": "catalog_data_contract",
+      "expected_blocking_rule_ids": [],
+      "expected_rule_ids": [
+        "data-contract.owner-unresolvable"
+      ]
+    },
+    {
+      "id": "catalog/data-contract-primary-key-missing",
+      "kind": "catalog_data_contract",
+      "expected_blocking_rule_ids": [],
+      "expected_rule_ids": [
+        "data-contract.primary-key-missing"
+      ]
+    },
+    {
+      "id": "catalog/data-contract-quality-rules-missing",
+      "kind": "catalog_data_contract",
+      "expected_blocking_rule_ids": [],
+      "expected_rule_ids": [
+        "data-contract.quality-rules-missing"
+      ]
+    },
+    {
+      "id": "catalog/data-contract-retention-undocumented",
+      "kind": "catalog_data_contract",
+      "expected_blocking_rule_ids": [],
+      "expected_rule_ids": [
+        "data-contract.retention-undocumented"
+      ]
+    },
+    {
+      "id": "catalog/data-contract-server-missing",
+      "kind": "catalog_data_contract",
+      "expected_blocking_rule_ids": [],
+      "expected_rule_ids": [
+        "data-contract.server-missing"
+      ]
+    },
+    {
+      "id": "catalog/data-contract-sla-missing",
+      "kind": "catalog_data_contract",
+      "expected_blocking_rule_ids": [],
+      "expected_rule_ids": [
+        "data-contract.sla-missing"
+      ]
+    },
+    {
+      "id": "catalog/data-contract-status-missing",
+      "kind": "catalog_data_contract",
+      "expected_blocking_rule_ids": [],
+      "expected_rule_ids": [
+        "data-contract.status-missing"
+      ]
+    },
+    {
+      "id": "catalog/data-contract-version-missing",
+      "kind": "catalog_data_contract",
+      "expected_blocking_rule_ids": [],
+      "expected_rule_ids": [
+        "data-contract.version-missing"
       ]
     },
     {
@@ -99,6 +174,33 @@
       "kind": "catalog_graphql_fileset",
       "expected_blocking_rule_ids": [
         "graphql.composition-unresolvable-selection"
+      ]
+    },
+    {
+      "id": "catalog/multi-format-index",
+      "kind": "catalog_pointer_index",
+      "expected_blocking_rule_ids": [],
+      "pointers": [
+        {
+          "format": "openapi",
+          "path": "../../openapi_family/openapi-3.1-petstore.yaml"
+        },
+        {
+          "format": "asyncapi",
+          "path": "../../asyncapi/suite/api.yaml"
+        },
+        {
+          "format": "graphql",
+          "path": "../../graphql/schema.query.graphql"
+        },
+        {
+          "format": "protobuf",
+          "path": "../../proto/grpc/echo.proto"
+        },
+        {
+          "format": "external_linter",
+          "path": "../../external_linter/findings.sarif.json"
+        }
       ]
     },
     {

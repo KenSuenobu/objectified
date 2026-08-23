@@ -71,6 +71,27 @@ def _blocking_section(rule_id: str) -> list[str]:
     ]
 
 
+def _transparency_section(descriptor) -> list[str]:
+    """Render the transparency block for one catalogued schema rule, blocking or not.
+
+    A blocking rule's block comes from the CLX-4.3 catalogue. A non-blocking rule whose pack
+    publishes its own remediation and fixture (FMT-5.5) gets the same treatment from the
+    enriched catalog payload, so the reference page does not tell a reader how to fix a rule
+    only when that rule can fail a gate.
+    """
+    blocking = _blocking_section(descriptor.rule_id)
+    if blocking:
+        return blocking
+    payload = descriptor.as_dict()
+    if not payload.get("remediation"):
+        return []
+    lines = [f"- **Remediation:** {payload['remediation']}"]
+    if payload.get("fixture_id"):
+        lines.append(f"- **Fixture:** `{payload['fixture_id']}`")
+    lines.append("")
+    return lines
+
+
 def render_schema(descriptors) -> str:
     lines = [HEADER_SCHEMA]
     by_pack: dict = {}
@@ -84,8 +105,9 @@ def render_schema(descriptors) -> str:
             lines.append(f"- **Category:** {d.category}")
             lines.append(f"- **Default severity:** {d.default_severity}")
             lines.append(f"- **Rationale:** {d.rationale}")
-            lines.extend(_blocking_section(d.rule_id))
-            if get_blocking_meta(d.rule_id) is None:
+            section = _transparency_section(d)
+            lines.extend(section)
+            if not section:
                 lines.append("")
     return "\n".join(lines)
 

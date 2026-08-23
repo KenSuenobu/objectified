@@ -202,7 +202,21 @@ def _adapters_covering(format_key: str) -> List[str]:
 
 
 def _native_pack_for(format_key: str) -> Optional[str]:
-    """Return the native pack identifier for ``format_key``, if any."""
+    """Return the native pack identifier for ``format_key``, if any.
+
+    A format has native coverage from a pack registered under its **format** key, from the
+    OpenAPI spec linter, or — since FMT-5.5 — from a pack registered under a **paradigm**
+    that covers it. The paradigm case is checked against the pack's own declared coverage
+    rather than against the paradigm alone: the data-contract pack self-gates to nothing for
+    the schema languages that share the ``data_schema`` paradigm, and a matrix that claimed
+    native coverage for those would be exactly the drift this module exists to prevent.
+    """
+    # Imported inside the function for the same reason the rest of this module defers its
+    # engine imports: the pack module pulls in the lint engine and the canonical model, and
+    # this module is imported by the route layer at startup.
+    from .data_contract_facts import CONTRACT_FORMATS
+    from .data_contract_lint import DATA_CONTRACT_PACK_ID
+
     load_format_rule_packs()
     packs = set(available_lint_formats())
     key = normalize_format_key(format_key)
@@ -212,6 +226,8 @@ def _native_pack_for(format_key: str) -> Optional[str]:
         return format_key
     if key in _OPENAPI_NATIVE_FORMATS or format_key in _OPENAPI_NATIVE_FORMATS:
         return "openapi-schema-lint"
+    if key in CONTRACT_FORMATS or format_key in CONTRACT_FORMATS:
+        return DATA_CONTRACT_PACK_ID
     return None
 
 

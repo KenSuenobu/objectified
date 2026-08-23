@@ -355,14 +355,14 @@
   },
   "fingerprint": "sha256:c201908e7bc3aad6acd3ec828cbb0c029351381c5fe4999ffc351b8e8e4b28de",
   "lint": {
-    "findings": 5,
+    "findings": 6,
     "grade": "A",
-    "report_fingerprint": "61b4e3999f3c5d860a4e24171b4964d3786eb13320fae941a88c39a67bdf0f3e",
-    "score": 95,
+    "report_fingerprint": "82a026bc2327535ef4f818f0aa84e7aea3a8ac4e7ef77d064275cc59f56fb997",
+    "score": 91,
     "severity_counts": {
       "error": 0,
       "info": 5,
-      "warning": 0
+      "warning": 1
     }
   },
   "snapshot_version": 1

@@ -443,14 +443,14 @@
   },
   "fingerprint": "sha256:90cb0e41edb8bd45e3abf2f585d7a3c5f0f50e6159e0ea62802b5fc46f966bc7",
   "lint": {
-    "findings": 11,
-    "grade": "B",
-    "report_fingerprint": "d84eebe5024190665a6c2af65766856928c12a1dd1b3b4510c07b0e2d30cfec2",
-    "score": 89,
+    "findings": 20,
+    "grade": "D",
+    "report_fingerprint": "66008f8536a88a00ea0a055e181b95cbf15090c8debf7e9fadbb7e10ac6c213f",
+    "score": 65,
     "severity_counts": {
       "error": 0,
-      "info": 11,
-      "warning": 0
+      "info": 15,
+      "warning": 5
     }
   },
   "snapshot_version": 1

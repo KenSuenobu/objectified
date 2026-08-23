@@ -166,6 +166,117 @@ Fetch this catalog programmatically with `GET /v1/lint/rules` (see
 - **Rationale:** Type names should be author-chosen, not generator output.
 
 
+## Pack: `data-contract`
+
+<a id="data-contract-classification-missing"></a>
+### `data-contract.classification-missing`
+
+- **Category:** governance
+- **Default severity:** info
+- **Rationale:** Personal data that is not labelled cannot be governed, masked or audited.
+- **Remediation:** Classify the columns that carry personal or restricted data — an ODCS `classification` / `criticalDataElement`, or a dbt `meta` marker.
+- **Fixture:** `catalog/data-contract-classification-missing`
+
+<a id="data-contract-column-description-coverage"></a>
+### `data-contract.column-description-coverage`
+
+- **Category:** documentation
+- **Default severity:** warning
+- **Rationale:** A column nobody described is a column consumers guess at.
+- **Remediation:** Describe the table's columns: at least three quarters of them need a `description` before the table reads as documented.
+- **Fixture:** `catalog/data-contract-column-description-coverage`
+
+<a id="data-contract-freshness-missing"></a>
+### `data-contract.freshness-missing`
+
+- **Category:** governance
+- **Default severity:** info
+- **Rationale:** Freshness is the service level consumers of a dataset ask about first.
+- **Remediation:** State a freshness expectation — an ODCS `frequency`/`latency` SLA property, or a dbt source `freshness` block with `warn_after`/`error_after`.
+- **Fixture:** `catalog/data-contract-freshness-missing`
+
+<a id="data-contract-owner-missing"></a>
+### `data-contract.owner-missing`
+
+- **Category:** governance
+- **Default severity:** warning
+- **Rationale:** A dataset nobody owns is a dataset nobody fixes.
+- **Remediation:** Declare an owner: an ODCS `team[]` member, a dbt `meta.owner`, or an exposure `owner` block naming the team accountable for the dataset.
+- **Fixture:** `catalog/data-contract-owner-missing`
+
+<a id="data-contract-owner-unresolvable"></a>
+### `data-contract.owner-unresolvable`
+
+- **Category:** governance
+- **Default severity:** warning
+- **Rationale:** An ownership entry with no name, address or channel cannot actually be reached.
+- **Remediation:** Give the ownership entry a `name`, `username`, `email` or `channel` — a role with no contact is a label, not an owner.
+- **Fixture:** `catalog/data-contract-owner-unresolvable`
+
+<a id="data-contract-primary-key-missing"></a>
+### `data-contract.primary-key-missing`
+
+- **Category:** structure
+- **Default severity:** warning
+- **Rationale:** Without a declared key, a row cannot be addressed, deduplicated or joined reliably.
+- **Remediation:** Declare row identity: an ODCS `primaryKey`/`unique` property, a dbt `unique` test, or a model-contract `primary_key` constraint.
+- **Fixture:** `catalog/data-contract-primary-key-missing`
+
+<a id="data-contract-quality-rules-missing"></a>
+### `data-contract.quality-rules-missing`
+
+- **Category:** governance
+- **Default severity:** warning
+- **Rationale:** A critical column with no declared check is an expectation held only in somebody's head.
+- **Remediation:** Attach a quality rule to the column — an ODCS `quality[]` entry, or a dbt data test — or attach a table-level rule that covers it.
+- **Fixture:** `catalog/data-contract-quality-rules-missing`
+
+<a id="data-contract-retention-undocumented"></a>
+### `data-contract.retention-undocumented`
+
+- **Category:** governance
+- **Default severity:** info
+- **Rationale:** Undocumented retention is a compliance question nobody can answer from the contract.
+- **Remediation:** State how long the data is kept: an ODCS `retention` SLA property, or a custom property naming the retention window.
+- **Fixture:** `catalog/data-contract-retention-undocumented`
+
+<a id="data-contract-server-missing"></a>
+### `data-contract.server-missing`
+
+- **Category:** governance
+- **Default severity:** warning
+- **Rationale:** A contract that never says where the data is served describes a table nobody can find.
+- **Remediation:** Declare the serving location — an ODCS `servers[]` entry, or the database/schema/alias a dbt resource materializes to.
+- **Fixture:** `catalog/data-contract-server-missing`
+
+<a id="data-contract-sla-missing"></a>
+### `data-contract.sla-missing`
+
+- **Category:** governance
+- **Default severity:** warning
+- **Rationale:** Without a stated service level, a consumer cannot tell a nightly batch from a streaming table.
+- **Remediation:** Declare `slaProperties[]` (ODCS) or a source `freshness` block (dbt) stating the latency, frequency or availability the dataset promises.
+- **Fixture:** `catalog/data-contract-sla-missing`
+
+<a id="data-contract-status-missing"></a>
+### `data-contract.status-missing`
+
+- **Category:** governance
+- **Default severity:** info
+- **Rationale:** A consumer cannot tell a draft dataset from a production one without a status.
+- **Remediation:** Declare a lifecycle `status` (`draft`, `active`, `deprecated`, `retired`).
+- **Fixture:** `catalog/data-contract-status-missing`
+
+<a id="data-contract-version-missing"></a>
+### `data-contract.version-missing`
+
+- **Category:** governance
+- **Default severity:** warning
+- **Rationale:** An unversioned contract cannot be changed safely: nothing distinguishes revisions.
+- **Remediation:** Declare the contract's own `version` (ODCS `version`, a dbt project `version`), so consumers can pin one.
+- **Fixture:** `catalog/data-contract-version-missing`
+
+
 ## Pack: `examples`
 
 <a id="examples-non-conforming-example"></a>
