@@ -23,6 +23,7 @@ from apiome_cli.output import (
     emit_json,
     emit_list_table,
 )
+from apiome_cli.terminal import confirm_action, make_console
 
 app = typer.Typer(
     name="api-keys",
@@ -190,23 +191,25 @@ def _confirm_create(
     label: str,
     skip: bool,
 ) -> None:
-    """Prompt before issuing a key unless ``--yes`` was passed."""
-    if skip:
-        return
+    """Prompt before issuing a key unless ``--yes`` was passed.
+
+    Routed through :func:`confirm_action` so a non-interactive caller is told to pass
+    ``--yes`` instead of being aborted with no explanation (clig.dev: never prompt when
+    stdin is not a TTY, and always offer a flag that does the same thing).
+    """
     type_label = "Browser" if key_type == "browser" else "MCP Server"
-    if not typer.confirm(
+    confirm_action(
         f"Issue a new {type_label} API key labeled '{label}'?",
-        default=False,
-    ):
-        raise typer.Exit(code=0)
+        skip=skip,
+        escape_flag="--yes",
+    )
 
 
 def _emit_create_secret(secret: str) -> None:
     """Print the one-time secret with a warning banner (human output)."""
-    from rich.console import Console
     from rich.panel import Panel
 
-    console = Console()
+    console = make_console()
     console.print(
         Panel(
             secret,
@@ -331,11 +334,12 @@ def _fetch_api_key(client: RestClient, key_id: UUID) -> dict[str, Any]:
 
 def _confirm_revoke(*, label: str, key_id: UUID, skip: bool) -> None:
     """Prompt before revoking a key unless ``--yes`` was passed."""
-    if skip:
-        return
     prompt_label = label or str(key_id)
-    if not typer.confirm(f"Revoke API key '{prompt_label}'?", default=False):
-        raise typer.Exit(code=0)
+    confirm_action(
+        f"Revoke API key '{prompt_label}'?",
+        skip=skip,
+        escape_flag="--yes",
+    )
 
 
 def _show_field_value(record: dict[str, Any], key: str) -> str | None:
@@ -410,7 +414,6 @@ def _fetch_rotation_policy(client: RestClient) -> dict[str, Any]:
 
 def _emit_rotation_policy_table(policy: dict[str, Any]) -> None:
     """Render rotation policy settings as a Rich table."""
-    from rich.console import Console
     from rich.table import Table
 
     table = Table(show_header=True, header_style="bold")
@@ -421,7 +424,7 @@ def _emit_rotation_policy_table(policy: dict[str, Any]) -> None:
     for label, key, description in _POLICY_DISPLAY_ROWS:
         table.add_row(label, _format_policy_value(key, policy.get(key)), description)
 
-    console = Console()
+    console = make_console()
     console.print(table)
 
 
@@ -483,7 +486,6 @@ def _merge_rotation_policy_body(
 
 def _emit_api_key_show(record: dict[str, Any]) -> None:
     """Render one API key as a field/value table with Epic 14 and legacy field support."""
-    from rich.console import Console
     from rich.table import Table
 
     table = Table(show_header=True, header_style="bold")
@@ -496,7 +498,7 @@ def _emit_api_key_show(record: dict[str, Any]) -> None:
         value = _show_field_value(record, key)
         table.add_row(label, "" if value is None else value)
 
-    console = Console()
+    console = make_console()
     console.print(table)
 
 

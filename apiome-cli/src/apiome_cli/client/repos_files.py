@@ -6,8 +6,9 @@ from collections.abc import Sequence
 from typing import Any
 
 import typer
-from rich.console import Console
 from rich.table import Table
+
+from apiome_cli.terminal import make_console
 
 _REPOSITORY_FILE_PRESETS = frozenset(
     {
@@ -159,7 +160,7 @@ def emit_repository_files_table(
             row.append(str(item.get("closure_indicator") or "—"))
         table.add_row(*row)
 
-    Console().print(table)
+    make_console().print(table)
     typer.echo(f"Showing {len(items)} of {total}")
 
 

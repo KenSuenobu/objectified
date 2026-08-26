@@ -6,10 +6,10 @@ from collections.abc import Sequence
 from typing import Any
 
 import typer
-from rich.console import Console
 from rich.table import Table
 
 from apiome_cli.output import emit_json
+from apiome_cli.terminal import make_console
 
 _INTEGRITY_FAILURE = "content_integrity_failed"
 _SIGNATURE_INVALID_FAILURE = "signature_invalid"
@@ -124,7 +124,7 @@ def emit_repository_verify_results(
             result,
         )
 
-    Console().print(table)
+    make_console().print(table)
     typer.echo(f"Showing {len(assessments)} of {total}")
     if failure_count:
         typer.echo(f"Failures: {failure_count}")

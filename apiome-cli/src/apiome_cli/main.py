@@ -32,12 +32,17 @@ from apiome_cli.commands import (
     spec,
     types,
     verify,
+    versions,
 )
 from apiome_cli.commands import import_ as import_commands
-from apiome_cli.commands import versions
 from apiome_cli.config import EnvFileNotFoundError, resolve_env_file_path
 from apiome_cli.exit_codes import EXIT_ERROR, EXIT_SUCCESS, EXIT_USAGE
-from apiome_cli.help_util import build_command_directory, echo_concise_help, show_cli_help
+from apiome_cli.help_util import (
+    build_command_directory,
+    echo_concise_help,
+    show_cli_help,
+)
+from apiome_cli.secret_input import read_secret_file
 
 
 class _ApiomeCLI(typer.core.TyperGroup):
@@ -54,7 +59,7 @@ app = typer.Typer(
     name="apiome",
     help="Command-line client for the Apiome REST API.",
     no_args_is_help=False,
-    add_completion=False,
+    add_completion=True,
     pretty_exceptions_enable=False,
     context_settings={"help_option_names": ["-h", "--help"]},
     cls=_ApiomeCLI,
@@ -129,16 +134,30 @@ def main(
         "--api-key",
         help=(
             "API key for Tier 2 endpoints "
-            "(overrides APIOME_API_KEY, config file, and .env)."
+            "(overrides APIOME_API_KEY, config file, and .env). "
+            "Prefer --api-key-file: a secret in argv is visible to other processes."
         ),
+    ),
+    api_key_file: str | None = typer.Option(
+        None,
+        "--api-key-file",
+        metavar="PATH",
+        help="Read the API key from a file, or from stdin with '-'.",
     ),
     session_token: str | None = typer.Option(
         None,
         "--session-token",
         help=(
             "UI session bearer token for auth and PAT commands "
-            "(overrides APIOME_SESSION_TOKEN, config file, and .env)."
+            "(overrides APIOME_SESSION_TOKEN, config file, and .env). "
+            "Prefer --session-token-file."
         ),
+    ),
+    session_token_file: str | None = typer.Option(
+        None,
+        "--session-token-file",
+        metavar="PATH",
+        help="Read the session token from a file, or from stdin with '-'.",
     ),
     env_file: str | None = typer.Option(
         None,
@@ -156,8 +175,32 @@ def main(
     verbose: bool = typer.Option(
         False,
         "--verbose",
+        "--debug",
+        "-d",
         "-v",
         help="Show Python tracebacks on unexpected failures.",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        "-q",
+        help="Suppress non-essential output. Errors and --json output are unaffected.",
+    ),
+    no_color: bool = typer.Option(
+        False,
+        "--no-color",
+        help=(
+            "Disable colour. Also honoured: NO_COLOR, APIOME_NO_COLOR, TERM=dumb, "
+            "and any non-terminal stdout."
+        ),
+    ),
+    no_input: bool = typer.Option(
+        False,
+        "--no-input",
+        help=(
+            "Never prompt. Commands needing confirmation fail with the flag to pass "
+            "instead of hanging."
+        ),
     ),
     timeout: float | None = typer.Option(
         None,
@@ -191,6 +234,20 @@ def main(
         except EnvFileNotFoundError as exc:
             typer.echo(f"Env file not found: {exc.filename}", err=True)
             raise typer.Exit(EXIT_USAGE) from exc
+
+    # Colour, quiet and no-input must land on the context before anything can emit, so
+    # that a failure in secret resolution below already respects them.
+    ctx.obj["quiet"] = quiet
+    ctx.obj["no_color"] = no_color
+    ctx.obj["no_input"] = no_input
+
+    # A file-sourced secret wins over the same secret passed inline: a caller who
+    # supplies both has moved to the safe form and the flag is likely a stale alias.
+    api_key = read_secret_file(api_key_file, label="--api-key-file") or api_key
+    session_token = (
+        read_secret_file(session_token_file, label="--session-token-file")
+        or session_token
+    )
 
     ctx.obj["base_url"] = base_url
     ctx.obj["tenant_id"] = tenant

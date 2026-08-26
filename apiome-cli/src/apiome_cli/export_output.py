@@ -21,13 +21,13 @@ prompt (MFX-8.2).
 
 from __future__ import annotations
 
-import sys
 from typing import Any, Mapping, Sequence
 
 import typer
 
 from apiome_cli.exit_codes import EXIT_ERROR
 from apiome_cli.output import ListColumn
+from apiome_cli.terminal import interactive_enabled
 
 # The one fidelity tier that carries every source construct faithfully; anything else is a loss the
 # command blocks on (unless --force or interactive confirm). Mirrors ExportFidelityTier in
@@ -265,7 +265,7 @@ def enforce_export_fidelity_gate(
         return
     if force:
         return
-    if sys.stdin.isatty() and typer.confirm(
+    if interactive_enabled() and typer.confirm(
         "Export anyway despite fidelity loss?",
         default=False,
     ):

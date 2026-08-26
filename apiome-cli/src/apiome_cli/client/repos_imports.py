@@ -8,8 +8,9 @@ from typing import Any
 from uuid import UUID
 
 import typer
-from rich.console import Console
 from rich.table import Table
+
+from apiome_cli.terminal import make_console
 
 
 def build_import_list_query_params(
@@ -127,5 +128,5 @@ def emit_repository_imports_table(
             format_blob_sha(item.get("blob_sha")),
         )
 
-    Console().print(table)
+    make_console().print(table)
     typer.echo(f"Showing {len(items)} of {total}")

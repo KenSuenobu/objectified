@@ -8,10 +8,10 @@ from copy import deepcopy
 from typing import Any
 
 import typer
-from rich.console import Console
 from rich.table import Table
 
 from apiome_cli.cli_context import json_mode_from_context
+from apiome_cli.terminal import make_console
 
 __all__ = [
     "ListColumn",
@@ -149,7 +149,7 @@ def _emit_created_counts_table(created: object, *, heading: str) -> None:
     for label, count in rows:
         table.add_row(label, count)
 
-    console = Console()
+    console = make_console()
     console.print(table, justify="left")
 
 
@@ -314,7 +314,7 @@ def emit_json_schema_type_import_result(
                 _cell_value(entry, "action", None),
             )
 
-        console = Console()
+        console = make_console()
         console.print(table)
 
     created = payload.get("created")
@@ -328,7 +328,7 @@ def emit_json_schema_type_import_result(
         summary.add_row("Created", str(created))
         summary.add_row("Updated", str(updated))
         summary.add_row("Skipped", str(skipped))
-        console = Console()
+        console = make_console()
         console.print(summary, justify="left")
 
 
@@ -396,13 +396,13 @@ def emit_list_table(
             ),
         )
 
-    console = Console()
+    console = make_console()
     if (
         min_width is not None
         and not console.is_terminal
         and console.width < min_width
     ):
-        console = Console(width=min_width)
+        console = make_console(width=min_width)
     console.print(table)
     if total is not None:
         typer.echo(f"Showing {len(items)} of {total}")
@@ -420,7 +420,7 @@ def emit_record_table(
     for label, key, fmt in fields:
         table.add_row(label, _cell_value(record, key, fmt))
 
-    console = Console()
+    console = make_console()
     console.print(table)
 
 

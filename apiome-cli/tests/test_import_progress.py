@@ -24,8 +24,7 @@ from apiome_cli.import_.jobs import (
     wait_for_import_job,
 )
 from apiome_cli.main import app
-from apiome_cli.progress import import_progress
-
+from apiome_cli.progress import import_progress, progress_allowed
 from helpers import strip_ansi
 
 runner = CliRunner()
@@ -69,11 +68,38 @@ def test_import_progress_disabled_yields_none() -> None:
         assert status is None
 
 
-def test_import_progress_enabled_yields_status() -> None:
-    """Enabled progress exposes an updatable Rich status."""
+def test_import_progress_enabled_yields_status(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Enabled progress exposes an updatable Rich status when stderr is a terminal."""
+    monkeypatch.setattr("apiome_cli.progress.sys.stderr.isatty", lambda: True)
     with import_progress(enabled=True, initial_message="Waiting…") as status:
         assert status is not None
         status.update("Import running… (1s)")
+
+
+def test_import_progress_suppressed_off_a_terminal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """clig.dev: no animations into a pipe — a spinner leaves frames in CI logs."""
+    monkeypatch.setattr("apiome_cli.progress.sys.stderr.isatty", lambda: False)
+    with import_progress(enabled=True) as status:
+        assert status is None
+
+
+def test_import_progress_suppressed_by_quiet(monkeypatch: pytest.MonkeyPatch) -> None:
+    """--quiet silences the non-essential channel, and a spinner is exactly that."""
+    monkeypatch.setattr("apiome_cli.progress.sys.stderr.isatty", lambda: True)
+    monkeypatch.setattr("apiome_cli.progress.quiet_enabled", lambda: True)
+    with import_progress(enabled=True) as status:
+        assert status is None
+
+
+def test_progress_allowed_honours_no_progress_first(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The caller's own --no-progress wins even on a terminal."""
+    monkeypatch.setattr("apiome_cli.progress.sys.stderr.isatty", lambda: True)
+    assert progress_allowed(enabled=False) is False
+    assert progress_allowed(enabled=True) is True
 
 
 def test_wait_for_import_job_returns_completed_payload(httpx_mock: object) -> None:

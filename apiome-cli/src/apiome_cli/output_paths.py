@@ -5,10 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 import typer
-from rich.console import Console
 from rich.table import Table
 
 from apiome_cli.output import ListColumn, emit_json, emit_list_table, emit_record_table
+from apiome_cli.terminal import make_console
 
 
 def _schema_kind(row: dict[str, Any]) -> str:
@@ -91,7 +91,7 @@ def emit_path_show(
             "" if deprecated is None else str(deprecated),
         )
 
-    Console().print(table)
+    make_console().print(table)
 
 
 def emit_operation_show(
@@ -129,7 +129,7 @@ def emit_operation_show(
                 str(parameter.get("in_location", parameter.get("in", ""))),
                 _schema_kind(parameter),
             )
-        Console().print(param_table)
+        make_console().print(param_table)
 
     if request_body is None:
         typer.echo("Request body: (none)")
@@ -168,7 +168,7 @@ def emit_operation_show(
                 _media_types_from_contents(contents),
                 ", ".join(kind for kind in kinds if kind),
             )
-        Console().print(response_table)
+        make_console().print(response_table)
 
 
 def emit_workflows_list_table(
@@ -230,7 +230,7 @@ def emit_workflow_show(
             "yes" if unresolved else "",
         )
 
-    Console().print(table)
+    make_console().print(table)
 
 
 def emit_paths_list_json(payload: dict[str, Any]) -> None:

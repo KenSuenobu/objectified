@@ -67,6 +67,10 @@ Settings resolve in this order (highest wins first):
 | `APIOME_TENANT_ID` | Tenant UUID (optional; some operations need tenant scope) |
 | `APIOME_API_KEY` | API key sent as `X-API-Key` (required for Tier 2 API-key-authenticated commands/routes, including list/import and `api-keys`) |
 | `APIOME_SESSION_TOKEN` | UI session bearer token from `POST /auth/login` (required for `auth`, `tokens`, and `integrations` commands) |
+| `NO_COLOR` | Set to any non-empty value to disable colour ([no-color.org](https://no-color.org)) |
+| `APIOME_NO_COLOR` | Disable colour for this tool only |
+| `FORCE_COLOR` | Emit colour even when stdout is not a terminal (CI log viewers that render ANSI) |
+| `TERM=dumb` | Treated as "no colour", like every other well-behaved terminal program |
 
 Copy the package template and edit values:
 
@@ -87,6 +91,46 @@ Use an alternate dotenv file for one invocation:
 
 ```bash
 apiome --env-file /path/to/staging.env doctor
+```
+
+### Credentials without putting them in `argv`
+
+A secret passed as a flag is visible to every other process on the machine through `ps`,
+and it lands in shell history and CI logs. Prefer the file forms, which also accept `-`
+to read stdin:
+
+```bash
+# from a file
+apiome --api-key-file ~/.secrets/apiome.key projects list
+
+# from a pipe, so the value never touches the filesystem either
+pass show apiome/api-key | apiome --api-key-file - projects list
+```
+
+`--api-key` and `--session-token` still work and are unchanged. When both forms are given,
+the file wins.
+
+### Terminal behaviour
+
+The CLI adapts to where its output is going, and every part of that is overridable:
+
+| Flag | Effect |
+|------|--------|
+| `--no-color` | Never emit ANSI colour. Also honoured: `NO_COLOR`, `APIOME_NO_COLOR`, `TERM=dumb`, and any non-terminal stdout |
+| `-q`, `--quiet` | Suppress non-essential messages. Errors on stderr and `--json` on stdout are unaffected |
+| `--no-input` | Never prompt. A command that would ask for confirmation fails instead, naming the flag (`--yes`, `--force`) that proceeds non-interactively |
+| `-d`, `--debug` | Show tracebacks on unexpected failures (`-v`/`--verbose` remain as aliases) |
+| `--json` | Machine-readable output on stdout |
+| `--no-progress` | Disable the stderr progress spinner |
+
+Colour is off automatically when stdout is a pipe or a file, so `apiome ... | grep` and
+redirected CI logs never receive escape codes.
+
+Shell completion is available for bash, zsh, fish and PowerShell:
+
+```bash
+apiome --install-completion     # install for the current shell
+apiome --show-completion        # print the script instead, to install it yourself
 ```
 
 ### User config file

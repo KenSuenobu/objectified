@@ -76,7 +76,7 @@ def test_enforce_export_fidelity_gate_lossless_is_noop() -> None:
 def test_enforce_export_fidelity_gate_exits_when_not_acknowledged(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr("apiome_cli.export_output.sys.stdin.isatty", lambda: False)
+    monkeypatch.setattr("apiome_cli.export_output.interactive_enabled", lambda: False)
     with pytest.raises(typer.Exit) as exc:
         enforce_export_fidelity_gate(_PREVIEW_LOSSY["fidelity"], force=False)
     assert exc.value.exit_code == 1
@@ -85,7 +85,7 @@ def test_enforce_export_fidelity_gate_exits_when_not_acknowledged(
 def test_enforce_export_fidelity_gate_interactive_confirm(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr("apiome_cli.export_output.sys.stdin.isatty", lambda: True)
+    monkeypatch.setattr("apiome_cli.export_output.interactive_enabled", lambda: True)
     monkeypatch.setattr("typer.confirm", lambda *args, **kwargs: True)
     enforce_export_fidelity_gate(_PREVIEW_LOSSY["fidelity"], force=False)
 

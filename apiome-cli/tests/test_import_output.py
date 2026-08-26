@@ -105,7 +105,7 @@ def _capture_human_output(func, *args, **kwargs) -> str:
 
     with (
         patch("apiome_cli.output.typer.echo", new=_echo_wrapper),
-        patch("apiome_cli.output.Console", return_value=console),
+        patch("apiome_cli.output.make_console", return_value=console),
     ):
         func(*args, **kwargs)
     return buffer.getvalue()
