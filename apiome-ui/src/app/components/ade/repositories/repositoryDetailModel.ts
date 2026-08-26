@@ -9,9 +9,10 @@
  * each, and every decision below was spelled inline in one of them — often twice, in two
  * spellings that had drifted. Which tab a query string names, what a KPI's figure and its
  * footnote are, how a glob and a regex compose into one request, what the toolbar's count
- * line says, which files a batch import may be narrowed to,
- * why Map & import is unavailable: all of it is here, React-free, so each rule is unit-tested
- * without rendering a screen.
+ * line says, why Map & import is unavailable: all of it is here, React-free, so each rule is
+ * unit-tested without rendering a screen. What the batch wizard *Import selected* opens for a
+ * multi-row selection says and offers is `repositoryBatchImportModel.ts` (BLK-1.4), split the
+ * same way.
  *
  * The same split `repositoriesModel.ts` (HIVE-7.3) and `addRepositoryModel.ts` (HIVE-7.4) use,
  * and for the same reason: a rule that lives in JSX is a rule that is only ever tested through

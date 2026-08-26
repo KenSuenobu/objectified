@@ -127,7 +127,7 @@
         </div>
         <!-- Table -->
         <div class="table-wrap">
-          <div class="table-toolbar"><span class="t-sm t-600">41 files match · 41 importable · 2 selected</span><span class="spacer"></span><button class="btn btn--sm btn--primary" data-tip="The import wizard maps one spec at a time — opening specs/payments/openapi.yaml. Re-select the rest afterward."><i data-lucide="upload"></i>Import selected</button><button class="btn btn--sm btn--ghost">Clear</button></div>
+          <div class="table-toolbar"><span class="t-sm t-600">41 files match · 41 importable · 2 selected</span><span class="spacer"></span><button class="btn btn--sm btn--primary" data-action="open" data-target="batch-wizard" data-tip="One ticked row opens Map &amp; import for it; more open the batch wizard covering all of them."><i data-lucide="layers"></i>Import selected (2)</button><button class="btn btn--sm btn--ghost">Clear</button></div>
           <table class="table table--dense">
             <thead><tr><th class="cell-check"><label class="check"><input type="checkbox" aria-label="Select all"/></label></th><th>Path</th><th>Detected kind</th><th title="Rough 0–100 quality score for classified specs. Informational only — it does not gate import or sync.">Quality</th><th>Confidence</th><th class="t-right">Size</th><th>Blob</th><th><span class="sr-only">Actions</span></th></tr></thead>
             <tbody>
@@ -489,6 +489,55 @@
   </div>
 </div>
 
+<!-- ===== Import selected — batch wizard (overlay, BLK-1.4) ===== -->
+<div class="overlay" id="batch-wizard" data-overlay>
+  <div class="dialog dialog--full" role="dialog" aria-labelledby="bw-title">
+    <div class="dialog__header">
+      <span class="icon-tile icon-tile--accent"><i data-lucide="upload"></i></span>
+      <div class="grow"><div class="dialog__title" id="bw-title">Import 2 selected files</div><div class="dialog__desc">Review what each file would do, verify the batch against this workspace, then apply it. Every specification becomes its own import job, so one failure never costs you the rest.</div></div>
+      <button class="btn btn--ghost btn--icon dialog__close" data-action="close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="row" style="justify-content:center;padding:8px 24px 16px;border-bottom:1px solid var(--border)">
+      <div class="stepper">
+        <div class="step is-active"><span class="step__num">1</span>Review</div><span class="step__line"></span>
+        <div class="step"><span class="step__num">2</span>Verify</div><span class="step__line"></span>
+        <div class="step"><span class="step__num">3</span>Apply</div>
+      </div>
+    </div>
+    <div class="dialog__body col gap-4">
+      <div class="col gap-1">
+        <div class="row gap-2 t-xs t-muted"><i data-lucide="git-branch"></i><span>Reading <span class="mono">main</span> at the commit it points at now, plus any document these files reference.</span></div>
+        <div class="row gap-2 t-sm t-600"><i data-lucide="layers"></i>2 items · 1 new version · 1 new project · 1 excluded</div>
+        <div class="row gap-2 t-xs t-muted"><i data-lucide="shield-check"></i>Policy: append-when-matched (workspace default) — matched files add a version, the rest create a project</div>
+      </div>
+      <!-- Step 1 · Review: the BLK-1.2 plan, one row per item, with a per-row target override feeding BLK-1.3 -->
+      <div class="table-wrap">
+        <table class="table table--dense">
+          <thead><tr><th>Path</th><th>Kind</th><th>Resolution</th><th>Version</th><th>Why</th><th>Target</th></tr></thead>
+          <tbody>
+            <tr><td class="mono t-xs">specs/payments/openapi.yaml</td><td><span class="fmt fmt--openapi">openapi</span></td><td><span class="badge badge--ok"><i data-lucide="layers"></i>New version of Payments API</span></td><td class="mono t-xs">v2.4.0</td><td class="t-xs t-muted">imported from this path before</td><td><select class="select select--sm" aria-label="Target for specs/payments/openapi.yaml"><option>Plan: New version of Payments API</option><option>New project payments-openapi</option><option>New version of Orders Service</option><option>New version of Inventory Events</option></select></td></tr>
+            <tr><td class="mono t-xs">specs/orders/asyncapi.yaml</td><td><span class="fmt fmt--asyncapi">asyncapi</span></td><td><span class="badge"><i data-lucide="folder-plus"></i>New project orders-events</span></td><td class="mono t-xs">v1.0.0</td><td class="t-xs t-muted">—</td><td><select class="select select--sm" aria-label="Target for specs/orders/asyncapi.yaml"><option>Plan: New project orders-events</option><option>New version of Payments API</option><option>New version of Orders Service</option><option>New version of Inventory Events</option></select></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="t-xs t-muted">Change a row’s target to send it somewhere other than where the plan resolved it. Rows you leave alone apply the plan as shown. An overridden row shows “—” for its version (decided when the batch is verified) and “chosen here” as its reason.</div>
+      <div class="col gap-1"><div class="t-h4">Excluded (1)</div><ul class="t-xs" style="padding-left:16px"><li><span class="mono">specs/common/types.proto</span> <span class="t-muted">— compiled into another selected spec</span></li></ul></div>
+      <div class="t-2xs t-subtle">Other excluded reasons: “no importer for {format}” · “format not recognised” · “no recognisable format” · “over the batch limit”. Under always-ask: warn banner “N rows still need a target — the policy in force leaves the choice to you…”; row reads “Needs a choice — matches X”.</div>
+      <!-- Step 2 · Verify (BLK-1.3 dry_run) and Step 3 · Apply share one run surface -->
+      <div class="card card--flat card--pad col gap-2">
+        <div class="card__title">Verify · Apply</div>
+        <div class="t-xs t-muted">Verify: “Verify runs the whole batch as a dry run: every item is resolved and validated exactly as the apply will resolve it, and nothing is written — no project, no version, no catalog row.” Footer primary is <b>Run verify</b>, with <b>Skip verify</b> beside it; only after one of them does the primary become <b>Next: Apply →</b>. Apply: “Apply starts one import job per item with exactly the decisions above. Items that fail report their reason; the rest still import.” Footer primary <b>Import 2 specs</b>; once done, Cancel becomes <b>Close</b>.</div>
+        <div class="row gap-2 t-xs"><span class="spinner"></span><span class="t-600">Importing 2 independent specs…</span><span class="t-subtle">→ “Bulk import finished: 1 imported, 1 failed of 2.” / “Verify finished: 2 validated of 2.”</span></div>
+        <div class="row gap-2 t-xs"><span class="badge" data-status="completed">completed</span><span class="mono">specs/payments/openapi.yaml</span><span class="t-muted">Appended v2.4.0 to payments-api</span><button class="btn btn--sm btn--ghost">Summary</button></div>
+        <div class="row gap-2 t-xs"><span class="badge" data-status="running">running</span><span class="mono">specs/orders/asyncapi.yaml</span><span class="t-muted">New project orders-events at v1.0.0 · 62%</span><button class="btn btn--sm btn--ghost">Progress</button></div>
+        <div class="t-2xs t-subtle">Summary / Progress open the item’s own job inline — the shared ImportCompletePanel / ImportExecutionPanel — so per-item progress is the same object as one import’s. A failed row restates its taxonomy error: “Import scores D, below the tenant floor of B. (code QUALITY_POLICY_BLOCKED)”.</div>
+        <div class="banner banner--warn"><i data-lucide="triangle-alert"></i><span class="t-xs">Stale plan (409 TARGET_PLAN_STALE): “The plan you reviewed no longer describes this batch — nothing was imported.” + one line per drifted row, then “This workspace changed since the plan was made, so the batch was refused before anything was written. Re-plan to review the rows that moved.” with a <b>Re-plan</b> button back to Review.</span></div>
+      </div>
+    </div>
+    <div class="dialog__footer"><div class="row gap-2"><button class="btn" disabled>← Back</button></div><span class="spacer"></span><div class="row gap-2"><button class="btn" data-action="close">Cancel</button><button class="btn btn--primary">Next: Verify →</button></div></div>
+  </div>
+</div>
+
 <!-- Create New Project dialog (from wizard) -->
 <div class="overlay" id="new-project-dialog" data-overlay>
   <div class="dialog dialog--lg" role="dialog" aria-labelledby="np-title">
@@ -537,14 +586,15 @@
   <ul>
     <li>Header: back link, gradient tile, health badge + status pill (Active/Scanning/Pending/Error/Archived) + provider slug chip + branch chip, description or fallback; Rescan (disabled while scanning, stub toast) + branch select. KPI row: Files indexed · Importable estimate (placeholder-split tooltip) · Branches (GitHub only) · Imports (30d) + distinct projects · Last scan; spinners while scanning; 2 s polling; imports refetch on focus.</li>
     <li>Preview: intro copy, Recent scans (dot/branch/relative, “View scan history →” stub), Importable mix (placeholder split + total), Recent imports table (path deep link, blob·branch, project link, ≤8 rows, “See all →”).</li>
-    <li>Files: branch popover (search, Branches N / Tags disabled with title, default tag, Compare branches / Refresh from remote stubs), tip-commit note, “N files on branch”, Diff vs default checkbox (disabled &lt;2 branches), Rescan branch; filter toolbar (importable presets verbatim, glob ↔ regex exclusivity, three checkboxes, Reset/Apply, 200 ms debounce → page 1); table (select-all indeterminate, path button, kind pill, quality badge with header tooltip verbatim, confidence filename/other, size, 7-char blob, row menu View details / Import… / Open on provider / Copy path); “Import selected” one-at-a-time toast; 50/page pager.</li>
+    <li>Files: branch popover (search, Branches N / Tags disabled with title, default tag, Compare branches / Refresh from remote stubs), tip-commit note, “N files on branch”, Diff vs default checkbox (disabled &lt;2 branches), Rescan branch; filter toolbar (importable presets verbatim, glob ↔ regex exclusivity, three checkboxes, Reset/Apply, 200 ms debounce → page 1); table (select-all indeterminate, path button, kind pill, quality badge with header tooltip verbatim, confidence filename/other, size, 7-char blob, row menu View details / Import… / Open on provider / Copy path); “Import selected” — one ticked row opens Map &amp; import for it, more open the batch wizard covering all of them (BLK-1.4; the one-at-a-time toast is gone); 50/page pager.</li>
     <li>File detail: breadcrumb, Ready-to-import banner when a staged mapping matches the blob, header (kind + confidence pills, size·sha·branch, Map &amp; import + unavailable reasons verbatim); left column Detected metadata / Importable verdict / Suggested target (placeholder copy); right Source (syntax bar, read-only viewer, truncation notice) / Diff (placeholder verbatim) / Visualize (schema relationship diagram + empty/incomplete copy) / Details (Classes · Properties · Paths &amp; operations sortable tables); “View on GitHub” or unavailable note; source-only rendering for unrecognized/oversized files.</li>
     <li>Map &amp; import: Existing project radio (suggested mapping rule, project select + read-only slug, Clear selection, empty copy) / Create new project (Set up new project… dialog with Form/Metadata tabs, Copy from specification / Clear form, full manual form, staged “Mapped: …” + Edit/Clear); Version to create (From spec / Latest existing / Will create + draft + auto-link checkboxes); Import options (naming conventions, prefix/suffix, Generate examples, Dry run, Incremental); Diff placeholder tiles; Source facts + repository_imports note; Import as vX / Cancel + helper lines; executing (ImportExecutionPanel) and summary phases; all toasts.</li>
+    <li>Batch wizard (BLK-1.4): Review → Verify → Apply stepper; header summary “N items · N new versions · N new projects · N excluded” + policy line throughout; review table (Path / Kind / Resolution “New version of {project}” | “New project {slug}” / Version / Why / per-row Target select — plan, new project, or any existing project — changing only that row); Excluded list with reasons; Verify = BLK-1.3 dry run rendering the same rows with each item’s outcome, Apply disabled until verify ran or “Skip verify”; Apply = per-item rows with realized destination, Summary/Progress opening the item’s own ImportCompletePanel / ImportExecutionPanel; stale-plan refusal with per-row drift + Re-plan; closing returns to the Files tab with branch, filters, page and selection intact.</li>
     <li>Specs: “Refresh now”, refresh chips (Up to date / Stale / Refreshing / Failed / Diverged with title text; diverged rows purple + “Review divergence”), “Imported before spec capture” pill, Next due (Paused / Due now / in Nm|h|d), per-row Refresh, notice bar variants, empty/loading/error.</li>
     <li>Imports: When · File · blob · Project · version · Outcome (“Completed”) · By + empty copy. Settings: Source card (provider, clone URL + open, read-only default branch, disabled subpath glob + note), Scan cadence (auto-refresh switch + optimistic toasts, disabled Schedule/Webhook fieldset), Refresh conflicts (three policies with verbatim descriptions, per-file overrides list + add form + all toasts), Default importer mappings (empty + disabled Add mapping), Danger zone + Remove dialog verbatim.</li>
   </ul>
   <h4>Adds</h4>
-  <ul><li>File detail is a peer tab (in the app it replaces the browser in place — same content); Map &amp; import is an overlay wizard with the import phases inline.</li></ul>
+  <ul><li>File detail is a peer tab (in the app it replaces the browser in place — same content); Map &amp; import is an overlay wizard with the import phases inline; the batch wizard is a second overlay on the same frame, opened by Import selected for a multi-row selection.</li></ul>
   <h4>States</h4>
   <ul><li>“Loading repository…” · error card “Repository unavailable” + Back to list · files empty/deep-link-miss · no-tenant lock card.</li></ul>
 </template>

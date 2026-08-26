@@ -23334,7 +23334,7 @@ button.cid-entity__head {
   margin-inline-start: auto;
 }
 
-/* ---- Files: the ticked-files batch overlay (BLK-1.5) --------------------- */
+/* ---- Files: the ticked-files batch overlay (BLK-1.5, BLK-1.4) ------------ */
 
 /* A note that leads with an icon. `.repo-det-note` is text-only — it sets a size and a
    colour and nothing else — so an icon placed in one renders at its natural size and stacks
@@ -23355,50 +23355,79 @@ button.cid-entity__head {
   flex: none;
 }
 
-/* One planned spec, read left to right as "this file → this outcome → this target →
-   this version → why". The path takes the slack so the outcome chips stay aligned down
-   the column, which is what makes a twelve-row batch scannable. */
-.repo-bulk-row {
+/* ---- Files: the batch wizard (BLK-1.4) ------------------------------------ */
+
+/* The three lines every step carries: what is being read, what the batch amounts to, and
+   which policy decided it. Stacked, so the summary — the line the ticket asks for
+   "throughout" — stays put while the step below it changes. */
+.repo-batch-lead {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* The header summary: "12 items · 9 new versions · 3 new projects · 2 excluded". The same
+   inline-flex + sized-glyph treatment as `.repo-bulk-note`, one weight up, because it is the
+   sentence the reader verifies the batch against. */
+.repo-batch-summary {
+  display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-1);
-  border-block-end: 1px solid var(--border);
-}
-
-.repo-bulk-row:last-child {
-  border-block-end: 0;
-}
-
-.repo-bulk-row__path {
-  flex: 1 1 16rem;
   min-inline-size: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
 }
 
-.repo-bulk-row__target,
-.repo-bulk-row__why {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-size: var(--text-sm);
-}
-
-.repo-bulk-row__target svg {
+.repo-batch-summary > svg {
   inline-size: var(--icon-dense);
   block-size: var(--icon-dense);
+  flex: none;
 }
 
-.repo-bulk-row__version {
-  font-size: var(--text-sm);
+/* The review table borrows `.repo-det-table` wholesale; only the path column needs a say.
+   It takes the slack and breaks inside itself, so a forty-row batch keeps its outcome and
+   target columns aligned however long the paths are — the same rule the file table applies. */
+.repo-batch-table .repo-batch-table__path {
+  inline-size: 40%;
+  min-inline-size: 14rem;
+  overflow-wrap: anywhere;
 }
 
-/* The "why it matched" clause is the first thing to go when the row runs out of room —
-   the outcome and the target are what a reader is verifying. */
-@media (max-width: 60rem) {
-  .repo-bulk-row__why {
-    display: none;
-  }
+.repo-batch-table__members {
+  font-size: var(--fs-xs);
+}
+
+/* The per-row target control. A native select with the Hive control chrome, sized to its
+   cell rather than to the form width `.hive-control` fields default to: it is one column of
+   six, and a control that filled the row would push the reasons off-screen. */
+.repo-batch-select {
+  inline-size: 100%;
+  min-inline-size: 12rem;
+  max-inline-size: 20rem;
+  block-size: var(--control-h-sm);
+  padding-inline: var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--bg-surface);
+  color: var(--fg);
+  font-size: var(--fs-xs);
+}
+
+/* What the batch will not import, listed rather than hidden. */
+.repo-batch-excluded {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.repo-batch-excluded__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-inline-start: var(--space-4);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+  list-style: disc;
 }
 
 /* ---- Files: the branch bar ---------------------------------------------- */
