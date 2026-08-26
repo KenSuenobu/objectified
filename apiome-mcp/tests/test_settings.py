@@ -163,3 +163,38 @@ def test_cli_serve_fails_fast_without_database_url(monkeypatch: pytest.MonkeyPat
     assert result.returncode != 0
     combined = result.stderr + result.stdout
     assert "database_url" in combined.lower() or "DATABASE_URL" in combined
+
+
+def test_settings_mock_public_base_url_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    """AGX-2.4 mock root mirrors apiome-rest's default so compose stays consistent."""
+    monkeypatch.setenv("APIOME_MCP_DATABASE_URL", "postgresql://localhost/db")
+    monkeypatch.setenv("APIOME_MCP_INTERNAL_SECRET", "z" * 16)
+    monkeypatch.delenv("APIOME_MCP_MOCK_PUBLIC_BASE_URL", raising=False)
+
+    from apiome_mcp.settings import Settings
+
+    s = Settings(_env_file=None)
+    assert s.mock_public_base_url == "http://localhost:8775"
+
+
+def test_settings_mock_public_base_url_strips_trailing_slash(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("APIOME_MCP_DATABASE_URL", "postgresql://localhost/db")
+    monkeypatch.setenv("APIOME_MCP_INTERNAL_SECRET", "z" * 16)
+    monkeypatch.setenv("APIOME_MCP_MOCK_PUBLIC_BASE_URL", "https://mock.apiome.dev/")
+
+    from apiome_mcp.settings import Settings
+
+    s = Settings(_env_file=None)
+    assert s.mock_public_base_url == "https://mock.apiome.dev"
+
+
+def test_settings_mock_public_base_url_rejects_non_http(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fail fast at startup rather than routing agent traffic at an unusable root."""
+    monkeypatch.setenv("APIOME_MCP_DATABASE_URL", "postgresql://localhost/db")
+    monkeypatch.setenv("APIOME_MCP_INTERNAL_SECRET", "z" * 16)
+    monkeypatch.setenv("APIOME_MCP_MOCK_PUBLIC_BASE_URL", "mock.apiome.dev")
+
+    from apiome_mcp.settings import Settings
+
+    with pytest.raises(ValueError):
+        Settings(_env_file=None)

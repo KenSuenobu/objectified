@@ -1,6 +1,6 @@
 [project]
 name = "apiome-mcp"
-version = "0.2.8"
+version = "0.3.0"
 description = "Model Context Protocol server for Apiome (FastMCP)."
 readme = "README.md"
 requires-python = ">=3.11"

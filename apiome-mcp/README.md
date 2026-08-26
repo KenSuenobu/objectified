@@ -99,6 +99,13 @@ never filtered by tenant/key enable-set (contrast AGX-3.1). See
 and shared-code guards: **[docs/AGX_COORDINATION.md](docs/AGX_COORDINATION.md)**
 (MTG-5.5 / #4789).
 
+**Mock-target mode (AGX-2.4):** an agent toolset with ``target: mock`` routes its
+``tools/call`` traffic to the hosted SIM mock for that version
+(``{mock root}/{tenant}/{project}/{version}``) instead of the production upstream, with
+the upstream credential vault skipped entirely and the invocation audit labelled
+``mock``. Switching a toolset between ``mock`` and ``prod`` needs no recompile. Resolver:
+``apiome_mcp.mock_target``; see **[docs/MOCK_TARGET.md](docs/MOCK_TARGET.md)** (#4536).
+
 Tool implementations live in `src/apiome_mcp/server.py` and sibling `*_tool.py` modules.
 
 ---

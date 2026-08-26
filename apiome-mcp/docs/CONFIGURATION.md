@@ -21,6 +21,7 @@ Runtime configuration is loaded from the environment by [`Settings`](../src/apio
 | **`APIOME_MCP_OPENAI_EMBEDDING_MODEL`** | No | `text-embedding-3-small` | Passed through to the embeddings API as **`model`**. |
 | **`APIOME_MCP_OPENAI_EMBEDDING_DIMENSIONS`** | No | `1536` | Must match **`apiome.versions.mcp_public_embedding`** (`vector(1536)` migration). |
 | **`APIOME_MCP_OPENAI_EMBEDDING_TIMEOUT_S`** | No | `60` | HTTP timeout for embedding requests (**> 0**, **≤ 600**). |
+| **`APIOME_MCP_MOCK_PUBLIC_BASE_URL`** | No | `http://localhost:8775` | Public root of the hosted SIM mock runtime. AGX-2.4 toolsets with `target: mock` route `tools/call` to `{root}/{tenant}/{project}/{version}`. Must be absolute `http`/`https` with a host (validated at startup); trailing slashes are stripped. Mirrors apiome-rest's `APIOME_MOCK_PUBLIC_BASE_URL`. See [`MOCK_TARGET.md`](MOCK_TARGET.md). |
 | **`APIOME_MCP_ANONYMOUS_POLICY_TENANT_ID`** | No | — | Optional UUID of the **host tenant** whose MCP policy gates anonymous `tools/call` (MTG-2.3). When unset, anonymous callers are not gated. See [`ANONYMOUS_CALL_POLICY.md`](ANONYMOUS_CALL_POLICY.md). |
 
 ## Related files
@@ -28,6 +29,7 @@ Runtime configuration is loaded from the environment by [`Settings`](../src/apio
 - **[`../.env.example`](../.env.example)** — copy/paste template for local development.
 - **Repository root [`docker-compose.env.example`](../../docker-compose.env.example)** — overrides for **`docker compose`** (Postgres + MCP port + secret).
 - **[`LIST_ALWAYS.md`](LIST_ALWAYS.md)** — MTG-2.1 ADR: `tools/list` is never filtered by enable-set (contrast AGX-3.1).
+- **[`MOCK_TARGET.md`](MOCK_TARGET.md)** — AGX-2.4: `target: mock` routes agent invocations to the SIM mock (sandbox; no upstream credentials).
 - **[`AGX_COORDINATION.md`](AGX_COORDINATION.md)** — MTG-5.5: catalog MCP vs AGX agent tools; shared code must not merge list contracts.
 - **[`EFFECTIVE_POLICY.md`](EFFECTIVE_POLICY.md)** — MTG-1.4 effective resolver used by the `tools/call` gate (MTG-2.2).
 - **[`ANONYMOUS_CALL_POLICY.md`](ANONYMOUS_CALL_POLICY.md)** — MTG-2.3 ADR: host-tenant anonymous enable-set + matrix.
