@@ -8,7 +8,10 @@ must happen on the client:
   deterministically, with the files that cannot be imported reported rather than
   quietly dropped;
 * render the plan and the per-item results, and decide the process exit code from
-  them (a batch where one item failed is not a success).
+  them (a batch where one item failed is not a success). The plan table leads with the
+  server's BLK-1.2 reconciliation — whether each item would append a version to a project
+  that already exists or create a new one — because a table that omits it describes an
+  empty tenant and cannot tell a re-import from a first import.
 
 Everything here is pure apart from reading the directory: no HTTP, so the shapes are
 testable without a server.
@@ -188,6 +191,16 @@ def load_bulk_payload(source: str) -> BulkPayload:
     raise ValueError(f"{source!r} is not a file or directory.")
 
 
+def _matched_slug(value: Any) -> str:
+    """Render the project a planned item resolves to, or ``-`` when it is new (BLK-1.2)."""
+    return str(value.get("slug") or "") if isinstance(value, dict) else "-"
+
+
+def _proposed_version(value: Any) -> str:
+    """Render the version label a planned item would create (BLK-1.2)."""
+    return str(value.get("version_id") or "") if isinstance(value, dict) else ""
+
+
 _PLAN_COLUMNS: tuple[ListColumn, ...] = (
     ("Item", "key", None),
     ("Format", "format", None),
@@ -195,6 +208,19 @@ _PLAN_COLUMNS: tuple[ListColumn, ...] = (
     ("Destination", "predicted_target", None),
     ("Files", "members", lambda value: str(len(value or []))),
     ("Name", "suggested_name", None),
+    # BLK-1.2: what applying this plan would actually do, per item. Without these three the
+    # table describes an empty tenant, and a user cannot tell a re-import from a first import.
+    ("Resolution", "resolution", None),
+    ("Existing", "matched_project", _matched_slug),
+    ("Version", "proposed_version", _proposed_version),
+)
+
+#: How each resolution reads in the summary line — token, singular, plural — in the order the
+#: line lists them.
+_RESOLUTION_LABELS: tuple[tuple[str, str, str], ...] = (
+    ("append-version", "new version", "new versions"),
+    ("create-project", "new project", "new projects"),
+    ("unresolved", "needing a choice", "needing a choice"),
 )
 
 _RESULT_COLUMNS: tuple[ListColumn, ...] = (
@@ -218,7 +244,7 @@ def emit_bulk_plan(plan: dict[str, Any], *, json_mode: bool) -> None:
         return
 
     items = [item for item in plan.get("items") or [] if isinstance(item, dict)]
-    emit_list_table(items, _PLAN_COLUMNS, empty_message="No importable specs found.")
+    emit_list_table(items, _PLAN_COLUMNS, empty_message="No importable specs found.", min_width=140)
     summary = plan.get("summary") or {}
     if isinstance(summary, dict) and summary:
         typer.echo(
@@ -227,12 +253,57 @@ def emit_bulk_plan(plan: dict[str, Any], *, json_mode: bool) -> None:
             f"{summary.get('unimportable', 0)} without an adapter, "
             f"{summary.get('skipped_files', 0)} file(s) not part of any spec."
         )
+        emit_plan_resolution(plan)
     if plan.get("truncated"):
         typer.echo(
             f"Only the first {len(items)} of {plan.get('total_items', len(items))} specs are "
             f"planned (limit {plan.get('max_items')}). Import the rest separately.",
             err=True,
         )
+
+
+def resolution_summary_line(plan: dict[str, Any]) -> str:
+    """Render the reconciliation half of the plan's summary line (BLK-1.2).
+
+    The line the wizard and the CLI both lead with — "12 items · 9 new versions · 3 new
+    projects" — plus a note naming the policy when it is not the default one, so a user who
+    sees every item creating a project can tell "nothing matched" from "your policy ignores
+    matches".
+
+    Args:
+        plan: A parsed ``BulkImportPlanResponse``.
+
+    Returns:
+        The line, or ``""`` when the plan carries no reconciliation counts.
+    """
+    summary = plan.get("summary")
+    counts = summary.get("by_resolution") if isinstance(summary, dict) else None
+    if not isinstance(counts, dict) or not counts:
+        return ""
+
+    parts = [
+        f"{counts[token]} {singular if counts[token] == 1 else plural}"
+        for token, singular, plural in _RESOLUTION_LABELS
+        if counts.get(token)
+    ]
+    if not parts:
+        return ""
+
+    line = f"Reconciled against existing projects: {', '.join(parts)}."
+    policy = str(plan.get("version_policy") or "")
+    matched = summary.get("matched") if isinstance(summary, dict) else 0
+    if policy == "always-create" and isinstance(matched, int) and matched:
+        line += f" Policy 'always-create' is ignoring {matched} match(es)."
+    elif policy == "always-ask":
+        line += " Policy 'always-ask' needs a per-item choice before importing."
+    return line
+
+
+def emit_plan_resolution(plan: dict[str, Any]) -> None:
+    """Print :func:`resolution_summary_line`, when the plan has one to print."""
+    line = resolution_summary_line(plan)
+    if line:
+        typer.echo(line)
 
 
 def emit_skipped_files(skipped: list[tuple[str, str]], *, json_mode: bool) -> None:

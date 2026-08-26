@@ -4,9 +4,12 @@ Three endpoints turn *"here is our ``specs/`` folder"* into N ordinary import jo
 
 ``POST /v1/tenants/{tenant_slug}/import/bulk/plan``
     Unpack the archive (or read the repository selection), partition it into
-    independent items with :mod:`app.bulk_intake`, and describe each one — root
-    document, members, detected format, predicted destination, suggested catalog
-    identity — without writing anything.
+    independent items with :mod:`app.bulk_intake`, describe each one — root document,
+    members, detected format, predicted destination, suggested catalog identity — and
+    **reconcile** it against the tenant's existing projects with
+    :mod:`app.bulk_import_reconciliation` (BLK-1.2), so each row says whether it would
+    append a version to a project that already exists or create a new one. All reads:
+    it still writes nothing.
 
 ``POST /v1/tenants/{tenant_slug}/import/bulk``
     Re-plan the same payload server-side and start one import job per selected item.
@@ -39,6 +42,14 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from .archive_intake import ArchiveIntakeError, is_archive_payload, unpack_archive_members
 from .auth import get_authenticated_user_id, validate_authentication
+from .bulk_import_reconciliation import (
+    ItemResolution,
+    ProjectReconciler,
+    ResolvedVersionPolicy,
+    VersionPolicy,
+    reconcile_item,
+    resolve_version_policy,
+)
 from .bulk_intake import (
     BulkGroup,
     BulkPlan,
@@ -171,6 +182,42 @@ class BulkImportSkippedMember(BaseModel):
     )
 
 
+class BulkImportMatchedProject(BaseModel):
+    """The existing project a planned item resolves to (BLK-1.2)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    project_id: str = Field(
+        description=(
+            "The matched project's id — what an apply step passes as 'project.project_id' "
+            "(BLK-1.1) to append this revision to it."
+        )
+    )
+    name: str = Field(description="The matched project's display name.")
+    slug: str = Field(description="The matched project's slug.")
+
+
+class BulkImportProposedVersion(BaseModel):
+    """The version label an item would create, and how it was derived (BLK-1.2)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    version_id: str = Field(description="The version label this item would create.")
+    derived_from: Literal["default", "version-bump", "next-available"] = Field(
+        description=(
+            "How the label was reached: 'default' (the batch's first version — a new project, "
+            "or a matched project with no revisions), 'version-bump' (the next free minor "
+            "after the matched project's highest semantic version) or 'next-available' (the "
+            "matched project's labels are not semantic versions, so the first free label at "
+            "or after the default was taken — what the importer itself would allocate)."
+        )
+    )
+    previous_version_id: Optional[str] = Field(
+        default=None,
+        description="The label this one follows, set only for 'version-bump'.",
+    )
+
+
 class BulkImportPlanItem(BaseModel):
     """One independent spec found in the payload — a candidate import job."""
 
@@ -213,6 +260,50 @@ class BulkImportPlanItem(BaseModel):
     suggested_name: str = Field(description="Catalog item name derived from the item.")
     suggested_slug: str = Field(description="Catalog slug derived from the suggested name.")
     reason: str = Field(description="Why these files are one item.")
+    resolution: Literal["append-version", "create-project", "unresolved"] = Field(
+        description=(
+            "What would happen to this item if the plan were applied now (BLK-1.2): "
+            "'append-version' adds a new version to 'matched_project', 'create-project' "
+            "creates a project, and 'unresolved' means the tenant's 'always-ask' policy "
+            "defers the choice to an explicit per-item decision at apply time."
+        )
+    )
+    matched_project: Optional[BulkImportMatchedProject] = Field(
+        default=None,
+        description=(
+            "The existing project this item resolves to, or null when it is genuinely new. "
+            "Reported even under the 'always-create' policy, which ignores the match rather "
+            "than hiding it."
+        ),
+    )
+    match_basis: Optional[Literal["repository-provenance", "slug", "spec-identity"]] = Field(
+        default=None,
+        description=(
+            "Why it matched: 'repository-provenance' (a prior import from the same repository "
+            "and path — the strongest signal), 'slug' (an existing project already uses this "
+            "item's suggested slug), or 'spec-identity' (an existing project is named for the "
+            "same API, which is how a file that moved within the repository still matches)."
+        ),
+    )
+    match_detail: Optional[str] = Field(
+        default=None,
+        description="One sentence explaining the match, so a verify screen can justify it.",
+    )
+    match_confidence: Optional[float] = Field(
+        default=None,
+        description=(
+            "Confidence in the *match* (0..1) — deliberately not named 'confidence', which is "
+            "already this item's format-detection confidence and answers a different question."
+        ),
+    )
+    proposed_version: Optional[BulkImportProposedVersion] = Field(
+        default=None,
+        description=(
+            "The version label this item would create, and how it was derived. An "
+            "'unresolved' item reports the label the default 'append-when-matched' policy "
+            "would produce — the candidate the user is being asked to confirm."
+        ),
+    )
     document_base64: Optional[str] = Field(
         default=None,
         description="The item's import payload, when include_documents was requested.",
@@ -233,6 +324,21 @@ class BulkImportPlanSummary(BaseModel):
     )
     by_format: Dict[str, int] = Field(
         default_factory=dict, description="Item counts by detected format key."
+    )
+    by_resolution: Dict[str, int] = Field(
+        default_factory=dict,
+        description=(
+            "Item counts by reconciliation outcome (BLK-1.2) — the '12 items · 9 new versions "
+            "· 3 new projects' line. Counts every planned item, importable or not, so the "
+            "totals reconcile with the per-item rows exactly as 'by_target' does."
+        ),
+    )
+    matched: int = Field(
+        default=0,
+        description=(
+            "Items that matched an existing project, whatever the policy did with the match. "
+            "Under 'always-create' this is how many matches the plan is ignoring."
+        ),
     )
 
 
@@ -258,6 +364,21 @@ class BulkImportPlanResponse(BaseModel):
     git_source: Optional[SpecImportGitSource] = Field(
         default=None,
         description="Repository provenance when the payload came from a git selection.",
+    )
+    version_policy: Literal["append-when-matched", "always-create", "always-ask"] = Field(
+        description=(
+            "The reconciliation policy this plan was resolved under (BLK-1.2): "
+            "'append-when-matched' (the default — matched items append a version, unmatched "
+            "items create a project), 'always-create' (every item creates a project; matches "
+            "are still reported) or 'always-ask' (every item is unresolved and needs a "
+            "per-item choice at apply time)."
+        )
+    )
+    version_policy_source: Literal["repository", "tenant", "default"] = Field(
+        description=(
+            "Which tier supplied the policy — the registered repository's override, the "
+            "tenant's default, or the built-in default when neither is set."
+        )
     )
     summary: BulkImportPlanSummary
 
@@ -548,17 +669,30 @@ def _max_items() -> int:
     return max(1, int(settings.bulk_import_max_items))
 
 
-def _plan_item(group: BulkGroup, *, include_document: bool) -> BulkImportPlanItem:
-    """Adapt one planned group into its API row.
+def _plan_item(
+    group: BulkGroup, resolved: ItemResolution, *, include_document: bool
+) -> BulkImportPlanItem:
+    """Adapt one planned group and its reconciliation into the item's API row.
 
     The item's bytes are built only when the caller asked for them: packing a fileset
     zip per item just to draw a list would double the cost of a plan the submit
     endpoint recomputes anyway.
+
+    Args:
+        group: The planned item.
+        resolved: Its BLK-1.2 reconciliation — what applying the plan would do, against
+            which project, and as which version.
+        include_document: Whether to pack and attach the item's import payload.
+
+    Returns:
+        The plan row.
     """
     detected = group.detection.detected
     document = group_document_bytes(group)[0] if include_document else None
     input_kind = "file" if len(group.members) == 1 else "fileset"
     name = suggested_item_name(group)
+    match = resolved.match
+    proposed = resolved.proposed_version
     return BulkImportPlanItem(
         key=group.key,
         root_path=group.root_path,
@@ -573,6 +707,22 @@ def _plan_item(group: BulkGroup, *, include_document: bool) -> BulkImportPlanIte
         suggested_name=name,
         suggested_slug=bulk_item_slug(name),
         reason=group.reason,
+        resolution=resolved.resolution.value,  # type: ignore[arg-type]
+        matched_project=(
+            BulkImportMatchedProject(
+                project_id=match.project_id, name=match.name, slug=match.slug
+            )
+            if match
+            else None
+        ),
+        match_basis=match.basis.value if match else None,  # type: ignore[arg-type]
+        match_detail=match.detail if match else None,
+        match_confidence=match.confidence if match else None,
+        proposed_version=BulkImportProposedVersion(
+            version_id=proposed.version_id,
+            derived_from=proposed.derived_from.value,  # type: ignore[arg-type]
+            previous_version_id=proposed.previous_version_id,
+        ),
         document_base64=(
             base64.standard_b64encode(document).decode("ascii") if document is not None else None
         ),
@@ -580,16 +730,21 @@ def _plan_item(group: BulkGroup, *, include_document: bool) -> BulkImportPlanIte
 
 
 def _plan_summary(items: List[BulkImportPlanItem], skipped_files: int) -> BulkImportPlanSummary:
-    """Count a plan by destination and format for the summary line."""
+    """Count a plan by destination, format and reconciliation outcome for the summary line."""
     by_target: Dict[str, int] = {}
     by_format: Dict[str, int] = {}
+    by_resolution: Dict[str, int] = {}
     importable = 0
+    matched = 0
     for item in items:
         by_target[item.predicted_target] = by_target.get(item.predicted_target, 0) + 1
         key = item.format or "unrecognised"
         by_format[key] = by_format.get(key, 0) + 1
+        by_resolution[item.resolution] = by_resolution.get(item.resolution, 0) + 1
         if item.importable:
             importable += 1
+        if item.matched_project is not None:
+            matched += 1
     return BulkImportPlanSummary(
         items=len(items),
         importable=importable,
@@ -597,7 +752,107 @@ def _plan_summary(items: List[BulkImportPlanItem], skipped_files: int) -> BulkIm
         skipped_files=skipped_files,
         by_target=by_target,
         by_format=by_format,
+        by_resolution=by_resolution,
+        matched=matched,
     )
+
+
+def _resolve_plan_policy(
+    body: BulkImportSourceRequest, *, tenant_id: str
+) -> ResolvedVersionPolicy:
+    """Resolve the reconciliation policy for one plan (BLK-1.2).
+
+    Reads the two stored tiers — the registered repository's override, when the payload names
+    one, and the tenant's default — and lets
+    :func:`app.bulk_import_reconciliation.resolve_version_policy` apply the precedence. An
+    archive upload names no repository, so only the tenant tier applies to it.
+
+    Blocking DB work — call via ``asyncio.to_thread``.
+
+    Args:
+        body: The plan request.
+        tenant_id: The acting tenant.
+
+    Returns:
+        The policy in force and the tier it came from.
+    """
+    repository_policy: Optional[Any] = None
+    repository_id = body.git.repository_id if body.git else None
+    if repository_id:
+        repository = db.get_tenant_repository(tenant_id, repository_id) or {}
+        repository_policy = repository.get("bulk_import_version_policy")
+    return resolve_version_policy(
+        repository_policy=repository_policy,
+        tenant_policy=db.get_tenant_bulk_import_version_policy(tenant_id),
+    )
+
+
+def _reconcile_groups(
+    groups: List[BulkGroup],
+    *,
+    tenant_id: str,
+    policy: VersionPolicy,
+    git_result: Optional[GitFilesetResult],
+) -> List[ItemResolution]:
+    """Reconcile every planned item against the tenant's existing projects (BLK-1.2).
+
+    One :class:`~app.bulk_import_reconciliation.ProjectReconciler` serves the whole plan, so
+    the batch's DB cost is proportional to the *distinct* paths, slugs and titles it holds
+    rather than to its item count.
+
+    Every planned item is reconciled, including one no adapter can import: it still has an
+    identity that may already exist, and skipping it would make ``by_resolution`` disagree
+    with the rows it summarises. ``importable`` remains the flag that says whether the item
+    can actually run.
+
+    Blocking DB work — call via ``asyncio.to_thread``.
+
+    Args:
+        groups: The planned items, in plan order.
+        tenant_id: The acting tenant; every lookup is scoped to it.
+        policy: The resolved reconciliation policy.
+        git_result: The repository selection, or ``None`` for an archive upload.
+
+    Returns:
+        One resolution per group, positionally aligned with ``groups``.
+    """
+    reconciler = ProjectReconciler(db, tenant_id=tenant_id)
+    repo_url = git_result.provenance.repo_url if git_result else None
+    resolutions: List[ItemResolution] = []
+    for group in groups:
+        name = suggested_item_name(group)
+        resolutions.append(
+            reconcile_item(
+                reconciler,
+                policy=policy,
+                repo_url=repo_url,
+                git_path=_item_git_path(git_result, group),
+                slug=bulk_item_slug(name),
+                title=name,
+                default_version_id=_DEFAULT_ITEM_VERSION,
+            )
+        )
+    return resolutions
+
+
+def _item_git_path(result: Optional[GitFilesetResult], group: BulkGroup) -> Optional[str]:
+    """Return the item's own path inside the repository, or ``None`` for an archive.
+
+    The batch's selection path plus the item's root document — the one string that identifies
+    *this* item's origin, and the value recorded as ``format_metadata.gitPath`` on the
+    revision an earlier import of it produced.
+
+    Args:
+        result: The fetched repository selection, or ``None``.
+        group: The planned item.
+
+    Returns:
+        The repository-relative path, or ``None`` when the payload was not a repository.
+    """
+    if result is None:
+        return None
+    base = result.provenance.path.rstrip("/")
+    return f"{base}/{group.root_path}" if base else group.root_path
 
 
 def _item_git_source(
@@ -618,11 +873,10 @@ def _item_git_source(
     Returns:
         The item's provenance, or ``None`` when the payload was not a repository.
     """
-    if result is None:
+    item_path = _item_git_path(result, group)
+    if result is None or item_path is None:
         return None
     provenance = result.provenance
-    base = provenance.path.rstrip("/")
-    item_path = f"{base}/{group.root_path}" if base else group.root_path
     browse = (
         f"https://github.com/{provenance.owner}/{provenance.repo}/blob/"
         f"{provenance.commit_sha}/{item_path}"
@@ -669,9 +923,22 @@ def _plan_payload(members: Dict[str, str], *, source_label: str) -> BulkPlan:
         "no importable item are reported in `skipped` with a reason, never dropped "
         "silently, and a payload holding more items than the batch ceiling reports "
         "`truncated` rather than importing a silent prefix.\n\n"
-        "Nothing is persisted and no job is created. Item bytes are returned only when "
-        "`include_documents` is set; the submit endpoint re-plans the same payload itself, "
-        "so a client that just renders the list does not need them."
+        "Every item is then **reconciled** against the tenant's existing projects (BLK-1.2), "
+        "so the plan answers the question that decides the batch: *which of these is a new "
+        "version of something I already have?* An item resolves to `append-version` or "
+        "`create-project`, naming the `matched_project`, the `match_basis` that found it "
+        "(repository provenance, then slug, then the document's own identity — which is how a "
+        "file that moved within the repository still matches), a `match_confidence` distinct "
+        "from the format-detection `confidence`, and the `proposed_version` it would create. "
+        "What a match *means* comes from the reconciliation policy — the registered "
+        "repository's override, else the tenant default, else `append-when-matched` — "
+        "reported as `version_policy` / `version_policy_source`. `always-create` reports the "
+        "matches it is ignoring rather than hiding them, and `always-ask` marks every item "
+        "`unresolved` for a per-item choice at apply time.\n\n"
+        "Nothing is persisted and no job is created — reconciliation is reads only. Item "
+        "bytes are returned only when `include_documents` is set; the submit endpoint "
+        "re-plans the same payload itself, so a client that just renders the list does not "
+        "need them."
     ),
 )
 async def plan_bulk_import_payload(
@@ -689,7 +956,24 @@ async def plan_bulk_import_payload(
         body, tenant_id=tenant_id, user_id=user_id
     )
     plan = _plan_payload(members, source_label=label)
-    items = [_plan_item(group, include_document=body.include_documents) for group in plan.groups]
+
+    # Reconciliation (BLK-1.2): the plan's other half — which of these items is a new version
+    # of something the tenant already has. Both steps are synchronous DB work, so they run off
+    # the event loop; both are reads, which is what keeps the endpoint's write-nothing
+    # guarantee intact.
+    policy = await asyncio.to_thread(_resolve_plan_policy, body, tenant_id=tenant_id)
+    resolutions = await asyncio.to_thread(
+        _reconcile_groups,
+        plan.groups,
+        tenant_id=tenant_id,
+        policy=policy.policy,
+        git_result=git_result,
+    )
+
+    items = [
+        _plan_item(group, resolved, include_document=body.include_documents)
+        for group, resolved in zip(plan.groups, resolutions)
+    ]
     skipped = [
         BulkImportSkippedMember(path=entry.path, reason=entry.reason) for entry in plan.skipped
     ]
@@ -703,6 +987,8 @@ async def plan_bulk_import_payload(
         git_source=(
             SpecImportGitSource(**git_result.provenance.as_dict()) if git_result else None
         ),
+        version_policy=policy.policy.value,
+        version_policy_source=policy.source.value,
         summary=_plan_summary(items, len(skipped)),
     )
 

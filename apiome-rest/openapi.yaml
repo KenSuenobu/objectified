@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.161.0
+  version: 1.162.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -34721,9 +34721,25 @@ paths:
         `truncated` rather than importing a silent prefix.
 
 
-        Nothing is persisted and no job is created. Item bytes are returned only when
-        `include_documents` is set; the submit endpoint re-plans the same payload
-        itself, so a client that just renders the list does not need them.'
+        Every item is then **reconciled** against the tenant''s existing projects
+        (BLK-1.2), so the plan answers the question that decides the batch: *which
+        of these is a new version of something I already have?* An item resolves to
+        `append-version` or `create-project`, naming the `matched_project`, the `match_basis`
+        that found it (repository provenance, then slug, then the document''s own
+        identity — which is how a file that moved within the repository still matches),
+        a `match_confidence` distinct from the format-detection `confidence`, and
+        the `proposed_version` it would create. What a match *means* comes from the
+        reconciliation policy — the registered repository''s override, else the tenant
+        default, else `append-when-matched` — reported as `version_policy` / `version_policy_source`.
+        `always-create` reports the matches it is ignoring rather than hiding them,
+        and `always-ask` marks every item `unresolved` for a per-item choice at apply
+        time.
+
+
+        Nothing is persisted and no job is created — reconciliation is reads only.
+        Item bytes are returned only when `include_documents` is set; the submit endpoint
+        re-plans the same payload itself, so a client that just renders the list does
+        not need them.'
       operationId: plan_bulk_import_payload_v1_tenants__tenant_slug__import_bulk_plan_post
       parameters:
       - name: tenant_slug
@@ -53549,6 +53565,32 @@ components:
       title: BulkImportGitSelector
       description: A repository selection to plan or import in bulk (MFI-29.3 selection
         rules).
+    BulkImportMatchedProject:
+      properties:
+        project_id:
+          type: string
+          title: Project Id
+          description: The matched project's id — what an apply step passes as 'project.project_id'
+            (BLK-1.1) to append this revision to it.
+          example: prj_01h2xcejqtf3fz5y5j0v8k9m2p
+        name:
+          type: string
+          title: Name
+          description: The matched project's display name.
+          example: Pet
+        slug:
+          type: string
+          title: Slug
+          description: The matched project's slug.
+          example: pet-store
+      additionalProperties: false
+      type: object
+      required:
+      - project_id
+      - name
+      - slug
+      title: BulkImportMatchedProject
+      description: The existing project a planned item resolves to (BLK-1.2).
     BulkImportPlanItem:
       properties:
         key:
@@ -53638,6 +53680,70 @@ components:
           title: Reason
           description: Why these files are one item.
           example: example
+        resolution:
+          type: string
+          enum:
+          - append-version
+          - create-project
+          - unresolved
+          title: Resolution
+          description: 'What would happen to this item if the plan were applied now
+            (BLK-1.2): ''append-version'' adds a new version to ''matched_project'',
+            ''create-project'' creates a project, and ''unresolved'' means the tenant''s
+            ''always-ask'' policy defers the choice to an explicit per-item decision
+            at apply time.'
+          example: append-version
+        matched_project:
+          anyOf:
+          - $ref: '#/components/schemas/BulkImportMatchedProject'
+          - type: 'null'
+            description: Bulk Import Plan schema.
+          description: The existing project this item resolves to, or null when it
+            is genuinely new. Reported even under the 'always-create' policy, which
+            ignores the match rather than hiding it.
+        match_basis:
+          anyOf:
+          - type: string
+            enum:
+            - repository-provenance
+            - slug
+            - spec-identity
+            description: Bulk Import Plan schema.
+          - type: 'null'
+            description: Bulk Import Plan schema.
+          title: Match Basis
+          description: 'Why it matched: ''repository-provenance'' (a prior import
+            from the same repository and path — the strongest signal), ''slug'' (an
+            existing project already uses this item''s suggested slug), or ''spec-identity''
+            (an existing project is named for the same API, which is how a file that
+            moved within the repository still matches).'
+        match_detail:
+          anyOf:
+          - type: string
+            description: Bulk Import Plan schema.
+          - type: 'null'
+            description: Bulk Import Plan schema.
+          title: Match Detail
+          description: One sentence explaining the match, so a verify screen can justify
+            it.
+        match_confidence:
+          anyOf:
+          - type: number
+            description: Bulk Import Plan schema.
+          - type: 'null'
+            description: Bulk Import Plan schema.
+          title: Match Confidence
+          description: Confidence in the *match* (0..1) — deliberately not named 'confidence',
+            which is already this item's format-detection confidence and answers a
+            different question.
+        proposed_version:
+          anyOf:
+          - $ref: '#/components/schemas/BulkImportProposedVersion'
+          - type: 'null'
+            description: Bulk Import Plan schema.
+          description: The version label this item would create, and how it was derived.
+            An 'unresolved' item reports the label the default 'append-when-matched'
+            policy would produce — the candidate the user is being asked to confirm.
         document_base64:
           anyOf:
           - type: string
@@ -53658,6 +53764,7 @@ components:
       - suggested_name
       - suggested_slug
       - reason
+      - resolution
       title: BulkImportPlanItem
       description: One independent spec found in the payload — a candidate import
         job.
@@ -53743,6 +53850,30 @@ components:
           - type: 'null'
             description: Response payload for bulk import plan.
           description: Repository provenance when the payload came from a git selection.
+        version_policy:
+          type: string
+          enum:
+          - append-when-matched
+          - always-create
+          - always-ask
+          title: Version Policy
+          description: 'The reconciliation policy this plan was resolved under (BLK-1.2):
+            ''append-when-matched'' (the default — matched items append a version,
+            unmatched items create a project), ''always-create'' (every item creates
+            a project; matches are still reported) or ''always-ask'' (every item is
+            unresolved and needs a per-item choice at apply time).'
+          example: append-when-matched
+        version_policy_source:
+          type: string
+          enum:
+          - repository
+          - tenant
+          - default
+          title: Version Policy Source
+          description: Which tier supplied the policy — the registered repository's
+            override, the tenant's default, or the built-in default when neither is
+            set.
+          example: repository
         summary:
           $ref: '#/components/schemas/BulkImportPlanSummary'
           description: Short summary suitable for navigation and reference docs.
@@ -53752,6 +53883,8 @@ components:
       - total_items
       - max_items
       - source_label
+      - version_policy
+      - version_policy_source
       - summary
       title: BulkImportPlanResponse
       description: The partition of one payload into independent items.
@@ -53789,6 +53922,23 @@ components:
           type: object
           title: By Format
           description: Item counts by detected format key.
+        by_resolution:
+          additionalProperties:
+            type: integer
+          type: object
+          title: By Resolution
+          description: Item counts by reconciliation outcome (BLK-1.2) — the '12 items
+            · 9 new versions · 3 new projects' line. Counts every planned item, importable
+            or not, so the totals reconcile with the per-item rows exactly as 'by_target'
+            does.
+        matched:
+          type: integer
+          title: Matched
+          description: Items that matched an existing project, whatever the policy
+            did with the match. Under 'always-create' this is how many matches the
+            plan is ignoring.
+          default: 0
+          example: 1
       additionalProperties: false
       type: object
       required:
@@ -53798,6 +53948,43 @@ components:
       - skipped_files
       title: BulkImportPlanSummary
       description: Counted roll-up of a plan, for the wizard's and CLI's summary line.
+    BulkImportProposedVersion:
+      properties:
+        version_id:
+          type: string
+          title: Version Id
+          description: The version label this item would create.
+          example: 1.0.0
+        derived_from:
+          type: string
+          enum:
+          - default
+          - version-bump
+          - next-available
+          title: Derived From
+          description: 'How the label was reached: ''default'' (the batch''s first
+            version — a new project, or a matched project with no revisions), ''version-bump''
+            (the next free minor after the matched project''s highest semantic version)
+            or ''next-available'' (the matched project''s labels are not semantic
+            versions, so the first free label at or after the default was taken —
+            what the importer itself would allocate).'
+          example: default
+        previous_version_id:
+          anyOf:
+          - type: string
+            description: Bulk Import Proposed Version schema.
+          - type: 'null'
+            description: Bulk Import Proposed Version schema.
+          title: Previous Version Id
+          description: The label this one follows, set only for 'version-bump'.
+      additionalProperties: false
+      type: object
+      required:
+      - version_id
+      - derived_from
+      title: BulkImportProposedVersion
+      description: The version label an item would create, and how it was derived
+        (BLK-1.2).
     BulkImportSkippedMember:
       properties:
         path:
@@ -57413,7 +57600,7 @@ components:
           type: string
           title: Operation Uuid
           description: The apiome.path_operation UUID.
-          example: 4a8e78ef-cdd4-4ae0-8673-83a3a70f84a6
+          example: c3173109-e7dc-4d02-9c71-3267a3458a77
         method:
           type: string
           title: Method
@@ -59405,7 +59592,7 @@ components:
           type: string
           title: Generated At
           description: Statement timestamp (ISO-8601, UTC).
-          example: '2026-08-26T12:37:35Z'
+          example: '2026-08-26T13:05:32Z'
         envelope:
           additionalProperties: true
           type: object
@@ -87634,7 +87821,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-26T12:37:35Z'
+          example: '2026-08-26T13:05:32Z'
       additionalProperties: false
       type: object
       required:
@@ -99381,13 +99568,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-26T12:37:35Z'
+          example: '2026-08-26T13:05:32Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-26T12:37:35Z'
+          example: '2026-08-26T13:05:32Z'
         outcome:
           anyOf:
           - type: string

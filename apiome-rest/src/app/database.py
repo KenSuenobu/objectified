@@ -7086,6 +7086,138 @@ class Database:
         results = self.execute_query(query, (slug, tenant_id))
         return results[0] if results else None
 
+    # --- Bulk-import reconciliation reads (BLK-1.2, #5524) -------------------------------
+    #
+    # What `app.bulk_import_reconciliation` needs to answer "does a project for this spec
+    # already exist?" before a bulk plan is rendered: the two match bases that had no read
+    # (repository provenance, spec identity — `get_project_by_slug` above is the third and
+    # predates this), the version labels the proposal derives from, and the tenant's policy.
+    # All read-only: the plan endpoint's contract is that it writes nothing.
+
+    def find_projects_by_git_path(self, tenant_id: str, git_path: str) -> List[Dict[str, Any]]:
+        """Find the projects holding a revision imported from ``git_path`` (BLK-1.2).
+
+        Repository provenance is recorded on the revision's ``format_metadata`` by MFI-29.3
+        (``git_provenance_metadata``): ``gitRepoUrl`` for the repository and ``gitPath`` for
+        the file. This is the read side, and the strongest reconciliation signal — the same
+        repository path produced that project's revision.
+
+        Filtering is on the path alone because that is the selective half of the key (a
+        monorepo has one repository URL and thousands of paths) and it is what
+        ``idx_versions_git_provenance_path`` indexes; the caller compares ``git_repo_url`` in
+        its normalized form, so ``…/repo`` and ``…/repo.git`` are not two repositories.
+
+        Args:
+            tenant_id: The acting tenant; every candidate is scoped to it.
+            git_path: The item's path inside the repository, as recorded on the revision.
+
+        Returns:
+            One row per candidate project — ``id``, ``name``, ``slug``, ``publishable`` and
+            the ``git_repo_url`` its newest matching revision recorded — newest revision
+            first, so the caller's first URL hit is the most recent import from that path.
+        """
+        # The inner select is what the path index serves: it narrows `versions` to this path
+        # and keeps one row (the newest) per project before any join. `created_at` is nullable
+        # on `versions`, so both orderings pin NULLS LAST rather than letting a row with no
+        # timestamp claim to be the most recent import.
+        query = """
+            SELECT p.id, p.name, p.slug, p.publishable, v.git_repo_url
+            FROM (
+                SELECT DISTINCT ON (v.project_id)
+                       v.project_id,
+                       v.format_metadata ->> 'gitRepoUrl' AS git_repo_url,
+                       v.created_at
+                FROM apiome.versions v
+                WHERE v.format_metadata ->> 'gitPath' = %s
+                  AND v.deleted_at IS NULL
+                ORDER BY v.project_id, v.created_at DESC NULLS LAST
+            ) v
+            JOIN apiome.projects p ON p.id = v.project_id
+            WHERE p.tenant_id = %s
+              AND p.deleted_at IS NULL
+            ORDER BY v.created_at DESC NULLS LAST
+        """
+        return self.execute_query(query, (git_path, tenant_id))
+
+    def find_project_by_name(self, tenant_id: str, name: str) -> Optional[Dict[str, Any]]:
+        """Find a live project named ``name``, case-insensitively (BLK-1.2 spec identity).
+
+        The fallback for a file that **moved** within its repository: its path no longer
+        resolves and its slug may have been suffixed at creation, but the API it describes
+        still declares the same title. Ties are broken by taking the oldest project, which is
+        the one a re-import has been landing in.
+
+        Args:
+            tenant_id: The acting tenant.
+            name: The document's declared identity (a plan item's ``suggested_name``).
+
+        Returns:
+            The project row (``id``, ``name``, ``slug``, ``publishable``), or ``None``.
+        """
+        query = """
+            SELECT p.id, p.name, p.slug, p.publishable
+            FROM apiome.projects p
+            WHERE p.tenant_id = %s
+              AND lower(p.name) = lower(%s)
+              AND p.deleted_at IS NULL
+            ORDER BY p.created_at ASC
+            LIMIT 1
+        """
+        rows = self.execute_query(query, (tenant_id, name))
+        return dict(rows[0]) if rows else None
+
+    def list_project_version_labels(self, project_id: str, tenant_id: str) -> List[str]:
+        """List a project's live version labels (BLK-1.2 version proposal).
+
+        Deliberately narrower than :meth:`get_versions_for_project`: proposing the next label
+        needs the ``version_id`` strings and nothing else, and a plan may ask this for every
+        matched item of a batch.
+
+        Args:
+            project_id: The project whose labels to read.
+            tenant_id: The acting tenant; the project must belong to it.
+
+        Returns:
+            The labels, newest revision first. Empty for an unknown project or an empty one.
+        """
+        query = """
+            SELECT v.version_id
+            FROM apiome.versions v
+            JOIN apiome.projects p ON p.id = v.project_id
+            WHERE v.project_id = %s
+              AND p.tenant_id = %s
+              AND v.deleted_at IS NULL
+              AND p.deleted_at IS NULL
+            ORDER BY v.created_at DESC NULLS LAST
+        """
+        rows = self.execute_query(query, (project_id, tenant_id))
+        return [str(row["version_id"]) for row in rows if row.get("version_id")]
+
+    def get_tenant_bulk_import_version_policy(self, tenant_id: str) -> Optional[str]:
+        """Read a tenant's default bulk-import reconciliation policy (BLK-1.2).
+
+        Args:
+            tenant_id: The acting tenant.
+
+        Returns:
+            The stored token (``append-when-matched`` / ``always-create`` / ``always-ask``),
+            or ``None`` when the tenant row is missing — the caller then applies
+            :data:`app.bulk_import_reconciliation.DEFAULT_VERSION_POLICY`.
+        """
+        rows = self.execute_query(
+            """
+            SELECT bulk_import_version_policy
+            FROM apiome.tenants
+            WHERE id = %s::uuid AND deleted_at IS NULL
+            LIMIT 1
+            """,
+            (tenant_id,),
+        )
+        if not rows:
+            return None
+        value = rows[0].get("bulk_import_version_policy")
+        return str(value) if value else None
+
     def allocate_project_slug(self, tenant_id: str, base_slug: str) -> str:
         """Pick a tenant-unique project slug derived from ``base_slug``.
 
@@ -14996,7 +15128,8 @@ class Database:
                    linked_account_id, last_scanned_at, total_files, importable_count, branch_count, created_by,
                    refresh_interval_seconds, last_refreshed_at, auto_refresh_enabled,
                    refresh_consecutive_failures, refresh_backoff_until,
-                   refresh_paused_at, refresh_pause_reason, refresh_conflict_policy
+                   refresh_paused_at, refresh_pause_reason, refresh_conflict_policy,
+                   bulk_import_version_policy
             FROM apiome.tenant_repositories
             WHERE id = %s::uuid AND tenant_id = %s::uuid AND deleted_at IS NULL
             LIMIT 1
