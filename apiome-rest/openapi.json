@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.163.0",
+    "version": "1.164.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -51908,6 +51908,579 @@
         }
       }
     },
+    "/v1/export/{tenant_slug}/mock/capability": {
+      "get": {
+        "tags": [
+          "export-mock"
+        ],
+        "summary": "Can this server start a mock of an emitted artifact?",
+        "description": "The capability signal the Export Studio renders its Test-drive tab from (MFX-44.1's flag, answered for the mock tool). Reports whether the Mock Server engine is deployed and the export binding enabled, which target keys the engine can serve, and the TTL / concurrency / rate bounds a provision will apply \u2014 so a disabled panel can say why and an enabled one can state the terms before the user clicks Start.",
+        "operationId": "get_export_mock_capability_v1_export__tenant_slug__mock_capability_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Canthisserverstartamockofanemittedartifaauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Canthisserverstartamockofanemittedartifaauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Canthisserverstartamockofanemittedartifa Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Canthisserverstartamockofanemittedartifa Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for can this server start a mock of an emitted artifact?.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportMockCapabilityResponse",
+                  "description": "Response payload for canthisserverstartamockofanemittedartifaresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for canthisserverstartamockofanemittedartifaresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/export/{tenant_slug}/mock": {
+      "post": {
+        "tags": [
+          "export-mock"
+        ],
+        "summary": "Start an ephemeral mock of an emitted export artifact",
+        "description": "Emit the source revision to the requested target, freeze the resulting OpenAPI document into a short-lived, tenant-scoped mock instance, and return its live base URL. The instance is served by the existing Mock Server data plane (``/v1/mock/{mock_id}/\u2026``) and auto-tears-down at its TTL \u2014 after which the same URL answers ``410 Gone``. Only targets the engine can serve (the capability endpoint's ``supportedTargets``) are accepted.",
+        "operationId": "provision_export_mock_v1_export__tenant_slug__mock_post",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Startanephemeralmockofanemittedexportartauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Startanephemeralmockofanemittedexportartauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Startanephemeralmockofanemittedexportart Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Startanephemeralmockofanemittedexportart Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportMockProvisionRequest",
+                "description": "Request body for startanephemeralmockofanemittedexportartrequest."
+              }
+            }
+          },
+          "description": "Request body for start an ephemeral mock of an emitted export artifact."
+        },
+        "responses": {
+          "201": {
+            "description": "Successful response for start an ephemeral mock of an emitted export artifact.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportMockInstanceResponse",
+                  "description": "Response payload for startanephemeralmockofanemittedexportartresponse201."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for startanephemeralmockofanemittedexportartresponse422."
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "export-mock"
+        ],
+        "summary": "List the tenant's live test-drive mocks",
+        "description": "The live test-drive mocks this workspace holds, newest first \u2014 what the per-tenant concurrency cap is measured against. Expired instances are omitted; hosted mocks provisioned from a published version (#3615) are managed on ``/v1/mocks/\u2026`` and never appear here.",
+        "operationId": "list_export_mocks_v1_export__tenant_slug__mock_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Listthetenantslivetestdrivemocksauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Listthetenantslivetestdrivemocksauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Listthetenantslivetestdrivemocks Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Listthetenantslivetestdrivemocks Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for list the tenant's live test-drive mocks.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExportMockInstanceResponse"
+                  },
+                  "title": "Response List Export Mocks V1 Export  Tenant Slug  Mock Get",
+                  "description": "Response List Export Mocks V1 Export  Tenant Slug  Mock Get schema."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for listthetenantslivetestdrivemocksresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/export/{tenant_slug}/mock/{mock_id}": {
+      "get": {
+        "tags": [
+          "export-mock"
+        ],
+        "summary": "Inspect one test-drive mock",
+        "description": "One instance with a freshly computed expiry countdown and request count \u2014 what the Studio polls while a mock is live, and how it learns the mock has expired.",
+        "operationId": "get_export_mock_v1_export__tenant_slug__mock__mock_id__get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "mock_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Mock Id",
+              "description": "Mock Id schema."
+            },
+            "description": "Path parameter identifying the mock id segment."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Inspectonetestdrivemockauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Inspectonetestdrivemockauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Inspectonetestdrivemock Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Inspectonetestdrivemock Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for inspect one test-drive mock.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportMockInstanceResponse",
+                  "description": "Response payload for inspectonetestdrivemockresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for inspectonetestdrivemockresponse422."
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "export-mock"
+        ],
+        "summary": "Stop a test-drive mock now",
+        "description": "Tear the instance down before its TTL and discard its request log. The base URL stops resolving immediately, and the workspace's concurrency budget is freed.",
+        "operationId": "destroy_export_mock_v1_export__tenant_slug__mock__mock_id__delete",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "mock_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Mock Id",
+              "description": "Mock Id schema."
+            },
+            "description": "Path parameter identifying the mock id segment."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Stopatestdrivemocknowauthorization schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Stopatestdrivemocknowauthorization schema."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Stopatestdrivemocknow Xapikey schema."
+                },
+                {
+                  "type": "null",
+                  "description": "Stopatestdrivemocknow Xapikey schema."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful response for stop a test-drive mock now."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Response payload for stopatestdrivemocknowresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/export/{tenant_slug}/mock/{mock_id}/requests": {
+      "get": {
+        "tags": [
+          "export-mock"
+        ],
+        "summary": "Read a test-drive mock's request log",
+        "description": "The requests this mock served, newest first: method, path, status, whether an operation matched, the scenario in force, and whether the body agreed with the response schema. The log is a bounded in-memory ring buffer scoped to the serving replica \u2014 a live view of a mock that expires in minutes, not a durable audit trail.",
+        "operationId": "get_export_mock_requests_v1_export__tenant_slug__mock__mock_id__requests_get",
+        "parameters": [
+          {
+            "name": "tenant_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Slug",
+              "description": "Tenant Slug schema."
+            },
+            "description": "URL-safe tenant slug that scopes the request."
+          },
+          {
+            "name": "mock_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Mock Id",
+              "description": "Mock Id schema."
+            },
+            "description": "Path parameter identifying the mock id segment."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Most entries to return.",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Most entries to return."
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Request body for readatestdrivemocksrequestlogauthorization."
+                },
+                {
+                  "type": "null",
+                  "description": "Request body for readatestdrivemocksrequestlogauthorization."
+                }
+              ],
+              "title": "Authorization",
+              "description": "Authorization schema."
+            },
+            "description": "JWT bearer token for authenticated access (``Authorization: Bearer <token>``)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "Request body for readatestdrivemocksrequestlog xapikey."
+                },
+                {
+                  "type": "null",
+                  "description": "Request body for readatestdrivemocksrequestlog xapikey."
+                }
+              ],
+              "title": "X-Api-Key",
+              "description": "X-Api-Key schema."
+            },
+            "description": "Tenant-scoped API key used as an alternative to JWT bearer authentication."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response for read a test-drive mock's request log.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportMockRequestLogResponse",
+                  "description": "Request body for readatestdrivemocksrequestlogresponse200."
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError",
+                  "description": "Request body for readatestdrivemocksrequestlogresponse422."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/tenants/{tenant_slug}/repository-polling-quota": {
       "get": {
         "tags": [
@@ -78226,7 +78799,7 @@
             "type": "string",
             "title": "Operation Uuid",
             "description": "The apiome.path_operation UUID.",
-            "example": "a76cdd17-002d-4361-9cc1-882933cb81e5"
+            "example": "6d5ab96a-07ad-402d-8e75-e1f7cadecd7e"
           },
           "method": {
             "type": "string",
@@ -80590,7 +81163,7 @@
             "type": "string",
             "title": "Generated At",
             "description": "Statement timestamp (ISO-8601, UTC).",
-            "example": "2026-08-26T15:00:52Z"
+            "example": "2026-08-26T17:50:45Z"
           },
           "envelope": {
             "additionalProperties": true,
@@ -83877,6 +84450,497 @@
         ],
         "title": "ExportManifestFile",
         "description": "One emitted file of the bundle, as the manifest addresses it."
+      },
+      "ExportMockCapabilityResponse": {
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "title": "Available",
+            "description": "Whether a mock can be provisioned on this server now.",
+            "example": false
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for export mock capability."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for export mock capability."
+              }
+            ],
+            "title": "Reason",
+            "description": "Why mocking is unavailable, or ``null`` when it is available."
+          },
+          "supportedTargets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Supportedtargets",
+            "description": "Target emitter keys whose emitted document the mock engine can serve.",
+            "maxItems": 1000
+          },
+          "defaultTtlMinutes": {
+            "type": "integer",
+            "title": "Defaultttlminutes",
+            "description": "TTL applied when a provision request names none.",
+            "example": 1
+          },
+          "maxTtlMinutes": {
+            "type": "integer",
+            "title": "Maxttlminutes",
+            "description": "Ceiling a requested TTL is clamped to.",
+            "example": 1
+          },
+          "maxPerTenant": {
+            "type": "integer",
+            "title": "Maxpertenant",
+            "description": "Concurrent live test-drive mocks one tenant may hold.",
+            "example": 1
+          },
+          "rateLimitPerMinute": {
+            "type": "integer",
+            "title": "Ratelimitperminute",
+            "description": "Per-instance request budget the data plane enforces.",
+            "example": 50
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "available",
+          "supportedTargets",
+          "defaultTtlMinutes",
+          "maxTtlMinutes",
+          "maxPerTenant",
+          "rateLimitPerMinute"
+        ],
+        "title": "ExportMockCapabilityResponse",
+        "description": "Whether this server can start test-drive mocks, and the bounds it applies (MFX-44.5).\n\nThe Studio calls this **before** it renders anything mock-shaped: an unavailable server means\nno Test-drive tab (or a disabled one carrying :attr:`reason`), and ``supported_targets`` keeps\nthe decision of *which* targets can be mocked on the server, where the emitter registry lives."
+      },
+      "ExportMockInstanceResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "The mock instance id.",
+            "example": "res_01h2xcejqtf3fz5y5j0v8k9m2p"
+          },
+          "baseUrl": {
+            "type": "string",
+            "title": "Baseurl",
+            "description": "Stable base URL of the mock's data plane; append an operation path to it.",
+            "example": "example"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "``active`` while it serves, ``expired`` once past its TTL.",
+            "example": "active"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "description": "The resolved target format key the mock was emitted from.",
+            "example": "example"
+          },
+          "targetKey": {
+            "type": "string",
+            "title": "Targetkey",
+            "description": "The emitter *key* the mock was started for (``openapi``) \u2014 what the Studio holds, so it can recognise a mock of the configuration it is showing.",
+            "example": "example"
+          },
+          "targetLabel": {
+            "type": "string",
+            "title": "Targetlabel",
+            "description": "Human label of that target (e.g. ``OpenAPI 3.1``).",
+            "example": "example"
+          },
+          "artifact": {
+            "type": "string",
+            "title": "Artifact",
+            "description": "The artifact (project) id the mock was provisioned from.",
+            "example": "example"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for export mock instance."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for export mock instance."
+              }
+            ],
+            "title": "Version",
+            "description": "The resolved revision's version label, when it has one."
+          },
+          "operationCount": {
+            "type": "integer",
+            "title": "Operationcount",
+            "description": "How many operations the frozen document exposes.",
+            "example": 1
+          },
+          "operations": {
+            "items": {
+              "$ref": "#/components/schemas/ExportMockOperation"
+            },
+            "type": "array",
+            "title": "Operations",
+            "description": "The operations themselves, ordered by path then method.",
+            "maxItems": 1000
+          },
+          "scenarios": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Scenarios",
+            "description": "Selectable scenario names; send one as ``X-Mock-Scenario`` per request.",
+            "maxItems": 1000
+          },
+          "activeScenario": {
+            "type": "string",
+            "title": "Activescenario",
+            "description": "The scenario in force when a request names none.",
+            "example": "example"
+          },
+          "rateLimitPerMinute": {
+            "type": "integer",
+            "title": "Ratelimitperminute",
+            "description": "Per-instance request budget the data plane enforces.",
+            "example": 50
+          },
+          "requestCount": {
+            "type": "integer",
+            "title": "Requestcount",
+            "description": "Lifetime data-plane requests served (best-effort).",
+            "example": 1
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for export mock instance."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for export mock instance."
+              }
+            ],
+            "title": "Createdat",
+            "description": "ISO-8601 provision time."
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for export mock instance."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for export mock instance."
+              }
+            ],
+            "title": "Expiresat",
+            "description": "ISO-8601 auto-teardown time."
+          },
+          "expiresInSeconds": {
+            "type": "integer",
+            "title": "Expiresinseconds",
+            "description": "Seconds until auto-teardown, computed server-side so the countdown is immune to browser clock skew; ``0`` once expired.",
+            "example": 1
+          },
+          "lastActivityAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Response payload for export mock instance."
+              },
+              {
+                "type": "null",
+                "description": "Response payload for export mock instance."
+              }
+            ],
+            "title": "Lastactivityat",
+            "description": "ISO-8601 time of the last served request, or null if none yet."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "baseUrl",
+          "status",
+          "target",
+          "targetKey",
+          "targetLabel",
+          "artifact",
+          "operationCount",
+          "activeScenario",
+          "rateLimitPerMinute",
+          "requestCount",
+          "expiresInSeconds"
+        ],
+        "title": "ExportMockInstanceResponse",
+        "description": "A live test-drive mock: where to reach it, what it serves, and when it disappears."
+      },
+      "ExportMockOperation": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "title": "Method",
+            "description": "Upper-case HTTP method.",
+            "example": "example"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "Templated path relative to the mock base URL.",
+            "example": "/resources/{id}"
+          },
+          "operationId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Export Mock Operation schema."
+              },
+              {
+                "type": "null",
+                "description": "Export Mock Operation schema."
+              }
+            ],
+            "title": "Operationid",
+            "description": "The document's ``operationId`` for this operation, when it declares one."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "method",
+          "path"
+        ],
+        "title": "ExportMockOperation",
+        "description": "One operation the mock will answer \u2014 what the try-it control offers."
+      },
+      "ExportMockProvisionRequest": {
+        "properties": {
+          "artifact": {
+            "type": "string",
+            "title": "Artifact",
+            "description": "The artifact (project) id to mock an export of.",
+            "example": "example"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for export mock provision."
+              },
+              {
+                "type": "null",
+                "description": "Request body for export mock provision."
+              }
+            ],
+            "title": "Version",
+            "description": "Revision UUID, version label (``1.0.0``), or null for the latest revision."
+          },
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "description": "Target emitter key (``openapi``) or format key (``openapi-3.1``).",
+            "example": "example"
+          },
+          "options": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object",
+                "description": "Request body for export mock provision."
+              },
+              {
+                "type": "null",
+                "description": "Request body for export mock provision."
+              }
+            ],
+            "title": "Options",
+            "description": "Per-target emit options (MFX-1.4); null or empty applies the target defaults."
+          },
+          "ttlMinutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0,
+                "description": "Request body for export mock provision."
+              },
+              {
+                "type": "null",
+                "description": "Request body for export mock provision."
+              }
+            ],
+            "title": "Ttlminutes",
+            "description": "Auto-teardown TTL in minutes; clamped to the configured maximum."
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "description": "Request body for export mock provision."
+              },
+              {
+                "type": "null",
+                "description": "Request body for export mock provision."
+              }
+            ],
+            "title": "Seed",
+            "description": "Deterministic response-generation seed; defaults to 0 (stable bodies)."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "artifact",
+          "target"
+        ],
+        "title": "ExportMockProvisionRequest",
+        "description": "Start a test-drive mock for one (source, target, options) export configuration.\n\nThe same coordinates ``/verify``, ``/document`` and ``/roundtrip`` take, so the mock serves\n*exactly* the artifact the Studio is showing: the emit is re-run server-side from the source\nrevision rather than trusting a document posted by the browser."
+      },
+      "ExportMockRequestEntryResponse": {
+        "properties": {
+          "at": {
+            "type": "string",
+            "title": "At",
+            "description": "ISO-8601 time the request was served.",
+            "example": "example"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method",
+            "description": "Request HTTP method.",
+            "example": "example"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "Request path relative to the mock base URL.",
+            "example": "/resources/{id}"
+          },
+          "status": {
+            "type": "integer",
+            "title": "Status",
+            "description": "Status the mock answered with.",
+            "example": 1
+          },
+          "matched": {
+            "type": "boolean",
+            "title": "Matched",
+            "description": "Whether an operation in the frozen document matched.",
+            "example": false
+          },
+          "scenario": {
+            "type": "string",
+            "title": "Scenario",
+            "description": "The scenario in force for this request.",
+            "example": "example"
+          },
+          "operationId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for export mock request entry."
+              },
+              {
+                "type": "null",
+                "description": "Request body for export mock request entry."
+              }
+            ],
+            "title": "Operationid",
+            "description": "The matched operation key (``GET /pets/{petId}``), or null when unmatched."
+          },
+          "schemaValid": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "description": "Request body for export mock request entry."
+              },
+              {
+                "type": "null",
+                "description": "Request body for export mock request entry."
+              }
+            ],
+            "title": "Schemavalid",
+            "description": "Whether the body agreed with the response schema; null when no operation matched, so there was no schema to check against."
+          },
+          "durationMs": {
+            "type": "integer",
+            "title": "Durationms",
+            "description": "Wall time the mock spent on the request, in milliseconds.",
+            "example": 1
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "at",
+          "method",
+          "path",
+          "status",
+          "matched",
+          "scenario",
+          "durationMs"
+        ],
+        "title": "ExportMockRequestEntryResponse",
+        "description": "One request the mock served, as the Studio's request-log panel renders it."
+      },
+      "ExportMockRequestLogResponse": {
+        "properties": {
+          "mockId": {
+            "type": "string",
+            "title": "Mockid",
+            "description": "The instance the log is for.",
+            "example": "example"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/ExportMockRequestEntryResponse"
+            },
+            "type": "array",
+            "title": "Entries",
+            "description": "Retained requests, newest first.",
+            "maxItems": 100
+          },
+          "retained": {
+            "type": "integer",
+            "title": "Retained",
+            "description": "How many requests the log currently holds.",
+            "example": 1
+          },
+          "capacity": {
+            "type": "integer",
+            "title": "Capacity",
+            "description": "How many the ring buffer retains per instance before discarding the oldest.",
+            "example": 1
+          },
+          "truncated": {
+            "type": "boolean",
+            "title": "Truncated",
+            "description": "True when the instance has served more requests than the log retains.",
+            "example": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "mockId",
+          "retained",
+          "capacity",
+          "truncated"
+        ],
+        "title": "ExportMockRequestLogResponse",
+        "description": "The retained request log for one mock instance, newest first."
       },
       "ExportPreflightCapability": {
         "properties": {
@@ -116163,7 +117227,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-26T15:00:52Z"
+            "example": "2026-08-26T17:50:45Z"
           }
         },
         "additionalProperties": false,
@@ -131217,14 +132281,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-26T15:00:52Z"
+            "example": "2026-08-26T17:50:45Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-26T15:00:52Z"
+            "example": "2026-08-26T17:50:45Z"
           },
           "outcome": {
             "anyOf": [

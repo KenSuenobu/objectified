@@ -25,7 +25,9 @@ from fastapi.responses import JSONResponse, Response
 from .auth import get_authenticated_user_id, validate_authentication
 from .config import settings
 from .database import db
+from .export_mock import mock_request_log
 from .mock_engine import (
+    MockResponse,
     extract_operations,
     normalize_scenarios,
     resolve_response,
@@ -72,8 +74,18 @@ def _iso(value: Any) -> Optional[str]:
     return str(value)
 
 
-def _is_expired(instance: Dict[str, Any]) -> bool:
-    """Has the instance passed its ``expires_at``?"""
+def mock_instance_is_expired(instance: Dict[str, Any]) -> bool:
+    """Has the instance passed its ``expires_at``?
+
+    Public because the export test-drive surface (MFX-44.5) reports the same expiry on the
+    same rows; both planes must agree on when an instance stops serving.
+
+    Args:
+        instance: A ``mock_instances`` row.
+
+    Returns:
+        ``True`` once the row's ``expires_at`` is in the past.
+    """
     expires_at = instance.get("expires_at")
     if not isinstance(expires_at, datetime):
         return False
@@ -81,6 +93,26 @@ def _is_expired(instance: Dict[str, Any]) -> bool:
     if expires_at.tzinfo is None:
         expires_at = expires_at.replace(tzinfo=timezone.utc)
     return _now() >= expires_at
+
+
+def _schema_valid_flag(result: MockResponse) -> Optional[bool]:
+    """Whether the served body was schema-checked, and the outcome, for the request log.
+
+    Mirrors the ``X-Mock-Schema-Valid`` response header exactly: ``False`` when the body drifted
+    from the response schema, ``True`` when an operation matched and it did not, and ``None`` when
+    no operation matched at all — there is no schema to have been valid against.
+
+    Args:
+        result: The resolved mock response.
+
+    Returns:
+        The tri-state schema-validity flag.
+    """
+    if result.validation_error:
+        return False
+    if result.matched:
+        return True
+    return None
 
 
 def _build_spec_for_version(
@@ -111,7 +143,7 @@ def _instance_to_response(instance: Dict[str, Any], request: Request) -> MockIns
     scenario_names = [s["name"] for s in normalize_scenarios(config.get("scenarios"))]
     active = config.get("active_scenario") or "happy-path"
     base = str(request.base_url).rstrip("/")
-    status = "expired" if _is_expired(instance) else instance.get("status", "active")
+    status = "expired" if mock_instance_is_expired(instance) else instance.get("status", "active")
     return MockInstanceResponse(
         id=str(instance["id"]),
         name=instance["name"],
@@ -338,15 +370,20 @@ async def _serve_mock(mock_id: str, sub_path: str, request: Request) -> Response
     returns a schema-valid (or scenario-overridden) body.
     """
     _require_enabled()
+    started = time.perf_counter()
     instance = db.get_mock_instance(mock_id)
     if not instance:
         raise HTTPException(status_code=404, detail=f"Mock instance not found: {mock_id}")
 
-    if _is_expired(instance):
+    if mock_instance_is_expired(instance):
         raise HTTPException(
             status_code=410,
             detail="This mock instance has expired. Provision a new one to continue.",
         )
+
+    # The request path relative to the mock base URL, resolved once: the rate-limit log entry and
+    # the operation match below must describe the same path.
+    relative_request_path = "/" + sub_path if not sub_path.startswith("/") else sub_path
 
     # Per-instance free-tier rate limit.
     limit = instance["rate_limit_per_minute"]
@@ -359,6 +396,19 @@ async def _serve_mock(mock_id: str, sub_path: str, request: Request) -> Response
         "X-RateLimit-Reset": str(reset_after),
     }
     if not allowed:
+        # A throttled request is still something the caller did — the export test drive's request
+        # log (MFX-44.5) has to show it, or a user hitting the budget sees silence instead of 429s.
+        mock_request_log.record(
+            mock_id,
+            method=request.method,
+            path=relative_request_path,
+            status=429,
+            matched=False,
+            scenario=str((instance.get("config") or {}).get("active_scenario") or "happy-path"),
+            operation_key=None,
+            schema_valid=None,
+            duration_ms=int((time.perf_counter() - started) * 1000),
+        )
         return JSONResponse(
             status_code=429,
             content={"detail": "Mock rate limit exceeded. Slow down and retry later."},
@@ -368,14 +418,13 @@ async def _serve_mock(mock_id: str, sub_path: str, request: Request) -> Response
     spec = instance.get("spec") or {}
     config = instance.get("config") or {}
     operations = extract_operations(spec)
-    relative_path = "/" + sub_path if not sub_path.startswith("/") else sub_path
 
     result = resolve_response(
         spec,
         config,
         operations,
         request.method,
-        relative_path,
+        relative_request_path,
         scenario_header=request.headers.get("x-mock-scenario"),
         seed=int(config.get("seed", 0) or 0),
     )
@@ -398,6 +447,22 @@ async def _serve_mock(mock_id: str, sub_path: str, request: Request) -> Response
         headers["X-Mock-Schema-Valid"] = "false"
     elif result.matched:
         headers["X-Mock-Schema-Valid"] = "true"
+
+    # Record what was served for the export test drive's request-log panel (MFX-44.5). Every
+    # instance is recorded — the store is keyed by mock id and only the export surface reads it, so
+    # one code path here serves both planes. The store is a bounded in-memory ring buffer, so this
+    # adds no DB write to the hot path and cannot fail the response.
+    mock_request_log.record(
+        mock_id,
+        method=request.method,
+        path=relative_request_path,
+        status=result.status,
+        matched=result.matched,
+        scenario=result.scenario,
+        operation_key=result.operation_key,
+        schema_valid=_schema_valid_flag(result),
+        duration_ms=int((time.perf_counter() - started) * 1000),
+    )
 
     if result.body is None:
         return Response(status_code=result.status, headers=headers)
@@ -423,5 +488,5 @@ def _make_path_handler(method: str):  # type: ignore[return]
 
 
 for _method in _ALL_METHODS:
-    data_router.api_route(f"/{{mock_id}}", methods=[_method])(_make_root_handler(_method))
-    data_router.api_route(f"/{{mock_id}}/{{sub_path:path}}", methods=[_method])(_make_path_handler(_method))
+    data_router.api_route("/{mock_id}", methods=[_method])(_make_root_handler(_method))
+    data_router.api_route("/{mock_id}/{sub_path:path}", methods=[_method])(_make_path_handler(_method))

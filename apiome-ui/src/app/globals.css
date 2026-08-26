@@ -30530,3 +30530,166 @@ tr:focus-within .pub-url__glyph {
 .xstd-evidence__action:hover {
   background: var(--accent-soft);
 }
+
+/* ---- The mock-server test drive (MFX-44.5, #4371) ------------------------ */
+/* The Review step's last question: does the emitted artifact behave like an
+   API? The panel starts a live mock of it, offers its operations, and logs what
+   it served. Everything here is layout and neutral ink — every state the panel
+   carries a colour for (the countdown, a status code, a schema verdict) is a
+   `Badge`, so the tone arrives through the calibrated `-soft`/`-fg` pairs the
+   vocabulary already measures rather than through a wash invented here. */
+
+/* The pre-start prompt and the unavailable notice share the round-trip
+   prompt's shape: an explanation and its one action, on a contour. */
+.xstd-mock__prompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+/* The running instance. A contour, never a wash: `--ok` is a teal in Solarized
+   and any usable wash of it drops `--fg-muted` under AA — the measurement the
+   `.xstd-notice[data-tone='ok']` rule above records. */
+.xstd-mock__live {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-mock__live[data-live] {
+  box-shadow: inset 0 0 0 1px var(--ok);
+}
+
+.xstd-mock__url-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The base URL is the deliverable of Start, so it is set as code on the inset
+   ground with `--fg` — the full-strength ink, not the quiet step. */
+.xstd-mock__url {
+  flex: 1 1 18rem;
+  min-inline-size: 0;
+  overflow-x: auto;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--bg-inset);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+.xstd-mock__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+}
+
+.xstd-mock__scenario,
+.xstd-mock__param {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-2xs);
+}
+
+.xstd-mock__param-name {
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+.xstd-mock__param-input {
+  inline-size: 6rem;
+  padding: 0.125rem var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  color: var(--fg);
+}
+
+.xstd-mock__param-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.xstd-mock__ops,
+.xstd-mock__log {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-block-start: var(--space-1);
+  /* Both lists grow with the document, so they are capped against the viewport
+     *and* the font scale — the same pairing the tall panes above use. */
+  max-block-size: min(40vh, 24rem);
+  overflow-y: auto;
+}
+
+.xstd-mock__op,
+.xstd-mock__log-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-xs);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.xstd-mock__op-method {
+  font-variant-numeric: tabular-nums;
+}
+
+.xstd-mock__op-path {
+  min-inline-size: 0;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+/* Pushes the trailing controls (Send; a log row's scenario and timing) to the
+   end without a justify-between that would strand the middle chips. */
+.xstd-mock__op-spacer {
+  flex: 1 1 auto;
+}
+
+.xstd-mock__log-time {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+/* The response body, verbatim. `--fg` on the inset ground for the same reason
+   the URL takes it: this is the evidence, not a caption. */
+.xstd-mock__body {
+  margin-block-start: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--r-sm);
+  background: var(--bg-inset);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  color: var(--fg);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-block-size: min(30vh, 18rem);
+  overflow-y: auto;
+}

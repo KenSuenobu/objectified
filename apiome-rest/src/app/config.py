@@ -713,6 +713,60 @@ class Settings(BaseSettings):
         ),
         description="Public base URL for hosted mock runtime (no trailing slash).",
     )
+
+    # Export test-drive mocks (MFX-44.5, #4371). The Export Studio provisions a *short-lived*
+    # mock from an emitted artifact rather than a published version, so it gets its own TTL band
+    # (minutes, not hours), its own per-tenant concurrency cap, and its own document-size ceiling.
+    # It is additionally gated by ``mock_server_enabled`` — without the mock engine there is no
+    # infrastructure to bind to, and the Studio hides the tab (the MFX-44.1 capability flag).
+    export_mock_enabled: bool = Field(
+        default=True,
+        validation_alias=AliasChoices(
+            "APIOME_EXPORT_MOCK_ENABLED",
+            "export_mock_enabled",
+        ),
+        description="Enable provisioning ephemeral mocks from emitted export artifacts.",
+    )
+    export_mock_default_ttl_minutes: int = Field(
+        default=30,
+        validation_alias=AliasChoices(
+            "APIOME_EXPORT_MOCK_DEFAULT_TTL_MINUTES",
+            "export_mock_default_ttl_minutes",
+        ),
+        description="Auto-teardown TTL applied to a test-drive mock when the caller names none.",
+    )
+    export_mock_max_ttl_minutes: int = Field(
+        default=240,
+        validation_alias=AliasChoices(
+            "APIOME_EXPORT_MOCK_MAX_TTL_MINUTES",
+            "export_mock_max_ttl_minutes",
+        ),
+        description="Hard ceiling a requested test-drive TTL is clamped to.",
+    )
+    export_mock_max_per_tenant: int = Field(
+        default=3,
+        validation_alias=AliasChoices(
+            "APIOME_EXPORT_MOCK_MAX_PER_TENANT",
+            "export_mock_max_per_tenant",
+        ),
+        description="Concurrent live test-drive mocks one tenant may hold.",
+    )
+    export_mock_max_document_bytes: int = Field(
+        default=2_097_152,  # 2 MiB
+        validation_alias=AliasChoices(
+            "APIOME_EXPORT_MOCK_MAX_DOCUMENT_BYTES",
+            "export_mock_max_document_bytes",
+        ),
+        description="Largest emitted document that may be frozen into a test-drive mock.",
+    )
+    export_mock_request_log_size: int = Field(
+        default=50,
+        validation_alias=AliasChoices(
+            "APIOME_EXPORT_MOCK_REQUEST_LOG_SIZE",
+            "export_mock_request_log_size",
+        ),
+        description="Most recent data-plane requests retained per mock for the request log.",
+    )
     slate_portal_base_url: str = Field(
         default="https://portal.apiome.dev",
         validation_alias=AliasChoices(

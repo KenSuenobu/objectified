@@ -47,6 +47,8 @@ import { ExportMappingGraphPanel } from './ExportMappingGraphPanel';
 import { FidelityLossHeatmapPanel } from './FidelityLossHeatmapPanel';
 import { RoundtripComparisonPanel } from './RoundtripComparisonPanel';
 import { useExportRoundtrip } from './useExportRoundtrip';
+import { MockTestDrivePanel } from './MockTestDrivePanel';
+import { useExportMockTestDrive } from './useExportMockTestDrive';
 import { useExportPreviewManifest } from './useExportPreviewManifest';
 import type { EntityRevealRequest, ExportManifestEntity } from './exportPreviewManifest';
 import { OriginalSourceOption } from './OriginalSourceOption';
@@ -327,6 +329,18 @@ export function ExportStudio({
   // changed option drops the comparison on its own and re-entering a configuration measured
   // earlier in the session restores it instantly.
   const roundtrip = useExportRoundtrip(artifact, version, selectedKey, changedOpts);
+
+  // The mock-server test drive (MFX-44.5): serve the emitted artifact as a live API for a few
+  // minutes and send it real requests. Enabled only once Review is actually showing a generated
+  // artifact — a mock of a document the user has not produced yet would describe nothing — and
+  // capability-gated beyond that, so a target the mock engine cannot serve renders no panel.
+  const mockTestDrive = useExportMockTestDrive(
+    artifact,
+    version,
+    selectedKey,
+    changedOpts,
+    step === 'review',
+  );
 
   // The async export job (MFX-46.2): Generate submits a job that runs the emit → fidelity →
   // validate → package pipeline and reports staged progress. The tracker keeps polling across
@@ -883,6 +897,20 @@ export function ExportStudio({
     />
   ) : null;
 
+  /**
+   * MFX-44.5: the strongest test of the emitted artifact — run it. Rendered beside the round-trip
+   * panel and gated the same way: an explicit action, never an ambient one. The panel decides for
+   * itself whether to appear at all (a target the mock engine cannot serve) or to appear disabled
+   * (a server with no mock infrastructure), from the server's capability report.
+   */
+  const mockPanel = selected ? (
+    <MockTestDrivePanel
+      testDrive={mockTestDrive}
+      targetKey={selected.key}
+      targetLabel={selected.entry.descriptor.label}
+    />
+  ) : null;
+
   /** Whether the current step permits advancing to the next one. */
   const canAdvance = useMemo(() => {
     switch (step) {
@@ -1264,6 +1292,8 @@ export function ExportStudio({
                   {lossHeatmap}
                   {/* IXH-4.4: check the prediction empirically — emit, re-import, diff. */}
                   {roundtripPanel}
+                  {/* MFX-44.5: the strongest check of all — serve it and send it real requests. */}
+                  {mockPanel}
                 </div>
               ) : emitted ? (
                 <div className="xstd-stack xstd-stack--tight">
@@ -1311,6 +1341,8 @@ export function ExportStudio({
                   {lossHeatmap}
                   {/* IXH-4.4: check the prediction empirically — emit, re-import, diff. */}
                   {roundtripPanel}
+                  {/* MFX-44.5: the strongest check of all — serve it and send it real requests. */}
+                  {mockPanel}
                 </div>
               ) : job && jobStatus ? (
                 jobCompleted ? (
