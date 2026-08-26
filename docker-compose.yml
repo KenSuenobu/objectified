@@ -148,6 +148,8 @@ services:
       APIOME_MCP_INTERNAL_SECRET: ${APIOME_MCP_INTERNAL_SECRET:-apiome-local-dev-secret-min-16}
       APIOME_MCP_HTTP_HOST: 0.0.0.0
       APIOME_MCP_HTTP_PORT: ${APIOME_MCP_HTTP_PORT:-8765}
+      # AGX-2.4: toolsets with target=mock route tools/call to the mock service below.
+      APIOME_MCP_MOCK_PUBLIC_BASE_URL: ${APIOME_MOCK_PUBLIC_BASE_URL:-http://localhost:8775}
     depends_on:
       postgres:
         condition: service_healthy

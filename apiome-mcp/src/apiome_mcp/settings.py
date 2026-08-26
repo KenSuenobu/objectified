@@ -9,6 +9,8 @@ from uuid import UUID
 from pydantic import Field, PostgresDsn, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from apiome_mcp.mock_target import normalize_base_url
+
 LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 Transport = Literal["stdio", "http"]
 
@@ -75,6 +77,15 @@ class Settings(BaseSettings):
         le=600.0,
         description="HTTP timeout for embedding requests.",
     )
+    mock_public_base_url: str = Field(
+        default="http://localhost:8775",
+        min_length=1,
+        description=(
+            "Public root of the hosted SIM mock runtime (no trailing slash). AGX-2.4 toolsets "
+            "with target='mock' route tools/call to {root}/{tenant}/{project}/{version}. Mirrors "
+            "apiome-rest's APIOME_MOCK_PUBLIC_BASE_URL so agents and the Control Panel agree."
+        ),
+    )
     anonymous_policy_tenant_id: UUID | None = Field(
         default=None,
         description=(
@@ -90,6 +101,12 @@ class Settings(BaseSettings):
                 "database_pool_max_size must be greater than or equal to database_pool_min_size",
             )
         return self
+
+    @field_validator("mock_public_base_url")
+    @classmethod
+    def validate_mock_public_base_url(cls, value: str) -> str:
+        """Fail fast on a mock root that is not an absolute http(s) URL; strip trailing slashes."""
+        return normalize_base_url("mock_public_base_url", value)
 
     @field_validator("log_level", mode="before")
     @classmethod

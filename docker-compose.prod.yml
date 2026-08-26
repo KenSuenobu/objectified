@@ -100,6 +100,9 @@ services:
       # No dev fallback — a weak MCP internal secret in production is a real exposure.
       APIOME_MCP_INTERNAL_SECRET: ${APIOME_MCP_INTERNAL_SECRET:?set APIOME_MCP_INTERNAL_SECRET in your .env (min 16 chars; openssl rand -base64 24)}
       APIOME_MCP_DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in your .env}@postgres:5432/${POSTGRES_DB:-apiome}
+      # AGX-2.4 sandbox toolsets (target=mock) must reach the same mock host the Control
+      # Panel publishes, so both services read one deploy domain.
+      APIOME_MCP_MOCK_PUBLIC_BASE_URL: https://${DEPLOY_MOCK_DOMAIN:?set DEPLOY_MOCK_DOMAIN in your .env}
     depends_on: !override
       postgres:
         condition: service_healthy
