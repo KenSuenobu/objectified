@@ -293,6 +293,32 @@ INTAKE_ERROR_TAXONOMY: Dict[str, IntakeErrorDescriptor] = {
             "violation — for a construct in this schema. Declare an `examples` or `default` "
             "value on the affected subschema to control what is generated for it.",
         ),
+        # --- target: the project/version the request aims at is at fault (BLK-1.1) --
+        _d(
+            "TARGET_PROJECT_NOT_FOUND",
+            IntakeErrorCategory.INPUT,
+            False,
+            "The project this import targets does not exist, or your tenant cannot see "
+            "it. Pick the project again from the project list and re-import, or omit the "
+            "project id to create a new project from this document.",
+        ),
+        _d(
+            "TARGET_NOT_PUBLISHABLE",
+            IntakeErrorCategory.POLICY,
+            False,
+            "The target is a catalog item, which keeps its source verbatim and cannot "
+            "take an imported API version. Run 'Convert to OpenAPI' on the catalog item "
+            "first and import into the Project that conversion creates, or omit the "
+            "project id to create a new project from this document.",
+        ),
+        _d(
+            "TARGET_VERSION_EXISTS",
+            IntakeErrorCategory.INPUT,
+            False,
+            "The target project already has a version with this version id, and an "
+            "import never overwrites one. Choose an unused version id, or set the "
+            "'skip duplicate versions' option to treat a repeat import as a no-op.",
+        ),
         # --- policy: rejected by tenant policy -----------------------------------
         _d(
             "QUALITY_POLICY_BLOCKED",

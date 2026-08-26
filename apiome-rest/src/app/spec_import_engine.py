@@ -962,12 +962,67 @@ def _current_correlation_id(job_id: str) -> str:
     return job_id
 
 
+async def _resolve_project_target(
+    metadata: SpecImportStartMetadata, *, tenant_id: str
+) -> SpecImportStartMetadata:
+    """Authorize this request's existing-project target before a job exists (BLK-1.1).
+
+    The seam every scheduling entry point shares, so the REST routes, the bulk submit path and
+    the internal convert/refresh callers all get the same two-branch resolution: a request that
+    supplies ``project.project_id`` is checked against the acting tenant and appended to that
+    project, and a request that supplies only ``name``/``slug`` is passed through untouched.
+
+    Running it here — before the job record is created — is what makes a refusal write nothing.
+
+    Args:
+        metadata: The start request's metadata.
+        tenant_id: The acting tenant.
+
+    Returns:
+        The metadata to schedule, normalized onto ``existing_project_id`` when a target was
+        supplied; the same object otherwise.
+
+    Raises:
+        HTTPException: 404 for a target this tenant cannot see, 409 for a non-publishable
+            target or a version id it already holds, each carrying its taxonomy code.
+    """
+    # Short-circuit the create-a-project shape here, not just inside the resolver: the common
+    # request then costs neither a thread hop nor an import of the DB stack.
+    if not metadata.project.project_id:
+        return metadata
+    from .import_project_target import ImportProjectTargetError, resolve_import_project_target
+
+    try:
+        return await asyncio.to_thread(
+            resolve_import_project_target, metadata, tenant_id=tenant_id
+        )
+    except ImportProjectTargetError as exc:
+        raise exc.as_http_exception() from exc
+
+
 async def schedule_spec_import(
     tenant_slug: str,
     tenant_id: str,
     user_id: str,
     body: SpecImportStartJsonRequest,
 ) -> SpecImportJobAccepted:
+    """Accept a JSON+base64 import and drive it in the background.
+
+    Args:
+        tenant_slug: Slug of the importing tenant (scopes the status path).
+        tenant_id: Id of the importing tenant; the project target is authorized against it.
+        user_id: The acting user, recorded as the creator of what the import writes.
+        body: The validated start request.
+
+    Returns:
+        The accepted job's id and the path to poll it on.
+
+    Raises:
+        HTTPException: The request names an existing project it may not append to (BLK-1.1).
+    """
+    metadata = await _resolve_project_target(body.metadata, tenant_id=tenant_id)
+    if metadata is not body.metadata:
+        body = body.model_copy(update={"metadata": metadata})
     job_id = str(uuid.uuid4())
     correlation_id = _current_correlation_id(job_id)
     payload = _build_worker_payload(
@@ -1049,6 +1104,7 @@ async def schedule_spec_import_from_path(
     content_type: Optional[str],
 ) -> SpecImportJobAccepted:
     """Schedule an import whose document already lives on a bounded tempfile."""
+    metadata = await _resolve_project_target(metadata, tenant_id=tenant_id)
     job_id = str(uuid.uuid4())
     correlation_id = _current_correlation_id(job_id)
     payload: Dict[str, Any] = {
