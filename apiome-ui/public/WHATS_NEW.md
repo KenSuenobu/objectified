@@ -40,6 +40,8 @@ We continue to improve the platform based on your feedback with improvements and
   - Fixed upload to accept all file format extensions instead of just the 10 it had previously
   - Fixes dependency for AsyncAPI to re-enable import functionality
   - Fixing durability of import process, added extra tests to REST service test suite
+  - Fixing bulk import functionality:
+    - Now includes the ability to bulk import into existing or new projects without having to validate all selections
 - MCP:
   - Hardens tool array emit for LLM tool summary
 
