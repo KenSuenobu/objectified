@@ -9,7 +9,7 @@ per-item payloads, and above all that one bad item never costs the user the rest
 from __future__ import annotations
 
 import base64
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import pytest
 from fastapi.testclient import TestClient
@@ -84,6 +84,122 @@ def _no_quality_policy(monkeypatch):
         return None
 
     monkeypatch.setattr(bulk_import_routes, "enforce_import_quality_gate", _pass)
+
+
+class FakeCatalog:
+    """The tenant's existing projects, for the BLK-1.2 reconciliation reads.
+
+    The plan endpoint asks the database four questions before it can say whether an item is a
+    new version of something that already exists. This stands in for all four, so a route test
+    can seed "this project was imported from that repository path" without a database. It also
+    counts writes: every mutating method of the real handle raises here, which is how
+    :func:`test_plan_writes_nothing_while_reconciling` proves the endpoint stays read-only.
+
+    Attributes:
+        projects: Seeded project rows, keyed by id.
+        provenance: ``git_path -> (project_id, repo_url)`` for repository-provenance matches.
+        labels: ``project_id -> [version label]`` for the proposed-version derivation.
+        tenant_policy: The stored tenant default, or ``None``.
+        repository_policy: The stored per-repository override, or ``None``.
+    """
+
+    def __init__(self) -> None:
+        self.projects: Dict[str, Dict[str, Any]] = {}
+        self.provenance: Dict[str, Tuple[str, str]] = {}
+        self.labels: Dict[str, List[str]] = {}
+        self.tenant_policy: Optional[str] = None
+        self.repository_policy: Optional[str] = None
+
+    def add_project(
+        self,
+        project_id: str,
+        *,
+        name: str,
+        slug: str,
+        versions: Optional[List[str]] = None,
+        git_path: Optional[str] = None,
+        repo_url: str = _REPO_URL,
+        publishable: bool = True,
+    ) -> None:
+        """Seed one existing project, optionally with the repository path it came from."""
+        self.projects[project_id] = {
+            "id": project_id,
+            "name": name,
+            "slug": slug,
+            "publishable": publishable,
+        }
+        self.labels[project_id] = list(versions or [])
+        if git_path is not None:
+            self.provenance[git_path] = (project_id, repo_url)
+
+    # --- the reads the reconciler makes -------------------------------------------------
+
+    def find_projects_by_git_path(self, tenant_id: str, git_path: str) -> List[Dict[str, Any]]:
+        entry = self.provenance.get(git_path)
+        if not entry:
+            return []
+        project_id, repo_url = entry
+        return [{**self.projects[project_id], "git_repo_url": repo_url}]
+
+    def get_project_by_slug(self, slug: str, tenant_id: str) -> Optional[Dict[str, Any]]:
+        return next(
+            (dict(row) for row in self.projects.values() if row["slug"] == slug), None
+        )
+
+    def find_project_by_name(self, tenant_id: str, name: str) -> Optional[Dict[str, Any]]:
+        folded = name.casefold()
+        return next(
+            (dict(row) for row in self.projects.values() if row["name"].casefold() == folded),
+            None,
+        )
+
+    def list_project_version_labels(self, project_id: str, tenant_id: str) -> List[str]:
+        return list(self.labels.get(project_id, []))
+
+    def get_tenant_bulk_import_version_policy(self, tenant_id: str) -> Optional[str]:
+        return self.tenant_policy
+
+    def get_tenant_repository(
+        self, tenant_id: str, repository_id: str
+    ) -> Optional[Dict[str, Any]]:
+        return {"id": repository_id, "bulk_import_version_policy": self.repository_policy}
+
+
+#: Every ``db`` method a bulk plan must never call. Named rather than pattern-matched so the
+#: guard cannot quietly stop covering a write when the DAO grows one.
+_FORBIDDEN_PLAN_WRITES = (
+    "create_project",
+    "create_version",
+    "allocate_project_slug",
+    "allocate_version_id",
+    "execute_update",
+)
+
+
+@pytest.fixture(autouse=True)
+def catalog(monkeypatch) -> FakeCatalog:
+    """Default: an empty tenant, so every item is new unless a test seeds otherwise."""
+    fake = FakeCatalog()
+    module = __import__("app.database", fromlist=["db"])
+    for name in (
+        "find_projects_by_git_path",
+        "get_project_by_slug",
+        "find_project_by_name",
+        "list_project_version_labels",
+        "get_tenant_bulk_import_version_policy",
+        "get_tenant_repository",
+    ):
+        monkeypatch.setattr(module.db, name, getattr(fake, name))
+
+    def _refuse_write(name: str):
+        def _raise(*args: Any, **kwargs: Any):
+            raise AssertionError(f"the plan endpoint wrote: db.{name}()")
+
+        return _raise
+
+    for name in _FORBIDDEN_PLAN_WRITES:
+        monkeypatch.setattr(module.db, name, _refuse_write(name), raising=False)
+    return fake
 
 
 @pytest.fixture
@@ -176,6 +292,8 @@ def test_plan_routes_items_and_counts_them_by_destination() -> None:
         "skipped_files": 1,
         "by_target": {"catalog": 3, "project": 1},
         "by_format": {"asyncapi-2": 2, "openapi-3.0": 1, "protobuf": 1},
+        "by_resolution": {"create-project": 4},
+        "matched": 0,
     }
 
 
@@ -270,6 +388,323 @@ def test_plan_maps_a_repository_failure_onto_its_taxonomy_code(monkeypatch) -> N
 
     assert response.status_code == 404
     assert response.json()["detail"]["code"] == "SOURCE_NOT_FOUND"
+
+
+# ------------------------------------------------------------ plan: reconciliation (BLK-1.2)
+
+_ORDERS_PROJECT = "770e8400-e29b-41d4-a716-446655440010"
+
+#: The mixed repository with ``openapi/orders.yaml`` moved one directory down — the same
+#: document at a path no earlier import recorded, which is what makes provenance miss.
+_MOVED_MEMBERS = {
+    **{key: value for key, value in _MIXED_MEMBERS.items() if key != "openapi/orders.yaml"},
+    "openapi/v2/orders.yaml": _OPENAPI,
+}
+
+
+def _plan_repository(monkeypatch, members=None, **selector: Any) -> Dict[str, Any]:
+    """Plan a repository selection against the in-memory repository client."""
+    _use_repository(monkeypatch, members or _MIXED_MEMBERS)
+    response = client.post(
+        _PLAN, json={"git": {"repo_url": _REPO_URL, "ref": "main", **selector}}
+    )
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
+def _item(body: Dict[str, Any], key: str) -> Dict[str, Any]:
+    return next(item for item in body["items"] if item["key"] == key)
+
+
+def test_plan_resolves_a_re_imported_repository_folder_to_append_version(
+    monkeypatch, catalog
+) -> None:
+    """The whole point: a folder imported once must not look like a first-time import."""
+    catalog.add_project(
+        _ORDERS_PROJECT,
+        name="Orders API",
+        slug="orders-api",
+        versions=["1.0.0"],
+        git_path="openapi/orders.yaml",
+    )
+
+    item = _item(_plan_repository(monkeypatch), "openapi/orders.yaml")
+
+    assert item["resolution"] == "append-version"
+    assert item["matched_project"] == {
+        "project_id": _ORDERS_PROJECT,
+        "name": "Orders API",
+        "slug": "orders-api",
+    }
+    assert item["match_basis"] == "repository-provenance"
+    assert item["match_confidence"] == 1.0
+    assert "openapi/orders.yaml" in item["match_detail"]
+    assert item["proposed_version"] == {
+        "version_id": "1.1.0",
+        "derived_from": "version-bump",
+        "previous_version_id": "1.0.0",
+    }
+
+
+def test_a_genuinely_new_spec_in_the_same_plan_still_creates_a_project(
+    monkeypatch, catalog
+) -> None:
+    catalog.add_project(
+        _ORDERS_PROJECT,
+        name="Orders API",
+        slug="orders-api",
+        versions=["1.0.0"],
+        git_path="openapi/orders.yaml",
+    )
+
+    body = _plan_repository(monkeypatch)
+    fresh = _item(body, "events/shipping.asyncapi.yaml")
+
+    assert fresh["resolution"] == "create-project"
+    assert fresh["matched_project"] is None
+    assert fresh["match_basis"] is None
+    assert fresh["match_confidence"] is None
+    assert fresh["proposed_version"] == {
+        "version_id": "1.0.0",
+        "derived_from": "default",
+        "previous_version_id": None,
+    }
+    assert body["summary"]["by_resolution"] == {"append-version": 1, "create-project": 3}
+    assert body["summary"]["matched"] == 1
+
+
+def test_a_moved_file_still_matches_its_project_through_spec_identity(
+    monkeypatch, catalog
+) -> None:
+    """Its path no longer resolves and its slug was suffixed — the title still identifies it."""
+    catalog.add_project(
+        _ORDERS_PROJECT,
+        name="Orders API",
+        slug="orders-api-2",
+        versions=["1.0.0", "1.3.0"],
+        git_path="openapi/orders.yaml",
+    )
+
+    item = _item(_plan_repository(monkeypatch, _MOVED_MEMBERS), "openapi/v2/orders.yaml")
+
+    assert item["resolution"] == "append-version"
+    assert item["match_basis"] == "spec-identity"
+    assert item["matched_project"]["project_id"] == _ORDERS_PROJECT
+    assert item["match_confidence"] < 1.0
+    assert item["proposed_version"]["version_id"] == "1.4.0"
+
+
+def test_an_archive_upload_matches_on_slug_since_it_has_no_repository(catalog) -> None:
+    catalog.add_project(
+        _ORDERS_PROJECT, name="Something Else", slug="orders-api", versions=["2.0.0"]
+    )
+
+    body = client.post(_PLAN, json={"document_base64": _archive()}).json()
+    item = _item(body, "openapi/orders.yaml")
+
+    assert item["match_basis"] == "slug"
+    assert item["resolution"] == "append-version"
+    assert item["proposed_version"]["version_id"] == "2.1.0"
+
+
+def test_the_default_policy_is_append_when_matched_and_says_so(catalog) -> None:
+    body = client.post(_PLAN, json={"document_base64": _archive()}).json()
+
+    assert body["version_policy"] == "append-when-matched"
+    assert body["version_policy_source"] == "default"
+
+
+def test_always_create_reports_the_matches_it_is_ignoring(monkeypatch, catalog) -> None:
+    """A plan that hid the match would be asserting the tenant is empty."""
+    catalog.tenant_policy = "always-create"
+    catalog.add_project(
+        _ORDERS_PROJECT,
+        name="Orders API",
+        slug="orders-api",
+        versions=["1.0.0"],
+        git_path="openapi/orders.yaml",
+    )
+
+    body = _plan_repository(monkeypatch)
+    item = _item(body, "openapi/orders.yaml")
+
+    assert body["version_policy"] == "always-create"
+    assert body["version_policy_source"] == "tenant"
+    assert item["resolution"] == "create-project"
+    assert item["matched_project"]["project_id"] == _ORDERS_PROJECT
+    assert item["match_basis"] == "repository-provenance"
+    # It creates, so it reports the version creating would take — not the append it declined.
+    assert item["proposed_version"] == {
+        "version_id": "1.0.0",
+        "derived_from": "default",
+        "previous_version_id": None,
+    }
+    assert body["summary"]["by_resolution"] == {"create-project": 4}
+    assert body["summary"]["matched"] == 1
+
+
+def test_always_ask_marks_every_item_unresolved(monkeypatch, catalog) -> None:
+    catalog.tenant_policy = "always-ask"
+    catalog.add_project(
+        _ORDERS_PROJECT,
+        name="Orders API",
+        slug="orders-api",
+        versions=["1.0.0"],
+        git_path="openapi/orders.yaml",
+    )
+
+    body = _plan_repository(monkeypatch)
+
+    assert body["version_policy"] == "always-ask"
+    assert {item["resolution"] for item in body["items"]} == {"unresolved"}
+    assert body["summary"]["by_resolution"] == {"unresolved": 4}
+    # Unresolved is a question, not silence: the match and what appending would mean are both
+    # still on the row, because that is what the user is being asked to confirm.
+    matched = _item(body, "openapi/orders.yaml")
+    assert matched["matched_project"]["project_id"] == _ORDERS_PROJECT
+    assert matched["proposed_version"]["version_id"] == "1.1.0"
+
+
+def test_a_registered_repository_overrides_the_tenant_default(monkeypatch, catalog) -> None:
+    catalog.tenant_policy = "always-ask"
+    catalog.repository_policy = "always-create"
+
+    body = _plan_repository(monkeypatch, repository_id="880e8400-e29b-41d4-a716-446655440020")
+
+    assert body["version_policy"] == "always-create"
+    assert body["version_policy_source"] == "repository"
+
+
+def test_by_resolution_counts_reconcile_with_the_per_item_rows(monkeypatch, catalog) -> None:
+    catalog.add_project(
+        _ORDERS_PROJECT,
+        name="Orders API",
+        slug="orders-api",
+        versions=["1.0.0"],
+        git_path="openapi/orders.yaml",
+    )
+    catalog.add_project(
+        "770e8400-e29b-41d4-a716-446655440011", name="orders", slug="orders", versions=[]
+    )
+
+    body = _plan_repository(monkeypatch)
+    summary = body["summary"]
+
+    counted: Dict[str, int] = {}
+    for item in body["items"]:
+        counted[item["resolution"]] = counted.get(item["resolution"], 0) + 1
+    assert summary["by_resolution"] == counted
+    assert sum(summary["by_resolution"].values()) == summary["items"] == len(body["items"])
+    assert summary["matched"] == sum(1 for item in body["items"] if item["matched_project"])
+
+
+def test_a_matched_project_with_no_revisions_proposes_the_default_version(
+    monkeypatch, catalog
+) -> None:
+    """An empty project is a match, and its first version is the batch default — not a bump."""
+    catalog.add_project(
+        _ORDERS_PROJECT,
+        name="Orders API",
+        slug="orders-api",
+        versions=[],
+        git_path="openapi/orders.yaml",
+    )
+
+    item = _item(_plan_repository(monkeypatch), "openapi/orders.yaml")
+
+    assert item["resolution"] == "append-version"
+    assert item["proposed_version"]["derived_from"] == "default"
+    assert item["proposed_version"]["version_id"] == "1.0.0"
+
+
+def test_plan_writes_nothing_while_reconciling(monkeypatch, catalog) -> None:
+    """The read-only guarantee predates BLK-1.2 and reconciliation must not have cost it.
+
+    The ``catalog`` fixture replaces every write on the ``db`` handle with a raise, so this
+    passing means the endpoint took none of them.
+    """
+    catalog.add_project(
+        _ORDERS_PROJECT,
+        name="Orders API",
+        slug="orders-api",
+        versions=["1.0.0"],
+        git_path="openapi/orders.yaml",
+    )
+    _use_repository(monkeypatch, _MIXED_MEMBERS)
+
+    response = client.post(
+        _PLAN, json={"git": {"repo_url": _REPO_URL, "ref": "main"}, "include_documents": True}
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["summary"]["matched"] == 1
+
+
+def test_every_unchanged_item_of_a_re_imported_folder_appends(monkeypatch, catalog) -> None:
+    """Not just the one the test picked: a tracked folder re-plans as all-appends."""
+    for index, (key, name, slug) in enumerate(
+        [
+            ("events/orders.asyncapi.yaml", "Orders Events", "orders-events"),
+            ("events/shipping.asyncapi.yaml", "Shipping Events", "shipping-events"),
+            ("openapi/orders.yaml", "Orders API", "orders-api"),
+            ("protos/orders/orders.proto", "orders", "orders"),
+        ]
+    ):
+        catalog.add_project(
+            f"770e8400-e29b-41d4-a716-4466554400{index:02d}",
+            name=name,
+            slug=slug,
+            versions=["1.0.0"],
+            git_path=key,
+        )
+
+    body = _plan_repository(monkeypatch)
+
+    assert body["summary"]["by_resolution"] == {"append-version": 4}
+    assert {item["match_basis"] for item in body["items"]} == {"repository-provenance"}
+    assert {item["proposed_version"]["version_id"] for item in body["items"]} == {"1.1.0"}
+
+
+def test_an_unimportable_item_is_reconciled_like_any_other(catalog) -> None:
+    """Its resolution is still reported, so by_resolution and the rows cannot disagree.
+
+    A sniffer-only format is the one shape that reaches the plan as an *item* nothing can
+    import, and it is not producible from an archive fixture, so the group is built directly.
+    """
+    catalog.add_project(
+        _ORDERS_PROJECT, name="Future Spec", slug="future-spec", versions=["1.0.0"]
+    )
+    group = BulkGroup(
+        key="future/spec.yaml",
+        root_path="future/spec.yaml",
+        members={"future/spec.yaml": "info:\n  title: Future Spec\n"},
+        detection=FormatDetection(
+            detected=FormatCandidate(
+                format="future-format",
+                confidence=0.9,
+                reason="sniffed",
+                source_key=None,
+                importable=False,
+            ),
+            candidates=[],
+            ambiguous=False,
+            ambiguous_candidates=[],
+        ),
+        reason="independent document",
+    )
+
+    resolutions = bulk_import_routes._reconcile_groups(
+        [group],
+        tenant_id=TENANT_ID,
+        policy=bulk_import_routes.VersionPolicy.APPEND_WHEN_MATCHED,
+        git_result=None,
+    )
+    row = bulk_import_routes._plan_item(group, resolutions[0], include_document=False)
+
+    assert row.importable is False
+    assert row.resolution == "append-version"
+    assert row.matched_project is not None
+    assert bulk_import_routes._plan_summary([row], 0).by_resolution == {"append-version": 1}
 
 
 # --------------------------------------------------------------------------- submit

@@ -1,9 +1,12 @@
 # Bulk import of independent specs (MFI-29.5)
 
 > **Status:** implemented — `src/app/bulk_intake.py` (grouping engine),
+> `src/app/bulk_import_reconciliation.py` (BLK-1.2 reconciliation),
 > `src/app/bulk_import_routes.py` (`POST /v1/tenants/{tenant}/import/bulk[/plan|/status]`)
 > **Issue:** [#4392](https://github.com/apiome/apiome/issues/4392) ·
 > **Epic:** MFI-EPIC-29 (#4384) · **Roadmap:** `ROADMAP_MULTI_FORMAT_IMPORT.md`
+> **Extended by:** BLK-1.1 ([#5523](https://github.com/apiome/apiome/issues/5523)) ·
+> BLK-1.2 ([#5524](https://github.com/apiome/apiome/issues/5524))
 
 MFI-29.1 answers *"one spec, many files"* — a proto tree is unpacked and handed to one
 adapter as a fileset. This is the other shape: a team's `specs/` folder holds **N unrelated
@@ -19,7 +22,9 @@ repo selection  ─┘        │
                           ▼  connected components  = the independent specs
                           ▼  resolve one root per component (shared rules)
                           │
-   plan ◀─────────────────┤   items + skipped + summary   (nothing written)
+                          ▼  reconcile each item against existing projects (BLK-1.2)
+                          │
+   plan ◀─────────────────┤   items + resolutions + skipped + summary   (nothing written)
                           │
    submit ────────────────┴─▶ one ordinary import job per item
                                     │
@@ -66,13 +71,56 @@ filename?, include_documents?}` — exactly one source.
 | Field | Meaning |
 |-------|---------|
 | `items[]` | One per independent spec: `key`, `root_path`, `members`, `source_kind`, `format`, `confidence`, `importable`, `predicted_target`, `input_kind`, `suggested_name`, `suggested_slug`, `reason` |
+| `items[].resolution` | BLK-1.2: `append-version` \| `create-project` \| `unresolved` — what applying the plan now would do |
+| `items[].matched_project` | The existing project it resolves to (`project_id`, `name`, `slug`), or null when the item is new |
+| `items[].match_basis` / `match_detail` / `match_confidence` | Why it matched, in one token and one sentence, plus a 0..1 confidence **distinct from** the detection `confidence` above |
+| `items[].proposed_version` | `version_id` plus `derived_from` (`default` \| `version-bump` \| `next-available`) and `previous_version_id` |
 | `items[].document_base64` | The item's ready-to-import bytes — only when `include_documents` |
 | `skipped[]` | Files belonging to no item, with `no-recognisable-format` or `over-item-limit` |
 | `truncated` / `total_items` / `max_items` | Explicit statement when the payload holds more items than one batch may carry |
-| `summary` | `items`, `importable`, `unimportable`, `skipped_files`, `by_target`, `by_format` |
+| `version_policy` / `version_policy_source` | The reconciliation policy in force, and which tier supplied it |
+| `summary` | `items`, `importable`, `unimportable`, `skipped_files`, `by_target`, `by_format`, `by_resolution`, `matched` |
 
 `predicted_target` is derived from the detected format (the §0.2 branch is on the emitted
 format). The **authoritative** routing is the one each job records; the plan never parses.
+
+## Reconciliation (BLK-1.2)
+
+Without this, every item was described as if the tenant were empty: a `specs/` folder
+re-imported after a change looked identical to a first-time import, and there was nothing to
+verify and nothing for an apply step to act on. The plan now answers **"which of these is a
+new version of something I already have?"** — with reads only, so it still writes nothing.
+
+A candidate project is resolved in precedence order, stopping at the first hit:
+
+| Basis | Signal | Confidence |
+|-------|--------|------------|
+| `repository-provenance` | A prior import from the **same repository and path**, read back from the MFI-29.3 provenance on `versions.format_metadata` (`gitRepoUrl` / `gitPath`) | 1.0 |
+| `slug` | An existing project already uses the item's `suggested_slug` | 0.8 |
+| `spec-identity` | An existing project is named for the same API — how a file that **moved** within the repository still matches | 0.6 |
+
+What a match *means* is configuration, resolved most-specific-first:
+
+```
+tenant_repositories.bulk_import_version_policy ──► tenants.bulk_import_version_policy ──► 'append-when-matched'
+```
+
+| Policy | Effect |
+|--------|--------|
+| `append-when-matched` (default) | Matched items resolve to `append-version`; unmatched items to `create-project` |
+| `always-create` | Every item resolves to `create-project`. The matches it ignores are **still reported**, so ignoring them is visible rather than hidden |
+| `always-ask` | Every item resolves to `unresolved` and needs an explicit per-item choice at apply time |
+
+`proposed_version` follows the item's outcome and never writes: an append bumps the minor of
+the matched project's highest semantic version, a create takes the batch default (`1.0.0`),
+and a matched project whose labels are not semantic versions falls back to the first free
+label at or after that default — which is what `allocate_version_id` would pick anyway, so
+the plan never promises a label the apply would rename.
+
+A **non-publishable catalog item is still a valid match.** That is genuinely where a
+re-imported non-OpenAPI spec lands (`_resolve_import_project` reuses a live catalog item with
+the same slug), so filtering those out would reintroduce the bug for every catalog format.
+BLK-1.1's `TARGET_NOT_PUBLISHABLE` remains the authority at apply time.
 
 ### `POST /v1/tenants/{tenant}/import/bulk`
 
@@ -123,6 +171,8 @@ the same archive imported as one spec.
 
 * **CLI** — `apiome import auto --bulk <archive|directory>` packs a directory
   deterministically, plans, submits, waits, and prints the per-item table plus the summary.
-  Exits non-zero when any item failed.
+  The plan table carries the reconciliation columns (`Resolution`, `Existing`, `Version`) and
+  the summary leads with "N new versions, M new projects", naming the policy when it is
+  `always-create` or `always-ask`. Exits non-zero when any item failed.
 * **UI** — the Catalog import wizard's detect step offers bulk mode when a payload holds
   more than one independent spec, and renders the per-item result list as the jobs finish.
