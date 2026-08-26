@@ -1289,13 +1289,57 @@ SpecImportJobState = Literal[
 
 
 class SpecImportProjectTarget(BaseModel):
-    """Project identity for a specification import job."""
+    """Project identity for a specification import job.
+
+    Two shapes, distinguished by whether ``project_id`` is set (BLK-1.1):
+
+    * **New project** (``project_id`` omitted) — ``name`` and ``slug`` are required and the
+      importer resolves or mints a project from that identity. This is the original shape and
+      its behaviour is unchanged.
+    * **Existing project** (``project_id`` set) — the import appends a new version to that
+      project instead of creating one, and ``name``/``slug`` become optional because the
+      resolved project supplies them.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
-    name: str
-    slug: str
+    project_id: Optional[str] = Field(
+        default=None,
+        description=(
+            "Existing catalog project to append this revision to (BLK-1.1). When set, the "
+            "import creates a new version on that project — labelled by 'version.version_id' "
+            "— instead of creating a project, and 'name'/'slug' may be omitted. The project "
+            "must belong to the acting tenant (a foreign id is reported as 404) and must be "
+            "publishable: a non-publishable catalog item is refused with the "
+            "TARGET_NOT_PUBLISHABLE taxonomy code, which names the convert-to-OpenAPI flow. "
+            "A 'version.version_id' that already exists on it is refused with "
+            "TARGET_VERSION_EXISTS before any write happens."
+        ),
+    )
+    name: Optional[str] = Field(
+        default=None,
+        description=(
+            "Display name for a project the import creates. Required unless 'project_id' "
+            "targets an existing project, whose own name is used instead."
+        ),
+    )
+    slug: Optional[str] = Field(
+        default=None,
+        description=(
+            "URL slug for a project the import creates. Required unless 'project_id' targets "
+            "an existing project, whose own slug is used instead."
+        ),
+    )
     description: Optional[str] = None
+
+    @model_validator(mode="after")
+    def _require_identity_or_project_id(self) -> "SpecImportProjectTarget":
+        """Keep ``name``/``slug`` mandatory for the create-a-project shape (BLK-1.1)."""
+        if self.project_id is None and (self.name is None or self.slug is None):
+            raise ValueError(
+                "project requires 'name' and 'slug' unless 'project_id' targets an existing project"
+            )
+        return self
 
 
 class SpecImportVersionTarget(BaseModel):
@@ -1809,7 +1853,15 @@ class RepositoryRefreshProvenance(BaseModel):
 
 
 class SpecImportStartMetadata(BaseModel):
-    """Shared metadata for JSON-base64 and multipart upload flows."""
+    """Shared metadata for JSON-base64 and multipart upload flows.
+
+    Two fields can name an existing project to append to. ``project.project_id`` (BLK-1.1) is
+    the public contract — validated and authorized before the job is scheduled — while
+    ``existing_project_id`` is the older internal seam the persistence paths actually read.
+    :func:`app.import_project_target.resolve_import_project_target` normalizes the former onto
+    the latter at schedule time, so a caller sets one of them and every downstream reader sees
+    ``existing_project_id``. Setting both to *different* ids is a contradiction and is rejected.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
@@ -1826,7 +1878,13 @@ class SpecImportStartMetadata(BaseModel):
     version: SpecImportVersionTarget
     existing_project_id: Optional[str] = Field(
         None,
-        description="When set, skip project creation and attach the job to this catalog project id.",
+        description=(
+            "When set, skip project creation and attach the job to this catalog project id. "
+            "Internal seam used by the catalog convert flow and repository auto-refresh, and "
+            "the field a caller's 'project.project_id' is normalized onto at schedule time "
+            "(BLK-1.1); external callers should set 'project.project_id' instead, which is "
+            "the shape the tenant/publishable/version-collision checks run against."
+        ),
     )
     options: SpecImportOptions = Field(default_factory=SpecImportOptions)
     repository_import_spec: Optional[SpecImportStoredSpec] = Field(
@@ -1844,6 +1902,17 @@ class SpecImportStartMetadata(BaseModel):
             f"'{REPOSITORY_AUTO_IMPORT_SOURCE_KIND}' (RAR-4.2)."
         ),
     )
+
+    @model_validator(mode="after")
+    def _project_target_ids_agree(self) -> "SpecImportStartMetadata":
+        """Refuse a request that names two different existing projects (BLK-1.1)."""
+        target_id = self.project.project_id
+        if target_id and self.existing_project_id and target_id != self.existing_project_id:
+            raise ValueError(
+                "project.project_id and existing_project_id name different projects; "
+                "set only project.project_id"
+            )
+        return self
 
 
 class SpecImportStartJsonRequest(BaseModel):
