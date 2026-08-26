@@ -14,6 +14,7 @@ from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 
 from apiome_mock.api_key import ValidatedApiKey, is_private_mock_mode
+from apiome_mock.callbacks import CallbackDefinition, parse_callbacks
 from apiome_mock.chaos import EMPTY_CHAOS, ChaosConfig, parse_chaos
 from apiome_mock.fixture_data import parse_fixtures
 from apiome_mock.fixture_packs import FixturePack, merged_template_data, parse_fixture_packs
@@ -108,6 +109,8 @@ class CompiledSpec:
     """Fixture data readable by response templates (#4744, PMR-2.1)."""
     fixture_packs: Mapping[str, FixturePack] = field(default_factory=dict)
     """Versioned fixture packs sessions can reset to (#4745, PMR-2.2)."""
+    callbacks: Mapping[str, CallbackDefinition] = field(default_factory=dict)
+    """Outbound callback/webhook definitions this version simulates (#4746, PMR-2.3)."""
 
     @property
     def cache_key(self) -> tuple[str, str, str]:
@@ -200,6 +203,7 @@ async def _compile_from_row(
         # Pack data overlays the flat fixtures map, so templates can read both (#4745).
         fixtures={**parse_fixtures(mock_settings), **merged_template_data(fixture_packs)},
         fixture_packs=fixture_packs,
+        callbacks=parse_callbacks(mock_settings),
     )
 
 

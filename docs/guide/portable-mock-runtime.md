@@ -134,6 +134,8 @@ collector needs exactly one parser. Common keys: `event`, `level`, `timestamp` (
 | `portable_runtime_starting` | Before the bundle is loaded | `runtime_version`, `host`, `port`, `config` (secrets redacted), `digest` |
 | `portable_runtime_ready` | Application startup complete | `digest`, `tenant`, `project`, `version`, `mount`, `operations`, `scenarios`, `signed` |
 | `mock_request` | One per served request | `method`, `path`, `status`, `duration_ms`, `digest` |
+| `mock_callback_attempt` | One per callback delivery attempt | `callback`, `destination` (query redacted), `attempt`, `delay_ms`, `status`, `error`, `duration_ms` |
+| `mock_callback_delivery` | One per callback delivery, terminal | `callback`, `digest`, `outcome`, `destination`, `trigger`, `status`, `attempts`, `detail` |
 | `portable_runtime_stopped` | Application shutdown | `digest` |
 | `bundle_invalid` / `bundle_incompatible` | The bundle was rejected at startup | `problems[]` with stable `code`s |
 
@@ -161,6 +163,9 @@ always wins over its environment variable; omitting a flag leaves the environmen
 | *(none — env only)* | `APIOME_MOCK_BUNDLE_SECRET` | *(none)* | Shared HMAC secret the signature must verify against. |
 | `--log-level LEVEL` | `APIOME_MOCK_LOG_LEVEL` | `INFO` | Structured log level. |
 | `--no-access-log` | `APIOME_MOCK_ACCESS_LOG` | `true` | Per-request `mock_request` line. |
+| `--callbacks` | `APIOME_MOCK_CALLBACKS_ENABLED` | `false` | Deliver the bundle's contract callbacks/webhooks outbound. Off by default: a portable mock makes no network connections unless it is told to. |
+| `--callback-allow-private` | `APIOME_MOCK_CALLBACK_ALLOW_PRIVATE` | `false` | Permit callback destinations on loopback/private addresses, for a CI job whose receiver runs beside the mock. |
+| `--callback-timeout SECONDS` | `APIOME_MOCK_CALLBACK_TIMEOUT_SECONDS` | `5` | Ceiling on one callback delivery attempt. |
 | `--session-ttl SECONDS` | `APIOME_MOCK_SESSION_TTL_SECONDS` | `3600` | Sliding TTL for `X-Mock-Session` state. |
 | `--session-max-resources COUNT` | `APIOME_MOCK_SESSION_MAX_RESOURCES` | `200` | Resources per session. |
 | `--session-max-bytes BYTES` | `APIOME_MOCK_SESSION_MAX_BYTES` | `1048576` | JSON bytes per session. |

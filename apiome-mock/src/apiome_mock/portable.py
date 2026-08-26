@@ -35,6 +35,7 @@ from starlette.middleware.base import RequestResponseEndpoint
 
 from apiome_mock import __version__
 from apiome_mock.bundle import LoadedBundle
+from apiome_mock.callback_dispatch import build_dispatcher
 from apiome_mock.handler import serve_compiled_request
 from apiome_mock.memory_session_store import InMemorySessionStore
 from apiome_mock.portable_config import PortableSettings
@@ -89,6 +90,7 @@ def _bundle_summary(bundle: LoadedBundle) -> dict[str, object]:
         "operations": len(bundle.operations),
         "scenarios": sorted(bundle.scenarios),
         "fixtures": sorted(str(entry.get("name", "")) for entry in bundle.fixtures),
+        "callbacks": sorted(bundle.callbacks),
     }
 
 
@@ -142,6 +144,11 @@ def create_portable_app(bundle: LoadedBundle, settings: PortableSettings) -> Fas
     prefix = version_prefix(bundle)
     summary = _bundle_summary(bundle)
     session_store = InMemorySessionStore(_session_caps(settings))
+    dispatcher = build_dispatcher(
+        enabled=settings.callbacks_enabled,
+        allow_private_destinations=settings.callback_allow_private,
+        timeout_seconds=settings.callback_timeout_seconds,
+    )
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -151,10 +158,13 @@ def create_portable_app(bundle: LoadedBundle, settings: PortableSettings) -> Fas
             runtime_version=__version__,
             base_path=settings.base_path,
             mount=prefix if settings.base_path == "version" else "/",
+            callbacks_enabled=dispatcher is not None,
             **summary,
         )
         yield
         app.state.ready = False
+        if dispatcher is not None:
+            await dispatcher.aclose()
         _log.info("portable_runtime_stopped", digest=bundle.digest)
 
     app = FastAPI(title="Apiome Mock (portable)", lifespan=lifespan)
@@ -162,6 +172,7 @@ def create_portable_app(bundle: LoadedBundle, settings: PortableSettings) -> Fas
     app.state.bundle = bundle
     app.state.compiled_spec = compiled
     app.state.session_store = session_store
+    app.state.callback_dispatcher = dispatcher
     app.state.portable_settings = settings
 
     if settings.access_log:
@@ -222,6 +233,7 @@ def create_portable_app(bundle: LoadedBundle, settings: PortableSettings) -> Fas
             version=bundle.version_label,
             path=relative,
             session_store=session_store,
+            callback_dispatcher=dispatcher,
         )
 
     return app

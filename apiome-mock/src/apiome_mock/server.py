@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse, Response
 from psycopg_pool import AsyncConnectionPool
 
 from apiome_mock.api_key import validate_api_key_for_tenant
+from apiome_mock.callback_dispatch import build_dispatcher
 from apiome_mock.canonical_spec_cache import CanonicalSpecCache
 from apiome_mock.database_pool import create_async_pool, ping_pool
 from apiome_mock.event_transport import handle_event_sse, handle_event_websocket
@@ -33,6 +34,7 @@ MOCK_DB_POOL_KEY = "db_pool"
 MOCK_SPEC_CACHE_KEY = "spec_cache"
 MOCK_CANONICAL_CACHE_KEY = "canonical_spec_cache"
 MOCK_SESSION_STORE_KEY = "session_store"
+MOCK_CALLBACK_DISPATCHER_KEY = "callback_dispatcher"
 
 
 @asynccontextmanager
@@ -76,21 +78,30 @@ async def lifespan(app: FastAPI) -> AsyncIterator[dict[str, object]]:
     await grpc_runtime.start()
 
     session_store = create_session_store(settings, pool)
+    callback_dispatcher = build_dispatcher(
+        enabled=settings.callbacks_enabled,
+        allow_private_destinations=settings.callback_allow_private,
+        timeout_seconds=settings.callback_timeout_seconds,
+    )
 
     app.state.db_pool = pool
     app.state.spec_cache = cache
     app.state.canonical_spec_cache = canonical_cache
     app.state.session_store = session_store
+    app.state.callback_dispatcher = callback_dispatcher
     app.state.grpc_runtime = grpc_runtime
     yield {
         MOCK_DB_POOL_KEY: pool,
         MOCK_SPEC_CACHE_KEY: cache,
         MOCK_CANONICAL_CACHE_KEY: canonical_cache,
         MOCK_SESSION_STORE_KEY: session_store,
+        MOCK_CALLBACK_DISPATCHER_KEY: callback_dispatcher,
     }
 
     stop_event.set()
     await grpc_runtime.stop()
+    if callback_dispatcher is not None:
+        await callback_dispatcher.aclose()
     if listener_task is not None:
         listener_task.cancel()
         try:
@@ -184,6 +195,7 @@ def create_app() -> FastAPI:
         pool: AsyncConnectionPool = app.state.db_pool
         cache: SpecCache = app.state.spec_cache
         session_store = getattr(app.state, "session_store", None)
+        callback_dispatcher = getattr(app.state, "callback_dispatcher", None)
         settings = get_settings()
         raw_api_key = request.headers.get("X-Api-Key") or request.headers.get("x-api-key")
         validated_key = await validate_api_key_for_tenant(
@@ -214,6 +226,7 @@ def create_app() -> FastAPI:
             cache=cache,
             api_key=validated_key,
             session_store=session_store,
+            callback_dispatcher=callback_dispatcher,
         )
         if limits is not None:
             record_mock_request(

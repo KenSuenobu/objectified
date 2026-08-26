@@ -173,6 +173,58 @@ caller's own namespace — data never crosses tenant, version, or session bounda
 routes bypass scenarios and chaos injection. Full guide:
 [docs/guide/mock-fixture-packs.md](../docs/guide/mock-fixture-packs.md).
 
+## Callbacks and webhooks (PMR-2.3)
+
+A **callback definition** is the outbound half of a contract: what the mock sends, where it is
+allowed to send it, what the payload must look like, and how it retries. Definitions live in
+`versions.mock_settings.callbacks` (and travel inside portable bundles):
+
+```json
+{
+  "order-created": {
+    "callbackFormat": "apiome.mock.callback/v1",
+    "trigger": {"operation": "POST /orders", "statuses": [201]},
+    "destinations": ["https://hooks.example.com/orders"],
+    "request": {"body": {"event": "order.created", "id": "{{request.body#/id}}"}},
+    "payloadSchema": {"$ref": "#/components/schemas/OrderEvent"},
+    "retry": {"maxAttempts": 3, "backoffMs": 100, "retryOn": [503]}
+  }
+}
+```
+
+Author them with `PUT /v1/versions/{tenant}/{project_id}/{version_record_id}/mock/callbacks`
+(apiome-rest validates the trigger against the version's operations, the schema `$ref` against its
+components, and every destination against the SSRF policy, then returns each definition's
+`sha256:<hex>` digest).
+
+Each delivery runs four gates and stops at the first failure: the payload **renders** from the
+triggering request and fixture data, it is **validated** against `payloadSchema` (a payload that
+does not match is never sent), the target is **authorized** against the destination allowlist *and*
+the outbound network policy, and only then is it **delivered** on a retry schedule with no jitter
+and no clock input — so replaying a fixture-driven event reproduces the attempt timeline exactly.
+
+Outbound delivery is off by default in both runtimes; `--callbacks` (portable) or
+`APIOME_MOCK_CALLBACKS_ENABLED` (hosted) turns it on, and `--callback-allow-private` permits a
+loopback receiver in CI. The `__mock__` control plane grows three routes:
+
+```bash
+# discover the outbound contract and pin its digests
+curl $MOCK/demo/orders/1.0.0/__mock__/callbacks
+
+# deliver one now, without driving its triggering operation
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"destination": "https://hooks.example.com/orders/tenant-a"}' \
+  $MOCK/demo/orders/1.0.0/__mock__/callbacks/order-created/trigger
+
+# read back every attempt and its outcome
+curl $MOCK/demo/orders/1.0.0/__mock__/callbacks/deliveries
+```
+
+Every attempt also emits a `mock_callback_attempt` log line and every delivery a terminal
+`mock_callback_delivery` line. Records and logs carry the destination's origin and path but never
+its query string, header values, or payload. Full guide:
+[docs/guide/mock-callbacks.md](../docs/guide/mock-callbacks.md).
+
 ## Container image
 
 One image, two runtimes — `serve` (hosted, the default) and `run` (portable):

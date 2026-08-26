@@ -22,6 +22,12 @@ from .compatibility_engine import CompatibilityCheckEngine, compat_audit_detail,
 from .config import settings
 from .database import BranchNotFoundError, StaleHeadPushError, db
 from .mock_bundle import BundleIdentity, build_bundle
+from .mock_callbacks import (
+    callback_digests,
+    callbacks_from_storage,
+    callbacks_to_storage,
+    validate_mock_callbacks,
+)
 from .mock_fixture_packs import (
     fixture_pack_digests,
     fixture_packs_from_storage,
@@ -39,12 +45,15 @@ from .mock_scenario_settings import (
 from .models import (
     BreakingPublishGuardrailOut,
     MockChaosSpec,
+    MockCallbackSpec,
     MockFixturePackSpec,
     MockScenarioSpec,
     SunsetTimelineEntryOut,
     SunsetTimelineResponse,
     VersionCreateRequest,
     VersionForkRequest,
+    VersionMockCallbacksRequest,
+    VersionMockCallbacksResponse,
     VersionMockFixturePacksRequest,
     VersionMockFixturePacksResponse,
     VersionMockScenariosRequest,
@@ -2493,6 +2502,93 @@ async def set_version_mock_fixture_packs(
             detail="Only the version creator or a tenant administrator can change mock settings",
         )
     return _stored_fixture_packs_response(updated.get("mock_settings"), version_record_id)
+
+
+def _stored_callbacks_response(mock_settings: Any, version_record_id: str) -> VersionMockCallbacksResponse:
+    """Build the callbacks response from a stored ``mock_settings`` value (#4746, PMR-2.3).
+
+    Malformed stored entries never break the editor; they are omitted (the runtime skips them the
+    same way) and logged.
+    """
+    stored = callbacks_from_storage(mock_settings)
+    callbacks: Dict[str, MockCallbackSpec] = {}
+    for name, raw in stored.items():
+        try:
+            callbacks[name] = MockCallbackSpec.model_validate(raw)
+        except ValueError:
+            logger.warning("Skipping malformed mock callback %r on version %s", name, version_record_id)
+    return VersionMockCallbacksResponse(
+        callbacks=callbacks,
+        digests=callback_digests({name: stored[name] for name in callbacks}),
+    )
+
+
+@router.get("/{tenant_slug}/{project_id}/{version_record_id}/mock/callbacks")
+async def get_version_mock_callbacks(
+    tenant_slug: str,
+    project_id: str,
+    version_record_id: str,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> VersionMockCallbacksResponse:
+    """Return the version's mock callback definitions and their content digests (#4746, PMR-2.3)."""
+    enforce_permission(db, auth_data, Resource.VERSIONS, Action.VIEW)
+    existing = _get_version_for_mock_scenarios(project_id, version_record_id, auth_data["tenant_id"])
+    return _stored_callbacks_response(existing.get("mock_settings"), version_record_id)
+
+
+@router.put("/{tenant_slug}/{project_id}/{version_record_id}/mock/callbacks")
+async def set_version_mock_callbacks(
+    tenant_slug: str,
+    project_id: str,
+    version_record_id: str,
+    request: VersionMockCallbacksRequest,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> VersionMockCallbacksResponse:
+    """Replace the version's mock callback definitions (#4746, PMR-2.3).
+
+    Definitions are validated against the versioned callback schema *and* against this version's
+    generated OpenAPI document: a trigger must name a real operation, a ``payloadSchema`` ``$ref``
+    must resolve, every destination must be a safe absolute http(s) URL, and the retry schedule
+    must stay inside its cost ceiling. Valid definitions are stored canonically in
+    ``versions.mock_settings`` under ``callbacks``, alongside the other mock knobs, and travel
+    inside portable mock bundles. The response echoes each definition's content digest — the
+    identity a test asserts when it exercises the callback. An empty ``callbacks`` map clears them.
+    """
+    enforce_permission(db, auth_data, Resource.VERSIONS, Action.EDIT)
+    existing = _get_version_for_mock_scenarios(project_id, version_record_id, auth_data["tenant_id"])
+
+    user_id = get_authenticated_user_id(auth_data)
+    if not user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Mock settings require user authentication (JWT token or API key with attribution)",
+        )
+
+    proposed = {
+        name: spec.model_dump(by_alias=True, exclude_none=True)
+        for name, spec in request.callbacks.items()
+    }
+    spec = _generated_spec_for_version(existing, tenant_slug)
+    errors = validate_mock_callbacks(proposed, spec)
+    if errors:
+        raise HTTPException(
+            status_code=422,
+            detail={"message": "Callback definitions failed validation.", "errors": errors},
+        )
+
+    storage = callbacks_to_storage(proposed)
+    updated = db.set_version_mock_callbacks(
+        version_record_id,
+        auth_data["tenant_id"],
+        user_id,
+        callbacks=storage,
+    )
+    if not updated:
+        raise HTTPException(
+            status_code=403,
+            detail="Only the version creator or a tenant administrator can change mock settings",
+        )
+    return _stored_callbacks_response(updated.get("mock_settings"), version_record_id)
 
 
 def _bundle_filename(project_slug: str, version_label: str) -> str:

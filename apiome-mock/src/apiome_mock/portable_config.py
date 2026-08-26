@@ -128,6 +128,33 @@ RUNTIME_OPTIONS: tuple[RuntimeOption, ...] = (
         kind="flag",
     ),
     RuntimeOption(
+        field="callbacks_enabled",
+        flag="--callbacks",
+        env=f"{ENV_PREFIX}CALLBACKS_ENABLED",
+        help=(
+            "Deliver the bundle's contract callbacks/webhooks outbound. Off by default: a "
+            "portable mock makes no network connections unless it is told to."
+        ),
+        kind="flag",
+    ),
+    RuntimeOption(
+        field="callback_allow_private",
+        flag="--callback-allow-private",
+        env=f"{ENV_PREFIX}CALLBACK_ALLOW_PRIVATE",
+        help=(
+            "Permit callback destinations on loopback/private addresses, for a CI job whose "
+            "webhook receiver runs beside the mock. Public-address-only otherwise."
+        ),
+        kind="flag",
+    ),
+    RuntimeOption(
+        field="callback_timeout_seconds",
+        flag="--callback-timeout",
+        env=f"{ENV_PREFIX}CALLBACK_TIMEOUT_SECONDS",
+        help="Ceiling on one callback delivery attempt, in seconds.",
+        metavar="SECONDS",
+    ),
+    RuntimeOption(
         field="session_ttl_seconds",
         flag="--session-ttl",
         env=f"{ENV_PREFIX}SESSION_TTL_SECONDS",
@@ -202,6 +229,9 @@ class PortableSettings(BaseSettings):
     bundle_secret: str | None = Field(default=None)
     log_level: LogLevel = Field(default="INFO")
     access_log: bool = Field(default=True)
+    callbacks_enabled: bool = Field(default=False)
+    callback_allow_private: bool = Field(default=False)
+    callback_timeout_seconds: float = Field(default=5.0, gt=0, le=60.0)
     session_ttl_seconds: float = Field(default=3600.0, gt=0, le=86_400.0)
     session_max_resources: int = Field(default=200, ge=1, le=100_000)
     session_max_bytes: int = Field(default=1_048_576, ge=1024, le=100_000_000)
