@@ -30,7 +30,7 @@ import {
   RotateCw,
   MinusCircle,
 } from 'lucide-react';
-import { cancelImport, getImportStatus, commitImport, rollbackImport, retryImport } from '../../../../../lib/db/import-actions';
+import { localImportJobClient, type ImportJobClient } from '../import/importJobClient';
 import {
   getErrorEvents,
   formatEventContext,
@@ -52,6 +52,12 @@ interface ImportExecutionPanelProps {
   /** When user retries a failed/canceled import, called with the new job ID so the dialog can switch to it. */
   onRetry?: (newJobId: string) => void;
   isReviewing?: boolean; // True when viewing from 'done' step via Back button
+  /**
+   * Which job store to read (BLK-1.4). Defaults to the in-process worker's; a bulk batch's
+   * rows are REST jobs and pass `restImportJobClient`. Verbs the client does not offer —
+   * commit, rollback, retry, cancel — are not drawn.
+   */
+  client?: ImportJobClient;
 }
 
 type LogLevel = 'info' | 'warn' | 'error';
@@ -109,6 +115,7 @@ export default function ImportExecutionPanel({
   selectedSchemas = [],
   onComplete,
   onRetry,
+  client = localImportJobClient,
   isReviewing,
 }: ImportExecutionPanelProps) {
   const [state, setState] = useState<JobState>('queued');
@@ -149,7 +156,7 @@ export default function ImportExecutionPanel({
 
     const poll = async () => {
       try {
-        const status = await getImportStatus(jobId);
+        const status = await client.getStatus(jobId);
         if (!mounted) return;
         if (importStartedAtMs.current === null && ((status.percent ?? 0) > 0 || (status.events?.length ?? 0) > 0)) {
           importStartedAtMs.current = Date.now();
@@ -184,23 +191,24 @@ export default function ImportExecutionPanel({
       mounted = false;
       if (timer) clearInterval(timer);
     };
-  }, [jobId, onComplete, isReviewing]);
+  }, [jobId, onComplete, isReviewing, client]);
 
   const onCancel = async () => {
-    await cancelImport(jobId);
+    await client.cancel?.(jobId);
   };
 
   const onAccept = async () => {
+    if (!client.commit) return;
     setIsCommitting(true);
     try {
-      const result = await commitImport(jobId);
+      const result = await client.commit(jobId);
       if (result.success) {
         setState('completed');
         if (onComplete) {
           onComplete(true);
         }
       } else {
-        const status = await getImportStatus(jobId);
+        const status = await client.getStatus(jobId);
         setState(status.state as JobState);
         setEvents(status.events || []);
       }
@@ -212,9 +220,10 @@ export default function ImportExecutionPanel({
   };
 
   const onReject = async () => {
+    if (!client.rollback) return;
     setIsRollingBack(true);
     try {
-      await rollbackImport(jobId);
+      await client.rollback(jobId);
       setState('rolled-back');
       if (onComplete) {
         onComplete(false);
@@ -227,10 +236,10 @@ export default function ImportExecutionPanel({
   };
 
   const onRetryClick = async () => {
-    if (!onRetry) return;
+    if (!onRetry || !client.retry) return;
     setIsRetrying(true);
     try {
-      const result = await retryImport(jobId);
+      const result = await client.retry(jobId);
       if (result.success && result.jobId) {
         onRetry(result.jobId);
       }
@@ -240,6 +249,12 @@ export default function ImportExecutionPanel({
       setIsRetrying(false);
     }
   };
+
+  // The store decides which verbs exist: a REST job can be cancelled but has no commit step
+  // to accept and is re-run by the batch that started it, so those buttons are not drawn.
+  const canDecide = Boolean(client.commit && client.rollback);
+  const canRetry = Boolean(onRetry && client.retry);
+  const canCancel = Boolean(client.cancel);
 
   const levelIcon = (lvl: LogLevel) => {
     if (lvl === 'error') return <XCircle className="size-[var(--icon-dense)] shrink-0 text-danger" aria-hidden />;
@@ -318,7 +333,7 @@ export default function ImportExecutionPanel({
         )}
 
         <div className="mt-4 flex flex-wrap gap-2">
-          {state === 'pending-approval' ? (
+          {state === 'pending-approval' && canDecide ? (
             <>
               <Button variant="success" onClick={onAccept} disabled={isCommitting || isRollingBack}>
                 <CheckCircle2 aria-hidden />
@@ -331,17 +346,19 @@ export default function ImportExecutionPanel({
             </>
           ) : state === 'failed' || state === 'canceled' ? (
             <>
-              {onRetry && (
+              {canRetry && (
                 <Button variant="primary" onClick={onRetryClick} disabled={isRetrying}>
                   <RotateCw className={isRetrying ? 'animate-spin' : undefined} aria-hidden />
                   {isRetrying ? 'Starting retry...' : 'Retry import'}
                 </Button>
               )}
-              <Button variant="outline" onClick={onCancel} disabled={isRetrying}>
-                Cancel import
-              </Button>
+              {canCancel && (
+                <Button variant="outline" onClick={onCancel} disabled={isRetrying}>
+                  Cancel import
+                </Button>
+              )}
             </>
-          ) : presentation.active ? (
+          ) : presentation.active && canCancel ? (
             <Button variant="outline" onClick={onCancel}>
               <MinusCircle aria-hidden />
               Cancel import

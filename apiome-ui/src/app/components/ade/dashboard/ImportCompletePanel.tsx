@@ -17,13 +17,19 @@ import {
   ShieldX,
   Undo2
 } from 'lucide-react';
-import { getImportStatus, rollbackCompletedImport } from '../../../../../lib/db/import-actions';
+import { localImportJobClient, type ImportJobClient } from '../import/importJobClient';
 import { buildDesignerEditorHref } from '../../../../../lib/external-links';
 import { buildImportErrorReport, getImportErrorReportFilename, type ImportErrorReport, type ImportStatusForReport } from '../../../../../lib/db/import-error-report';
 import { SchemaVersionScoringPanel } from './SchemaVersionScoringPanel';
 
 interface ImportCompletePanelProps {
   jobId: string;
+  /**
+   * Which job store to read (BLK-1.4). Defaults to the in-process worker's; a bulk batch's
+   * rows are REST jobs and pass `restImportJobClient`. *Undo import* is drawn only for a
+   * store that can roll a committed import back.
+   */
+  client?: ImportJobClient;
 }
 
 interface VerificationResult {
@@ -87,7 +93,7 @@ interface ImportSummary {
   verification?: VerificationResult;
 }
 
-export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps) {
+export default function ImportCompletePanel({ jobId, client = localImportJobClient }: ImportCompletePanelProps) {
   const router = useRouter();
   const [summary, setSummary] = useState<ImportSummary | null>(null);
   const [report, setReport] = useState<ImportErrorReport | null>(null);
@@ -99,7 +105,7 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const status = await getImportStatus(jobId) as ImportStatusResponse;
+        const status = (await client.getStatus(jobId)) as unknown as ImportStatusResponse;
         setState(status.state);
 
         // Surface the same failures the downloadable report contains (errors,
@@ -147,7 +153,7 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
     };
 
     fetchStatus();
-  }, [jobId]);
+  }, [jobId, client]);
 
   const handleViewInCanvas = () => {
     if (summary?.projectId && summary?.versionId) {
@@ -159,11 +165,11 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
   };
 
   const handleRollbackCompleted = async () => {
-    if (!jobId) return;
+    if (!jobId || !client.rollbackCompleted) return;
     setIsRollingBack(true);
     setRollbackError(null);
     try {
-      const result = await rollbackCompletedImport(jobId);
+      const result = await client.rollbackCompleted(jobId);
       if (result.success) {
         setState('rolled-back');
       } else {
@@ -179,7 +185,7 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
 
   const handleDownloadErrorReport = async () => {
     try {
-      const status = await getImportStatus(jobId);
+      const status = await client.getStatus(jobId);
       const exportedAt = new Date().toISOString();
       const report = buildImportErrorReport(status as ImportStatusForReport, exportedAt);
       const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
@@ -559,7 +565,7 @@ export default function ImportCompletePanel({ jobId }: ImportCompletePanelProps)
                 View on Canvas
               </Button>
             )}
-            {isSuccess && !isDryRun && summary?.projectId && !isRolledBack && (
+            {isSuccess && !isDryRun && summary?.projectId && !isRolledBack && client.rollbackCompleted && (
               <Button
                 variant="outline"
                 className="flex items-center gap-2 text-warn hover:bg-warn-soft"

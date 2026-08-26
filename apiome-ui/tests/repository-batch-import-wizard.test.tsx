@@ -28,13 +28,23 @@ import 'jest-axe/extend-expect';
 import { RepositoryBulkImportPanel } from '@/app/components/ade/dashboard/repositories/RepositoryBulkImportPanel';
 import type { BulkPlan } from '@/app/components/ade/dashboard/catalog/bulkImportModel';
 
+// The per-item panels are stubbed; what they must prove here is that a row hands them a job
+// id *and* the REST job client — a bulk row is a REST job the worker store has never heard of.
 jest.mock('@/app/components/ade/dashboard/ImportExecutionPanel', () => ({
   __esModule: true,
-  default: ({ jobId }: { jobId: string }) => <div data-testid="execution-panel">{jobId}</div>,
+  default: ({ jobId, client }: { jobId: string; client?: { kind: string } }) => (
+    <div data-testid="execution-panel" data-client={client?.kind}>
+      {jobId}
+    </div>
+  ),
 }));
 jest.mock('@/app/components/ade/dashboard/ImportCompletePanel', () => ({
   __esModule: true,
-  default: ({ jobId }: { jobId: string }) => <div data-testid="complete-panel">{jobId}</div>,
+  default: ({ jobId, client }: { jobId: string; client?: { kind: string } }) => (
+    <div data-testid="complete-panel" data-client={client?.kind}>
+      {jobId}
+    </div>
+  ),
 }));
 
 const ORDERS = 'openapi/orders.yaml';
@@ -495,7 +505,10 @@ describe('verify, then apply', () => {
     await waitFor(() => expect(button('Next: Apply →')).toBeEnabled(), RUN_TIMEOUT);
 
     fireEvent.click(screen.getByTestId(`catalog-bulk-import-toggle-${ORDERS}`));
-    expect(screen.getByTestId('complete-panel')).toHaveTextContent('job-1');
+    const panel = screen.getByTestId('complete-panel');
+    expect(panel).toHaveTextContent('job-1');
+    // Read through the REST proxy: the worker store would answer "Job not found".
+    expect(panel).toHaveAttribute('data-client', 'rest');
   });
 
   it('refuses a stale plan with the drift named, and Re-plan starts over', async () => {

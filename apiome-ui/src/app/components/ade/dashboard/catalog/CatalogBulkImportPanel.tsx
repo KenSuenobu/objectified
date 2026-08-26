@@ -7,6 +7,7 @@ import { Button } from '../../../ui/Button';
 import { FormatPill } from '../../../ui/catalog/FormatPill';
 import ImportExecutionPanel from '../ImportExecutionPanel';
 import ImportCompletePanel from '../ImportCompletePanel';
+import { restImportJobClient } from '../../import/importJobClient';
 import {
   BULK_TERMINAL_STATES,
   bulkErrorText,
@@ -109,14 +110,22 @@ function isLive(state: string): boolean {
  *
  * A running job gets `ImportExecutionPanel`, a completed one `ImportCompletePanel` — the two
  * surfaces the single-file wizard already draws, so per-item progress in a batch is the same
- * object as progress for one import rather than a smaller copy of it.
+ * object as progress for one import rather than a smaller copy of it. The rows are REST jobs,
+ * so the panels read them through `restImportJobClient` rather than the in-process worker's
+ * store, which has never heard of them.
  */
 function BulkRowJob({ row }: { row: BulkResultRow }) {
   if (!row.jobId) return null;
   if (row.state === 'completed') {
-    return <ImportCompletePanel jobId={row.jobId} />;
+    return <ImportCompletePanel jobId={row.jobId} client={restImportJobClient} />;
   }
-  return <ImportExecutionPanel jobId={row.jobId} isReviewing={!isLive(row.state)} />;
+  return (
+    <ImportExecutionPanel
+      jobId={row.jobId}
+      isReviewing={!isLive(row.state)}
+      client={restImportJobClient}
+    />
+  );
 }
 
 export function CatalogBulkImportPanel({
