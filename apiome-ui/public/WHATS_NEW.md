@@ -42,6 +42,7 @@ We continue to improve the platform based on your feedback with improvements and
   - Fixing durability of import process, added extra tests to REST service test suite
   - Fixing bulk import functionality:
     - Now includes the ability to bulk import into existing or new projects without having to validate all selections
+    - Visual indicator of the bulk import is now implemented properly
 - MCP:
   - Hardens tool array emit for LLM tool summary
 

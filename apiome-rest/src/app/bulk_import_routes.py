@@ -35,7 +35,7 @@ import asyncio
 import base64
 import binascii
 import uuid
-from typing import Any, Dict, List, Literal, Optional, Tuple
+from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
@@ -50,6 +50,12 @@ from .bulk_import_reconciliation import (
     reconcile_item,
     resolve_version_policy,
 )
+from .bulk_import_selection import (
+    NOT_AN_ITEM_ROOT,
+    normalize_selection_paths,
+    partition_requested_roots,
+    repository_relative_path,
+)
 from .bulk_intake import (
     BulkGroup,
     BulkPlan,
@@ -61,7 +67,13 @@ from .bulk_intake import (
 from .config import settings
 from .database import db
 from .git_import_routes import resolve_stored_git_token
-from .git_intake import GitFilesetResult, GitIntakeError, GitSelector, fetch_git_fileset
+from .git_intake import (
+    GitFilesetResult,
+    GitIntakeError,
+    GitSelector,
+    fetch_git_files,
+    fetch_git_fileset,
+)
 from .import_export_quality_policy import QualityGateError, enforce_import_quality_gate
 from .intake_error_taxonomy import descriptor_for
 from .models import (
@@ -113,6 +125,25 @@ class BulkImportGitSelector(BaseModel):
         description=(
             "Path or glob selecting the files to consider — a directory ('specs/'), an "
             "exact file, or a glob ('**/*.yaml'). Empty selects the whole tree."
+        ),
+    )
+    paths: Optional[List[str]] = Field(
+        default=None,
+        description=(
+            "Import exactly these repository-relative files — what a reader ticked in the "
+            "repository's Files tab (BLK-1.5). **Replaces 'path'**, which is ignored when this "
+            "is set: instead of reading a selection, the batch reads these files plus every "
+            "document they reference, following '$ref' targets, protobuf imports and XSD/WSDL "
+            "locations until the set closes over itself. A ticked 'orders.proto' therefore "
+            "arrives with the 'common/types.proto' it imports, wherever in the repository that "
+            "lives, and a monorepo whose whole tree is over the intake limit can still have "
+            "four files imported from it.\n\n"
+            "Members are keyed from the repository root, so an item's path is the one the "
+            "Files tab shows. A listed path that is not an item root — a shared type file "
+            "another listed item already compiles — is reported in 'skipped' with reason "
+            "'not-an-item-root' rather than dropped silently, and a path the commit no longer "
+            "holds is skipped rather than failing the batch. Omitted (or empty) reads 'path' "
+            "as a selection, which is the unchanged behaviour."
         ),
     )
     repository_id: Optional[str] = Field(
@@ -637,20 +668,35 @@ async def _resolve_payload(
         repository_id=selector.repository_id,
         linked_account_id=selector.linked_account_id,
     )
+    # Two different reads, because ticked files and a selection are different questions.
+    #
+    # A selection ("specs/", "**/*.yaml") is answered by reading everything it matches. Ticked
+    # files cannot be: narrowing the read to their shared directory drops the siblings they
+    # compile — `protos/orders/orders.proto` imports `protos/common/types.proto`, one level up —
+    # and *not* narrowing it means reading the whole tree, which a monorepo refuses outright
+    # with INPUT_TOO_LARGE however small the ticked files are. `fetch_git_files` reads from the
+    # other end instead: the ticked files, then whatever they reference, until the set closes.
+    requested_paths = normalize_selection_paths(selector.paths)
+    git_selector = GitSelector(
+        repo_url=selector.repo_url,
+        ref=selector.ref,
+        path=selector.path or "",
+        root=None,
+    )
     try:
-        result = await asyncio.to_thread(
-            fetch_git_fileset,
-            GitSelector(
-                repo_url=selector.repo_url,
-                ref=selector.ref,
-                path=selector.path or "",
-                root=None,
-            ),
-            access_token=token,
-            # A repository holding several independent specs has no single root, which
-            # is the premise here rather than a fault: the planner resolves one per item.
-            require_root=False,
-        )
+        if requested_paths:
+            result = await asyncio.to_thread(
+                fetch_git_files, git_selector, requested_paths, access_token=token
+            )
+        else:
+            result = await asyncio.to_thread(
+                fetch_git_fileset,
+                git_selector,
+                access_token=token,
+                # A repository holding several independent specs has no single root, which
+                # is the premise here rather than a fault: the planner resolves one per item.
+                require_root=False,
+            )
     except GitIntakeError as exc:
         code = getattr(exc, "code", "SOURCE_UNREACHABLE")
         status = {
@@ -893,13 +939,90 @@ def _item_git_source(
     )
 
 
-def _plan_payload(members: Dict[str, str], *, source_label: str) -> BulkPlan:
-    """Partition members into items, mapping planner failures onto HTTP errors."""
+def _plan_payload(
+    members: Dict[str, str], *, source_label: str, max_items: Optional[int] = None
+) -> BulkPlan:
+    """Partition members into items, mapping planner failures onto HTTP errors.
+
+    Args:
+        members: The unpacked payload.
+        source_label: Label for the payload, appended to planner errors.
+        max_items: Ceiling override. Defaults to the deployment ceiling. A ticked-files
+            request (BLK-1.5) passes one high enough to never truncate, because the ceiling
+            has to apply to the *ticked* items rather than to everything the read happened to
+            fetch — otherwise a file ticked in a large directory could be cut before it was
+            ever considered.
+
+    Returns:
+        The plan.
+    """
     where = f" ({source_label})" if source_label else ""
     try:
-        return plan_bulk_import(members, max_items=_max_items(), where=where)
+        return plan_bulk_import(
+            members, max_items=_max_items() if max_items is None else max_items, where=where
+        )
     except ValueError as exc:
         raise _http_error("SOURCE_SELECTION_EMPTY", str(exc), 422) from exc
+
+
+def _requested_paths(body: BulkImportSourceRequest) -> Tuple[str, ...]:
+    """The repository-relative files this request ticked, normalized (BLK-1.5)."""
+    return normalize_selection_paths(body.git.paths) if body.git else ()
+
+
+def _narrow_to_requested(
+    plan: BulkPlan,
+    *,
+    requested: Sequence[str],
+    git_result: Optional[GitFilesetResult],
+) -> Tuple[List[BulkGroup], List[BulkImportSkippedMember], bool, int]:
+    """Keep only the planned items whose root is a file the reader ticked (BLK-1.5).
+
+    Grouping has already run over the whole fetched selection, so each kept item still carries
+    the siblings it compiles — narrowing here removes *items*, never members. A ticked path
+    that is no item's root is reported rather than dropped: it is almost always a shared type
+    file another item already compiles, and saying so is the difference between a batch that
+    explains itself and one that quietly imports fewer things than were asked for.
+
+    Args:
+        plan: The plan over the whole fetched selection, built without truncation.
+        requested: Normalized repository-relative paths the reader ticked. Empty means no
+            narrowing, and everything is returned unchanged.
+        git_result: The repository selection, needed to re-anchor member paths onto the
+            repository root; ``None`` for an archive upload, which cannot tick files.
+
+    Returns:
+        ``(groups, extra_skipped, truncated, total_items)`` — the items to plan, the rows to
+        add to ``skipped``, whether the batch ceiling cut the ticked set, and how many ticked
+        items were found before that cut.
+    """
+    if not requested or git_result is None:
+        return list(plan.groups), [], plan.truncated, plan.total_groups
+
+    prefix = git_result.provenance.path
+    roots = [
+        (group.key, repository_relative_path(prefix, group.root_path)) for group in plan.groups
+    ]
+    kept_keys, unmatched = partition_requested_roots(roots, requested)
+    by_key = {group.key: group for group in plan.groups}
+    root_by_key = dict(roots)
+    kept = [by_key[key] for key in kept_keys]
+
+    extra = [
+        BulkImportSkippedMember(path=path, reason=NOT_AN_ITEM_ROOT) for path in unmatched
+    ]
+
+    # The ceiling applies to what was ticked, not to what the read fetched.
+    ceiling = _max_items()
+    total = len(kept)
+    truncated = total > ceiling
+    if truncated:
+        extra.extend(
+            BulkImportSkippedMember(path=root_by_key[group.key], reason="over-item-limit")
+            for group in kept[ceiling:]
+        )
+        kept = kept[:ceiling]
+    return kept, extra, truncated, total
 
 
 # ---------------------------------------------------------------------------
@@ -955,7 +1078,18 @@ async def plan_bulk_import_payload(
     members, label, git_result = await _resolve_payload(
         body, tenant_id=tenant_id, user_id=user_id
     )
-    plan = _plan_payload(members, source_label=label)
+    requested = _requested_paths(body)
+    plan = _plan_payload(
+        members,
+        source_label=label,
+        # Ticked files (BLK-1.5) group over the whole fetched selection and are capped after
+        # narrowing, so grouping must not truncate first. One item per member is the ceiling
+        # nothing can exceed.
+        max_items=len(members) if requested else None,
+    )
+    groups, narrowed_skipped, truncated, total_items = _narrow_to_requested(
+        plan, requested=requested, git_result=git_result
+    )
 
     # Reconciliation (BLK-1.2): the plan's other half — which of these items is a new version
     # of something the tenant already has. Both steps are synchronous DB work, so they run off
@@ -964,7 +1098,7 @@ async def plan_bulk_import_payload(
     policy = await asyncio.to_thread(_resolve_plan_policy, body, tenant_id=tenant_id)
     resolutions = await asyncio.to_thread(
         _reconcile_groups,
-        plan.groups,
+        groups,
         tenant_id=tenant_id,
         policy=policy.policy,
         git_result=git_result,
@@ -972,16 +1106,16 @@ async def plan_bulk_import_payload(
 
     items = [
         _plan_item(group, resolved, include_document=body.include_documents)
-        for group, resolved in zip(plan.groups, resolutions)
+        for group, resolved in zip(groups, resolutions)
     ]
     skipped = [
         BulkImportSkippedMember(path=entry.path, reason=entry.reason) for entry in plan.skipped
-    ]
+    ] + narrowed_skipped
     return BulkImportPlanResponse(
         items=items,
         skipped=skipped,
-        truncated=plan.truncated,
-        total_items=plan.total_groups,
+        truncated=truncated,
+        total_items=total_items,
         max_items=_max_items(),
         source_label=label,
         git_source=(
@@ -1024,14 +1158,23 @@ async def start_bulk_import(
     members, label, git_result = await _resolve_payload(
         body, tenant_id=tenant_id, user_id=user_id
     )
-    plan = _plan_payload(members, source_label=label)
-    by_key = {group.key: group for group in plan.groups}
+    requested = _requested_paths(body)
+    plan = _plan_payload(
+        members, source_label=label, max_items=len(members) if requested else None
+    )
+    # The submit re-plans the same payload the plan endpoint described, so it has to narrow it
+    # the same way — otherwise `keys` would be checked against a different item set than the
+    # one the reader was shown.
+    groups, narrowed_skipped, _truncated, _total = _narrow_to_requested(
+        plan, requested=requested, git_result=git_result
+    )
+    by_key = {group.key: group for group in groups}
 
     requested_keys = [key.strip() for key in body.keys if key and key.strip()]
     selected: List[Tuple[str, Optional[BulkGroup]]] = (
         [(key, by_key.get(key)) for key in requested_keys]
         if requested_keys
-        else [(group.key, group) for group in plan.groups]
+        else [(group.key, group) for group in groups]
     )
 
     items: List[BulkImportStartItem] = []
@@ -1056,7 +1199,8 @@ async def start_bulk_import(
         skipped=[
             BulkImportSkippedMember(path=entry.path, reason=entry.reason)
             for entry in plan.skipped
-        ],
+        ]
+        + narrowed_skipped,
         summary=BulkImportStartSummary(
             requested=len(items), accepted=accepted, failed=len(items) - accepted
         ),

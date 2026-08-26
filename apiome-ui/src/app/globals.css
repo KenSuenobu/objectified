@@ -23334,6 +23334,73 @@ button.cid-entity__head {
   margin-inline-start: auto;
 }
 
+/* ---- Files: the ticked-files batch overlay (BLK-1.5) --------------------- */
+
+/* A note that leads with an icon. `.repo-det-note` is text-only — it sets a size and a
+   colour and nothing else — so an icon placed in one renders at its natural size and stacks
+   above the sentence. This is the same inline-flex + sized-glyph treatment
+   `.repo-files-branchbar__note` gives the branch bar, so the two read alike. */
+.repo-bulk-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.repo-bulk-note > svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex: none;
+}
+
+/* One planned spec, read left to right as "this file → this outcome → this target →
+   this version → why". The path takes the slack so the outcome chips stay aligned down
+   the column, which is what makes a twelve-row batch scannable. */
+.repo-bulk-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-1);
+  border-block-end: 1px solid var(--border);
+}
+
+.repo-bulk-row:last-child {
+  border-block-end: 0;
+}
+
+.repo-bulk-row__path {
+  flex: 1 1 16rem;
+  min-inline-size: 0;
+}
+
+.repo-bulk-row__target,
+.repo-bulk-row__why {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+.repo-bulk-row__target svg {
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+}
+
+.repo-bulk-row__version {
+  font-size: var(--text-sm);
+}
+
+/* The "why it matched" clause is the first thing to go when the row runs out of room —
+   the outcome and the target are what a reader is verifying. */
+@media (max-width: 60rem) {
+  .repo-bulk-row__why {
+    display: none;
+  }
+}
+
 /* ---- Files: the branch bar ---------------------------------------------- */
 
 .repo-files-branchbar {

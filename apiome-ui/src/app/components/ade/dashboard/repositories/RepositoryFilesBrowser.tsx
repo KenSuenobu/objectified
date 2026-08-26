@@ -18,8 +18,7 @@
  * 1. **Map & import replaced the whole tab.** Opening it unmounted the browser, so the reader
  *    lost their filters, their page and their selection; cancelling put them back at the top
  *    of an unfiltered list. It is an overlay now — the mockup's own `dialog--full` — so
- *    closing it returns to exactly the row that opened it. That is also what makes "Import
- *    selected, re-select the rest afterward" a workable instruction rather than an apology.
+ *    closing it returns to exactly the row that opened it.
  * 2. **The regex silently disabled the preset.** The endpoint applies a regex *or* a
  *    preset-and-glob; the toolbar disabled the glob field but left the preset live, so a
  *    reader could pick "OpenAPI" while a regex was set and watch nothing happen.
@@ -28,9 +27,17 @@
  *    response object, so a silent re-read wiped a selection the reader had just made. It now
  *    keys on the identity of the result *set* — the branch, the filters and the offset —
  *    which is the thing that actually invalidates a selection.
+ *
+ * ### A multi-row selection is its own request (BLK-1.5)
+ *
+ * Map & import maps **one** specification at a time, so ticking twelve rows used to open it on
+ * the first file and tell the reader to re-select the rest afterward. Ticking more than one row
+ * now offers *Import Bulk Items* instead — {@link RepositoryBulkImportPanel}, which sends the
+ * ticked paths to the batch endpoints as `git.paths` — and the apology is gone with the flow
+ * that needed it.
  */
 
-import { FileCode2, GitCommitHorizontal, Loader2, RefreshCw, Upload } from 'lucide-react';
+import { FileCode2, GitCommitHorizontal, Layers, Loader2, RefreshCw, Upload } from 'lucide-react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -42,6 +49,7 @@ import { FormatPill } from '@/app/components/ui/catalog/FormatPill';
 import { cn } from '@lib/utils';
 import { RepositoryFileDetail } from '@/app/components/ade/dashboard/repositories/RepositoryFileDetail';
 import { RepositoryFileImportMapping } from '@/app/components/ade/dashboard/repositories/RepositoryFileImportMapping';
+import { RepositoryBulkImportPanel } from '@/app/components/ade/dashboard/repositories/RepositoryBulkImportPanel';
 import { repositoryFileQualityBadge } from '@/app/utils/repository-file-quality';
 import type { RepositoryFileStagedImportTarget } from '@/app/components/ade/dashboard/repositories/repositoryFileStagedImport';
 import {
@@ -61,7 +69,6 @@ import {
   RepositoryFileFilters,
   branchFileCountLine,
   formatFileBytes,
-  importSelectedNotice,
   repositoryFileConfidence,
   repositoryFilesQuery,
   repositoryFilesShowingLine,
@@ -193,6 +200,8 @@ export function RepositoryFilesBrowser({
   const [stagedImportTarget, setStagedImportTarget] =
     useState<RepositoryFileStagedImportTarget | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set<string>());
+  /** Repository-relative paths the reader ticked, held while the batch overlay is open. */
+  const [bulkPaths, setBulkPaths] = useState<string[] | null>(null);
   const selectAllRef = useRef<HTMLInputElement | null>(null);
 
   /**
@@ -395,6 +404,27 @@ export function RepositoryFilesBrowser({
     />
   ) : null;
 
+  /**
+   * The batch overlay. Rendered beside the list for the same reason the Map & import overlay
+   * is: closing it must put the reader back on the selection that opened it.
+   */
+  const bulkOverlay = bulkPaths ? (
+    <RepositoryBulkImportPanel
+      repositoryId={repositoryId}
+      repoUrl={githubWebBase}
+      branch={branch}
+      paths={bulkPaths}
+      open
+      onOpenChange={(next) => {
+        if (!next) setBulkPaths(null);
+      }}
+      onImported={() => {
+        setSelectedIds(new Set<string>());
+        void fetchFiles();
+      }}
+    />
+  ) : null;
+
   if (detailFile) {
     return (
       <>
@@ -410,6 +440,7 @@ export function RepositoryFilesBrowser({
           onContinueStagedImport={() => setImportFile(detailFile)}
         />
         {importOverlay}
+        {bulkOverlay}
       </>
     );
   }
@@ -433,9 +464,12 @@ export function RepositoryFilesBrowser({
   const importSelected = () => {
     const chosen = pageFiles.filter((f) => selectedIds.has(f.id));
     if (chosen.length === 0) return;
-    const notice = importSelectedNotice(chosen.map((f) => f.path));
-    if (notice) toast.message(notice);
     setImportFile(chosen[0]);
+  };
+  const importBulkSelected = () => {
+    const chosen = pageFiles.filter((f) => selectedIds.has(f.id));
+    if (chosen.length < 2) return;
+    setBulkPaths(chosen.map((f) => f.path));
   };
 
   return (
@@ -519,16 +553,31 @@ export function RepositoryFilesBrowser({
               <Loader2 className="size-4 shrink-0 animate-spin text-fg-muted" aria-hidden />
             ) : null}
             <div className="repo-det-table__bar-end">
-              <Button
-                type="button"
-                size="sm"
-                disabled={selectedIds.size === 0}
-                onClick={importSelected}
-                data-testid="repository-import-selected"
-              >
-                <Upload aria-hidden />
-                Import selected
-              </Button>
+              {/* A multi-row selection is a different shape of request, not a bigger version of
+                  the same one: the wizard maps one spec at a time, so N ticked rows get the
+                  batch surface instead of the wizard-plus-an-apology. */}
+              {selectedIds.size > 1 ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={importBulkSelected}
+                  data-testid="repository-import-bulk"
+                >
+                  <Layers aria-hidden />
+                  Import Bulk Items ({selectedIds.size})
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={selectedIds.size === 0}
+                  onClick={importSelected}
+                  data-testid="repository-import-selected"
+                >
+                  <Upload aria-hidden />
+                  Import selected
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="ghost"
@@ -682,6 +731,7 @@ export function RepositoryFilesBrowser({
       )}
 
       {importOverlay}
+      {bulkOverlay}
     </div>
   );
 }

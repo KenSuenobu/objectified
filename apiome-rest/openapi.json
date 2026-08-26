@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.162.0",
+    "version": "1.162.2",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -72831,6 +72831,23 @@
             "default": "",
             "example": "/resources/{id}"
           },
+          "paths": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "description": "Bulk Import Git Selector schema."
+              },
+              {
+                "type": "null",
+                "description": "Bulk Import Git Selector schema."
+              }
+            ],
+            "title": "Paths",
+            "description": "Import exactly these repository-relative files \u2014 what a reader ticked in the repository's Files tab (BLK-1.5). **Replaces 'path'**, which is ignored when this is set: instead of reading a selection, the batch reads these files plus every document they reference, following '$ref' targets, protobuf imports and XSD/WSDL locations until the set closes over itself. A ticked 'orders.proto' therefore arrives with the 'common/types.proto' it imports, wherever in the repository that lives, and a monorepo whose whole tree is over the intake limit can still have four files imported from it.\n\nMembers are keyed from the repository root, so an item's path is the one the Files tab shows. A listed path that is not an item root \u2014 a shared type file another listed item already compiles \u2014 is reported in 'skipped' with reason 'not-an-item-root' rather than dropped silently, and a path the commit no longer holds is skipped rather than failing the batch. Omitted (or empty) reads 'path' as a selection, which is the unchanged behaviour."
+          },
           "repository_id": {
             "anyOf": [
               {
@@ -77996,7 +78013,7 @@
             "type": "string",
             "title": "Operation Uuid",
             "description": "The apiome.path_operation UUID.",
-            "example": "c3173109-e7dc-4d02-9c71-3267a3458a77"
+            "example": "eb2feedd-217c-4b32-aec8-9c79db4e2624"
           },
           "method": {
             "type": "string",
@@ -80360,7 +80377,7 @@
             "type": "string",
             "title": "Generated At",
             "description": "Statement timestamp (ISO-8601, UTC).",
-            "example": "2026-08-26T13:05:32Z"
+            "example": "2026-08-26T14:07:25Z"
           },
           "envelope": {
             "additionalProperties": true,
@@ -115933,7 +115950,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-26T13:05:32Z"
+            "example": "2026-08-26T14:07:25Z"
           }
         },
         "additionalProperties": false,
@@ -130987,14 +131004,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-26T13:05:32Z"
+            "example": "2026-08-26T14:07:25Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-26T13:05:32Z"
+            "example": "2026-08-26T14:07:25Z"
           },
           "outcome": {
             "anyOf": [
