@@ -22,6 +22,8 @@ from apiome_cli.cli_context import (
 from apiome_cli.client import api_paths
 from apiome_cli.client.errors import exit_on_api_error
 from apiome_cli.client.bulk_import import (
+    BulkPlanStale,
+    build_bulk_apply_body,
     build_bulk_source_body,
     fetch_bulk_plan,
     fetch_bulk_status,
@@ -48,12 +50,15 @@ from apiome_cli.extract.openapi_info import extract_info_metadata
 from apiome_cli.extract.slug import slugify_project_name, slugify_version
 from apiome_cli.exit_codes import EXIT_ERROR, EXIT_SUCCESS, EXIT_USAGE
 from apiome_cli.import_.bulk import (
+    OVERRIDE_HELP,
     bulk_exit_code,
     emit_bulk_plan,
     emit_bulk_results,
+    emit_plan_drift,
     emit_skipped_files,
     load_bulk_payload,
     merge_bulk_results,
+    parse_overrides,
 )
 from apiome_cli.import_.detect import (
     DocumentKind,
@@ -1400,6 +1405,11 @@ def import_auto(
             "one import per spec. PATH must be a .zip/.tar.gz archive or a directory."
         ),
     ),
+    override: list[str] = typer.Option(
+        [],
+        "--override",
+        help=f"{OVERRIDE_HELP} (--bulk only)",
+    ),
 ) -> None:
     """Detect document format from headers and run the matching import."""
     import_timeout_override = import_timeout
@@ -1415,8 +1425,13 @@ def import_auto(
             wait=wait,
             poll_interval=poll_interval,
             no_progress=no_progress,
+            overrides=list(override or []),
         )
         return
+
+    if override:
+        typer.echo("--override applies to bulk imports; add --bulk.", err=True)
+        raise typer.Exit(EXIT_USAGE)
 
     try:
         document = load_import_document(
@@ -1556,8 +1571,9 @@ def _run_bulk_import(
     wait: bool,
     poll_interval: float,
     no_progress: bool,
+    overrides: list[str] | None = None,
 ) -> None:
-    """Import every independent spec in an archive or directory (MFI-29.5).
+    """Import every independent spec in an archive or directory (MFI-29.5, BLK-1.3).
 
     Three calls, mirroring what the wizard does: plan the payload so the user is told
     what will be created, start one job per spec, then roll the jobs up into a per-item
@@ -1565,18 +1581,31 @@ def _run_bulk_import(
     quality policy — is one failed row; the rest of the batch still imports, and the
     exit code reports the failure rather than hiding it.
 
+    The plan is applied as the plan: each item goes where its reconciliation resolved, and
+    ``--override`` moves the ones the reviewer disagrees with. Because the command plans and
+    applies in the same run, it echoes the plan's fingerprint back, so a batch whose tenant
+    changed underneath it is refused with the drift named rather than quietly importing
+    something else.
+
     Args:
         ctx: The Click/Typer context (settings, output mode).
         source: Path to a ``.zip`` / ``.tar.gz`` archive or a directory of specs.
-        dry_run: Validate and plan each spec without persisting.
+        dry_run: Verify each spec — resolve and validate it — without persisting.
         import_timeout: HTTP timeout, and the wall-clock budget for the wait loop.
         wait: Poll the started jobs until they finish.
         poll_interval: Seconds between status polls.
         no_progress: Suppress progress lines on stderr.
+        overrides: Raw ``KEY=SPEC`` per-item decisions from ``--override``.
     """
     settings = settings_from_context(ctx)
     require_api_key(settings)
     json_mode = json_mode_from_context(ctx)
+
+    try:
+        parsed_overrides = parse_overrides(overrides)
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(EXIT_USAGE) from exc
 
     try:
         payload = load_bulk_payload(source)
@@ -1607,7 +1636,24 @@ def _run_bulk_import(
     if not no_progress and not json_mode:
         emit_bulk_plan(plan, json_mode=False)
 
-    started = start_bulk_import(client, tenant_slug, {**body, "dry_run": dry_run})
+    try:
+        started = start_bulk_import(
+            client,
+            tenant_slug,
+            build_bulk_apply_body(
+                body,
+                overrides=parsed_overrides,
+                # The plan we just fetched *is* the plan being applied, so echoing its
+                # fingerprint costs nothing and turns a tenant that moved in between into a
+                # refusal with the rows named rather than a silent substitution.
+                plan_fingerprint=plan.get("plan_fingerprint"),
+                dry_run=dry_run,
+            ),
+        )
+    except BulkPlanStale as exc:
+        emit_plan_drift(exc.message, exc.drift, json_mode=json_mode)
+        raise typer.Exit(EXIT_USAGE) from exc
+
     refs = [
         {"key": str(item.get("key", "")), "job_id": str(item.get("job_id"))}
         for item in started.get("items") or []

@@ -11,7 +11,11 @@ must happen on the client:
   them (a batch where one item failed is not a success). The plan table leads with the
   server's BLK-1.2 reconciliation — whether each item would append a version to a project
   that already exists or create a new one — because a table that omits it describes an
-  empty tenant and cannot tell a re-import from a first import.
+  empty tenant and cannot tell a re-import from a first import. The result table carries the
+  BLK-1.3 answer to the same question: what each item was applied *as*, and what it turned
+  out to do;
+* parse ``--override KEY=SPEC`` into the per-item decisions the apply takes, so disagreeing
+  with one row of a twelve-row plan costs one flag rather than the batch.
 
 Everything here is pure apart from reading the directory: no HTTP, so the shapes are
 testable without a server.
@@ -191,6 +195,114 @@ def load_bulk_payload(source: str) -> BulkPayload:
     raise ValueError(f"{source!r} is not a file or directory.")
 
 
+# ---------------------------------------------------------------------------
+# Per-item overrides (BLK-1.3)
+# ---------------------------------------------------------------------------
+
+#: What a ``--override`` value may say about where an item goes.
+_OVERRIDE_MODES = {
+    "existing": "existing",
+    "append": "existing",
+    "new": "new",
+    "create": "new",
+}
+
+OVERRIDE_HELP = (
+    "Override where one item goes, as KEY=SPEC (repeatable). SPEC is 'new' (create a "
+    "project), 'existing' (append to the item's matched project), 'existing:PROJECT_ID' "
+    "(append to that project), and may end in '@VERSION' to name the version created. "
+    "'@VERSION' alone keeps the plan's choice and only sets the label. Items with no "
+    "override apply the plan as reviewed."
+)
+
+
+def parse_override(text: str) -> dict[str, Any]:
+    """Parse one ``KEY=SPEC`` override into the request entry the endpoint takes.
+
+    The grammar is small on purpose — a batch review is a list of yes/no decisions, and a
+    reviewer changing one row should not have to write JSON to do it::
+
+        specs/orders.yaml=new
+        specs/orders.yaml=existing
+        specs/orders.yaml=existing:9f2c…
+        specs/orders.yaml=existing:9f2c…@2.0.0
+        specs/orders.yaml=@2.0.0
+
+    Args:
+        text: One ``--override`` value.
+
+    Returns:
+        ``{"key": …}`` plus whichever of ``mode`` / ``project_id`` / ``version_id`` was given.
+
+    Raises:
+        ValueError: The value names no item, decides nothing, or uses a word that is neither
+            'new' nor 'existing'.
+    """
+    key, separator, spec = text.partition("=")
+    key = key.strip()
+    if not separator or not key:
+        raise ValueError(
+            f"{text!r} is not an override. Write it as KEY=SPEC, for example "
+            "'specs/orders.yaml=new'."
+        )
+
+    target, _, version = spec.strip().partition("@")
+    mode_token, _, project_id = target.strip().partition(":")
+    mode_token = mode_token.strip().lower()
+    project_id = project_id.strip()
+    version = version.strip()
+
+    entry: dict[str, Any] = {"key": key}
+    if mode_token:
+        try:
+            entry["mode"] = _OVERRIDE_MODES[mode_token]
+        except KeyError as exc:
+            raise ValueError(
+                f"{mode_token!r} in {text!r} is not a target: use 'new' to create a project "
+                "or 'existing' to append a version."
+            ) from exc
+    if project_id:
+        if entry.get("mode") == "new":
+            raise ValueError(
+                f"{text!r} asks to create a project and to append to {project_id!r}. "
+                "Choose one."
+            )
+        entry["mode"] = "existing"
+        entry["project_id"] = project_id
+    if version:
+        entry["version_id"] = version
+    if len(entry) == 1:
+        raise ValueError(
+            f"{text!r} decides nothing. Say 'new', 'existing[:PROJECT_ID]', or '@VERSION'."
+        )
+    return entry
+
+
+def parse_overrides(values: list[str] | None) -> list[dict[str, Any]]:
+    """Parse every ``--override`` value, refusing two decisions for one item.
+
+    Args:
+        values: The raw option values, or ``None``.
+
+    Returns:
+        The request's ``overrides`` list, in the order they were given.
+
+    Raises:
+        ValueError: Any value is malformed, or two of them name the same item.
+    """
+    entries: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for value in values or []:
+        entry = parse_override(value)
+        if entry["key"] in seen:
+            raise ValueError(
+                f"{entry['key']!r} is overridden twice; give one decision per item."
+            )
+        seen.add(entry["key"])
+        entries.append(entry)
+    return entries
+
+
 def _matched_slug(value: Any) -> str:
     """Render the project a planned item resolves to, or ``-`` when it is new (BLK-1.2)."""
     return str(value.get("slug") or "") if isinstance(value, dict) else "-"
@@ -223,12 +335,29 @@ _RESOLUTION_LABELS: tuple[tuple[str, str, str], ...] = (
     ("unresolved", "needing a choice", "needing a choice"),
 )
 
+def _short_action(value: Any) -> str:
+    """Render a resolution as the verb a narrow column can hold (BLK-1.3)."""
+    return {"append-version": "append", "create-project": "create"}.get(str(value or ""), "")
+
+
 _RESULT_COLUMNS: tuple[ListColumn, ...] = (
     ("Item", "key", None),
     ("State", "state", None),
+    # BLK-1.3: what the item was applied *as*. Without these the result table cannot tell a
+    # new project from a new version of one that already existed — which is the whole point
+    # of the batch reconciling before it applies.
+    ("Action", "resolution", _short_action),
     ("Destination", "target", None),
-    ("Created", "project_slug", None),
+    ("Project", "project_slug", None),
+    ("Version", "version_id", None),
     ("Detail", "detail", None),
+)
+
+#: How each destination reads in the summary's ``Destinations:`` line — the token a finished
+#: job reports, the token a started item carries until then, and the singular/plural nouns.
+_DESTINATION_LABELS: tuple[tuple[str, str, str, str], ...] = (
+    ("version-appended", "append-version", "new version", "new versions"),
+    ("project-created", "create-project", "new project", "new projects"),
 )
 
 
@@ -335,8 +464,10 @@ def merge_bulk_results(
         status: A parsed ``BulkImportStatusResponse``, or ``None`` when not waiting.
 
     Returns:
-        One row per item: ``key``, ``state``, ``target``, ``project_slug``, ``detail``,
-        and the taxonomy ``error`` when there is one.
+        One row per item: ``key``, ``state``, ``target``, ``project_slug``, ``detail``, the
+        BLK-1.3 apply fields (``resolution``, ``version_id``, ``target_project_id``,
+        ``overridden``, and the realized ``outcome`` once the job finished), and the taxonomy
+        ``error`` when there is one.
     """
     by_key: dict[str, dict[str, Any]] = {}
     for row in (status or {}).get("items") or []:
@@ -348,6 +479,16 @@ def merge_bulk_results(
         if not isinstance(item, dict):
             continue
         key = str(item.get("key", ""))
+        # BLK-1.3: the decision the submit reported for this item. It is the same on a failed
+        # row (where it is null) and on a dry run, which is what makes the verify table and
+        # the apply table the same table.
+        decided = {
+            "resolution": item.get("resolution"),
+            "target_project_id": item.get("target_project_id"),
+            "version_id": item.get("version_id"),
+            "overridden": bool(item.get("overridden")),
+            "resolution_detail": item.get("resolution_detail"),
+        }
         if item.get("state") == "failed":
             error = item.get("error") if isinstance(item.get("error"), dict) else None
             results.append(
@@ -357,8 +498,10 @@ def merge_bulk_results(
                     "state": "failed",
                     "target": item.get("predicted_target"),
                     "project_slug": None,
+                    "outcome": None,
                     "detail": _error_detail(error) or "did not start",
                     "error": error,
+                    **decided,
                 }
             )
             continue
@@ -371,8 +514,12 @@ def merge_bulk_results(
                     "state": "accepted",
                     "target": item.get("predicted_target"),
                     "project_slug": None,
+                    "outcome": None,
+                    # The job exists but has not been polled, so its state is all the
+                    # Detail column can say; the decision is in Action/Project/Version.
                     "detail": "started",
                     "error": None,
+                    **decided,
                 }
             )
             continue
@@ -384,11 +531,65 @@ def merge_bulk_results(
                 "state": job.get("state"),
                 "target": job.get("target") or item.get("predicted_target"),
                 "project_slug": job.get("project_slug"),
+                "outcome": job.get("outcome"),
                 "detail": _error_detail(error) or "",
                 "error": error,
+                **decided,
+                # The job's own version label is what was created; the submit's is what was
+                # asked for. Once the job has one, it is the truth.
+                "version_id": job.get("version_id") or decided["version_id"],
             }
         )
     return results
+
+
+def destination_summary_line(results: list[dict[str, Any]]) -> str:
+    """Render where the batch's items went — the BLK-1.3 half of the summary line.
+
+    Prefers each row's **realized** ``outcome``, so once the jobs finish the line states what
+    happened. Until then — a batch that was not waited on, or a dry run, which persists
+    nothing to read back — it falls back to the resolution each item was started with, which
+    is the same answer one tense earlier.
+
+    Args:
+        results: Rows from :func:`merge_bulk_results`.
+
+    Returns:
+        For example ``"Destinations: 2 new versions, 1 new project."``, or ``""`` when no row
+        got far enough to have a destination.
+    """
+    realized = [row.get("outcome") for row in results if row.get("outcome")]
+    tokens = realized or [
+        row.get("resolution")
+        for row in results
+        if row.get("resolution") and row.get("state") != "failed"
+    ]
+    parts = [
+        f"{count} {singular if count == 1 else plural}"
+        for realized_token, planned_token, singular, plural in _DESTINATION_LABELS
+        for count in [tokens.count(realized_token if realized else planned_token)]
+        if count
+    ]
+    return f"Destinations: {', '.join(parts)}." if parts else ""
+
+
+def emit_plan_drift(message: str, drift: list[dict[str, Any]], *, json_mode: bool) -> None:
+    """Report a refused batch: which rows moved since the plan was reviewed (BLK-1.3).
+
+    Args:
+        message: The server's summary of the refusal.
+        drift: The per-item drift rows.
+        json_mode: Emit the payload verbatim instead of prose.
+    """
+    if json_mode:
+        emit_json({"error": {"code": "TARGET_PLAN_STALE", "message": message}, "drift": drift})
+        return
+    typer.echo(message, err=True)
+    for row in drift:
+        typer.echo(f"  x {row.get('key')}: {row.get('detail') or ''}", err=True)
+    typer.echo(
+        "Nothing was imported. Re-run the command to plan and apply the batch again.", err=True
+    )
 
 
 def _error_detail(error: dict[str, Any] | None) -> str:
@@ -435,13 +636,27 @@ def emit_bulk_results(
     for row in failures:
         detail = row.get("detail") or "failed"
         typer.echo(f"  x {row.get('key')}: {detail}", err=True)
+    # The verify pass's reasons: a dry run's whole output is "what would this do, and why",
+    # and a table cell cannot hold the sentence that answers the second half.
+    if dry_run:
+        for row in results:
+            reason = row.get("resolution_detail")
+            if reason and row.get("state") != "failed":
+                typer.echo(f"  - {row.get('key')}: {reason}")
+
     verb = "validated" if dry_run else "imported"
-    parts = [f"{completed} {verb}"]
+    started = len(results) - failed if dry_run else completed
+    parts = [f"{started} {verb}"]
     if failed:
         parts.append(f"{failed} failed")
-    if pending:
+    if pending and not dry_run:
         parts.append(f"{pending} still running")
     typer.echo(f"Bulk import: {', '.join(parts)} of {len(results)} spec(s).")
+    # BLK-1.3: what the batch did to the tenant, not only that it did something. On a dry run
+    # this is the verify pass's answer — the same resolutions the apply would use.
+    line = destination_summary_line(results)
+    if line:
+        typer.echo(f"{'Would apply. ' if dry_run else ''}{line}")
 
 
 def bulk_exit_code(results: list[dict[str, Any]]) -> int:

@@ -12,6 +12,7 @@ import base64
 from typing import Any, Dict, List, Optional, Tuple
 
 import pytest
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from test_bulk_intake import (
     _ASYNCAPI_ORDERS,
@@ -220,6 +221,9 @@ def scheduled(monkeypatch) -> List[Dict[str, Any]]:
                 "source_kind": body.metadata.source_kind,
                 "name": body.metadata.project.name,
                 "slug": body.metadata.project.slug,
+                # BLK-1.3: which shape the item was submitted with, and as which version.
+                "project_id": body.metadata.project.project_id,
+                "version_id": body.metadata.version.version_id,
                 "options": body.metadata.options,
                 "filename": body.filename,
                 "document": base64.standard_b64decode(body.document_base64),
@@ -1103,6 +1107,427 @@ def test_submit_reports_skipped_files_alongside_the_started_items(scheduled) -> 
     assert body["skipped"] == [{"path": "README.md", "reason": "no-recognisable-format"}]
 
 
+# ---------------------------------------------- submit: apply with overrides (BLK-1.3)
+
+
+def _submit_repository(monkeypatch, members=None, **body: Any):
+    """Apply a repository batch against the in-memory repository client."""
+    _use_repository(monkeypatch, members or _MIXED_MEMBERS)
+    return client.post(
+        _SUBMIT, json={"git": {"repo_url": _REPO_URL, "ref": "main"}, **body}
+    )
+
+
+def _row(body: Dict[str, Any], key: str) -> Dict[str, Any]:
+    return next(item for item in body["items"] if item["key"] == key)
+
+
+def _seed_orders_project(catalog) -> None:
+    """The tenant already holds the project ``openapi/orders.yaml`` was imported into."""
+    catalog.add_project(
+        _ORDERS_PROJECT,
+        name="Orders API",
+        slug="orders-api",
+        versions=["1.0.0", "1.1.0"],
+        git_path="openapi/orders.yaml",
+    )
+
+
+def test_a_batch_applied_from_its_plan_produces_the_plans_resolutions(
+    monkeypatch, catalog, scheduled
+) -> None:
+    """AC 1: matched items gain a version on the right project; unmatched items create one."""
+    _seed_orders_project(catalog)
+
+    body = _submit_repository(monkeypatch).json()
+
+    appended = _row(body, "openapi/orders.yaml")
+    assert appended["resolution"] == "append-version"
+    assert appended["target_project_id"] == _ORDERS_PROJECT
+    assert appended["version_id"] == "1.2.0"
+    assert appended["overridden"] is False
+
+    created = _row(body, "events/shipping.asyncapi.yaml")
+    assert created["resolution"] == "create-project"
+    assert created["target_project_id"] is None
+    assert created["version_id"] == "1.0.0"
+
+    jobs = {job["slug"]: job for job in scheduled}
+    # The append is submitted as BLK-1.1's existing-project shape at the derived label — not
+    # as a fresh project at the old hardcoded 1.0.0.
+    assert jobs["orders-api"]["project_id"] == _ORDERS_PROJECT
+    assert jobs["orders-api"]["version_id"] == "1.2.0"
+    assert jobs["shipping-events"]["project_id"] is None
+    assert jobs["shipping-events"]["version_id"] == "1.0.0"
+
+
+def test_an_override_flips_one_item_to_create_and_leaves_the_rest_alone(
+    monkeypatch, catalog, scheduled
+) -> None:
+    """AC 2, one direction: append -> create, with every other item unaffected."""
+    _seed_orders_project(catalog)
+
+    body = _submit_repository(
+        monkeypatch, overrides=[{"key": "openapi/orders.yaml", "mode": "new"}]
+    ).json()
+
+    flipped = _row(body, "openapi/orders.yaml")
+    assert flipped["resolution"] == "create-project"
+    assert flipped["target_project_id"] is None
+    assert flipped["version_id"] == "1.0.0"
+    assert flipped["overridden"] is True
+
+    untouched = _row(body, "events/shipping.asyncapi.yaml")
+    assert untouched["resolution"] == "create-project"
+    assert untouched["overridden"] is False
+    assert body["summary"] == {"requested": 4, "accepted": 4, "failed": 0}
+    assert all(job["project_id"] is None for job in scheduled)
+
+
+def test_an_override_flips_one_item_to_append_to_a_named_project(
+    monkeypatch, catalog, scheduled
+) -> None:
+    """AC 2, the other direction: create -> append, onto a project the reviewer names."""
+    catalog.add_project(
+        _ORDERS_PROJECT, name="Shipping", slug="shipping", versions=["2.3.0"]
+    )
+
+    body = _submit_repository(
+        monkeypatch,
+        overrides=[
+            {
+                "key": "events/shipping.asyncapi.yaml",
+                "mode": "existing",
+                "project_id": _ORDERS_PROJECT,
+            }
+        ],
+    ).json()
+
+    flipped = _row(body, "events/shipping.asyncapi.yaml")
+    assert flipped["resolution"] == "append-version"
+    assert flipped["target_project_id"] == _ORDERS_PROJECT
+    # The label follows the *target* project's history, not the abandoned create's default.
+    assert flipped["version_id"] == "2.4.0"
+    assert flipped["overridden"] is True
+
+    job = next(job for job in scheduled if job["slug"] == "shipping-events")
+    assert job["project_id"] == _ORDERS_PROJECT
+    assert job["version_id"] == "2.4.0"
+    assert [_row(body, key)["overridden"] for key in ("openapi/orders.yaml",)] == [False]
+
+
+def test_an_override_can_carry_a_real_version_number_without_moving_the_item(
+    monkeypatch, catalog, scheduled
+) -> None:
+    _seed_orders_project(catalog)
+
+    body = _submit_repository(
+        monkeypatch,
+        overrides=[{"key": "openapi/orders.yaml", "version_id": "2.0.0"}],
+    ).json()
+
+    row = _row(body, "openapi/orders.yaml")
+    assert row["resolution"] == "append-version"
+    assert row["target_project_id"] == _ORDERS_PROJECT
+    assert row["version_id"] == "2.0.0"
+    assert next(job for job in scheduled if job["slug"] == "orders-api")["version_id"] == "2.0.0"
+
+
+def test_a_matched_catalog_item_is_appended_to_by_slug(
+    monkeypatch, catalog, scheduled
+) -> None:
+    """A catalog item takes a revision by slug; BLK-1.1 would refuse it by id."""
+    catalog.add_project(
+        _ORDERS_PROJECT,
+        name="orders",
+        slug="orders",
+        versions=["1.0.0"],
+        git_path="protos/orders/orders.proto",
+        publishable=False,
+    )
+
+    body = _submit_repository(monkeypatch).json()
+    row = _row(body, "protos/orders/orders.proto")
+
+    assert row["resolution"] == "append-version"
+    assert row["target_project_id"] == _ORDERS_PROJECT
+    assert row["version_id"] == "1.1.0"
+
+    job = next(job for job in scheduled if job["slug"] == "orders")
+    assert job["project_id"] is None
+    assert job["version_id"] == "1.1.0"
+
+
+def test_an_unresolved_item_fails_its_own_row_until_it_is_decided(
+    monkeypatch, catalog, scheduled
+) -> None:
+    catalog.tenant_policy = "always-ask"
+
+    body = _submit_repository(monkeypatch).json()
+
+    assert body["summary"] == {"requested": 4, "accepted": 0, "failed": 4}
+    assert {item["error"]["code"] for item in body["items"]} == {"TARGET_DECISION_REQUIRED"}
+    assert scheduled == []
+
+
+def test_an_override_decides_an_item_the_policy_left_unresolved(
+    monkeypatch, catalog, scheduled
+) -> None:
+    catalog.tenant_policy = "always-ask"
+
+    body = _submit_repository(
+        monkeypatch, overrides=[{"key": "openapi/orders.yaml", "mode": "new"}]
+    ).json()
+
+    assert _row(body, "openapi/orders.yaml")["state"] == "accepted"
+    assert _row(body, "events/shipping.asyncapi.yaml")["state"] == "failed"
+    assert len(scheduled) == 1
+
+
+def test_a_quality_block_still_fails_only_its_own_row_under_overrides(
+    monkeypatch, catalog, scheduled
+) -> None:
+    """AC 5: the batch guarantee, re-asserted now that items carry targets."""
+    _seed_orders_project(catalog)
+
+    async def _gate(*, source_kind: str, **kwargs: Any) -> None:
+        if source_kind == "asyncapi":
+            raise QualityGateError(_blocking_verdict())
+
+    monkeypatch.setattr(bulk_import_routes, "enforce_import_quality_gate", _gate)
+
+    body = _submit_repository(
+        monkeypatch, overrides=[{"key": "openapi/orders.yaml", "version_id": "3.0.0"}]
+    ).json()
+
+    assert body["summary"] == {"requested": 4, "accepted": 2, "failed": 2}
+    assert _row(body, "openapi/orders.yaml")["version_id"] == "3.0.0"
+    assert len(scheduled) == 2
+
+
+def test_a_target_the_importer_refuses_fails_only_its_own_row(monkeypatch, catalog) -> None:
+    """BLK-1.1 refuses by raising; for a batch that is one row, not the batch."""
+    _seed_orders_project(catalog)
+    started: List[str] = []
+
+    async def _schedule(tenant_slug, tenant_id, user_id, body):
+        if body.metadata.project.project_id:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "code": "TARGET_NOT_PUBLISHABLE",
+                    "category": "policy",
+                    "message": "Project is a catalog item.",
+                    "remediation": "Convert it first.",
+                    "retriable": False,
+                },
+            )
+        started.append(body.metadata.project.slug)
+        return SpecImportJobAccepted(
+            job_id=f"job-{len(started)}",
+            status_path=f"/v1/tenants/{tenant_slug}/imports/job-{len(started)}",
+        )
+
+    monkeypatch.setattr(bulk_import_routes, "schedule_spec_import", _schedule)
+
+    body = _submit_repository(monkeypatch).json()
+
+    refused = _row(body, "openapi/orders.yaml")
+    assert refused["state"] == "failed"
+    assert refused["error"]["code"] == "TARGET_NOT_PUBLISHABLE"
+    assert body["summary"] == {"requested": 4, "accepted": 3, "failed": 1}
+    assert len(started) == 3
+
+
+def test_an_override_for_an_item_the_batch_is_not_importing_is_reported(
+    monkeypatch, catalog, scheduled
+) -> None:
+    body = _submit_repository(
+        monkeypatch,
+        keys=["openapi/orders.yaml"],
+        overrides=[{"key": "events/orders.asyncapi.yaml", "mode": "new"}],
+    ).json()
+
+    assert body["summary"] == {"requested": 2, "accepted": 1, "failed": 1}
+    stray = _row(body, "events/orders.asyncapi.yaml")
+    assert stray["state"] == "failed"
+    assert stray["error"]["code"] == "FORMAT_UNRECOGNIZED"
+
+
+def test_a_contradictory_override_is_refused_before_anything_runs(scheduled) -> None:
+    response = client.post(
+        _SUBMIT,
+        json={
+            "document_base64": _archive(),
+            "overrides": [
+                {"key": "openapi/orders.yaml", "mode": "new", "project_id": _ORDERS_PROJECT}
+            ],
+        },
+    )
+
+    assert response.status_code == 422
+    assert scheduled == []
+
+
+def test_two_decisions_for_one_item_are_refused(scheduled) -> None:
+    response = client.post(
+        _SUBMIT,
+        json={
+            "document_base64": _archive(),
+            "overrides": [
+                {"key": "openapi/orders.yaml", "mode": "new"},
+                {"key": "openapi/orders.yaml", "mode": "existing"},
+            ],
+        },
+    )
+
+    assert response.status_code == 422
+    assert scheduled == []
+
+
+# ------------------------------------------------------ submit: verify pass (BLK-1.3)
+
+
+def test_dry_run_returns_the_same_resolutions_the_apply_would(
+    monkeypatch, catalog, scheduled
+) -> None:
+    """AC 3: verify and apply are demonstrably the same computation."""
+    _seed_orders_project(catalog)
+    overrides = [{"key": "events/orders.asyncapi.yaml", "mode": "new"}]
+
+    verified = _submit_repository(monkeypatch, dry_run=True, overrides=overrides).json()
+    applied = _submit_repository(monkeypatch, overrides=overrides).json()
+
+    fields = ("key", "resolution", "target_project_id", "version_id", "overridden")
+    assert [{field: row[field] for field in fields} for row in verified["items"]] == [
+        {field: row[field] for field in fields} for row in applied["items"]
+    ]
+    assert verified["dry_run"] is True
+    assert applied["dry_run"] is False
+
+
+def test_dry_run_persists_nothing(monkeypatch, catalog, scheduled) -> None:
+    """AC 3: no project, version or catalog write occurs.
+
+    Every mutating method of the ``db`` handle raises in this suite (see the ``catalog``
+    fixture), so reaching the assertions at all proves the batch wrote nothing; each item is
+    additionally handed to the importer with its dry-run flag set, which is what stops the
+    worker writing either.
+    """
+    _seed_orders_project(catalog)
+
+    body = _submit_repository(monkeypatch, dry_run=True).json()
+
+    assert all(job["options"].dry_run for job in scheduled)
+    assert _row(body, "openapi/orders.yaml")["resolution"] == "append-version"
+
+
+# ------------------------------------------------- submit: stale plans (BLK-1.3)
+
+
+def _plan_and_fingerprint(monkeypatch, members=None) -> str:
+    _use_repository(monkeypatch, members or _MIXED_MEMBERS)
+    body = client.post(_PLAN, json={"git": {"repo_url": _REPO_URL, "ref": "main"}}).json()
+    return body["plan_fingerprint"]
+
+
+def test_a_plan_hands_back_a_fingerprint_the_apply_accepts(
+    monkeypatch, catalog, scheduled
+) -> None:
+    _seed_orders_project(catalog)
+    fingerprint = _plan_and_fingerprint(monkeypatch)
+
+    response = _submit_repository(monkeypatch, plan_fingerprint=fingerprint)
+
+    assert response.status_code == 200, response.text
+    assert response.json()["summary"]["accepted"] == 4
+
+
+def test_a_plan_that_drifted_is_refused_with_the_drift_named_per_item(
+    monkeypatch, catalog, scheduled
+) -> None:
+    """AC 4: nothing is written, and the reviewer is told which rows moved."""
+    fingerprint = _plan_and_fingerprint(monkeypatch)
+    # Someone else imported this spec between the plan and the apply.
+    _seed_orders_project(catalog)
+
+    response = _submit_repository(monkeypatch, plan_fingerprint=fingerprint)
+
+    assert response.status_code == 409, response.text
+    detail = response.json()["detail"]
+    assert detail["code"] == "TARGET_PLAN_STALE"
+    drift = {row["key"]: row for row in detail["drift"]}
+    assert set(drift) == {"openapi/orders.yaml"}
+    assert drift["openapi/orders.yaml"]["change"] == "resolution"
+    assert "create-project" in drift["openapi/orders.yaml"]["reviewed"]
+    assert "append-version" in drift["openapi/orders.yaml"]["current"]
+    assert scheduled == []
+
+
+def test_a_drifted_item_the_batch_is_not_importing_does_not_block_it(
+    monkeypatch, catalog, scheduled
+) -> None:
+    fingerprint = _plan_and_fingerprint(monkeypatch)
+    _seed_orders_project(catalog)
+
+    response = _submit_repository(
+        monkeypatch,
+        keys=["events/shipping.asyncapi.yaml"],
+        plan_fingerprint=fingerprint,
+    )
+
+    assert response.status_code == 200, response.text
+    assert len(scheduled) == 1
+
+
+def test_a_match_the_policy_ignores_does_not_make_the_plan_stale(
+    monkeypatch, catalog, scheduled
+) -> None:
+    """Under 'always-create' the match is reported but never applied, so it cannot drift."""
+    catalog.tenant_policy = "always-create"
+    fingerprint = _plan_and_fingerprint(monkeypatch)
+    # A colleague creates a project this item now matches. The item still creates one.
+    _seed_orders_project(catalog)
+
+    response = _submit_repository(monkeypatch, plan_fingerprint=fingerprint)
+
+    assert response.status_code == 200, response.text
+    assert _row(response.json(), "openapi/orders.yaml")["resolution"] == "create-project"
+
+
+def test_a_fingerprint_this_server_did_not_issue_is_refused(monkeypatch, scheduled) -> None:
+    response = _submit_repository(monkeypatch, plan_fingerprint="not-a-fingerprint")
+
+    assert response.status_code == 422
+    assert response.json()["detail"]["code"] == "TARGET_PLAN_STALE"
+    assert scheduled == []
+
+
+def test_omitting_the_fingerprint_applies_whatever_re_planning_produces(
+    monkeypatch, catalog, scheduled
+) -> None:
+    _seed_orders_project(catalog)
+
+    response = _submit_repository(monkeypatch)
+
+    assert response.status_code == 200
+    assert len(scheduled) == 4
+
+
+def test_a_truncated_payload_reports_the_items_it_dropped_rather_than_importing_them(
+    monkeypatch, scheduled
+) -> None:
+    """AC: over the ceiling reports `truncated` rather than importing a silent prefix."""
+    monkeypatch.setattr(bulk_import_routes.settings, "bulk_import_max_items", 2)
+    members = {f"spec-{index}.asyncapi.yaml": _ASYNCAPI_ORDERS for index in range(4)}
+
+    body = client.post(_SUBMIT, json={"document_base64": _archive(members)}).json()
+
+    assert body["summary"]["requested"] == 2
+    assert {entry["reason"] for entry in body["skipped"]} == {"over-item-limit"}
+    assert len(scheduled) == 2
+
+
 # --------------------------------------------------------------------------- status
 
 
@@ -1154,6 +1579,8 @@ def test_status_rolls_up_a_batch(monkeypatch) -> None:
         "failed": 1,
         "running": 1,
         "not_found": 0,
+        "created": 1,
+        "appended": 0,
     }
     assert body["done"] is False
     assert body["items"][0]["target"] == "catalog"
@@ -1176,8 +1603,6 @@ def test_status_is_done_when_every_item_is_terminal(monkeypatch) -> None:
 
 
 def test_an_unknown_job_id_does_not_blind_the_rest_of_the_batch(monkeypatch) -> None:
-    from fastapi import HTTPException
-
     async def _get(tenant_slug: str, job_id: str) -> SpecImportJobStatus:
         if job_id == "missing":
             raise HTTPException(status_code=404, detail="Import job not found")
@@ -1196,9 +1621,123 @@ def test_an_unknown_job_id_does_not_blind_the_rest_of_the_batch(monkeypatch) -> 
         "failed": 0,
         "running": 0,
         "not_found": 1,
+        "created": 0,
+        "appended": 0,
     }
     assert body["items"][1]["state"] == "not-found"
     assert body["done"] is True
+
+
+def test_the_roll_up_names_each_items_realized_destination(monkeypatch, catalog) -> None:
+    """AC 6: the summary states what happened, read back from the catalog."""
+    catalog.add_project(
+        _ORDERS_PROJECT, name="Orders API", slug="orders-api", versions=["1.0.0", "1.1.0"]
+    )
+    catalog.add_project("990e8400-e29b-41d4-a716-4466554400aa", name="New", slug="new",
+                        versions=["1.0.0"])
+
+    statuses = {
+        "job-1": _status(
+            "job-1",
+            "completed",
+            summary={"routing": {"target": "project"}},
+            result=SpecImportJobResult(
+                project_id=_ORDERS_PROJECT, project_slug="orders-api", version_id="1.1.0"
+            ),
+        ),
+        "job-2": _status(
+            "job-2",
+            "completed",
+            result=SpecImportJobResult(
+                project_id="990e8400-e29b-41d4-a716-4466554400aa",
+                project_slug="new",
+                version_id="1.0.0",
+            ),
+        ),
+        "job-3": _status("job-3", "running"),
+    }
+
+    async def _get(tenant_slug: str, job_id: str) -> SpecImportJobStatus:
+        return statuses[job_id]
+
+    monkeypatch.setattr(bulk_import_routes, "engine_get_spec_import_status", _get)
+
+    body = client.post(
+        _STATUS,
+        json={
+            "items": [
+                {"key": "a", "job_id": "job-1"},
+                {"key": "b", "job_id": "job-2"},
+                {"key": "c", "job_id": "job-3"},
+            ]
+        },
+    ).json()
+
+    appended, created, running = body["items"]
+    assert appended["outcome"] == "version-appended"
+    assert (appended["project_id"], appended["version_id"]) == (_ORDERS_PROJECT, "1.1.0")
+    assert created["outcome"] == "project-created"
+    assert created["version_id"] == "1.0.0"
+    # Nothing to report until a job finishes.
+    assert running["outcome"] is None
+    assert body["summary"]["appended"] == 1
+    assert body["summary"]["created"] == 1
+
+
+def test_a_failed_job_names_no_destination(monkeypatch, catalog) -> None:
+    async def _get(tenant_slug: str, job_id: str) -> SpecImportJobStatus:
+        return _status(
+            job_id,
+            "failed",
+            error=SpecImportJobError(
+                code="PARSE_FAILED",
+                category="format",
+                message="broken",
+                remediation="fix it",
+                retriable=False,
+            ),
+        )
+
+    monkeypatch.setattr(bulk_import_routes, "engine_get_spec_import_status", _get)
+
+    body = client.post(_STATUS, json={"items": [{"key": "a", "job_id": "job-1"}]}).json()
+
+    assert body["items"][0]["outcome"] is None
+    assert body["summary"]["created"] == 0
+    assert body["summary"]["appended"] == 0
+
+
+def test_one_project_is_read_once_however_many_items_landed_on_it(
+    monkeypatch, catalog
+) -> None:
+    catalog.add_project(
+        _ORDERS_PROJECT, name="Orders API", slug="orders-api", versions=["1.0.0", "1.1.0"]
+    )
+    reads: List[str] = []
+    original = catalog.list_project_version_labels
+
+    def _counting(project_id: str, tenant_id: str) -> List[str]:
+        reads.append(project_id)
+        return original(project_id, tenant_id)
+
+    module = __import__("app.database", fromlist=["db"])
+    monkeypatch.setattr(module.db, "list_project_version_labels", _counting)
+
+    async def _get(tenant_slug: str, job_id: str) -> SpecImportJobStatus:
+        return _status(
+            job_id,
+            "completed",
+            result=SpecImportJobResult(project_id=_ORDERS_PROJECT, project_slug="orders-api"),
+        )
+
+    monkeypatch.setattr(bulk_import_routes, "engine_get_spec_import_status", _get)
+
+    client.post(
+        _STATUS,
+        json={"items": [{"key": "a", "job_id": "job-1"}, {"key": "b", "job_id": "job-2"}]},
+    )
+
+    assert reads == [_ORDERS_PROJECT]
 
 
 def test_status_of_an_empty_batch_is_done() -> None:
