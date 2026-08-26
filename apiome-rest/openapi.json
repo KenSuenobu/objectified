@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.160.0",
+    "version": "1.161.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -77800,7 +77800,7 @@
             "type": "string",
             "title": "Operation Uuid",
             "description": "The apiome.path_operation UUID.",
-            "example": "8ffd4a8c-ce19-4f10-92af-3f5a0ac64b0e"
+            "example": "4a8e78ef-cdd4-4ae0-8673-83a3a70f84a6"
           },
           "method": {
             "type": "string",
@@ -80164,7 +80164,7 @@
             "type": "string",
             "title": "Generated At",
             "description": "Statement timestamp (ISO-8601, UTC).",
-            "example": "2026-08-23T02:32:06Z"
+            "example": "2026-08-26T12:37:35Z"
           },
           "envelope": {
             "additionalProperties": true,
@@ -115737,7 +115737,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-23T02:32:06Z"
+            "example": "2026-08-26T12:37:35Z"
           }
         },
         "additionalProperties": false,
@@ -121805,17 +121805,47 @@
       },
       "SpecImportProjectTarget": {
         "properties": {
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Spec Import Project Target schema."
+              },
+              {
+                "type": "null",
+                "description": "Spec Import Project Target schema."
+              }
+            ],
+            "title": "Project Id",
+            "description": "Existing catalog project to append this revision to (BLK-1.1). When set, the import creates a new version on that project \u2014 labelled by 'version.version_id' \u2014 instead of creating a project, and 'name'/'slug' may be omitted. The project must belong to the acting tenant (a foreign id is reported as 404) and must be publishable: a non-publishable catalog item is refused with the TARGET_NOT_PUBLISHABLE taxonomy code, which names the convert-to-OpenAPI flow. A 'version.version_id' that already exists on it is refused with TARGET_VERSION_EXISTS before any write happens."
+          },
           "name": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Spec Import Project Target schema."
+              },
+              {
+                "type": "null",
+                "description": "Spec Import Project Target schema."
+              }
+            ],
             "title": "Name",
-            "description": "Human-readable name.",
-            "example": "Pet"
+            "description": "Display name for a project the import creates. Required unless 'project_id' targets an existing project, whose own name is used instead."
           },
           "slug": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Spec Import Project Target schema."
+              },
+              {
+                "type": "null",
+                "description": "Spec Import Project Target schema."
+              }
+            ],
             "title": "Slug",
-            "description": "URL-safe identifier.",
-            "example": "pet-store"
+            "description": "URL slug for a project the import creates. Required unless 'project_id' targets an existing project, whose own slug is used instead."
           },
           "description": {
             "anyOf": [
@@ -121834,12 +121864,8 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": [
-          "name",
-          "slug"
-        ],
         "title": "SpecImportProjectTarget",
-        "description": "Project identity for a specification import job."
+        "description": "Project identity for a specification import job.\n\nTwo shapes, distinguished by whether ``project_id`` is set (BLK-1.1):\n\n* **New project** (``project_id`` omitted) \u2014 ``name`` and ``slug`` are required and the\n  importer resolves or mints a project from that identity. This is the original shape and\n  its behaviour is unchanged.\n* **Existing project** (``project_id`` set) \u2014 the import appends a new version to that\n  project instead of creating one, and ``name``/``slug`` become optional because the\n  resolved project supplies them."
       },
       "SpecImportRollbackResponse": {
         "properties": {
@@ -121971,7 +121997,7 @@
               }
             ],
             "title": "Existing Project Id",
-            "description": "When set, skip project creation and attach the job to this catalog project id."
+            "description": "When set, skip project creation and attach the job to this catalog project id. Internal seam used by the catalog convert flow and repository auto-refresh, and the field a caller's 'project.project_id' is normalized onto at schedule time (BLK-1.1); external callers should set 'project.project_id' instead, which is the shape the tenant/publishable/version-collision checks run against."
           },
           "options": {
             "$ref": "#/components/schemas/SpecImportOptions",
@@ -122010,7 +122036,7 @@
           "version"
         ],
         "title": "SpecImportStartMetadata",
-        "description": "Shared metadata for JSON-base64 and multipart upload flows."
+        "description": "Shared metadata for JSON-base64 and multipart upload flows.\n\nTwo fields can name an existing project to append to. ``project.project_id`` (BLK-1.1) is\nthe public contract \u2014 validated and authorized before the job is scheduled \u2014 while\n``existing_project_id`` is the older internal seam the persistence paths actually read.\n:func:`app.import_project_target.resolve_import_project_target` normalizes the former onto\nthe latter at schedule time, so a caller sets one of them and every downstream reader sees\n``existing_project_id``. Setting both to *different* ids is a contradiction and is rejected."
       },
       "SpecImportStoredSpec": {
         "properties": {
@@ -130765,14 +130791,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-23T02:32:06Z"
+            "example": "2026-08-26T12:37:35Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-23T02:32:06Z"
+            "example": "2026-08-26T12:37:35Z"
           },
           "outcome": {
             "anyOf": [

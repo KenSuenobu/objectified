@@ -41,6 +41,10 @@ SHIPPED_CODES = {
     "INPUT_REF_LIMIT",
     "INPUT_TIME_LIMIT",
     "INPUT_MEMORY_LIMIT",
+    # Added by BLK-1.1 (#5523): the existing project/version a start request targets.
+    "TARGET_PROJECT_NOT_FOUND",
+    "TARGET_NOT_PUBLISHABLE",
+    "TARGET_VERSION_EXISTS",
 }
 
 

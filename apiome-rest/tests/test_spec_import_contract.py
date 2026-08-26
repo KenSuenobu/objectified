@@ -885,3 +885,209 @@ async def test_worker_phase_timings_are_ingested_once_despite_redelivery(
     assert cell["total_duration_ms"] == 12.5
     # The engine stamped the correlation id onto the worker-produced status.
     assert sie._jobs[job_id].status.correlation_id == "req-worker-1"
+
+
+# ===========================================================================
+# BLK-1.1 (#5523) — existing-project target on the import contract
+# ===========================================================================
+
+_TARGET_PROJECT_ID = "770e8400-e29b-41d4-a716-446655440077"
+
+
+class _TargetDb:
+    """Fake DB serving the two tenant-scoped reads the target resolver makes."""
+
+    def __init__(self, project=None, taken_versions=()):
+        self._project = project
+        self._taken = set(taken_versions)
+
+    def get_project_by_id(self, project_id, tenant_id):
+        if self._project and project_id == self._project["id"]:
+            return dict(self._project)
+        return None
+
+    def get_version_by_version_id(self, project_id, version_id, tenant_id):
+        return {"id": "v-rec"} if version_id in self._taken else None
+
+
+def _publishable_target_db(**kwargs):
+    return _TargetDb(
+        project={
+            "id": _TARGET_PROJECT_ID,
+            "name": "Payments",
+            "slug": "payments-api",
+            "publishable": True,
+        },
+        **kwargs,
+    )
+
+
+def _start_body(project: dict, version_id: str = "2.0.0") -> dict:
+    return {
+        "metadata": {
+            "source_kind": "openapi-3",
+            "project": project,
+            "version": {"version_id": version_id},
+            "options": {},
+        },
+        "document_base64": "b3BlbmFwaTogMy4xLjA=",
+        "filename": "spec.yaml",
+    }
+
+
+def test_openapi_documents_the_existing_project_target():
+    """The new field is on the contract, and name/slug are no longer unconditionally required."""
+    schema = app.openapi()["components"]["schemas"]["SpecImportProjectTarget"]
+    assert "project_id" in schema["properties"]
+    description = schema["properties"]["project_id"]["description"]
+    assert "TARGET_NOT_PUBLISHABLE" in description
+    assert "TARGET_VERSION_EXISTS" in description
+    # name/slug are conditional now (enforced by the model validator), so neither is declared
+    # required — a project_id-only target is a valid document.
+    assert set(schema.get("required", [])) == set()
+
+
+def test_start_with_project_id_appends_to_that_project(monkeypatch, spec_import_fake_worker):
+    """AC1: a start request carrying project_id appends a version instead of creating a project."""
+    captured = {}
+
+    async def _capture(payload: dict) -> dict:
+        captured["metadata"] = payload["metadata"]
+        jid = payload["rest_job_id"]
+        return {
+            "ok": True,
+            "job_id": jid,
+            "status": {
+                "job_id": jid,
+                "state": "completed",
+                "percent": 100,
+                "events": [],
+                "summary": {},
+                "result": {
+                    "project_id": _TARGET_PROJECT_ID,
+                    "project_slug": payload["metadata"]["project"]["slug"],
+                    "version_id": payload["metadata"]["version"]["version_id"],
+                    "version_record_id": "660e8400-e29b-41d4-a716-446655440088",
+                },
+            },
+        }
+
+    monkeypatch.setattr("app.database.db", _publishable_target_db())
+    monkeypatch.setattr("app.spec_import_engine._worker_runner", _capture)
+
+    r = client.post("/v1/tenants/acme/imports", json=_start_body({"project_id": _TARGET_PROJECT_ID}))
+    assert r.status_code == 202, r.text
+    final = _wait_completed(r.json()["job_id"])
+
+    assert final["state"] == "completed"
+    # The target is normalized onto the field both persistence paths read...
+    assert captured["metadata"]["existing_project_id"] == _TARGET_PROJECT_ID
+    # ...and the target project's own identity is backfilled for the job result.
+    assert captured["metadata"]["project"]["slug"] == "payments-api"
+    assert captured["metadata"]["project"]["name"] == "Payments"
+    assert final["result"]["project_id"] == _TARGET_PROJECT_ID
+
+
+def test_start_without_project_id_is_unchanged(monkeypatch, spec_import_fake_worker):
+    """AC2: the name/slug shape behaves exactly as before — and consults no project."""
+
+    class _ExplodingDb:
+        def get_project_by_id(self, *a, **k):  # pragma: no cover - must not be called
+            raise AssertionError("the create-a-project branch must not resolve a target")
+
+        def get_version_by_version_id(self, *a, **k):  # pragma: no cover
+            raise AssertionError("the create-a-project branch must not resolve a version")
+
+    monkeypatch.setattr("app.database.db", _ExplodingDb())
+
+    r = client.post(
+        "/v1/tenants/acme/imports",
+        json=_start_body({"name": "Payments", "slug": "payments-api"}),
+    )
+    assert r.status_code == 202, r.text
+    final = _wait_completed(r.json()["job_id"])
+    assert final["state"] == "completed"
+    assert final["result"]["project_slug"] == "payments-api"
+
+
+def test_start_with_a_cross_tenant_project_id_is_404(monkeypatch):
+    """AC3: a project id this tenant cannot see is a 404, and no job is created."""
+    from app import spec_import_engine as sie
+
+    monkeypatch.setattr("app.database.db", _TargetDb(project=None))
+
+    r = client.post("/v1/tenants/acme/imports", json=_start_body({"project_id": _TARGET_PROJECT_ID}))
+
+    assert r.status_code == 404, r.text
+    assert r.json()["detail"]["code"] == "TARGET_PROJECT_NOT_FOUND"
+    assert sie._jobs == {}
+
+
+def test_start_targeting_a_catalog_item_names_the_convert_flow(monkeypatch):
+    """AC3: a publishable=false target is refused with a typed, actionable error."""
+    from app import spec_import_engine as sie
+
+    monkeypatch.setattr(
+        "app.database.db",
+        _TargetDb(
+            project={
+                "id": _TARGET_PROJECT_ID,
+                "name": "Orders (proto)",
+                "slug": "orders-proto",
+                "publishable": False,
+            }
+        ),
+    )
+
+    r = client.post("/v1/tenants/acme/imports", json=_start_body({"project_id": _TARGET_PROJECT_ID}))
+
+    assert r.status_code == 409, r.text
+    detail = r.json()["detail"]
+    assert detail["code"] == "TARGET_NOT_PUBLISHABLE"
+    assert detail["category"] == "policy"
+    assert "Convert to OpenAPI" in detail["remediation"]
+    assert detail["retriable"] is False
+    assert sie._jobs == {}
+
+
+def test_start_with_a_colliding_version_writes_nothing(monkeypatch):
+    """AC4: a version id the target already holds fails typed, before any job exists."""
+    from app import spec_import_engine as sie
+
+    monkeypatch.setattr("app.database.db", _publishable_target_db(taken_versions=("2.0.0",)))
+
+    r = client.post("/v1/tenants/acme/imports", json=_start_body({"project_id": _TARGET_PROJECT_ID}))
+
+    assert r.status_code == 409, r.text
+    assert r.json()["detail"]["code"] == "TARGET_VERSION_EXISTS"
+    assert sie._jobs == {}
+
+
+def test_multipart_start_resolves_the_project_target_too(monkeypatch):
+    """The upload entry point shares the seam, so it refuses the same targets."""
+    from app import spec_import_engine as sie
+
+    monkeypatch.setattr("app.database.db", _TargetDb(project=None))
+    meta = json.dumps(
+        {
+            "source_kind": "openapi-3",
+            "project": {"project_id": _TARGET_PROJECT_ID},
+            "version": {"version_id": "2.0.0"},
+            "options": {},
+        }
+    )
+
+    r = client.post(
+        "/v1/tenants/acme/imports/upload",
+        files={"file": ("spec.yaml", b"openapi: 3.1.0", "application/yaml")},
+        data={"metadata": meta},
+    )
+
+    assert r.status_code == 404, r.text
+    assert r.json()["detail"]["code"] == "TARGET_PROJECT_NOT_FOUND"
+    assert sie._jobs == {}
+
+
+def test_start_without_name_slug_or_project_id_is_422():
+    r = client.post("/v1/tenants/acme/imports", json=_start_body({"name": "Payments"}))
+    assert r.status_code == 422, r.text
