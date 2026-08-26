@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+from dataclasses import dataclass, field
+from typing import Any, Mapping
 
 from app.mock_engine import MockOperation
 from app.mock_template import TemplateLimitError
@@ -12,6 +13,12 @@ from fastapi.responses import JSONResponse, Response
 from psycopg_pool import AsyncConnectionPool
 
 from apiome_mock.api_key import ValidatedApiKey
+from apiome_mock.callback_dispatch import (
+    CALLBACK_HEADER,
+    CALLBACK_URL_HEADER,
+    CallbackDispatcher,
+    DispatchRequest,
+)
 from apiome_mock.chaos import (
     CHAOS_DELAY_HEADER,
     CHAOS_HEADER,
@@ -53,6 +60,23 @@ from apiome_mock.session_store import SessionStore
 from apiome_mock.spec_cache import SpecCache
 from apiome_mock.spec_loader import CompiledSpec, get_mock_access_status, load_compiled_spec
 from apiome_mock.stateful_handler import parse_mock_session_token, try_handle_stateful_crud
+
+
+@dataclass
+class _ServeTrace:
+    """What the serving pass learned that the callback pass needs (#4746, PMR-2.3).
+
+    :func:`_serve_matched_request` has many exit points; rather than thread a return tuple through
+    every one of them, it records the matched operation and its path parameters here, and the
+    public wrapper reads them once the response exists.
+
+    Attributes:
+        operation: The operation the request matched, or ``None`` when nothing matched.
+        path_params: Path template parameters extracted from the request.
+    """
+
+    operation: MockOperation | None = None
+    path_params: Mapping[str, str] = field(default_factory=dict)
 
 
 def _instance_path(tenant: str, project: str, version: str, path: str) -> str:
@@ -236,6 +260,7 @@ async def handle_mock_request(
     cache: SpecCache,
     api_key: ValidatedApiKey | None = None,
     session_store: SessionStore | None = None,
+    callback_dispatcher: CallbackDispatcher | None = None,
 ) -> Response:
     """Serve a mock response for ``/{tenant}/{project}/{version}/{path}`` (hosted, Postgres-backed).
 
@@ -290,6 +315,7 @@ async def handle_mock_request(
         version=version,
         path=path,
         session_store=session_store,
+        callback_dispatcher=callback_dispatcher,
     )
 
 
@@ -302,14 +328,16 @@ async def serve_compiled_request(
     version: str,
     path: str,
     session_store: SessionStore | None = None,
+    callback_dispatcher: CallbackDispatcher | None = None,
 ) -> Response:
     """Serve a mock response from an already-resolved :class:`CompiledSpec`.
 
     This is the whole of the mock's request behavior — routing, scenarios, chaos, validation,
-    stateful CRUD, and example-first response resolution — with no dependency on Postgres. The
-    hosted path (:func:`handle_mock_request`) reaches it after resolving the spec from the
-    database; the portable runtime (:mod:`apiome_mock.portable`) reaches it with the spec compiled
-    from a mock bundle. Sharing this function is what makes the two runtimes behave identically.
+    stateful CRUD, example-first response resolution, and outbound callback delivery — with no
+    dependency on Postgres. The hosted path (:func:`handle_mock_request`) reaches it after
+    resolving the spec from the database; the portable runtime (:mod:`apiome_mock.portable`)
+    reaches it with the spec compiled from a mock bundle. Sharing this function is what makes the
+    two runtimes behave identically.
 
     Args:
         request: The incoming request.
@@ -319,10 +347,114 @@ async def serve_compiled_request(
         version: Version label, used for problem ``instance`` paths.
         path: Request path *relative to* the ``/{tenant}/{project}/{version}`` prefix.
         session_store: Store backing ``X-Mock-Session`` state; ``None`` disables stateful CRUD.
+        callback_dispatcher: Delivers contract callbacks the served response fires (#4746,
+            PMR-2.3); ``None`` disables outbound delivery entirely.
 
     Returns:
         The mock response (a spec-derived response, a canned scenario response, or a problem+json
         document describing why no response could be served).
+    """
+    trace = _ServeTrace()
+    response = await _serve_matched_request(
+        request,
+        compiled=compiled,
+        tenant=tenant,
+        project=project,
+        version=version,
+        path=path,
+        session_store=session_store,
+        callback_dispatcher=callback_dispatcher,
+        trace=trace,
+    )
+    if callback_dispatcher is not None and trace.operation is not None and compiled.callbacks:
+        await _fire_callbacks(
+            request,
+            compiled=compiled,
+            response=response,
+            operation_key=trace.operation.key,
+            path_params=trace.path_params,
+            dispatcher=callback_dispatcher,
+        )
+    return response
+
+
+async def _fire_callbacks(
+    request: Request,
+    *,
+    compiled: CompiledSpec,
+    response: Response,
+    operation_key: str,
+    path_params: Mapping[str, str],
+    dispatcher: CallbackDispatcher,
+) -> None:
+    """Deliver every callback the served response fires, then stamp the outcome on it.
+
+    Deliveries are awaited *before* the response is returned rather than fired into the
+    background. A mock exists to make behavior observable and reproducible: a consumer that drove
+    the triggering operation can read ``X-Mock-Callback`` on the very response it got, and a test
+    never has to poll for an outcome that may or may not have happened yet. The cost is bounded by
+    the definitions themselves — each carries a capped attempt count, per-attempt timeout, and
+    total backoff, all validated at save time.
+
+    Args:
+        request: The triggering request, read for template context and the session token.
+        compiled: The compiled spec being served (source of definitions and fixture data).
+        response: The response about to be returned; annotated in place with the outcomes.
+        operation_key: The canonical key of the operation that was served.
+        path_params: Path template parameters, for ``{{request.path.<name>}}`` templates.
+        dispatcher: The deployment's dispatcher.
+    """
+    fired = [
+        definition
+        for definition in compiled.callbacks.values()
+        if definition.fires_for(operation_key, response.status_code)
+    ]
+    if not fired:
+        return
+
+    ctx = await build_match_context(
+        request,
+        path_params=path_params,
+        needs_body=any(definition.needs_request_body for definition in fired),
+    )
+    seed = parse_mock_seed(request.query_params.get("__seed"))
+    session_token = parse_mock_session_token(request)
+    requested = request.headers.get(CALLBACK_URL_HEADER)
+
+    outcomes: list[str] = []
+    for definition in sorted(fired, key=lambda entry: entry.name):
+        record = await dispatcher.dispatch(
+            definition,
+            DispatchRequest(
+                ctx=ctx,
+                seed=seed,
+                fixtures=compiled.fixtures,
+                schema_root=compiled.spec,
+                destination=requested,
+                trigger=operation_key,
+                session=session_token,
+            ),
+        )
+        outcomes.append(f"{record.callback}={record.outcome}")
+    response.headers[CALLBACK_HEADER] = ", ".join(outcomes)
+
+
+async def _serve_matched_request(
+    request: Request,
+    *,
+    compiled: CompiledSpec,
+    tenant: str,
+    project: str,
+    version: str,
+    path: str,
+    session_store: SessionStore | None,
+    callback_dispatcher: CallbackDispatcher | None,
+    trace: _ServeTrace,
+) -> Response:
+    """Produce the mock response itself, recording the matched operation in ``trace``.
+
+    Split out of :func:`serve_compiled_request` so the callback pass has the matched operation
+    without every one of this function's exit points having to carry it.
     """
     instance = _instance_path(tenant, project, version, path)
     relative_path = "/" + path.strip("/") if path.strip("/") else "/"
@@ -340,6 +472,7 @@ async def serve_compiled_request(
             version=version,
             instance=instance,
             store=session_store,
+            dispatcher=callback_dispatcher,
         )
 
     operation, path_params, allowed_methods = match_request(compiled.operations, request.method, relative_path)
@@ -354,6 +487,9 @@ async def serve_compiled_request(
             f"No operation matches {request.method.upper()} {relative_path}.",
             instance=instance,
         )
+
+    trace.operation = operation
+    trace.path_params = path_params
 
     session_token = parse_mock_session_token(request)
 

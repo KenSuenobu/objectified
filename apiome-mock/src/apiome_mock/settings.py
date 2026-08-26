@@ -87,6 +87,20 @@ class Settings(BaseSettings):
     )
     grpc_host: str = Field(default="127.0.0.1", min_length=1)
     grpc_port: int = Field(default=8776, ge=1, le=65535)
+    callbacks_enabled: bool = Field(
+        default=False,
+        description="Deliver contract callbacks/webhooks outbound (#4746, PMR-2.3).",
+    )
+    callback_allow_private: bool = Field(
+        default=False,
+        description="Permit callback destinations on loopback/private addresses; public-only otherwise.",
+    )
+    callback_timeout_seconds: float = Field(
+        default=5.0,
+        gt=0,
+        le=60.0,
+        description="Ceiling on one callback delivery attempt (seconds).",
+    )
     session_store_backend: Literal["memory", "postgres"] = Field(
         default="memory",
         description="Stateful CRUD store backend (X-Mock-Session); memory for single-node, postgres for multi-replica.",

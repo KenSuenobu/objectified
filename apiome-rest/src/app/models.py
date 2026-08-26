@@ -4210,6 +4210,146 @@ class VersionMockFixturePacksResponse(BaseModel):
     )
 
 
+class MockCallbackTriggerSpec(BaseModel):
+    """What fires a callback: an operation, optionally narrowed to certain statuses (#4746 PMR-2.3)."""
+
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    operation: Optional[str] = Field(
+        default=None,
+        description='Operation whose response fires the callback, as "METHOD /path/{template}". '
+        "Omit for a callback that only ever fires from an explicit __mock__ trigger.",
+    )
+    statuses: Optional[List[int]] = Field(
+        default=None,
+        description="Response statuses that fire it; omit to fire on any 2xx.",
+    )
+
+
+class MockCallbackRequestSpec(BaseModel):
+    """The outbound message a callback sends (#4746 PMR-2.3)."""
+
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    method: Optional[str] = Field(
+        default=None,
+        description="Outbound HTTP method (POST, PUT, PATCH, DELETE, GET); defaults to POST.",
+    )
+    headers: Dict[str, str] = Field(
+        default_factory=dict,
+        description="Outbound headers; values may embed {{ ... }} templates (#4744 PMR-2.1).",
+    )
+    body: Optional[Any] = Field(
+        default=None,
+        description="Outbound payload; may embed {{ ... }} templates over request and fixture data.",
+    )
+
+
+class MockCallbackRetrySpec(BaseModel):
+    """The deterministic delivery schedule for one callback (#4746 PMR-2.3)."""
+
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    max_attempts: Optional[int] = Field(
+        default=None,
+        validation_alias=AliasChoices("maxAttempts", "max_attempts"),
+        serialization_alias="maxAttempts",
+        description="Total attempts including the first; defaults to 3.",
+    )
+    backoff_ms: Optional[int] = Field(
+        default=None,
+        validation_alias=AliasChoices("backoffMs", "backoff_ms"),
+        serialization_alias="backoffMs",
+        description="Delay before the first retry, in milliseconds; defaults to 100.",
+    )
+    backoff_multiplier: Optional[float] = Field(
+        default=None,
+        validation_alias=AliasChoices("backoffMultiplier", "backoff_multiplier"),
+        serialization_alias="backoffMultiplier",
+        description="Growth factor applied per retry; defaults to 2.0. No jitter — the schedule is deterministic.",
+    )
+    retry_on: Optional[List[int]] = Field(
+        default=None,
+        validation_alias=AliasChoices("retryOn", "retry_on"),
+        serialization_alias="retryOn",
+        description="Response statuses worth retrying; defaults to the transient ones (408, 425, 429, 5xx).",
+    )
+    timeout_ms: Optional[int] = Field(
+        default=None,
+        validation_alias=AliasChoices("timeoutMs", "timeout_ms"),
+        serialization_alias="timeoutMs",
+        description="Per-attempt request timeout in milliseconds; defaults to 5000.",
+    )
+
+
+class MockCallbackSpec(BaseModel):
+    """One callback/webhook the mock simulates on this version's behalf (#4746 PMR-2.3)."""
+
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    callback_format: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("callbackFormat", "callback_format"),
+        serialization_alias="callbackFormat",
+        description='Callback format id; defaults to "apiome.mock.callback/v1" when omitted.',
+    )
+    callback_format_version: Optional[int] = Field(
+        default=None,
+        validation_alias=AliasChoices("callbackFormatVersion", "callback_format_version"),
+        serialization_alias="callbackFormatVersion",
+        description="Callback format revision; defaults to the current version when omitted.",
+    )
+    description: str = Field(default="", max_length=500, description="Human summary of the event.")
+    trigger: Optional[MockCallbackTriggerSpec] = Field(
+        default=None,
+        description="What fires the callback; omit for trigger-on-demand only.",
+    )
+    destinations: List[str] = Field(
+        default_factory=list,
+        description="Allowlisted delivery targets. At least one is required — the mock delivers nowhere else.",
+    )
+    request: Optional[MockCallbackRequestSpec] = Field(
+        default=None,
+        description="The outbound message (method, headers, templated body).",
+    )
+    payload_schema: Optional[Dict[str, Any]] = Field(
+        default=None,
+        validation_alias=AliasChoices("payloadSchema", "payload_schema"),
+        serialization_alias="payloadSchema",
+        description="JSON Schema (inline, or a local $ref) the rendered payload must satisfy before delivery.",
+    )
+    retry: Optional[MockCallbackRetrySpec] = Field(
+        default=None,
+        description="Delivery retry schedule; omit for the defaults.",
+    )
+
+
+class VersionMockCallbacksRequest(BaseModel):
+    """Replace the version's mock callback definitions (#4746 PMR-2.3)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    callbacks: Dict[str, MockCallbackSpec] = Field(
+        default_factory=dict,
+        description="Callback definitions keyed by callback name; an empty map clears them.",
+    )
+
+
+class VersionMockCallbacksResponse(BaseModel):
+    """The version's persisted mock callback definitions and their content digests (#4746 PMR-2.3)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    callbacks: Dict[str, MockCallbackSpec] = Field(
+        default_factory=dict,
+        description="Callback definitions keyed by callback name, in canonical stored form.",
+    )
+    digests: Dict[str, str] = Field(
+        default_factory=dict,
+        description="sha256:<hex> content digest of each definition — the identity a test pins.",
+    )
+
+
 class VersionPublishChangeReportPreviewRequest(BaseModel):
     """Preview publication change report before publishing (same baseline fields as publish)."""
 

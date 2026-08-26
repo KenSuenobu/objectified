@@ -154,6 +154,55 @@ def unknown_fixture_pack(
     )
 
 
+def unknown_callback(
+    detail: str,
+    *,
+    instance: str | None = None,
+    available: list[str] | None = None,
+) -> JSONResponse:
+    """400 returned when a trigger names a callback that does not exist (#4746, PMR-2.3)."""
+    return problem_response(
+        status=400,
+        title="Unknown Callback",
+        detail=detail,
+        problem_type="unknown-callback",
+        instance=instance,
+        extra={"availableCallbacks": available or []},
+    )
+
+
+def destination_not_allowed(
+    detail: str,
+    *,
+    instance: str | None = None,
+    allowed: list[str] | None = None,
+) -> JSONResponse:
+    """403 returned when a requested callback destination is not allowlisted (#4746, PMR-2.3).
+
+    The response echoes the definition's allowlist — it is author-declared configuration, not a
+    secret — so a consumer can see immediately which targets it may use.
+    """
+    return problem_response(
+        status=403,
+        title="Destination Not Allowed",
+        detail=detail,
+        problem_type="destination-not-allowed",
+        instance=instance,
+        extra={"allowedDestinations": allowed or []},
+    )
+
+
+def callbacks_disabled(detail: str, *, instance: str | None = None) -> JSONResponse:
+    """503 returned when outbound callbacks are not enabled for this deployment (#4746)."""
+    return problem_response(
+        status=503,
+        title="Callbacks Disabled",
+        detail=detail,
+        problem_type="callbacks-disabled",
+        instance=instance,
+    )
+
+
 def session_required(detail: str, *, instance: str | None = None) -> JSONResponse:
     """400 returned when a session lifecycle operation lacks the X-Mock-Session header (#4745)."""
     return problem_response(

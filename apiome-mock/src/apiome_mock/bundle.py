@@ -42,6 +42,7 @@ from app.mock_bundle import (
 from app.mock_engine import MockOperation, extract_operations
 
 from apiome_mock import __version__
+from apiome_mock.callbacks import CallbackDefinition, parse_callbacks
 from apiome_mock.chaos import ChaosConfig, parse_chaos
 from apiome_mock.fixture_data import decode_bundle_fixtures
 from apiome_mock.fixture_packs import FixturePack, merged_template_data, parse_fixture_packs
@@ -113,6 +114,9 @@ class LoadedBundle:
             (#4744, PMR-2.1).
         fixture_packs: Versioned fixture packs parsed from the bundled settings, so portable
             sessions can seed and reset exactly like hosted ones (#4745, PMR-2.2).
+        callbacks: Outbound callback/webhook definitions parsed from the bundled settings, so a
+            portable mock exercises the same contract callbacks the hosted one does
+            (#4746, PMR-2.3).
         signed: Whether the bundle carried a signature block.
         source: Filesystem path the bundle was read from, when it came from a file.
     """
@@ -126,6 +130,7 @@ class LoadedBundle:
     fixtures: tuple[Mapping[str, Any], ...] = ()
     fixture_data: Mapping[str, Any] = field(default_factory=dict)
     fixture_packs: Mapping[str, FixturePack] = field(default_factory=dict)
+    callbacks: Mapping[str, CallbackDefinition] = field(default_factory=dict)
     signed: bool = False
     source: Path | None = None
 
@@ -176,6 +181,7 @@ class LoadedBundle:
             # fixtures-then-packs precedence (#4745, PMR-2.2).
             fixtures={**self.fixture_data, **merged_template_data(self.fixture_packs)},
             fixture_packs=self.fixture_packs,
+            callbacks=self.callbacks,
         )
 
 
@@ -254,6 +260,7 @@ def load_bundle_document(
         fixtures=fixture_entries,
         fixture_data=decode_bundle_fixtures(fixture_entries, document.get("fixtures")),
         fixture_packs=parse_fixture_packs(settings),
+        callbacks=parse_callbacks(settings),
         signed=document.get("signature") is not None,
         source=source,
     )

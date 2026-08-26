@@ -218,6 +218,42 @@ def _request_guard_hook_shape_only(request: httpx.Request) -> None:
     validate_url_policy(str(request.url))
 
 
+async def _async_request_guard_hook(request: httpx.Request) -> None:
+    """Async httpx request event hook: validate every outbound request URL.
+
+    The async twin of :func:`_request_guard_hook`. ``httpx.AsyncClient`` only awaits its event
+    hooks, so a sync hook would be silently ignored (or raise) rather than guarding anything.
+    """
+    validate_url(str(request.url))
+
+
+async def _async_request_guard_hook_shape_only(request: httpx.Request) -> None:
+    """Async httpx request hook enforcing scheme/credential rules but not public IPs."""
+    validate_url_policy(str(request.url))
+
+
+def build_guarded_async_client(*, allow_private: bool = False, **kwargs) -> httpx.AsyncClient:
+    """Build an :class:`httpx.AsyncClient` whose every request is SSRF-validated.
+
+    The async counterpart of :func:`build_guarded_client`, used by outbound work that runs on the
+    event loop — notably mock callback/webhook delivery (PMR-2.3, #4746). Any caller-supplied
+    ``request`` event hooks are preserved and the guard is appended so it runs last.
+
+    Args:
+        allow_private: When ``True``, only scheme and credential rules run on each hop (no
+            public-IP filter). Reserved for deployments that deliver to an approved private
+            target on purpose; the default remains fail-closed.
+        **kwargs: Forwarded to ``httpx.AsyncClient``.
+    """
+    event_hooks = dict(kwargs.pop("event_hooks", {}) or {})
+    request_hooks = list(event_hooks.get("request", []))
+    request_hooks.append(
+        _async_request_guard_hook_shape_only if allow_private else _async_request_guard_hook
+    )
+    event_hooks["request"] = request_hooks
+    return httpx.AsyncClient(event_hooks=event_hooks, **kwargs)
+
+
 def build_guarded_client(*, allow_private: bool = False, **kwargs) -> httpx.Client:
     """Build an :class:`httpx.Client` whose every request is SSRF-validated.
 

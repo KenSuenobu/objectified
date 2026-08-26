@@ -64,7 +64,7 @@ project slug and version label.
     "sig": "…"
   },
   "spec": { "openapi": "3.1.0", "…": "…" },              // the version's generated document
-  "settings": { "scenarios": {…}, "chaos": {…}, "fixturePacks": {…} },  // portable settings subset
+  "settings": { "scenarios": {…}, "chaos": {…}, "fixturePacks": {…}, "callbacks": {…} },  // portable settings subset
   "fixtures": { "pets.json": "<base64>" }                // embedded, so nothing else is needed
 }
 ```
@@ -115,9 +115,9 @@ first), each with a stable code:
 
 Three independent layers keep secrets out of a bundle:
 
-1. **Allowlist.** Only `scenarios`, `chaos`, and `fixturePacks` (#4745, PMR-2.2) travel from
-   `versions.mock_settings`. Hosted-plane access control (the private-mock `mode`) is meaningless
-   offline and never leaves the server.
+1. **Allowlist.** Only `scenarios`, `chaos`, `fixturePacks` (#4745, PMR-2.2), and `callbacks`
+   (#4746, PMR-2.3) travel from `versions.mock_settings`. Hosted-plane access control (the
+   private-mock `mode`) is meaningless offline and never leaves the server.
 2. **Redaction.** Credential-shaped fields inside that subset — `Authorization`, `*token*`,
    `*secret*`, `*password*`, `*apiKey*`, PEM blocks, `Bearer …` values — are *removed* (not masked,
    so not even a length leaks) and their JSON pointers are published in `manifest.redactions`.
