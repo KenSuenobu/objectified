@@ -60,6 +60,24 @@ The exported document is valid OpenAPI and contains the classes and paths you ed
 [Golden Path](../GOLDEN_PATH.md) does exactly this — it exports via the real CLI and re-validates the
 downloaded document with `openapi-spec-validator`.
 
+## Test-drive it
+
+For OpenAPI targets, the Export Studio's Review step can turn the artifact you just generated into
+a **live mock** for a few minutes — one click, a base URL you can `curl`, responses generated from
+the document's own response schemas, and a log of everything it served. It is the strongest check
+available: a document that cannot answer its own operations is a finding no static validation would
+surface.
+
+```http
+POST /v1/export/{tenant_slug}/mock
+{ "artifact": "<project-id>", "version": "1.0.0", "target": "openapi" }
+```
+
+The mock expires by itself, and servers without the Mock Server deployed report the capability as
+unavailable rather than offering a button that cannot work. See
+[export_mock_test_drive.md](../../apiome-rest/docs/export_mock_test_drive.md) for the endpoints,
+the lifetime rules and the configuration.
+
 ## Related
 
 - [supported-formats.md](supported-formats.md) — every format Apiome imports and exports,
