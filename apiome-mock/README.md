@@ -51,6 +51,25 @@ uv run python scripts/build_conformance_bundle.py           # rewrite
 uv run python scripts/build_conformance_bundle.py --check   # verify it is current
 ```
 
+## Serverless adapter (PMR-1.3)
+
+`apiome_mock/serverless.py` runs the *same* portable app inside a function environment — AWS
+Lambda, Google Cloud Run functions, or Azure Functions — by translating the provider's event into
+one ASGI call. The bundle is verified and compiled once per execution environment and reused by
+every warm invocation, and that cost is measured rather than assumed:
+
+```bash
+uv run apiome-mock serverless --provider aws-lambda --bundle petstore-1.0.0-mock-bundle.json
+uv run apiome-mock serverless --provider aws-lambda --conformance   # corpus through real events
+```
+
+Preflight reports each provider's published package/payload/timeout limits, checks the measured
+cold start against the provider's budget, and refuses a bundle carrying a cloud credential (exit
+code `7`). Provider limits live as data in `apiome_mock/serverless_providers.py`, so the CLI and
+the guide read one table.
+
+Full guide: [docs/guide/serverless-mock-adapter.md](../docs/guide/serverless-mock-adapter.md).
+
 ## CI parity and the mock action (PMR-3.1)
 
 `conformance` proves one deployment answers the corpus. **`parity`** proves a hosted deployment and
@@ -163,7 +182,7 @@ docker run --rm -p 8775:8775 -v "$PWD/mock-bundle.json:/bundle/mock-bundle.json:
   ghcr.io/apiome/apiome-mock:latest run
 docker run --rm ghcr.io/apiome/apiome-mock:latest selftest   # the image passes the corpus
 
-scripts/build-image.sh --push ghcr.io/apiome/apiome-mock:0.6.0   # linux/amd64 + linux/arm64
+scripts/build-image.sh --push ghcr.io/apiome/apiome-mock:0.7.0   # linux/amd64 + linux/arm64
 ```
 
 ## Development

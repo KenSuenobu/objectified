@@ -13,6 +13,7 @@ configuration.
 | Liveness | `GET /health` |
 | Readiness | `GET /ready` |
 | Conformance | `apiome-mock selftest` · `apiome-mock conformance --base-url URL` |
+| Serverless | [serverless-mock-adapter.md](serverless-mock-adapter.md) — the same runtime as a function |
 
 Both the CLI and the image execute the **identical runtime**, and both are held to the same
 [mock conformance corpus](#conformance) — that is what "portable" is allowed to mean here.
@@ -60,7 +61,7 @@ image still runs the hosted, database-backed mock as its default command (`serve
 Build it for every supported architecture:
 
 ```bash
-apiome-mock/scripts/build-image.sh --push ghcr.io/apiome/apiome-mock:0.6.0
+apiome-mock/scripts/build-image.sh --push ghcr.io/apiome/apiome-mock:0.7.0
 # PLATFORMS=linux/amd64 apiome-mock/scripts/build-image.sh --load apiome-mock:dev   # local testing
 ```
 
@@ -99,7 +100,7 @@ exits instead), and `/health` cannot tell you *which* bundle answered.
   "status": "ready",
   "runtime": {
     "name": "apiome-mock",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "mode": "portable",
     "basePath": "version",
     "mount": "/acme-corp/petstore/1.0.0"
@@ -252,7 +253,7 @@ hands back a loopback-only service URL, and removes the container automatically 
   id: mock
   with:
     bundle: petstore-1.0.0-mock-bundle.json
-    image: ghcr.io/apiome/apiome-mock:0.6.0   # pin a version or a digest
+    image: ghcr.io/apiome/apiome-mock:0.7.0   # pin a version or a digest
     conformance: "true"
 
 - run: npm test
@@ -263,6 +264,21 @@ hands back a loopback-only service URL, and removes the container automatically 
 The action publishes `bundle-digest` and `runtime-version` as outputs and writes them to the job
 summary. Record or assert them: a green suite proves nothing if nobody can tell which artifact
 answered it.
+
+## As a serverless function
+
+The same runtime answers a bundle from inside an AWS Lambda, a Google Cloud Run function, or an
+Azure Function — no container and no open port. It is the same ASGI application this page
+describes, reached through a narrow event adapter, and the corpus above is run through each
+provider's real event shape to prove it.
+
+```bash
+apiome-mock serverless --provider aws-lambda --bundle petstore-1.0.0-mock-bundle.json
+```
+
+Preflight reports the provider's published package, payload, and timeout limits, measures what a
+cold start actually costs against the provider's budget, and refuses a bundle carrying a cloud
+credential. Full guide: [serverless-mock-adapter.md](serverless-mock-adapter.md).
 
 ## What the portable runtime does not do
 

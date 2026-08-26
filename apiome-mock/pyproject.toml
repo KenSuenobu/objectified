@@ -1,6 +1,6 @@
 [project]
 name = "apiome-mock"
-version = "0.6.0"
+version = "0.7.0"
 description = "Objectified mock server runtime for Apiome (FastAPI)."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -66,6 +66,13 @@ strict = true
 warn_unused_configs = true
 explicit_package_bases = true
 mypy_path = ["src", "../apiome-rest/src", "../apiome-mcp/src"]
+
+# The serverless adapter (#4743, PMR-1.3) imports azure.functions lazily, only to build a response
+# object inside a deployed Azure Function. The SDK is deliberately not a dependency of the runtime
+# — installing it would put an Azure package in every mock deployment — so it has no stubs here.
+[[tool.mypy.overrides]]
+module = ["azure.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

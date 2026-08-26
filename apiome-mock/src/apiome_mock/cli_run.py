@@ -1,4 +1,7 @@
-"""``apiome-mock run``/``verify``/``conformance``/``parity`` implementations (#4742, PMR-1.2).
+"""``apiome-mock run``/``verify``/``conformance``/``parity``/``serverless`` implementations.
+
+The portable-runtime command implementations (#4742, PMR-1.2; ``parity`` #4748, PMR-3.1;
+``serverless`` #4743, PMR-1.3).
 
 These are the portable-runtime commands: they never touch Postgres, and everything they need comes
 from a mock bundle plus the knobs declared in :mod:`apiome_mock.portable_config`. ``parity``
@@ -16,6 +19,7 @@ Code  Meaning
 4     Bundle is well-formed but incompatible with this runtime version.
 5     Conformance failures — the runtime answered at least one corpus case wrongly.
 6     Parity failures — hosted and portable deployments answered at least one case differently.
+7     Serverless preflight failures — the bundle cannot be deployed to the chosen provider.
 ===== ==========================================================================================
 """
 
@@ -28,7 +32,7 @@ import threading
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator
+from typing import TYPE_CHECKING, Any, Iterator
 
 import structlog
 from pydantic import ValidationError
@@ -53,6 +57,9 @@ from apiome_mock.logging_config import configure_portable_logging, uvicorn_log_c
 from apiome_mock.parity import ParityReport, run_parity
 from apiome_mock.portable_config import PortableSettings, settings_from_args
 
+if TYPE_CHECKING:  # pragma: no cover - import cycle avoidance; the module is imported lazily
+    from apiome_mock.serverless_preflight import PreflightReport
+
 __all__ = [
     "EXIT_BUNDLE_INCOMPATIBLE",
     "EXIT_BUNDLE_INVALID",
@@ -60,10 +67,12 @@ __all__ = [
     "EXIT_CONFORMANCE_FAILED",
     "EXIT_OK",
     "EXIT_PARITY_FAILED",
+    "EXIT_SERVERLESS_FAILED",
     "conformance_command",
     "parity_command",
     "run_command",
     "selftest_command",
+    "serverless_command",
     "serve_in_background",
     "verify_command",
 ]
@@ -74,6 +83,7 @@ EXIT_BUNDLE_INVALID = 3
 EXIT_BUNDLE_INCOMPATIBLE = 4
 EXIT_CONFORMANCE_FAILED = 5
 EXIT_PARITY_FAILED = 6
+EXIT_SERVERLESS_FAILED = 7
 
 _log = structlog.get_logger(__name__)
 
@@ -423,3 +433,102 @@ def conformance_command(args: argparse.Namespace) -> int:
     else:
         _print_report(report)
     return EXIT_OK if report.ok else EXIT_CONFORMANCE_FAILED
+
+
+def serverless_command(args: argparse.Namespace) -> int:
+    """Preflight a bundle for a function environment (#4743, PMR-1.3).
+
+    Two things a serverless deployment can only find out the hard way are checked here instead: the
+    bundle's size and initialization cost against the provider's published budgets, and whether the
+    bundle carries a provider credential. ``--conformance`` adds the third — that a *function
+    invocation*, event translation included, answers the shared corpus exactly as every other
+    runtime does.
+
+    The two halves are independently useful, so each runs on its own: with a bundle configured the
+    preflight runs, with ``--conformance`` the corpus runs, and with both, both. Only a run with
+    neither is a configuration error — there would be nothing to do.
+
+    Args:
+        args: Parsed ``serverless`` namespace (``provider``, ``conformance``, ``json``, plus the
+            declared runtime options).
+
+    Returns:
+        0 when the bundle is deployable and any requested corpus run passed, 7 when preflight found
+        an error, 5 when a corpus case failed.
+
+    Raises:
+        SystemExit: Exit code 2 when nothing was asked for or a flag is invalid.
+    """
+    from apiome_mock.serverless import create_adapter, serverless_sender
+    from apiome_mock.serverless_preflight import preflight
+    from apiome_mock.serverless_providers import provider_for
+
+    settings = _resolve_settings(args)
+    configure_portable_logging("WARNING" if args.json else settings.log_level)
+    provider = provider_for(args.provider)
+
+    report: PreflightReport | None = None
+    if settings.bundle.strip() or not args.conformance:
+        report = preflight(
+            _require_bundle_path(settings),
+            provider=provider,
+            secret=settings.bundle_secret,
+            require_signature=settings.require_signature,
+        )
+
+    conformance: ConformanceReport | None = None
+    if args.conformance:
+        # The packaged bundle is used deliberately, as ``selftest`` does: the subject under test is
+        # the adapter and the provider's event translation, not whichever bundle is being deployed.
+        adapter = create_adapter(PortableSettings.isolated(bundle=str(DEFAULT_BUNDLE_PATH)))
+        try:
+            conformance = run_corpus(
+                serverless_sender(adapter, provider=provider),
+                corpus=load_corpus(),
+                base_url=f"{provider.name}:{provider.entrypoint}",
+            )
+        finally:
+            adapter.close()
+
+    if args.json:
+        payload: dict[str, Any] = {}
+        if report is not None:
+            payload["preflight"] = report.as_dict()
+        if conformance is not None:
+            payload["conformance"] = conformance.as_dict()
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        if report is not None:
+            _print_preflight_report(report)
+        if conformance is not None:
+            if report is not None:
+                print("")
+            print(f"Conformance through {provider.title} events:")
+            _print_report(conformance)
+
+    if report is not None and not report.ok:
+        return EXIT_SERVERLESS_FAILED
+    if conformance is not None and not conformance.ok:
+        return EXIT_CONFORMANCE_FAILED
+    return EXIT_OK
+
+
+def _print_preflight_report(report: "PreflightReport") -> None:
+    """Print a human-readable serverless preflight report."""
+    provider = report.provider
+    print(f"Serverless preflight: {provider.title} ({provider.name})")
+    print(f"  handler    {provider.entrypoint}")
+    print(f"  bundle     {report.bundle_path}")
+    if report.digest is not None:
+        signed = "signed" if report.signed else "unsigned"
+        print(f"  digest     {report.digest} ({signed})")
+    if report.bundle_bytes is not None:
+        print(f"  size       {report.bundle_bytes} bytes")
+    if report.cold_start is not None:
+        print(f"  cold start {report.cold_start.total_ms:.0f} ms")
+    if report.warm_ms is not None:
+        print(f"  warm call  {report.warm_ms:.1f} ms")
+    print(f"  limits     {provider.limits.docs_url} (read {provider.limits.verified_on})")
+    for finding in report.findings:
+        print(f"[{finding.level.upper():7}] {finding.code}: {finding.detail}")
+    print(report.summary())

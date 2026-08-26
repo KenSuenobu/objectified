@@ -9,10 +9,12 @@ Two runtimes live behind one command:
     network, and no credentials — the command ``apiome mock run`` and the official image both
     execute.
 
-``verify``, ``conformance``, and ``parity`` support the portable path: the first proves a bundle is
-loadable before a job depends on it, the second proves a *running* runtime answers the shared
-conformance corpus correctly (how the CLI and the image are held to identical behavior), and the
-third (#4748, PMR-3.1) diffs a hosted deployment against a portable one response by response.
+``verify``, ``conformance``, ``parity``, and ``serverless`` support the portable path: the first
+proves a bundle is loadable before a job depends on it, the second proves a *running* runtime
+answers the shared conformance corpus correctly (how the CLI and the image are held to identical
+behavior), the third (#4748, PMR-3.1) diffs a hosted deployment against a portable one response by
+response, and the fourth (#4743, PMR-1.3) checks a bundle against a function environment's
+published limits and can run the corpus through that provider's real event shape.
 
 Every ``run`` flag is generated from :data:`apiome_mock.portable_config.RUNTIME_OPTIONS`, so the
 help text, the environment variables, and the documented reference table cannot drift apart.
@@ -25,13 +27,15 @@ import sys
 
 from apiome_mock import __version__
 from apiome_mock.portable_config import add_runtime_arguments
+from apiome_mock.serverless_providers import PROVIDER_NAMES
 
 
 def _build_parser() -> argparse.ArgumentParser:
     """Construct the full argument parser.
 
     Returns:
-        The parser, with the ``serve``, ``run``, ``verify``, and ``conformance`` subcommands.
+        The parser, with the ``serve``, ``run``, ``verify``, ``conformance``, ``parity``,
+        ``selftest``, and ``serverless`` subcommands.
     """
     parser = argparse.ArgumentParser(
         prog="apiome-mock",
@@ -192,6 +196,38 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Emit the parity report as JSON.",
     )
 
+    serverless_parser = subparsers.add_parser(
+        "serverless",
+        help="Check a bundle against a function environment's limits, and run the corpus through it.",
+        description=(
+            "Preflight a mock bundle for a serverless deployment (#4743, PMR-1.3). Reports the "
+            "provider's published package, payload, timeout, and cold-start limits, measures what "
+            "initialization actually costs, and refuses a bundle carrying provider credentials. "
+            "With --conformance, the shared corpus is additionally run through the provider's own "
+            "event shape against the packaged conformance bundle."
+        ),
+    )
+    add_runtime_arguments(serverless_parser)
+    serverless_parser.add_argument(
+        "--provider",
+        default=PROVIDER_NAMES[0],
+        choices=PROVIDER_NAMES,
+        help=f"Target function environment (default: {PROVIDER_NAMES[0]}).",
+    )
+    serverless_parser.add_argument(
+        "--conformance",
+        action="store_true",
+        help=(
+            "Also run the shared conformance corpus through the provider's event shape, against "
+            "the bundle packaged with this runtime (not --bundle)."
+        ),
+    )
+    serverless_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit the preflight report as JSON.",
+    )
+
     selftest_parser = subparsers.add_parser(
         "selftest",
         help="Serve the packaged conformance bundle and run the corpus against it.",
@@ -261,7 +297,7 @@ def main(argv: list[str] | None = None) -> int:
         _serve(args)
         return 0
 
-    if args.command in {"run", "verify", "conformance", "parity", "selftest"}:
+    if args.command in {"run", "verify", "conformance", "parity", "selftest", "serverless"}:
         from apiome_mock import cli_run
 
         handlers = {
@@ -270,6 +306,7 @@ def main(argv: list[str] | None = None) -> int:
             "conformance": cli_run.conformance_command,
             "parity": cli_run.parity_command,
             "selftest": cli_run.selftest_command,
+            "serverless": cli_run.serverless_command,
         }
         return handlers[args.command](args)
 
