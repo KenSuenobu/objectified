@@ -21,10 +21,14 @@ from typer.testing import CliRunner
 from apiome_cli.exit_codes import EXIT_ERROR, EXIT_POLICY_BLOCKED, EXIT_USAGE
 from apiome_cli.import_.bulk import (
     bulk_exit_code,
+    destination_summary_line,
     emit_bulk_plan,
+    emit_bulk_results,
     load_bulk_payload,
     merge_bulk_results,
     pack_directory,
+    parse_override,
+    parse_overrides,
     resolution_summary_line,
 )
 from apiome_cli.main import app
@@ -124,6 +128,7 @@ def _plan_response(**overrides: Any) -> dict[str, Any]:
         "git_source": None,
         "version_policy": "append-when-matched",
         "version_policy_source": "default",
+        "plan_fingerprint": "bp1.reviewed-plan",
         "summary": {
             "items": 2,
             "importable": 2,
@@ -152,6 +157,11 @@ def _start_response(**overrides: Any) -> dict[str, Any]:
                 "name": "Orders Events",
                 "slug": "orders-events",
                 "state": "accepted",
+                "resolution": "append-version",
+                "target_project_id": "p-1",
+                "version_id": "1.1.0",
+                "overridden": False,
+                "resolution_detail": "Appends version 1.1.0 to Orders Events.",
                 "job_id": "job-1",
                 "status_path": "/v1/tenants/acme-corp/imports/job-1",
                 "error": None,
@@ -165,12 +175,18 @@ def _start_response(**overrides: Any) -> dict[str, Any]:
                 "name": "Orders API",
                 "slug": "orders-api",
                 "state": "accepted",
+                "resolution": "create-project",
+                "target_project_id": None,
+                "version_id": "1.0.0",
+                "overridden": False,
+                "resolution_detail": "Creates project 'orders-api' at version 1.0.0.",
                 "job_id": "job-2",
                 "status_path": "/v1/tenants/acme-corp/imports/job-2",
                 "error": None,
             },
         ],
         "skipped": [{"path": "README.md", "reason": "no-recognisable-format"}],
+        "dry_run": False,
         "summary": {"requested": 2, "accepted": 2, "failed": 0},
     }
     body.update(overrides)
@@ -187,7 +203,9 @@ def _status_response(**overrides: Any) -> dict[str, Any]:
                 "percent": 100,
                 "target": "catalog",
                 "project_slug": "orders-events",
-                "project_id": "p1",
+                "project_id": "p-1",
+                "version_id": "1.1.0",
+                "outcome": "version-appended",
                 "error": None,
             },
             {
@@ -198,10 +216,20 @@ def _status_response(**overrides: Any) -> dict[str, Any]:
                 "target": "project",
                 "project_slug": "orders-api",
                 "project_id": "p2",
+                "version_id": "1.0.0",
+                "outcome": "project-created",
                 "error": None,
             },
         ],
-        "summary": {"total": 2, "completed": 2, "failed": 0, "running": 0, "not_found": 0},
+        "summary": {
+            "total": 2,
+            "completed": 2,
+            "failed": 0,
+            "running": 0,
+            "not_found": 0,
+            "created": 1,
+            "appended": 1,
+        },
         "done": True,
     }
     body.update(overrides)
@@ -561,3 +589,242 @@ def test_the_plan_table_tolerates_items_with_no_reconciliation_block(capsys: Any
     emit_bulk_plan(plan, json_mode=False)
 
     assert "Orders API" in capsys.readouterr().out
+
+
+# ------------------------------------------------- overrides and verify (BLK-1.3)
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("specs/orders.yaml=new", {"key": "specs/orders.yaml", "mode": "new"}),
+        ("specs/orders.yaml=existing", {"key": "specs/orders.yaml", "mode": "existing"}),
+        ("specs/orders.yaml=create", {"key": "specs/orders.yaml", "mode": "new"}),
+        ("specs/orders.yaml=append", {"key": "specs/orders.yaml", "mode": "existing"}),
+        (
+            "specs/orders.yaml=existing:p-9",
+            {"key": "specs/orders.yaml", "mode": "existing", "project_id": "p-9"},
+        ),
+        (
+            "specs/orders.yaml=:p-9",
+            {"key": "specs/orders.yaml", "mode": "existing", "project_id": "p-9"},
+        ),
+        (
+            "specs/orders.yaml=existing:p-9@2.0.0",
+            {
+                "key": "specs/orders.yaml",
+                "mode": "existing",
+                "project_id": "p-9",
+                "version_id": "2.0.0",
+            },
+        ),
+        (
+            "specs/orders.yaml=new@0.9.0",
+            {"key": "specs/orders.yaml", "mode": "new", "version_id": "0.9.0"},
+        ),
+        ("specs/orders.yaml=@2.1.0", {"key": "specs/orders.yaml", "version_id": "2.1.0"}),
+        (" specs/orders.yaml = NEW ", {"key": "specs/orders.yaml", "mode": "new"}),
+    ],
+)
+def test_parse_override_reads_the_shapes_a_reviewer_types(value: str, expected: dict) -> None:
+    assert parse_override(value) == expected
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "specs/orders.yaml",
+        "=new",
+        "specs/orders.yaml=",
+        "specs/orders.yaml=maybe",
+        "specs/orders.yaml=new:p-9",
+    ],
+)
+def test_parse_override_refuses_what_it_cannot_act_on(value: str) -> None:
+    with pytest.raises(ValueError):
+        parse_override(value)
+
+
+def test_two_decisions_for_one_item_are_refused() -> None:
+    with pytest.raises(ValueError, match="overridden twice"):
+        parse_overrides(["a.yaml=new", "a.yaml=existing"])
+
+
+def test_overrides_reach_the_submit_as_per_item_decisions(
+    httpx_mock: Any, tmp_path: Path
+) -> None:
+    _mock_batch(httpx_mock)
+
+    result = runner.invoke(
+        app,
+        [
+            "import",
+            "auto",
+            "--bulk",
+            "--override",
+            "openapi/orders.yaml=existing:p-9@2.0.0",
+            "--override",
+            "events/orders.asyncapi.yaml=new",
+            str(_specs_dir(tmp_path)),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert _recorded_body(httpx_mock, _SUBMIT_URL)["overrides"] == [
+        {
+            "key": "openapi/orders.yaml",
+            "mode": "existing",
+            "project_id": "p-9",
+            "version_id": "2.0.0",
+        },
+        {"key": "events/orders.asyncapi.yaml", "mode": "new"},
+    ]
+
+
+def test_a_batch_with_no_overrides_sends_none(httpx_mock: Any, tmp_path: Path) -> None:
+    """Agreeing with the plan must stay a one-command apply."""
+    _mock_batch(httpx_mock)
+
+    runner.invoke(app, ["import", "auto", "--bulk", str(_specs_dir(tmp_path))])
+
+    assert "overrides" not in _recorded_body(httpx_mock, _SUBMIT_URL)
+
+
+def test_a_malformed_override_is_a_usage_error_before_anything_is_sent(
+    httpx_mock: Any, tmp_path: Path
+) -> None:
+    result = runner.invoke(
+        app,
+        ["import", "auto", "--bulk", "--override", "nonsense", str(_specs_dir(tmp_path))],
+    )
+
+    assert result.exit_code == EXIT_USAGE
+    assert "not an override" in result.output
+    assert httpx_mock.get_requests() == []
+
+
+def test_override_without_bulk_is_a_usage_error(tmp_path: Path) -> None:
+    document = tmp_path / "orders.yaml"
+    document.write_text(_OPENAPI, encoding="utf-8")
+
+    result = runner.invoke(
+        app, ["import", "auto", "--override", "a=new", str(document)]
+    )
+
+    assert result.exit_code == EXIT_USAGE
+    assert "--bulk" in result.output
+
+
+def test_the_plan_fingerprint_is_echoed_on_the_apply(httpx_mock: Any, tmp_path: Path) -> None:
+    _mock_batch(httpx_mock)
+
+    runner.invoke(app, ["import", "auto", "--bulk", str(_specs_dir(tmp_path))])
+
+    assert _recorded_body(httpx_mock, _SUBMIT_URL)["plan_fingerprint"] == "bp1.reviewed-plan"
+
+
+def test_a_stale_plan_is_reported_with_the_drift_and_nothing_imported(
+    httpx_mock: Any, tmp_path: Path
+) -> None:
+    httpx_mock.add_response(url=_PLAN_URL, method="POST", json=_plan_response())
+    httpx_mock.add_response(
+        url=_SUBMIT_URL,
+        method="POST",
+        status_code=409,
+        json={
+            "detail": {
+                "code": "TARGET_PLAN_STALE",
+                "category": "input",
+                "message": "The plan you reviewed no longer describes this batch: 1 item(s) changed.",
+                "remediation": "Re-plan the payload.",
+                "retriable": True,
+                "drift": [
+                    {
+                        "key": "openapi/orders.yaml",
+                        "change": "resolution",
+                        "reviewed": "create-project at 1.0.0",
+                        "current": "append-version onto project p-4 at 1.1.0",
+                        "detail": "'openapi/orders.yaml' would do something different now.",
+                    }
+                ],
+            }
+        },
+    )
+
+    result = runner.invoke(app, ["import", "auto", "--bulk", str(_specs_dir(tmp_path))])
+
+    assert result.exit_code == EXIT_USAGE
+    assert "no longer describes this batch" in result.output
+    assert "openapi/orders.yaml" in result.output
+    assert "Nothing was imported" in result.output
+    # The batch stopped at the submit: no status poll was made.
+    assert not any(str(request.url) == _STATUS_URL for request in httpx_mock.get_requests())
+
+
+def test_the_result_table_names_what_each_item_was_applied_as(
+    httpx_mock: Any, tmp_path: Path
+) -> None:
+    _mock_batch(httpx_mock)
+
+    result = runner.invoke(app, ["import", "auto", "--bulk", str(_specs_dir(tmp_path))])
+
+    assert "Action" in result.output and "Version" in result.output
+    assert "append" in result.output and "create" in result.output
+    assert "Destinations: 1 new version, 1 new project." in result.output
+
+
+def test_a_dry_run_states_the_resolutions_it_would_apply(
+    httpx_mock: Any, tmp_path: Path
+) -> None:
+    start = _start_response(dry_run=True)
+    _mock_batch(httpx_mock, start=start)
+
+    result = runner.invoke(
+        app, ["import", "auto", "--bulk", "--dry-run", str(_specs_dir(tmp_path))]
+    )
+
+    assert "Appends version 1.1.0 to Orders Events." in result.output
+    assert "2 validated" in result.output
+
+
+def test_the_destination_line_prefers_what_actually_happened() -> None:
+    realized = [
+        {"state": "completed", "resolution": "create-project", "outcome": "version-appended"},
+        {"state": "completed", "resolution": "create-project", "outcome": "version-appended"},
+    ]
+
+    assert destination_summary_line(realized) == "Destinations: 2 new versions."
+
+
+def test_the_destination_line_falls_back_to_what_was_started() -> None:
+    planned = [
+        {"state": "accepted", "resolution": "append-version", "outcome": None},
+        {"state": "accepted", "resolution": "create-project", "outcome": None},
+        {"state": "failed", "resolution": None, "outcome": None},
+    ]
+
+    assert destination_summary_line(planned) == "Destinations: 1 new version, 1 new project."
+
+
+def test_the_destination_line_is_empty_when_nothing_got_that_far() -> None:
+    assert destination_summary_line([{"state": "failed", "resolution": None}]) == ""
+
+
+def test_results_from_a_server_without_the_apply_fields_still_render(capsys: Any) -> None:
+    """The CLI ships ahead of some deployments; missing BLK-1.3 fields must not raise."""
+    started = {
+        "items": [
+            {
+                "key": "a.yaml",
+                "state": "accepted",
+                "job_id": "job-1",
+                "predicted_target": "project",
+            }
+        ]
+    }
+
+    rows = merge_bulk_results(started, None)
+    emit_bulk_results(rows, json_mode=False, dry_run=False)
+
+    assert rows[0]["resolution"] is None
+    assert "a.yaml" in capsys.readouterr().out

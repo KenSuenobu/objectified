@@ -45,6 +45,9 @@ SHIPPED_CODES = {
     "TARGET_PROJECT_NOT_FOUND",
     "TARGET_NOT_PUBLISHABLE",
     "TARGET_VERSION_EXISTS",
+    # Added by BLK-1.3 (#5525): the batch apply cannot honour what it was asked for.
+    "TARGET_PLAN_STALE",
+    "TARGET_DECISION_REQUIRED",
 }
 
 

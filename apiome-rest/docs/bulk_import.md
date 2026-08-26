@@ -6,7 +6,8 @@
 > **Issue:** [#4392](https://github.com/apiome/apiome/issues/4392) ·
 > **Epic:** MFI-EPIC-29 (#4384) · **Roadmap:** `ROADMAP_MULTI_FORMAT_IMPORT.md`
 > **Extended by:** BLK-1.1 ([#5523](https://github.com/apiome/apiome/issues/5523)) ·
-> BLK-1.2 ([#5524](https://github.com/apiome/apiome/issues/5524))
+> BLK-1.2 ([#5524](https://github.com/apiome/apiome/issues/5524)) ·
+> BLK-1.3 ([#5525](https://github.com/apiome/apiome/issues/5525))
 
 MFI-29.1 answers *"one spec, many files"* — a proto tree is unpacked and handed to one
 adapter as a fileset. This is the other shape: a team's `specs/` folder holds **N unrelated
@@ -79,6 +80,7 @@ linked_account_id?}, filename?, include_documents?}` — exactly one source.
 | `skipped[]` | Files belonging to no item, with `no-recognisable-format` or `over-item-limit` |
 | `truncated` / `total_items` / `max_items` | Explicit statement when the payload holds more items than one batch may carry |
 | `version_policy` / `version_policy_source` | The reconciliation policy in force, and which tier supplied it |
+| `plan_fingerprint` | BLK-1.3: opaque token describing these resolutions. Echo it on the submit and a plan that drifted is refused. Do not parse it |
 | `summary` | `items`, `importable`, `unimportable`, `skipped_files`, `by_target`, `by_format`, `by_resolution`, `matched` |
 
 `predicted_target` is derived from the detected format (the §0.2 branch is on the emitted
@@ -120,25 +122,89 @@ the plan never promises a label the apply would rename.
 A **non-publishable catalog item is still a valid match.** That is genuinely where a
 re-imported non-OpenAPI spec lands (`_resolve_import_project` reuses a live catalog item with
 the same slug), so filtering those out would reintroduce the bug for every catalog format.
-BLK-1.1's `TARGET_NOT_PUBLISHABLE` remains the authority at apply time.
+How the apply expresses that append is BLK-1.3's problem, below.
+
+## Applying the plan (BLK-1.3)
+
+The submit endpoint used to answer "where does this go?" with a constant: every item was
+submitted as `project: {name, slug}` at `1.0.0`, so a batch could only mint new projects at
+their first version. It now applies the plan it re-derives, and only what a reviewer agreed to.
 
 ### `POST /v1/tenants/{tenant}/import/bulk`
 
-Body: the same source plus `{keys?: [...], dry_run?}`. The payload is re-planned server-side —
-identical bytes always yield an identical plan — and one job is started per selected item
-(every planned item when `keys` is omitted).
+Body: the same source plus `{keys?: [...], overrides?: [...], plan_fingerprint?, dry_run?}`.
+The payload is re-planned server-side — identical bytes always yield an identical plan — and
+**reconciled again**, so each item's destination is the one its plan row named.
+
+| Item resolves to | Submitted as | Version |
+|---|---|---|
+| `create-project` | `project: {name, slug}` | The batch default (`1.0.0`) |
+| `append-version` onto a Project | `project: {project_id}` (BLK-1.1) | Derived from that project's own labels |
+| `append-version` onto a **catalog item** | `project: {name, slug}` carrying the matched item's slug | Derived from that item's own labels |
+| `unresolved` (`always-ask`) | Nothing — the row fails with `TARGET_DECISION_REQUIRED` until an override decides it | — |
+
+A catalog item is appended to **by slug rather than by id** because BLK-1.1's `project_id`
+refuses a non-publishable target outright, and `_resolve_import_project` already adds another
+revision to a live catalog item with the same slug. The revision lands on the same project
+either way; only the field that names it differs. The row still reports
+`target_project_id`, so a client sees where it went.
+
+#### Overrides
+
+`overrides[]` is keyed by the plan's stable item `key` and is **sparse** — an item with no
+entry applies its resolution, so agreeing with the plan costs nothing to express.
+
+| Field | Effect |
+|---|---|
+| `mode: "existing"` | Append to `project_id` when given, else to the item's matched project |
+| `mode: "new"` | Create a project, whatever the plan matched |
+| `project_id` | Implies `existing`. Named explicitly, it is submitted as an id — so a catalog item named here is refused with `TARGET_NOT_PUBLISHABLE`, exactly as BLK-1.1 refuses it for a single import |
+| `version_id` | The label to create, replacing the derived one. On its own it keeps the plan's resolution |
+
+An override that both creates and names a project, two overrides for one item, or an override
+whose key the batch is not importing are all reported rather than silently applied — the first
+two as a 422, the third as that key's own failed row.
+
+#### `dry_run` is the verify pass
+
+Every item is resolved and validated through **the same function** the apply uses
+(`decide_item_target`), and nothing is persisted. The rows a dry run returns therefore *are*
+the import it would perform: same `resolution`, same `target_project_id`, same `version_id`.
+
+#### Stale plans
+
+Send the plan's `plan_fingerprint` and the submit refuses — **before any item starts, so
+nothing is written** — when re-planning would now do something else:
+
+```
+HTTP 409  {"detail": {"code": "TARGET_PLAN_STALE", …, "drift": [
+  {"key": "openapi/orders.yaml", "change": "resolution",
+   "reviewed": "create-project at 1.0.0",
+   "current": "append-version onto project 9f2c… at 1.1.0",
+   "detail": "…Re-plan the batch, or send an override that says what you want."}
+]}}
+```
+
+`change` is `resolution`, `target`, `version`, `item-missing` or `item-added`. A submit naming
+explicit `keys` compares only those — an item it will not touch cannot make its apply wrong —
+while a submit with no `keys` treats an item appearing or vanishing as drift too. Omit the
+fingerprint to apply whatever re-planning produces.
+
+#### Per-item outcomes
 
 Each item is gated and scheduled **independently**:
 
 | Outcome | Row |
 |---------|-----|
-| Job started | `state: accepted`, `job_id`, `status_path` |
-| Key not in the plan | `state: failed`, `FORMAT_UNRECOGNIZED` |
+| Job started | `state: accepted`, `job_id`, `status_path`, plus `resolution` / `target_project_id` / `version_id` / `overridden` |
+| Key not in the plan (or an override for one) | `state: failed`, `FORMAT_UNRECOGNIZED` |
 | No adapter for the detected format | `state: failed`, `FORMAT_UNRECOGNIZED` |
 | Refused by the tenant's import policy (IXH-2.3) | `state: failed`, `QUALITY_POLICY_BLOCKED` |
+| Undecided under `always-ask`, or an `existing` override naming nothing | `state: failed`, `TARGET_DECISION_REQUIRED` |
+| A target BLK-1.1 will not honour | `state: failed`, `TARGET_PROJECT_NOT_FOUND` / `TARGET_NOT_PUBLISHABLE` / `TARGET_VERSION_EXISTS` |
 
 **A partial failure never aborts the batch.** Every requested item is reported, and the
-items that can import still do.
+items that can import still do — including when the failure is one reviewer's bad override.
 
 Single-file items are submitted verbatim (`input_kind: file`) so the catalog stores the
 user's own document; multi-file items are packed as the MFI-29.1 archive payload
@@ -150,6 +216,14 @@ Body: `{items: [{key, job_id}]}` — the pairs the submit call returned. Returns
 `state`, `percent`, the authoritative `target`, the created `project_slug`/`project_id`, and
 the taxonomy-coded `error`, plus counts and a `done` flag. A job id this tenant does not own
 is reported as `not-found` rather than failing the whole call.
+
+A completed row also names its **realized destination** (BLK-1.3): `outcome` is
+`version-appended` or `project-created`, alongside the `version_id` the import created, and
+the summary counts both as `appended` / `created`. That is read back from the catalog — a
+revision that is its project's only version means the batch produced that project — rather
+than echoed from what the submit predicted, so the roll-up states what happened. It is a
+snapshot, so an unrelated version added in between can read as an append; the alternative,
+trusting the client's own prediction, cannot report a prediction that was wrong.
 
 The batch itself is **stateless**: each job is an ordinary import job in the shared store, so
 `GET …/imports/{job_id}` remains the source of truth and this endpoint is only a roll-up.
@@ -204,7 +278,13 @@ the same archive imported as one spec.
   deterministically, plans, submits, waits, and prints the per-item table plus the summary.
   The plan table carries the reconciliation columns (`Resolution`, `Existing`, `Version`) and
   the summary leads with "N new versions, M new projects", naming the policy when it is
-  `always-create` or `always-ask`. Exits non-zero when any item failed.
+  `always-create` or `always-ask`. The result table adds `Action` / `Project` / `Version` —
+  what each item was applied *as* — and a `Destinations:` line counting what the batch did.
+  `--override KEY=SPEC` (repeatable) moves one item: `new`, `existing`,
+  `existing:PROJECT_ID`, any of them suffixed `@VERSION`, or `@VERSION` alone. Because the
+  command plans and applies in one run it echoes the plan's fingerprint, so a tenant that
+  moved underneath the batch produces a named-drift refusal rather than a silent
+  substitution. Exits non-zero when any item failed.
 * **UI** — the Catalog import wizard's detect step offers bulk mode when a payload holds
   more than one independent spec, and renders the per-item result list as the jobs finish. The
   repository detail screen's Files tab offers **Import Bulk Items** as soon as a reader ticks

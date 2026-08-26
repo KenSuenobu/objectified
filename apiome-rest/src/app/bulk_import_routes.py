@@ -38,14 +38,31 @@ import uuid
 from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .archive_intake import ArchiveIntakeError, is_archive_payload, unpack_archive_members
 from .auth import get_authenticated_user_id, validate_authentication
+from .bulk_import_apply import (
+    ItemOverride,
+    ItemTarget,
+    ItemTargetError,
+    OverrideMode,
+    decide_item_target,
+)
+from .bulk_import_plan_fingerprint import (
+    TARGET_PLAN_STALE,
+    ReviewedItem,
+    decode_plan_fingerprint,
+    detect_plan_drift,
+    encode_plan_fingerprint,
+)
 from .bulk_import_reconciliation import (
     ItemResolution,
     ProjectReconciler,
+    ProposedVersion,
+    Resolution,
     ResolvedVersionPolicy,
+    VersionDerivation,
     VersionPolicy,
     reconcile_item,
     resolve_version_policy,
@@ -96,9 +113,14 @@ from .spec_import_engine import (
 
 router = APIRouter(prefix="/v1/tenants", tags=["spec-import"])
 
-#: Version assigned to every catalog revision a bulk item creates. Bulk intake carries
-#: no per-item version input, and the adapter pipeline keys identity off the normalized
-#: model rather than this string (see ``build_adapter_import_body`` in the CLI).
+#: The batch's **fallback** first version — no longer its universal answer (BLK-1.3).
+#:
+#: Until BLK-1.3 every item of every batch was submitted at this label, so a batch could only
+#: mint new projects at 1.0.0 and never append a real version. It now applies exactly where it
+#: is the truth: a project that does not exist yet has no history to derive a label from, so
+#: its first revision takes this. Every append derives its label from the target project's own
+#: versions (:func:`app.bulk_import_reconciliation.propose_version`), and an explicit per-item
+#: override replaces both.
 _DEFAULT_ITEM_VERSION = "1.0.0"
 
 #: Job states that will not change again, so the batch is done when every item is one.
@@ -411,7 +433,76 @@ class BulkImportPlanResponse(BaseModel):
             "tenant's default, or the built-in default when neither is set."
         )
     )
+    plan_fingerprint: str = Field(
+        description=(
+            "Opaque token describing the reconciliation this plan reports (BLK-1.3). Echo it "
+            "verbatim as the submit request's 'plan_fingerprint' and the apply refuses to run "
+            "a plan that has drifted since you reviewed it — someone else creating the project "
+            "one of your items was going to mint, or taking the version another proposed — "
+            "naming the rows that moved instead of importing what you never saw. Do not parse "
+            "it: its encoding is the server's business and may change. Two plans of the same "
+            "payload with the same fingerprint would do the same thing."
+        )
+    )
     summary: BulkImportPlanSummary
+
+
+class BulkImportItemOverride(BaseModel):
+    """One reviewer decision for one item, replacing what the plan resolved (BLK-1.3).
+
+    Overrides are **sparse**: an item with no entry applies its BLK-1.2 resolution, so
+    applying a plan you agree with stays one click and disagreeing with one row of twelve
+    costs one entry rather than the batch.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    key: str = Field(
+        description=(
+            "The plan item this decision is about — the same stable key 'keys' takes. An "
+            "override naming an item this batch is not importing is reported as a failed row "
+            "rather than ignored."
+        )
+    )
+    mode: Optional[Literal["existing", "new"]] = Field(
+        default=None,
+        description=(
+            "Where this item goes, overriding the plan: 'existing' appends a version to a "
+            "project that already exists ('project_id' when given, else the item's matched "
+            "project), 'new' creates a project whatever the plan matched. Omit to keep the "
+            "plan's resolution. Required for an item the plan left 'unresolved'."
+        ),
+    )
+    project_id: Optional[str] = Field(
+        default=None,
+        description=(
+            "The existing project to append to. Naming one implies mode 'existing'. The "
+            "project must belong to this tenant and be publishable — a catalog item named "
+            "here is refused for this item with TARGET_NOT_PUBLISHABLE, exactly as BLK-1.1 "
+            "refuses it for a single import."
+        ),
+    )
+    version_id: Optional[str] = Field(
+        default=None,
+        description=(
+            "The version label to create, replacing the derived one. Set it on its own to "
+            "carry a real version number without changing where the item lands. Omitted, an "
+            "append derives the next label from the target project's own versions and a "
+            "create takes the batch's first version."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _reject_contradictions(self) -> "BulkImportItemOverride":
+        """Refuse an override that asks for two different things (BLK-1.3)."""
+        if not self.key.strip():
+            raise ValueError("override 'key' must name a plan item")
+        if self.mode == "new" and (self.project_id or "").strip():
+            raise ValueError(
+                "override mode 'new' creates a project, so it cannot also name a "
+                "'project_id' to append to"
+            )
+        return self
 
 
 class BulkImportStartRequest(BulkImportSourceRequest):
@@ -424,10 +515,42 @@ class BulkImportStartRequest(BulkImportSourceRequest):
             "A key that is not in the plan is reported as a failed item, not an error."
         ),
     )
+    overrides: List[BulkImportItemOverride] = Field(
+        default_factory=list,
+        description=(
+            "Per-item decisions overriding the plan's reconciliation (BLK-1.3), keyed by the "
+            "plan's stable item key. Absent for an item means 'apply what the plan resolved'."
+        ),
+    )
+    plan_fingerprint: Optional[str] = Field(
+        default=None,
+        description=(
+            "The 'plan_fingerprint' of the plan you reviewed, echoed verbatim (BLK-1.3). When "
+            "set, the batch re-plans and refuses with TARGET_PLAN_STALE — naming the drift per "
+            "item and writing nothing — if the payload would now do something other than what "
+            "you reviewed. Omit it to apply whatever re-planning produces."
+        ),
+    )
     dry_run: bool = Field(
         default=False,
-        description="Run every item as a dry run: validate and plan without persisting.",
+        description=(
+            "Verify instead of apply: every item is resolved and validated exactly as the "
+            "apply would resolve and validate it — the response's per-item 'resolution', "
+            "'target_project_id' and 'version_id' are the same computation — and nothing is "
+            "persisted. No project, version or catalog row is written."
+        ),
     )
+
+    @model_validator(mode="after")
+    def _reject_duplicate_overrides(self) -> "BulkImportStartRequest":
+        """One decision per item: two entries for a key would make the batch order-dependent."""
+        seen = set()
+        for entry in self.overrides:
+            key = entry.key.strip()
+            if key in seen:
+                raise ValueError(f"overrides name {key!r} more than once")
+            seen.add(key)
+        return self
 
 
 class BulkImportStartItem(BaseModel):
@@ -444,6 +567,40 @@ class BulkImportStartItem(BaseModel):
     slug: str = Field(description="Catalog slug the job was started with.")
     state: Literal["accepted", "failed"] = Field(
         description="'accepted' when a job was created; 'failed' when this item never started."
+    )
+    resolution: Optional[Literal["append-version", "create-project"]] = Field(
+        default=None,
+        description=(
+            "What this item's job was started to do (BLK-1.3) — the applied form of the plan's "
+            "'resolution', after any override. Null for an item that never got that far (an "
+            "unknown key, or a format no adapter can import). A 'dry_run' batch reports the "
+            "same value the apply would, because it is the same computation."
+        ),
+    )
+    target_project_id: Optional[str] = Field(
+        default=None,
+        description=(
+            "The existing project this item appends to, or null when it creates one. Set for "
+            "every 'append-version' row, including one landing on a catalog item — which takes "
+            "the revision by slug rather than by project id, so the job carries no "
+            "'project.project_id' even though the destination is this project."
+        ),
+    )
+    version_id: Optional[str] = Field(
+        default=None,
+        description=(
+            "The version label the job was started with: derived from the target project's own "
+            "versions for an append, the batch's first version for a create, or the override's "
+            "own value when one was given."
+        ),
+    )
+    overridden: bool = Field(
+        default=False,
+        description="Whether a per-item override, rather than the plan, decided this row.",
+    )
+    resolution_detail: Optional[str] = Field(
+        default=None,
+        description="One sentence stating the decision, for a verify screen or a CLI table.",
     )
     job_id: Optional[str] = Field(default=None, description="The started job's id.")
     status_path: Optional[str] = Field(
@@ -474,6 +631,13 @@ class BulkImportStartResponse(BaseModel):
             "Correlation id for this submission. The batch itself is stateless — poll the "
             "per-item job ids (or the bulk status endpoint) for progress."
         )
+    )
+    dry_run: bool = Field(
+        default=False,
+        description=(
+            "Whether this was a verify pass. True means the rows describe what an apply would "
+            "do and nothing was persisted."
+        ),
     )
     items: List[BulkImportStartItem] = Field(default_factory=list)
     skipped: List[BulkImportSkippedMember] = Field(default_factory=list)
@@ -518,6 +682,20 @@ class BulkImportStatusItem(BaseModel):
         default=None, description="Slug of the catalog item or project the import created."
     )
     project_id: Optional[str] = Field(default=None, description="Id of the created item.")
+    version_id: Optional[str] = Field(
+        default=None,
+        description="Version label the import actually created on that project (BLK-1.3).",
+    )
+    outcome: Optional[Literal["project-created", "version-appended"]] = Field(
+        default=None,
+        description=(
+            "What this item **did** to the tenant (BLK-1.3), read back from the catalog rather "
+            "than from what the submit predicted: 'version-appended' when the revision joined a "
+            "project that already had versions, 'project-created' when it is that project's "
+            "only one. Null until the job completes, and for a dry run, which creates nothing "
+            "to read back."
+        ),
+    )
     error: Optional[SpecImportJobError] = Field(
         default=None, description="Taxonomy-coded failure, when the job failed."
     )
@@ -533,6 +711,12 @@ class BulkImportStatusSummary(BaseModel):
     failed: int
     running: int
     not_found: int
+    created: int = Field(
+        default=0, description="Completed items that produced a project of their own."
+    )
+    appended: int = Field(
+        default=0, description="Completed items that added a version to an existing project."
+    )
 
 
 class BulkImportStatusResponse(BaseModel):
@@ -839,6 +1023,7 @@ def _reconcile_groups(
     tenant_id: str,
     policy: VersionPolicy,
     git_result: Optional[GitFilesetResult],
+    reconciler: Optional[ProjectReconciler] = None,
 ) -> List[ItemResolution]:
     """Reconcile every planned item against the tenant's existing projects (BLK-1.2).
 
@@ -858,11 +1043,14 @@ def _reconcile_groups(
         tenant_id: The acting tenant; every lookup is scoped to it.
         policy: The resolved reconciliation policy.
         git_result: The repository selection, or ``None`` for an archive upload.
+        reconciler: An existing reconciler to reuse. The submit path passes the one it will
+            also derive each item's version from (BLK-1.3), so a project's labels are read
+            once for the whole batch rather than once to plan it and again to apply it.
 
     Returns:
         One resolution per group, positionally aligned with ``groups``.
     """
-    reconciler = ProjectReconciler(db, tenant_id=tenant_id)
+    reconciler = reconciler or ProjectReconciler(db, tenant_id=tenant_id)
     repo_url = git_result.provenance.repo_url if git_result else None
     resolutions: List[ItemResolution] = []
     for group in groups:
@@ -1025,6 +1213,132 @@ def _narrow_to_requested(
     return kept, extra, truncated, total
 
 
+# --------------------------------------------------------------- apply (BLK-1.3)
+
+
+def _reviewed_items(
+    groups: Sequence[BulkGroup], resolutions: Sequence[ItemResolution]
+) -> List[ReviewedItem]:
+    """Reduce a plan to the decisions a fingerprint compares (BLK-1.3).
+
+    Only the fields that decide what an apply *does* — the resolution, the project it would
+    land in, the version it would create. Everything else about a plan row (its members, its
+    detection confidence, the sentence explaining the match) can change without changing the
+    import, and folding those in would make a plan look stale when it is not.
+
+    That is also why a ``create-project`` row records no project. Under ``always-create`` an
+    item reports the match it is *ignoring*, and a colleague creating a project that happens
+    to match it does not change what applying the plan does — the item still creates one.
+    Treating that as drift would refuse a batch nothing had actually changed about.
+
+    Args:
+        groups: The planned items, in plan order.
+        resolutions: Their reconciliations, positionally aligned.
+
+    Returns:
+        One :class:`~app.bulk_import_plan_fingerprint.ReviewedItem` per group.
+    """
+    return [
+        ReviewedItem(
+            key=group.key,
+            resolution=resolved.resolution.value,
+            project_id=(
+                resolved.match.project_id
+                if resolved.match and resolved.resolution is not Resolution.CREATE_PROJECT
+                else ""
+            ),
+            version_id=resolved.proposed_version.version_id,
+        )
+        for group, resolved in zip(groups, resolutions)
+    ]
+
+
+def _enforce_plan_fingerprint(
+    token: Optional[str],
+    groups: Sequence[BulkGroup],
+    resolutions: Sequence[ItemResolution],
+    *,
+    keys: Sequence[str],
+) -> None:
+    """Refuse to apply a plan that no longer says what it said when it was reviewed.
+
+    The check runs **before** any item is gated or scheduled, so a stale batch writes nothing
+    at all rather than importing a prefix and then noticing.
+
+    Args:
+        token: The client's echoed ``plan_fingerprint``, or ``None`` to skip the check.
+        groups: The items this submit re-planned.
+        resolutions: Their freshly computed reconciliations.
+        keys: The item keys this batch will act on; empty means every planned item.
+
+    Raises:
+        HTTPException: 422 when the token is not one this server issued, 409 carrying a
+            per-item ``drift`` list when the plan has moved.
+    """
+    if not token or not token.strip():
+        return
+
+    reviewed = decode_plan_fingerprint(token.strip())
+    if reviewed is None:
+        raise _http_error(
+            TARGET_PLAN_STALE,
+            (
+                "'plan_fingerprint' is not a fingerprint this server issued. Send the value "
+                "from the plan response verbatim, or omit it."
+            ),
+            422,
+        )
+
+    drifts = detect_plan_drift(reviewed, _reviewed_items(groups, resolutions), keys=keys)
+    if not drifts:
+        return
+
+    moved = ", ".join(drift.key for drift in drifts[:3])
+    if len(drifts) > 3:
+        moved += f" and {len(drifts) - 3} more"
+    error = _taxonomy_error(
+        TARGET_PLAN_STALE,
+        (
+            f"The plan you reviewed no longer describes this batch: {len(drifts)} item(s) "
+            f"changed ({moved}). Nothing was imported."
+        ),
+    )
+    detail: Dict[str, Any] = error.model_dump()
+    detail["drift"] = [drift.as_dict() for drift in drifts]
+    raise HTTPException(status_code=409, detail=detail)
+
+
+def _item_override(entry: BulkImportItemOverride) -> ItemOverride:
+    """Adapt one request override into the decision :mod:`app.bulk_import_apply` takes."""
+    return ItemOverride(
+        mode=OverrideMode(entry.mode) if entry.mode else None,
+        project_id=entry.project_id,
+        version_id=entry.version_id,
+    )
+
+
+def _target_refusal(exc: HTTPException) -> SpecImportJobError:
+    """Adapt a scheduling refusal into this item's failed row, never the batch's failure.
+
+    ``schedule_spec_import`` raises for a BLK-1.1 target it cannot honour — an id this tenant
+    cannot see, a catalog item, a version label already taken. Those are HTTP errors for a
+    single import and **per-item** outcomes for a batch, because one reviewer's bad override
+    must not cost the other nineteen items their import.
+
+    Args:
+        exc: The refusal raised while scheduling.
+
+    Returns:
+        The taxonomy-coded error for this item's row.
+    """
+    detail = exc.detail if isinstance(exc.detail, dict) else {}
+    code = str(detail.get("code") or "").strip()
+    message = str(detail.get("message") or detail or exc.detail or "Import could not start.")
+    if code:
+        return _taxonomy_error(code, message)
+    return _taxonomy_error("INTERNAL_WORKER_FAULT", message)
+
+
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
@@ -1058,6 +1372,11 @@ def _narrow_to_requested(
         "reported as `version_policy` / `version_policy_source`. `always-create` reports the "
         "matches it is ignoring rather than hiding them, and `always-ask` marks every item "
         "`unresolved` for a per-item choice at apply time.\n\n"
+        "The response carries a `plan_fingerprint` (BLK-1.3) describing exactly these "
+        "resolutions. Echo it on the submit call and the apply refuses to run a plan that has "
+        "drifted since you read it — someone else creating the project one of your items was "
+        "going to mint, or taking the version another proposed — naming the rows that moved "
+        "rather than importing something you never saw.\n\n"
         "Nothing is persisted and no job is created — reconciliation is reads only. Item "
         "bytes are returned only when `include_documents` is set; the submit endpoint "
         "re-plans the same payload itself, so a client that just renders the list does not "
@@ -1123,6 +1442,7 @@ async def plan_bulk_import_payload(
         ),
         version_policy=policy.policy.value,
         version_policy_source=policy.source.value,
+        plan_fingerprint=encode_plan_fingerprint(_reviewed_items(groups, resolutions)),
         summary=_plan_summary(items, len(skipped)),
     )
 
@@ -1132,16 +1452,34 @@ async def plan_bulk_import_payload(
     response_model=BulkImportStartResponse,
     summary="Start one import job per independent spec in a bulk payload",
     description=(
-        "Re-plan the payload server-side (identical bytes always yield an identical plan) "
-        "and start **one ordinary import job per item** (MFI-29.5). Pass `keys` to import "
-        "a subset of the planned items; omit it to attempt every planned item.\n\n"
-        "Each item is gated and scheduled independently: an item whose format has no "
-        "adapter, whose key is not in the plan, or which the tenant's import quality policy "
-        "refuses (IXH-2.3) is reported as a **failed row with a taxonomy code** while every "
-        "other item still starts — a partial failure never aborts the batch. Items that do "
-        "start run the unchanged import chain, including the §0.2 routing that decides "
-        "Catalog vs Projects, so nothing about a bulk import differs from importing the "
-        "same document on its own.\n\n"
+        "Re-plan the payload server-side (identical bytes always yield an identical plan), "
+        "**reconcile it exactly as the plan endpoint did**, and start one ordinary import job "
+        "per item (MFI-29.5). Pass `keys` to import a subset of the planned items; omit it to "
+        "attempt every planned item.\n\n"
+        "Each item is applied at the destination its plan row resolved to (BLK-1.2): a matched "
+        "item appends its proposed version to that project, an unmatched item creates one. "
+        "**`overrides` change that per item** — `mode: existing` (optionally with a "
+        "`project_id`) appends where the plan would have created, `mode: new` creates where it "
+        "would have appended, and `version_id` alone carries a real version number without "
+        "moving the item. An item with no override applies the plan, so agreeing with the plan "
+        "costs nothing to express. Every started row reports its `resolution`, "
+        "`target_project_id` and `version_id`, so the response states what was done rather "
+        "than only that something was.\n\n"
+        "**`dry_run` is the verify pass**, not a lesser one: it resolves and validates every "
+        "item through the same computation the apply uses and persists nothing — no project, "
+        "no version, no catalog row — so the rows it returns are the import it would perform. "
+        "\n\n"
+        "**Send `plan_fingerprint`** and a plan that drifted since it was reviewed is refused "
+        "with `TARGET_PLAN_STALE` (409), carrying a `drift` list naming each item that moved "
+        "and what it moved from — checked before any item starts, so nothing is written.\n\n"
+        "Each item is otherwise gated and scheduled independently: an item whose format has no "
+        "adapter, whose key is not in the plan, which the tenant's import quality policy "
+        "refuses (IXH-2.3), or whose target BLK-1.1 will not honour (an unknown project, a "
+        "catalog item named explicitly, a version label already taken) is reported as a "
+        "**failed row with a taxonomy code** while every other item still starts — a partial "
+        "failure never aborts the batch. Items that do start run the unchanged import chain, "
+        "including the §0.2 routing that decides Catalog vs Projects, so nothing about a bulk "
+        "import differs from importing the same document on its own.\n\n"
         "The response is the batch's per-item start result. The batch itself holds no "
         "server state: poll the returned job ids individually or roll them up with "
         "`POST …/import/bulk/status`."
@@ -1170,12 +1508,42 @@ async def start_bulk_import(
     )
     by_key = {group.key: group for group in groups}
 
+    # Reconcile before anything is started: the apply's destinations are the plan's answer
+    # (BLK-1.2) plus the reviewer's overrides, and the drift check needs the fresh answer to
+    # compare against the one that was reviewed. One reconciler serves the whole batch and is
+    # handed on to the per-item version derivation, so each project is read once.
+    reconciler = ProjectReconciler(db, tenant_id=tenant_id)
+    policy = await asyncio.to_thread(_resolve_plan_policy, body, tenant_id=tenant_id)
+    resolutions = await asyncio.to_thread(
+        _reconcile_groups,
+        groups,
+        tenant_id=tenant_id,
+        policy=policy.policy,
+        git_result=git_result,
+        reconciler=reconciler,
+    )
+    resolved_by_key = dict(zip((group.key for group in groups), resolutions))
+
     requested_keys = [key.strip() for key in body.keys if key and key.strip()]
+    overrides = {
+        entry.key.strip(): _item_override(entry)
+        for entry in body.overrides
+        if entry.key.strip()
+    }
+    overrides = {key: value for key, value in overrides.items() if not value.is_empty()}
+
+    _enforce_plan_fingerprint(body.plan_fingerprint, groups, resolutions, keys=requested_keys)
+
     selected: List[Tuple[str, Optional[BulkGroup]]] = (
         [(key, by_key.get(key)) for key in requested_keys]
         if requested_keys
         else [(group.key, group) for group in groups]
     )
+    # An override for an item this batch is not importing is a mistake worth reporting: it says
+    # the reviewer believes a decision is being applied that is not. It joins the result list as
+    # its own failed row rather than being dropped.
+    chosen = {key for key, _ in selected}
+    selected += [(key, None) for key in overrides if key not in chosen]
 
     items: List[BulkImportStartItem] = []
     for key, group in selected:
@@ -1189,12 +1557,16 @@ async def start_bulk_import(
                 source_label=label,
                 dry_run=body.dry_run,
                 git_result=git_result,
+                resolved=resolved_by_key.get(key),
+                override=overrides.get(key),
+                reconciler=reconciler,
             )
         )
 
     accepted = sum(1 for item in items if item.state == "accepted")
     return BulkImportStartResponse(
         batch_id=str(uuid.uuid4()),
+        dry_run=body.dry_run,
         items=items,
         skipped=[
             BulkImportSkippedMember(path=entry.path, reason=entry.reason)
@@ -1217,12 +1589,16 @@ async def _start_bulk_item(
     source_label: str,
     dry_run: bool,
     git_result: Optional[GitFilesetResult],
+    resolved: Optional[ItemResolution] = None,
+    override: Optional[ItemOverride] = None,
+    reconciler: Optional[ProjectReconciler] = None,
 ) -> BulkImportStartItem:
-    """Gate and schedule one item, converting any refusal into a failed row.
+    """Gate, target and schedule one item, converting any refusal into a failed row.
 
     Every failure mode of a single import — unknown key, unrecognised format, a
-    blocking quality policy — is a per-item outcome here, because the batch's contract
-    is that one bad document cannot cost the user the other nineteen.
+    blocking quality policy, a target BLK-1.1 refuses — is a per-item outcome here,
+    because the batch's contract is that one bad document cannot cost the user the
+    other nineteen.
 
     Args:
         key: The requested item key.
@@ -1233,6 +1609,11 @@ async def _start_bulk_item(
         source_label: Label of the whole payload, for the item's filename hint.
         dry_run: Whether to run the item without persisting.
         git_result: The repository selection, when the payload came from git.
+        resolved: The item's BLK-1.2 reconciliation, or ``None`` when it is not a planned
+            item (an unknown key never reaches the target decision).
+        override: The reviewer's per-item decision, when one was sent (BLK-1.3).
+        reconciler: The batch's reconciler, used to read the target project's existing
+            version labels when deriving the version to create.
 
     Returns:
         The item's start result — ``accepted`` with a job id, or ``failed`` with a
@@ -1276,6 +1657,30 @@ async def _start_bulk_item(
         )
         return row
 
+    # Where this item goes, and as which version (BLK-1.3). Blocking DB reads hide behind
+    # ``version_labels``, so the decision runs off the event loop like the reconciliation did.
+    try:
+        target = await asyncio.to_thread(
+            _decide_target,
+            resolved,
+            override,
+            tenant_id=tenant_id,
+            suggested_name=name,
+            suggested_slug=slug,
+            reconciler=reconciler,
+        )
+    except ItemTargetError as exc:
+        row.error = _taxonomy_error(exc.code, exc.message)
+        return row
+
+    row.resolution = target.action.value  # type: ignore[assignment]
+    row.target_project_id = target.lands_on
+    row.version_id = target.version_id
+    row.overridden = target.overridden
+    row.resolution_detail = target.detail
+    row.name = target.name
+    row.slug = target.slug
+
     document, input_kind, archive_root = group_document_bytes(group)
     filename = f"{source_label}:{group.root_path}" if source_label else group.root_path
 
@@ -1299,8 +1704,10 @@ async def _start_bulk_item(
     request = SpecImportStartJsonRequest(
         metadata=SpecImportStartMetadata(
             source_kind=source_kind,
-            project=SpecImportProjectTarget(name=name, slug=slug),
-            version=SpecImportVersionTarget(version_id=_DEFAULT_ITEM_VERSION),
+            project=SpecImportProjectTarget(
+                project_id=target.project_id, name=target.name, slug=target.slug
+            ),
+            version=SpecImportVersionTarget(version_id=target.version_id),
             options=SpecImportOptions(
                 dry_run=dry_run,
                 input_kind=input_kind,  # type: ignore[arg-type]
@@ -1311,12 +1718,65 @@ async def _start_bulk_item(
         document_base64=base64.standard_b64encode(document).decode("ascii"),
         filename=filename,
     )
-    accepted = await schedule_spec_import(tenant_slug, tenant_id, user_id, request)
+    try:
+        accepted = await schedule_spec_import(tenant_slug, tenant_id, user_id, request)
+    except HTTPException as exc:
+        # BLK-1.1 refuses a target it cannot honour by raising. For one import that is the
+        # response; for a batch it is one row.
+        row.error = _target_refusal(exc)
+        return row
     row.state = "accepted"
     row.job_id = accepted.job_id
     row.status_path = accepted.status_path
     row.error = None
     return row
+
+
+def _decide_target(
+    resolved: Optional[ItemResolution],
+    override: Optional[ItemOverride],
+    *,
+    tenant_id: str,
+    suggested_name: str,
+    suggested_slug: str,
+    reconciler: Optional[ProjectReconciler],
+) -> ItemTarget:
+    """Resolve one item's destination, reading version labels through the batch reconciler.
+
+    Blocking DB work (label reads) — call via ``asyncio.to_thread``.
+
+    Args:
+        resolved: The item's reconciliation. ``None`` only for a caller that skipped the plan,
+            which is treated as "nothing matched" so the item creates a project.
+        override: The reviewer's decision for this item, or ``None``.
+        tenant_id: The acting tenant, scoping the label reads.
+        suggested_name: The item's catalog name.
+        suggested_slug: Its slug.
+        reconciler: The batch's reconciler; a fresh one is built when a caller has none.
+
+    Returns:
+        The :class:`~app.bulk_import_apply.ItemTarget` this item's job is built from.
+
+    Raises:
+        ItemTargetError: The item is undecided and no override said what to do.
+    """
+    handle = reconciler or ProjectReconciler(db, tenant_id=tenant_id)
+    if resolved is None:
+        resolved = ItemResolution(
+            resolution=Resolution.CREATE_PROJECT,
+            match=None,
+            proposed_version=ProposedVersion(
+                version_id=_DEFAULT_ITEM_VERSION, derived_from=VersionDerivation.DEFAULT
+            ),
+        )
+    return decide_item_target(
+        resolved,
+        override,
+        suggested_name=suggested_name,
+        suggested_slug=suggested_slug,
+        default_version_id=_DEFAULT_ITEM_VERSION,
+        version_labels=handle.version_labels,
+    )
 
 
 @router.post(
@@ -1328,6 +1788,11 @@ async def _start_bulk_item(
         "item's state, its authoritative routing destination and created item once it "
         "completes, and its taxonomy-coded error when it fails — plus the counts a summary "
         "line needs and a `done` flag that is true once every item is terminal.\n\n"
+        "A completed row also names its **realized destination** (BLK-1.3): `outcome` is "
+        "`version-appended` or `project-created`, with the `project_id`, `project_slug` and "
+        "`version_id` it landed on, and the summary counts both. That is read back from the "
+        "catalog rather than echoed from what the submit predicted, so the roll-up states what "
+        "happened.\n\n"
         "This is a convenience roll-up, not a second source of truth: each row is the same "
         "payload `GET …/imports/{job_id}` returns. A job id this tenant does not own is "
         "reported as state `not-found` rather than failing the whole call, so one stale id "
@@ -1339,10 +1804,13 @@ async def bulk_import_status(
     body: BulkImportStatusRequest,
     auth_data: Dict[str, Any] = Depends(validate_authentication),
 ) -> BulkImportStatusResponse:
-    _ = auth_data
+    tenant_id = str(auth_data.get("tenant_id") or "")
+    # One label read per *distinct* project, so a batch of twenty revisions on one project
+    # costs one query rather than twenty.
+    labels: Dict[str, Tuple[str, ...]] = {}
     rows: List[BulkImportStatusItem] = []
     for ref in body.items:
-        rows.append(await _status_row(tenant_slug, ref))
+        rows.append(await _status_row(tenant_slug, ref, tenant_id=tenant_id, labels=labels))
 
     completed = sum(1 for row in rows if row.state == "completed")
     failed = sum(1 for row in rows if row.state in {"failed", "canceled", "rolled-back"})
@@ -1356,17 +1824,28 @@ async def bulk_import_status(
             failed=failed,
             running=running,
             not_found=not_found,
+            created=sum(1 for row in rows if row.outcome == "project-created"),
+            appended=sum(1 for row in rows if row.outcome == "version-appended"),
         ),
         done=all(row.state in _TERMINAL_STATES or row.state == "not-found" for row in rows),
     )
 
 
-async def _status_row(tenant_slug: str, ref: BulkImportStatusRef) -> BulkImportStatusItem:
+async def _status_row(
+    tenant_slug: str,
+    ref: BulkImportStatusRef,
+    *,
+    tenant_id: str = "",
+    labels: Optional[Dict[str, Tuple[str, ...]]] = None,
+) -> BulkImportStatusItem:
     """Flatten one job's status into a batch result row.
 
     Args:
         tenant_slug: The tenant that owns the batch.
         ref: The item key and its job id.
+        tenant_id: The acting tenant's id, scoping the realized-destination read. Empty skips
+            it, which only costs the row its ``outcome``.
+        labels: Per-call cache of ``project_id -> version labels``, shared across the batch.
 
     Returns:
         The row, with state ``not-found`` when the job is unknown to this tenant.
@@ -1380,16 +1859,68 @@ async def _status_row(tenant_slug: str, ref: BulkImportStatusRef) -> BulkImportS
 
     summary = status.summary if isinstance(status.summary, dict) else {}
     routing = summary.get("routing") if isinstance(summary.get("routing"), dict) else {}
+    result = status.result
+    project_id = result.project_id if result else None
     return BulkImportStatusItem(
         key=ref.key,
         job_id=status.job_id,
         state=status.state,
         percent=status.percent,
         target=routing.get("target") if isinstance(routing, dict) else None,
-        project_slug=status.result.project_slug if status.result else None,
-        project_id=status.result.project_id if status.result else None,
+        project_slug=result.project_slug if result else None,
+        project_id=project_id,
+        version_id=result.version_id if result else None,
+        outcome=await _realized_outcome(
+            status.state, project_id, tenant_id=tenant_id, labels=labels
+        ),
         error=status.error,
     )
+
+
+async def _realized_outcome(
+    state: str,
+    project_id: Optional[str],
+    *,
+    tenant_id: str,
+    labels: Optional[Dict[str, Tuple[str, ...]]],
+) -> Optional[str]:
+    """Say what a finished item **did** to the tenant, read back from the catalog (BLK-1.3).
+
+    Read back rather than echoed, because a roll-up that repeated the submit's prediction
+    could not tell the user that the prediction was wrong. The catalog answers it directly:
+    a revision that is its project's only version is a project this batch produced, and one
+    that joined other versions was appended to a project that was already there. That holds
+    for both submit shapes — a catalog item takes its append by slug rather than by project
+    id (see :mod:`app.bulk_import_apply`), and the version count says the same thing either
+    way.
+
+    The read is a snapshot, so a project that gains an unrelated version between the import
+    finishing and this call can read as an append. That is the same tolerance every other
+    row of this endpoint has, and the alternative — trusting what the client says it asked
+    for — is what the ticket rules out.
+
+    Args:
+        state: The job's state; only a completed job has a destination to report.
+        project_id: The project the job recorded, or ``None`` when it produced none.
+        tenant_id: The acting tenant, scoping the read. Empty skips it.
+        labels: The per-call label cache, or ``None`` to read uncached.
+
+    Returns:
+        ``"project-created"``, ``"version-appended"``, or ``None`` when there is nothing to
+        report yet.
+    """
+    if state != "completed" or not project_id or not tenant_id:
+        return None
+    cache = labels if labels is not None else {}
+    if project_id not in cache:
+        try:
+            found = await asyncio.to_thread(
+                db.list_project_version_labels, project_id, tenant_id
+            )
+        except Exception:  # noqa: BLE001 - a roll-up must never fail on a decoration
+            return None
+        cache[project_id] = tuple(found or ())
+    return "version-appended" if len(cache[project_id]) > 1 else "project-created"
 
 
 def _require_tenant_and_user(auth_data: Dict[str, Any]) -> Tuple[str, str]:

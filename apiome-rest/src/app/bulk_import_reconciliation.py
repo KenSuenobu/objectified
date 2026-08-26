@@ -281,6 +281,10 @@ class ProjectMatch:
         basis: Which :class:`MatchBasis` found it.
         confidence: :data:`MATCH_CONFIDENCE` for that basis.
         detail: One sentence explaining the match in the user's terms.
+        publishable: Whether the matched row is a Project (``True``) or a catalog item
+            (``False``). Carried because the two take an appended version by different
+            routes — see :mod:`app.bulk_import_apply` — not because a catalog item is a
+            lesser match.
     """
 
     project_id: str
@@ -289,6 +293,7 @@ class ProjectMatch:
     basis: MatchBasis
     confidence: float
     detail: str
+    publishable: bool = True
 
 
 def normalize_repo_url(repo_url: Optional[str]) -> str:
@@ -466,6 +471,9 @@ def _project_match(row: Dict[str, Any], basis: MatchBasis, *, detail: str) -> Pr
         basis=basis,
         confidence=MATCH_CONFIDENCE[basis],
         detail=detail,
+        # Every match read returns the flag; absent (an older double) means "a Project",
+        # which is the shape that takes ``project.project_id`` and the safer default.
+        publishable=bool(row.get("publishable", True)),
     )
 
 

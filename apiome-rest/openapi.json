@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.162.2",
+    "version": "1.163.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -47948,7 +47948,7 @@
           "spec-import"
         ],
         "summary": "Plan a bulk import: partition an archive or repository into independent items",
-        "description": "Partition one archive upload or repository selection into the **independent** specs it holds (MFI-29.5) and describe each as a candidate import job: root document, the sibling files it compiles, the detected format and adapter, the predicted destination under the \u00a70.2 routing policy, and a suggested catalog name and slug.\n\nGrouping follows references between files \u2014 protobuf `import`, JSON/YAML `$ref`, XSD/WSDL `schemaLocation` \u2014 so a proto tree with cross-directory imports stays **one** item while two unrelated AsyncAPI documents are two. Files that belong to no importable item are reported in `skipped` with a reason, never dropped silently, and a payload holding more items than the batch ceiling reports `truncated` rather than importing a silent prefix.\n\nEvery item is then **reconciled** against the tenant's existing projects (BLK-1.2), so the plan answers the question that decides the batch: *which of these is a new version of something I already have?* An item resolves to `append-version` or `create-project`, naming the `matched_project`, the `match_basis` that found it (repository provenance, then slug, then the document's own identity \u2014 which is how a file that moved within the repository still matches), a `match_confidence` distinct from the format-detection `confidence`, and the `proposed_version` it would create. What a match *means* comes from the reconciliation policy \u2014 the registered repository's override, else the tenant default, else `append-when-matched` \u2014 reported as `version_policy` / `version_policy_source`. `always-create` reports the matches it is ignoring rather than hiding them, and `always-ask` marks every item `unresolved` for a per-item choice at apply time.\n\nNothing is persisted and no job is created \u2014 reconciliation is reads only. Item bytes are returned only when `include_documents` is set; the submit endpoint re-plans the same payload itself, so a client that just renders the list does not need them.",
+        "description": "Partition one archive upload or repository selection into the **independent** specs it holds (MFI-29.5) and describe each as a candidate import job: root document, the sibling files it compiles, the detected format and adapter, the predicted destination under the \u00a70.2 routing policy, and a suggested catalog name and slug.\n\nGrouping follows references between files \u2014 protobuf `import`, JSON/YAML `$ref`, XSD/WSDL `schemaLocation` \u2014 so a proto tree with cross-directory imports stays **one** item while two unrelated AsyncAPI documents are two. Files that belong to no importable item are reported in `skipped` with a reason, never dropped silently, and a payload holding more items than the batch ceiling reports `truncated` rather than importing a silent prefix.\n\nEvery item is then **reconciled** against the tenant's existing projects (BLK-1.2), so the plan answers the question that decides the batch: *which of these is a new version of something I already have?* An item resolves to `append-version` or `create-project`, naming the `matched_project`, the `match_basis` that found it (repository provenance, then slug, then the document's own identity \u2014 which is how a file that moved within the repository still matches), a `match_confidence` distinct from the format-detection `confidence`, and the `proposed_version` it would create. What a match *means* comes from the reconciliation policy \u2014 the registered repository's override, else the tenant default, else `append-when-matched` \u2014 reported as `version_policy` / `version_policy_source`. `always-create` reports the matches it is ignoring rather than hiding them, and `always-ask` marks every item `unresolved` for a per-item choice at apply time.\n\nThe response carries a `plan_fingerprint` (BLK-1.3) describing exactly these resolutions. Echo it on the submit call and the apply refuses to run a plan that has drifted since you read it \u2014 someone else creating the project one of your items was going to mint, or taking the version another proposed \u2014 naming the rows that moved rather than importing something you never saw.\n\nNothing is persisted and no job is created \u2014 reconciliation is reads only. Item bytes are returned only when `include_documents` is set; the submit endpoint re-plans the same payload itself, so a client that just renders the list does not need them.",
         "operationId": "plan_bulk_import_payload_v1_tenants__tenant_slug__import_bulk_plan_post",
         "parameters": [
           {
@@ -48047,7 +48047,7 @@
           "spec-import"
         ],
         "summary": "Start one import job per independent spec in a bulk payload",
-        "description": "Re-plan the payload server-side (identical bytes always yield an identical plan) and start **one ordinary import job per item** (MFI-29.5). Pass `keys` to import a subset of the planned items; omit it to attempt every planned item.\n\nEach item is gated and scheduled independently: an item whose format has no adapter, whose key is not in the plan, or which the tenant's import quality policy refuses (IXH-2.3) is reported as a **failed row with a taxonomy code** while every other item still starts \u2014 a partial failure never aborts the batch. Items that do start run the unchanged import chain, including the \u00a70.2 routing that decides Catalog vs Projects, so nothing about a bulk import differs from importing the same document on its own.\n\nThe response is the batch's per-item start result. The batch itself holds no server state: poll the returned job ids individually or roll them up with `POST \u2026/import/bulk/status`.",
+        "description": "Re-plan the payload server-side (identical bytes always yield an identical plan), **reconcile it exactly as the plan endpoint did**, and start one ordinary import job per item (MFI-29.5). Pass `keys` to import a subset of the planned items; omit it to attempt every planned item.\n\nEach item is applied at the destination its plan row resolved to (BLK-1.2): a matched item appends its proposed version to that project, an unmatched item creates one. **`overrides` change that per item** \u2014 `mode: existing` (optionally with a `project_id`) appends where the plan would have created, `mode: new` creates where it would have appended, and `version_id` alone carries a real version number without moving the item. An item with no override applies the plan, so agreeing with the plan costs nothing to express. Every started row reports its `resolution`, `target_project_id` and `version_id`, so the response states what was done rather than only that something was.\n\n**`dry_run` is the verify pass**, not a lesser one: it resolves and validates every item through the same computation the apply uses and persists nothing \u2014 no project, no version, no catalog row \u2014 so the rows it returns are the import it would perform. \n\n**Send `plan_fingerprint`** and a plan that drifted since it was reviewed is refused with `TARGET_PLAN_STALE` (409), carrying a `drift` list naming each item that moved and what it moved from \u2014 checked before any item starts, so nothing is written.\n\nEach item is otherwise gated and scheduled independently: an item whose format has no adapter, whose key is not in the plan, which the tenant's import quality policy refuses (IXH-2.3), or whose target BLK-1.1 will not honour (an unknown project, a catalog item named explicitly, a version label already taken) is reported as a **failed row with a taxonomy code** while every other item still starts \u2014 a partial failure never aborts the batch. Items that do start run the unchanged import chain, including the \u00a70.2 routing that decides Catalog vs Projects, so nothing about a bulk import differs from importing the same document on its own.\n\nThe response is the batch's per-item start result. The batch itself holds no server state: poll the returned job ids individually or roll them up with `POST \u2026/import/bulk/status`.",
         "operationId": "start_bulk_import_v1_tenants__tenant_slug__import_bulk_post",
         "parameters": [
           {
@@ -48146,7 +48146,7 @@
           "spec-import"
         ],
         "summary": "Roll up the jobs of one bulk batch into a per-item result list",
-        "description": "Fan out over the `(key, job_id)` pairs a bulk submit returned and report each item's state, its authoritative routing destination and created item once it completes, and its taxonomy-coded error when it fails \u2014 plus the counts a summary line needs and a `done` flag that is true once every item is terminal.\n\nThis is a convenience roll-up, not a second source of truth: each row is the same payload `GET \u2026/imports/{job_id}` returns. A job id this tenant does not own is reported as state `not-found` rather than failing the whole call, so one stale id cannot blind a client to the rest of its batch.",
+        "description": "Fan out over the `(key, job_id)` pairs a bulk submit returned and report each item's state, its authoritative routing destination and created item once it completes, and its taxonomy-coded error when it fails \u2014 plus the counts a summary line needs and a `done` flag that is true once every item is terminal.\n\nA completed row also names its **realized destination** (BLK-1.3): `outcome` is `version-appended` or `project-created`, with the `project_id`, `project_slug` and `version_id` it landed on, and the summary counts both. That is read back from the catalog rather than echoed from what the submit predicted, so the roll-up states what happened.\n\nThis is a convenience roll-up, not a second source of truth: each row is the same payload `GET \u2026/imports/{job_id}` returns. A job id this tenant does not own is reported as state `not-found` rather than failing the whole call, so one stale id cannot blind a client to the rest of its batch.",
         "operationId": "bulk_import_status_v1_tenants__tenant_slug__import_bulk_status_post",
         "parameters": [
           {
@@ -72885,6 +72885,69 @@
         "title": "BulkImportGitSelector",
         "description": "A repository selection to plan or import in bulk (MFI-29.3 selection rules)."
       },
+      "BulkImportItemOverride": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "The plan item this decision is about \u2014 the same stable key 'keys' takes. An override naming an item this batch is not importing is reported as a failed row rather than ignored.",
+            "example": "example"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "existing",
+                  "new"
+                ],
+                "description": "Bulk Import Item Override schema."
+              },
+              {
+                "type": "null",
+                "description": "Bulk Import Item Override schema."
+              }
+            ],
+            "title": "Mode",
+            "description": "Where this item goes, overriding the plan: 'existing' appends a version to a project that already exists ('project_id' when given, else the item's matched project), 'new' creates a project whatever the plan matched. Omit to keep the plan's resolution. Required for an item the plan left 'unresolved'."
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Bulk Import Item Override schema."
+              },
+              {
+                "type": "null",
+                "description": "Bulk Import Item Override schema."
+              }
+            ],
+            "title": "Project Id",
+            "description": "The existing project to append to. Naming one implies mode 'existing'. The project must belong to this tenant and be publishable \u2014 a catalog item named here is refused for this item with TARGET_NOT_PUBLISHABLE, exactly as BLK-1.1 refuses it for a single import."
+          },
+          "version_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Bulk Import Item Override schema."
+              },
+              {
+                "type": "null",
+                "description": "Bulk Import Item Override schema."
+              }
+            ],
+            "title": "Version Id",
+            "description": "The version label to create, replacing the derived one. Set it on its own to carry a real version number without changing where the item lands. Omitted, an append derives the next label from the target project's own versions and a create takes the batch's first version."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "key"
+        ],
+        "title": "BulkImportItemOverride",
+        "description": "One reviewer decision for one item, replacing what the plan resolved (BLK-1.3).\n\nOverrides are **sparse**: an item with no entry applies its BLK-1.2 resolution, so\napplying a plan you agree with stays one click and disagreeing with one row of twelve\ncosts one entry rather than the batch."
+      },
       "BulkImportMatchedProject": {
         "properties": {
           "project_id": {
@@ -73279,6 +73342,12 @@
             "description": "Which tier supplied the policy \u2014 the registered repository's override, the tenant's default, or the built-in default when neither is set.",
             "example": "repository"
           },
+          "plan_fingerprint": {
+            "type": "string",
+            "title": "Plan Fingerprint",
+            "description": "Opaque token describing the reconciliation this plan reports (BLK-1.3). Echo it verbatim as the submit request's 'plan_fingerprint' and the apply refuses to run a plan that has drifted since you reviewed it \u2014 someone else creating the project one of your items was going to mint, or taking the version another proposed \u2014 naming the rows that moved instead of importing what you never saw. Do not parse it: its encoding is the server's business and may change. Two plans of the same payload with the same fingerprint would do the same thing.",
+            "example": "a1b2c3d4e5f6789012345678901234ab"
+          },
           "summary": {
             "$ref": "#/components/schemas/BulkImportPlanSummary",
             "description": "Short summary suitable for navigation and reference docs."
@@ -73292,6 +73361,7 @@
           "source_label",
           "version_policy",
           "version_policy_source",
+          "plan_fingerprint",
           "summary"
         ],
         "title": "BulkImportPlanResponse",
@@ -73508,6 +73578,73 @@
             "description": "'accepted' when a job was created; 'failed' when this item never started.",
             "example": "accepted"
           },
+          "resolution": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "append-version",
+                  "create-project"
+                ],
+                "description": "Bulk Import Start schema."
+              },
+              {
+                "type": "null",
+                "description": "Bulk Import Start schema."
+              }
+            ],
+            "title": "Resolution",
+            "description": "What this item's job was started to do (BLK-1.3) \u2014 the applied form of the plan's 'resolution', after any override. Null for an item that never got that far (an unknown key, or a format no adapter can import). A 'dry_run' batch reports the same value the apply would, because it is the same computation."
+          },
+          "target_project_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Bulk Import Start schema."
+              },
+              {
+                "type": "null",
+                "description": "Bulk Import Start schema."
+              }
+            ],
+            "title": "Target Project Id",
+            "description": "The existing project this item appends to, or null when it creates one. Set for every 'append-version' row, including one landing on a catalog item \u2014 which takes the revision by slug rather than by project id, so the job carries no 'project.project_id' even though the destination is this project."
+          },
+          "version_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Bulk Import Start schema."
+              },
+              {
+                "type": "null",
+                "description": "Bulk Import Start schema."
+              }
+            ],
+            "title": "Version Id",
+            "description": "The version label the job was started with: derived from the target project's own versions for an append, the batch's first version for a create, or the override's own value when one was given."
+          },
+          "overridden": {
+            "type": "boolean",
+            "title": "Overridden",
+            "description": "Whether a per-item override, rather than the plan, decided this row.",
+            "default": false,
+            "example": false
+          },
+          "resolution_detail": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Bulk Import Start schema."
+              },
+              {
+                "type": "null",
+                "description": "Bulk Import Start schema."
+              }
+            ],
+            "title": "Resolution Detail",
+            "description": "One sentence stating the decision, for a verify screen or a CLI table."
+          },
           "job_id": {
             "anyOf": [
               {
@@ -73612,10 +73749,33 @@
             "description": "Item keys to import (from the plan). Empty imports every importable item. A key that is not in the plan is reported as a failed item, not an error.",
             "maxItems": 1000
           },
+          "overrides": {
+            "items": {
+              "$ref": "#/components/schemas/BulkImportItemOverride"
+            },
+            "type": "array",
+            "title": "Overrides",
+            "description": "Per-item decisions overriding the plan's reconciliation (BLK-1.3), keyed by the plan's stable item key. Absent for an item means 'apply what the plan resolved'.",
+            "maxItems": 1000
+          },
+          "plan_fingerprint": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Request body for bulk import start."
+              },
+              {
+                "type": "null",
+                "description": "Request body for bulk import start."
+              }
+            ],
+            "title": "Plan Fingerprint",
+            "description": "The 'plan_fingerprint' of the plan you reviewed, echoed verbatim (BLK-1.3). When set, the batch re-plans and refuses with TARGET_PLAN_STALE \u2014 naming the drift per item and writing nothing \u2014 if the payload would now do something other than what you reviewed. Omit it to apply whatever re-planning produces."
+          },
           "dry_run": {
             "type": "boolean",
             "title": "Dry Run",
-            "description": "Run every item as a dry run: validate and plan without persisting.",
+            "description": "Verify instead of apply: every item is resolved and validated exactly as the apply would resolve and validate it \u2014 the response's per-item 'resolution', 'target_project_id' and 'version_id' are the same computation \u2014 and nothing is persisted. No project, version or catalog row is written.",
             "default": false,
             "example": true
           }
@@ -73632,6 +73792,13 @@
             "title": "Batch Id",
             "description": "Correlation id for this submission. The batch itself is stateless \u2014 poll the per-item job ids (or the bulk status endpoint) for progress.",
             "example": "batch_01h2xcejqtf3fz5y5j0v8k9m2p"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "title": "Dry Run",
+            "description": "Whether this was a verify pass. True means the rows describe what an apply would do and nothing was persisted.",
+            "default": false,
+            "example": true
           },
           "items": {
             "items": {
@@ -73767,6 +73934,38 @@
             "title": "Project Id",
             "description": "Id of the created item."
           },
+          "version_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Bulk Import Status schema."
+              },
+              {
+                "type": "null",
+                "description": "Bulk Import Status schema."
+              }
+            ],
+            "title": "Version Id",
+            "description": "Version label the import actually created on that project (BLK-1.3)."
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "project-created",
+                  "version-appended"
+                ],
+                "description": "Bulk Import Status schema."
+              },
+              {
+                "type": "null",
+                "description": "Bulk Import Status schema."
+              }
+            ],
+            "title": "Outcome",
+            "description": "What this item **did** to the tenant (BLK-1.3), read back from the catalog rather than from what the submit predicted: 'version-appended' when the revision joined a project that already had versions, 'project-created' when it is that project's only one. Null until the job completes, and for a dry run, which creates nothing to read back."
+          },
           "error": {
             "anyOf": [
               {
@@ -73892,6 +74091,20 @@
             "type": "integer",
             "title": "Not Found",
             "description": "Not Found.",
+            "example": 1
+          },
+          "created": {
+            "type": "integer",
+            "title": "Created",
+            "description": "Completed items that produced a project of their own.",
+            "default": 0,
+            "example": 1
+          },
+          "appended": {
+            "type": "integer",
+            "title": "Appended",
+            "description": "Completed items that added a version to an existing project.",
+            "default": 0,
             "example": 1
           }
         },
@@ -78013,7 +78226,7 @@
             "type": "string",
             "title": "Operation Uuid",
             "description": "The apiome.path_operation UUID.",
-            "example": "eb2feedd-217c-4b32-aec8-9c79db4e2624"
+            "example": "a76cdd17-002d-4361-9cc1-882933cb81e5"
           },
           "method": {
             "type": "string",
@@ -80377,7 +80590,7 @@
             "type": "string",
             "title": "Generated At",
             "description": "Statement timestamp (ISO-8601, UTC).",
-            "example": "2026-08-26T14:07:25Z"
+            "example": "2026-08-26T15:00:52Z"
           },
           "envelope": {
             "additionalProperties": true,
@@ -115950,7 +116163,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-26T14:07:25Z"
+            "example": "2026-08-26T15:00:52Z"
           }
         },
         "additionalProperties": false,
@@ -131004,14 +131217,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-26T14:07:25Z"
+            "example": "2026-08-26T15:00:52Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-26T14:07:25Z"
+            "example": "2026-08-26T15:00:52Z"
           },
           "outcome": {
             "anyOf": [

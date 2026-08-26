@@ -319,6 +319,23 @@ INTAKE_ERROR_TAXONOMY: Dict[str, IntakeErrorDescriptor] = {
             "import never overwrites one. Choose an unused version id, or set the "
             "'skip duplicate versions' option to treat a repeat import as a no-op.",
         ),
+        # --- target: the batch apply cannot honour what it was asked for (BLK-1.3) --
+        _d(
+            "TARGET_PLAN_STALE",
+            IntakeErrorCategory.INPUT,
+            True,
+            "The plan you reviewed no longer describes what this batch would do — the "
+            "tenant's projects changed in between. Re-plan the payload, read the rows "
+            "that moved, and apply the new plan.",
+        ),
+        _d(
+            "TARGET_DECISION_REQUIRED",
+            IntakeErrorCategory.INPUT,
+            False,
+            "This item has no destination yet: the reconciliation policy defers the "
+            "choice to you, or the override asked to append without naming a project. "
+            "Send a per-item override choosing 'existing' (with a project id) or 'new'.",
+        ),
         # --- policy: rejected by tenant policy -----------------------------------
         _d(
             "QUALITY_POLICY_BLOCKED",
