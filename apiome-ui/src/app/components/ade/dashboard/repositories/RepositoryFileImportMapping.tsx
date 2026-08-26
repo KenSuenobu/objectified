@@ -873,7 +873,15 @@ export function RepositoryFileImportMapping({
                             </p>
                           ) : (
                             <Select
-                              value={stagedProject?.id}
+                              // `?? ''` keeps the Root *controlled* at all times. With
+                              // `undefined` it flips to uncontrolled the moment the staged
+                              // project is cleared — by the "Create a new project" radio, or by
+                              // "Clear selection" — while Radix keeps the previously chosen id
+                              // internally. Re-picking that same project is then a no-op: no
+                              // `onValueChange`, nothing staged, and the Import button stays
+                              // disabled forever unless the reader happens to choose a
+                              // *different* project.
+                              value={stagedProject?.id ?? ''}
                               onValueChange={(projectId) => {
                                 const p = projectsList.find((x) => x.id === projectId);
                                 if (p) {

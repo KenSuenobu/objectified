@@ -44,7 +44,6 @@ import {
   formatFileBytes,
   formatImportedByActor,
   formatRelativeWhen,
-  importSelectedNotice,
   isRepositoryFileListNarrowed,
   parseRepositoryDetailTab,
   previewImportsFootLabel,
@@ -480,15 +479,6 @@ describe('the file table', () => {
       'Showing 51–56 of 56'
     );
     expect(repositoryFilesShowingLine({ offset: 0, rows: 0, matchCount: 0 })).toBe('—');
-  });
-
-  test('one selected file needs no warning; more than one names the file it is opening', () => {
-    expect(importSelectedNotice([])).toBeNull();
-    expect(importSelectedNotice(['a.yaml'])).toBeNull();
-    const notice = importSelectedNotice(['a.yaml', 'b.yaml', 'c.yaml']);
-    expect(notice).toContain('one spec at a time');
-    expect(notice).toContain('a.yaml');
-    expect(notice).toContain('Re-select the rest afterward');
   });
 
   test('the empty state names both reasons a page can be blank', () => {

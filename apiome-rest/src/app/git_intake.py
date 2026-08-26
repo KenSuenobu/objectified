@@ -50,6 +50,7 @@ from .archive_intake import (
     archive_policy_from_settings,
     resolve_fileset_root,
 )
+from .bulk_intake import member_references
 from .format_detection import FormatDetection
 from .intake_paths import (
     BINARY_SUFFIXES,
@@ -707,6 +708,167 @@ def fetch_git_fileset(
         provenance=provenance,
         skipped=tuple(skipped),
         ambiguous_roots=ambiguous,
+    )
+
+
+#: How many times the reference closure may widen before it stops. A spec tree that needs more
+#: than this many hops from a ticked file is pathological, and stopping is safer than an
+#: unbounded walk over a repository whose tree the caller does not control.
+MAX_REFERENCE_HOPS = 10
+
+
+def fetch_git_files(
+    selector: GitSelector,
+    paths: Sequence[str],
+    *,
+    access_token: Optional[str] = None,
+    policy: Optional[ArchivePolicy] = None,
+    client: Optional[GitRepositoryClient] = None,
+) -> GitFilesetResult:
+    """Fetch exactly the named repository files, plus everything they reference (BLK-1.5).
+
+    :func:`fetch_git_fileset` reads a *selection* — a directory, a glob, the whole tree — which
+    is the wrong unit of work when a reader has ticked four rows in a repository's Files tab.
+    On a monorepo that read is refused outright (``INPUT_TOO_LARGE``: the selection matches more
+    files than ``archive_max_entries``) even though the four ticked files are tiny.
+
+    So this reads from the other end. The tree listing is one cheap call and carries no content;
+    the ticked files are downloaded, scanned for the references they make, and whatever those
+    name is downloaded too, repeating until the set closes over itself. A ticked
+    ``orders.proto`` therefore arrives with the ``common/types.proto`` it imports even though
+    nobody ticked it and no glob covers both — which is the whole reason narrowing the *read* to
+    the ticked files' shared directory is not a valid shortcut.
+
+    Members are keyed by their **repository-relative** path (the provenance anchor is the
+    repository root, not a subdirectory), so an item's path is directly comparable to what the
+    Files tab shows and to the ``format_metadata.gitPath`` an earlier import recorded.
+
+    Args:
+        selector: Repository and ref. Its ``path`` is ignored — ``paths`` is the selection.
+        paths: Repository-relative files to fetch. Blank and unknown entries are skipped rather
+            than failing the read, since a stale index can name a file the commit no longer has.
+        access_token: Stored credential for private repositories; ``None`` reads anonymously.
+        policy: Sandbox budget; defaults to the archive policy from settings, so a ticked-files
+            read can never cost more than an archive upload.
+        client: Repository client to use; defaults to :class:`GitHubApiClient`.
+
+    Returns:
+        The closure of the named files, with an empty ``root_path`` and no detection — the
+        caller partitions it per item, exactly as a bulk selection is partitioned.
+
+    Raises:
+        GitIntakeError: For an unsupported provider, an unreachable repository or ref, a
+            selection that names nothing the commit holds, or a budget breach.
+    """
+    owner_repo = parse_github_owner_repo_from_url(selector.repo_url)
+    if not owner_repo:
+        raise GitIntakeError(
+            "Git intake currently supports github.com repository URLs only "
+            "(for example https://github.com/owner/repo).",
+            code="SOURCE_PROVIDER_UNSUPPORTED",
+        )
+    owner, repo = owner_repo
+    active = policy or archive_policy_from_settings()
+    api = client or GitHubApiClient(access_token)
+
+    commit = api.resolve_ref(owner, repo, selector.ref)
+    # The tree is paths and sizes only — no blob content — so listing a monorepo is cheap and
+    # the budget below applies to what is actually downloaded.
+    tree = {blob.path: blob for blob in api.list_tree(owner, repo, commit.commit_sha)}
+
+    wanted = [_normalise_selection(path) for path in paths]
+    frontier = [path for path in dict.fromkeys(wanted) if path and path in tree]
+    if not frontier:
+        raise GitIntakeError(
+            f"None of the selected files exist in {owner}/{repo} at {commit.ref} "
+            f"({commit.commit_sha[:7]}). Rescan the repository and try again.",
+            code="SOURCE_SELECTION_EMPTY",
+        )
+
+    members: Dict[str, str] = {}
+    skipped: List[GitSkippedMember] = []
+    total = 0
+
+    for _hop in range(MAX_REFERENCE_HOPS):
+        if not frontier:
+            break
+        for path in frontier:
+            if path in members:
+                continue
+            blob = tree[path]
+            reason = _should_skip_tree_path(path)
+            if reason:
+                skipped.append(GitSkippedMember(path=path, reason=reason))
+                continue
+            if blob.size > active.max_file_bytes:
+                skipped.append(GitSkippedMember(path=path, reason="too-large"))
+                continue
+            if len(members) >= active.max_entries:
+                raise GitIntakeError(
+                    f"The selected files and the documents they reference come to more than "
+                    f"{active.max_entries} files (limit archive_max_entries="
+                    f"{active.max_entries}). Select fewer files.",
+                    code="INPUT_TOO_LARGE",
+                )
+            # Validated for depth and path safety exactly as a selection member is, so a
+            # ticked path cannot smuggle in a traversal the selection rules would refuse.
+            _validated_member_key(path, prefix="", max_depth=active.max_depth)
+            text = api.read_file(
+                owner, repo, path, commit.commit_sha, max_bytes=active.max_file_bytes
+            )
+            total += len(text.encode("utf-8", errors="replace"))
+            if total > active.max_total_bytes:
+                raise GitIntakeError(
+                    f"The selected files and the documents they reference exceed the "
+                    f"{active.max_total_bytes}-byte intake limit (limit "
+                    f"archive_max_total_bytes={active.max_total_bytes}). Select fewer files.",
+                    code="INPUT_TOO_LARGE",
+                )
+            members[path] = text
+
+        # Widen by one hop: whatever this round's documents reference and we do not hold yet.
+        # `member_references` resolves against a *candidate* map — the whole tree — so a
+        # reference is followed wherever in the repository it points, not only inside what has
+        # already been read.
+        candidates = {path: "" for path in tree}
+        discovered: List[str] = []
+        for path in frontier:
+            text = members.get(path)
+            if text is None:
+                continue
+            for referenced in member_references(path, text, candidates):
+                if referenced not in members and referenced not in discovered:
+                    discovered.append(referenced)
+        frontier = discovered
+
+    if not members:
+        raise GitIntakeError(
+            f"None of the selected files in {owner}/{repo} at {commit.ref} "
+            f"({commit.commit_sha[:7]}) could be read.",
+            code="SOURCE_SELECTION_EMPTY",
+        )
+
+    provenance = GitProvenance(
+        provider=GITHUB_PROVIDER,
+        repo_url=f"https://github.com/{owner}/{repo}",
+        owner=owner,
+        repo=repo,
+        ref=commit.ref,
+        commit_sha=commit.commit_sha,
+        # Members are keyed from the repository root, so the anchor is the root too. Anything
+        # else would make an item's recorded gitPath disagree with the Files tab.
+        path="",
+        browse_url=_browse_url(owner, repo, commit.commit_sha, ""),
+    )
+    return GitFilesetResult(
+        members=members,
+        root_path="",
+        detection=FormatDetection(
+            detected=None, candidates=[], ambiguous=False, ambiguous_candidates=[]
+        ),
+        provenance=provenance,
+        skipped=tuple(skipped),
+        ambiguous_roots=(),
     )
 
 

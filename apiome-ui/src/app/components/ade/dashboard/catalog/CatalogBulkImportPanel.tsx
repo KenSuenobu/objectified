@@ -25,7 +25,27 @@ export interface BulkSkippedMember {
   reason: string;
 }
 
-/** One independent spec found in the payload (a row of the plan). */
+/** The existing project a planned item resolves to (BLK-1.2). */
+export interface BulkMatchedProject {
+  project_id: string;
+  name: string;
+  slug: string;
+}
+
+/** The version label a planned item would create, and how it was derived (BLK-1.2). */
+export interface BulkProposedVersion {
+  version_id: string;
+  derived_from: 'default' | 'version-bump' | 'next-available';
+  previous_version_id?: string | null;
+}
+
+/**
+ * One independent spec found in the payload (a row of the plan).
+ *
+ * The reconciliation fields are optional so the panel still renders against a deployment that
+ * predates BLK-1.2 — a plan without them reads as "everything is new", which is exactly what
+ * such a server means.
+ */
 export interface BulkPlanItem {
   key: string;
   root_path: string;
@@ -40,6 +60,13 @@ export interface BulkPlanItem {
   suggested_name: string;
   suggested_slug: string;
   reason: string;
+  /** BLK-1.2: what applying this plan now would do with the item. */
+  resolution?: 'append-version' | 'create-project' | 'unresolved';
+  matched_project?: BulkMatchedProject | null;
+  match_basis?: 'repository-provenance' | 'slug' | 'spec-identity' | null;
+  match_detail?: string | null;
+  match_confidence?: number | null;
+  proposed_version?: BulkProposedVersion | null;
 }
 
 /** The partition of one payload, as returned by `/api/catalog/import/bulk/plan`. */
@@ -50,6 +77,9 @@ export interface BulkPlan {
   total_items: number;
   max_items: number;
   source_label: string;
+  /** BLK-1.2: the reconciliation policy the plan was resolved under, and which tier set it. */
+  version_policy?: 'append-when-matched' | 'always-create' | 'always-ask';
+  version_policy_source?: 'repository' | 'tenant' | 'default';
   summary: {
     items: number;
     importable: number;
@@ -57,6 +87,8 @@ export interface BulkPlan {
     skipped_files: number;
     by_target: Record<string, number>;
     by_format: Record<string, number>;
+    by_resolution?: Record<string, number>;
+    matched?: number;
   };
 }
 

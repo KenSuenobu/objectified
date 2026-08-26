@@ -9,7 +9,7 @@
  * each, and every decision below was spelled inline in one of them — often twice, in two
  * spellings that had drifted. Which tab a query string names, what a KPI's figure and its
  * footnote are, how a glob and a regex compose into one request, what the toolbar's count
- * line says, when "Import selected" has to warn that the wizard takes one file at a time,
+ * line says, which files a batch import may be narrowed to,
  * why Map & import is unavailable: all of it is here, React-free, so each rule is unit-tested
  * without rendering a screen.
  *
@@ -682,21 +682,6 @@ export const DEEP_LINK_MISS_TOAST =
 /** The Quality column's header tooltip, kept verbatim. */
 export const QUALITY_COLUMN_TOOLTIP =
   'Rough 0–100 quality score for classified specs. Informational only — it does not gate import or sync.';
-
-/**
- * What "Import selected" says when more than one row is ticked.
- *
- * The wizard maps one specification at a time — a version, a project and a set of naming
- * conventions are per-file decisions — so a multi-row selection opens the first and says so
- * rather than silently dropping the rest.
- *
- * @param paths The selected paths, in table order.
- * @returns The message, or `null` when one row is selected and there is nothing to explain.
- */
-export function importSelectedNotice(paths: readonly string[]): string | null {
-  if (paths.length <= 1) return null;
-  return `The import wizard maps one spec at a time — opening ${paths[0]}. Re-select the rest afterward.`;
-}
 
 // ============================================================================
 // The branch bar

@@ -706,16 +706,25 @@ describe('the Files tab', () => {
     await waitFor(() => expect(selectAll.indeterminate).toBe(false));
   });
 
-  test('Import selected warns that the wizard maps one file at a time', async () => {
+  test('ticking more than one row offers the batch instead of the one-file wizard', async () => {
+    // BLK-1.5: this used to open Map & import on the first file and apologise for the rest.
     await renderScreen();
     await openFiles();
 
     fireEvent.click(screen.getByLabelText('Select all files on this page'));
+
+    const bulk = await screen.findByTestId('repository-import-bulk');
+    expect(bulk).toHaveTextContent('Import Bulk Items (2)');
+    expect(screen.queryByTestId('repository-import-selected')).not.toBeInTheDocument();
+  });
+
+  test('ticking exactly one row still opens Map & import for it', async () => {
+    await renderScreen();
+    await openFiles();
+
+    fireEvent.click(screen.getByLabelText('Select specs/payments/openapi.yaml'));
     fireEvent.click(screen.getByTestId('repository-import-selected'));
 
-    expect(mockToastMessage).toHaveBeenCalledWith(
-      expect.stringContaining('one spec at a time')
-    );
     expect(await screen.findByTestId('repository-map-import')).toBeInTheDocument();
   });
 

@@ -26,7 +26,13 @@ from app import bulk_import_routes
 from app.auth import validate_authentication
 from app.bulk_intake import BulkGroup
 from app.format_detection import FormatCandidate, FormatDetection
-from app.git_intake import GitIntakeError, GitSelector, fetch_git_fileset, pack_fileset_zip
+from app.git_intake import (
+    GitIntakeError,
+    GitSelector,
+    fetch_git_files,
+    fetch_git_fileset,
+    pack_fileset_zip,
+)
 from app.import_export_quality_policy import (
     QualityGateError,
     QualityThresholds,
@@ -234,13 +240,28 @@ def _archive(members: Optional[Dict[str, str]] = None) -> str:
 
 
 def _use_repository(monkeypatch, files: Dict[str, str]) -> None:
-    """Point the batch at an in-memory repository instead of GitHub."""
+    """Point the batch at an in-memory repository instead of GitHub.
+
+    Both reads are stubbed: a selection goes through ``fetch_git_fileset`` and a ticked-files
+    request (BLK-1.5) through ``fetch_git_files``, and a test that patched only one would
+    quietly reach the real GitHub API for the other.
+    """
     repo = FakeRepositoryClient(files)
 
     def _fetch(selector: GitSelector, *, access_token: Optional[str] = None, **kwargs: Any):
         return fetch_git_fileset(selector, access_token=access_token, client=repo, **kwargs)
 
+    def _fetch_files(
+        selector: GitSelector,
+        paths: Any,
+        *,
+        access_token: Optional[str] = None,
+        **kwargs: Any,
+    ):
+        return fetch_git_files(selector, paths, access_token=access_token, client=repo, **kwargs)
+
     monkeypatch.setattr(bulk_import_routes, "fetch_git_fileset", _fetch)
+    monkeypatch.setattr(bulk_import_routes, "fetch_git_files", _fetch_files)
     monkeypatch.setattr(
         bulk_import_routes, "resolve_stored_git_token", lambda *args, **kwargs: None
     )
@@ -402,11 +423,14 @@ _MOVED_MEMBERS = {
 }
 
 
-def _plan_repository(monkeypatch, members=None, **selector: Any) -> Dict[str, Any]:
+def _plan_repository(
+    monkeypatch, members=None, *, selector: Optional[Dict[str, Any]] = None, **extra: Any
+) -> Dict[str, Any]:
     """Plan a repository selection against the in-memory repository client."""
     _use_repository(monkeypatch, members or _MIXED_MEMBERS)
     response = client.post(
-        _PLAN, json={"git": {"repo_url": _REPO_URL, "ref": "main", **selector}}
+        _PLAN,
+        json={"git": {"repo_url": _REPO_URL, "ref": "main", **(selector or {}), **extra}},
     )
     assert response.status_code == 200, response.text
     return response.json()
@@ -705,6 +729,214 @@ def test_an_unimportable_item_is_reconciled_like_any_other(catalog) -> None:
     assert row.resolution == "append-version"
     assert row.matched_project is not None
     assert bulk_import_routes._plan_summary([row], 0).by_resolution == {"append-version": 1}
+
+
+# --------------------------------------------------- plan: ticked repository files (BLK-1.5)
+
+
+def test_ticking_files_plans_only_those_items(monkeypatch, catalog) -> None:
+    """The Files tab's shape of intent: N ticked rows, not a directory."""
+    body = _plan_repository(
+        monkeypatch, selector={"paths": ["openapi/orders.yaml", "events/shipping.asyncapi.yaml"]}
+    )
+
+    assert sorted(item["key"] for item in body["items"]) == [
+        "events/shipping.asyncapi.yaml",
+        "openapi/orders.yaml",
+    ]
+    assert body["total_items"] == 2
+
+
+def test_a_ticked_item_keeps_the_siblings_it_compiles(monkeypatch, catalog) -> None:
+    """Narrowing removes items, never members — a proto keeps its imported type file."""
+    body = _plan_repository(monkeypatch, selector={"paths": ["protos/orders/orders.proto"]})
+
+    proto = _item(body, "protos/orders/orders.proto")
+    assert proto["members"] == [
+        "protos/common/types.proto",
+        "protos/orders/orders.proto",
+    ]
+    assert proto["input_kind"] == "fileset"
+
+
+def test_ticking_a_file_that_is_no_items_root_reports_it(monkeypatch, catalog) -> None:
+    """A shared type file another ticked item compiles is explained, not silently dropped."""
+    body = _plan_repository(
+        monkeypatch,
+        selector={
+            "paths": ["protos/orders/orders.proto", "protos/common/types.proto"],
+        },
+    )
+
+    # Both were ticked, but they are one compilation unit rooted at the service proto.
+    assert [item["key"] for item in body["items"]] == ["protos/orders/orders.proto"]
+    assert {
+        "path": "protos/common/types.proto",
+        "reason": "not-an-item-root",
+    } in body["skipped"]
+
+
+def test_ticked_files_are_always_keyed_from_the_repository_root(monkeypatch, catalog) -> None:
+    """A ticked read anchors at the root, so `path` cannot re-key what the reader ticked.
+
+    Anchoring anywhere else would make an item's key — and the gitPath it records — disagree
+    with the path the Files tab showed, which is the comparison BLK-1.2 reconciles against.
+    """
+    body = _plan_repository(
+        monkeypatch, selector={"path": "openapi", "paths": ["openapi/orders.yaml"]}
+    )
+
+    assert [item["key"] for item in body["items"]] == ["openapi/orders.yaml"]
+    assert body["git_source"]["path"] == ""
+
+
+def test_ticked_files_are_read_without_their_whole_directory(monkeypatch, catalog) -> None:
+    """The fix for the monorepo 413: a selection this size is refused, ticked files are not."""
+    monkeypatch.setattr(bulk_import_routes.settings, "archive_max_entries", 5)
+    crowded = {
+        **_MIXED_MEMBERS,
+        **{f"noise/file-{index}.yaml": "unrelated: true\n" for index in range(40)},
+    }
+
+    body = _plan_repository(monkeypatch, crowded, selector={"paths": ["openapi/orders.yaml"]})
+
+    assert [item["key"] for item in body["items"]] == ["openapi/orders.yaml"]
+
+
+def test_a_selection_over_the_entry_limit_still_refuses(monkeypatch, catalog) -> None:
+    """The budget is unchanged for a selection — ticking files is what narrows the read."""
+    monkeypatch.setattr(bulk_import_routes.settings, "archive_max_entries", 5)
+    crowded = {
+        **_MIXED_MEMBERS,
+        **{f"noise/file-{index}.yaml": "unrelated: true\n" for index in range(40)},
+    }
+    _use_repository(monkeypatch, crowded)
+
+    response = client.post(_PLAN, json={"git": {"repo_url": _REPO_URL, "ref": "main"}})
+
+    assert response.status_code == 413
+    assert response.json()["detail"]["code"] == "INPUT_TOO_LARGE"
+
+
+def test_ticking_more_than_the_budget_allows_is_refused_with_its_code(
+    monkeypatch, catalog
+) -> None:
+    """Reading from the ticked end is bounded too — it just counts what was actually asked for."""
+    monkeypatch.setattr(bulk_import_routes.settings, "archive_max_entries", 2)
+    _use_repository(monkeypatch, _MIXED_MEMBERS)
+
+    response = client.post(
+        _PLAN,
+        json={
+            "git": {
+                "repo_url": _REPO_URL,
+                "ref": "main",
+                "paths": [
+                    "openapi/orders.yaml",
+                    "events/orders.asyncapi.yaml",
+                    "events/shipping.asyncapi.yaml",
+                ],
+            }
+        },
+    )
+
+    assert response.status_code == 413
+    assert response.json()["detail"]["code"] == "INPUT_TOO_LARGE"
+
+
+def test_a_ticked_path_the_commit_no_longer_holds_is_reported(monkeypatch, catalog) -> None:
+    """A stale file index must not make the whole batch fail with a confusing error."""
+    _use_repository(monkeypatch, _MIXED_MEMBERS)
+
+    response = client.post(
+        _PLAN,
+        json={"git": {"repo_url": _REPO_URL, "ref": "main", "paths": ["gone/deleted.yaml"]}},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"]["code"] == "SOURCE_SELECTION_EMPTY"
+
+
+def test_ticking_nothing_leaves_the_batch_unchanged(monkeypatch, catalog) -> None:
+    """Omitted and empty both mean "plan everything" — never "plan nothing"."""
+    every = _plan_repository(monkeypatch)
+    empty = _plan_repository(monkeypatch, selector={"paths": []})
+
+    assert [item["key"] for item in empty["items"]] == [item["key"] for item in every["items"]]
+
+
+def test_ticked_files_are_still_reconciled(monkeypatch, catalog) -> None:
+    """Narrowing is orthogonal to BLK-1.2: a ticked re-import still resolves to an append."""
+    catalog.add_project(
+        _ORDERS_PROJECT,
+        name="Orders API",
+        slug="orders-api",
+        versions=["1.0.0"],
+        git_path="openapi/orders.yaml",
+    )
+
+    body = _plan_repository(monkeypatch, selector={"paths": ["openapi/orders.yaml"]})
+    item = _item(body, "openapi/orders.yaml")
+
+    assert item["resolution"] == "append-version"
+    assert item["match_basis"] == "repository-provenance"
+    assert body["summary"]["by_resolution"] == {"append-version": 1}
+
+
+def test_the_batch_ceiling_applies_to_the_ticked_items_not_the_fetched_ones(
+    monkeypatch, catalog
+) -> None:
+    """A ticked file must never be cut by a ceiling it was nowhere near."""
+    monkeypatch.setattr(bulk_import_routes.settings, "bulk_import_max_items", 2)
+    members = {f"spec-{index}.asyncapi.yaml": _ASYNCAPI_ORDERS for index in range(6)}
+
+    body = _plan_repository(
+        monkeypatch,
+        members,
+        selector={"paths": ["spec-5.asyncapi.yaml"]},
+    )
+
+    assert [item["key"] for item in body["items"]] == ["spec-5.asyncapi.yaml"]
+    assert body["truncated"] is False
+    assert body["total_items"] == 1
+
+
+def test_submit_narrows_to_the_same_items_the_plan_showed(monkeypatch, scheduled) -> None:
+    """`keys` is checked against the narrowed set, so submit and plan cannot disagree."""
+    _use_repository(monkeypatch, _MIXED_MEMBERS)
+
+    body = client.post(
+        _SUBMIT,
+        json={
+            "git": {
+                "repo_url": _REPO_URL,
+                "ref": "main",
+                "paths": ["openapi/orders.yaml"],
+            }
+        },
+    ).json()
+
+    assert [item["key"] for item in body["items"]] == ["openapi/orders.yaml"]
+    assert len(scheduled) == 1
+    assert scheduled[0]["slug"] == "orders-api"
+
+
+def test_submit_records_the_ticked_items_own_repository_path(monkeypatch, scheduled) -> None:
+    """Provenance is what BLK-1.2 reconciles a later re-import against, so it must be exact."""
+    _use_repository(monkeypatch, _MIXED_MEMBERS)
+
+    client.post(
+        _SUBMIT,
+        json={
+            "git": {
+                "repo_url": _REPO_URL,
+                "ref": "main",
+                "paths": ["openapi/orders.yaml"],
+            }
+        },
+    )
+
+    assert scheduled[0]["options"].git_source.path == "openapi/orders.yaml"
 
 
 # --------------------------------------------------------------------------- submit

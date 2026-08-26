@@ -65,8 +65,8 @@ All three take `imports:create` and write nothing but the jobs the submit call s
 
 ### `POST /v1/tenants/{tenant}/import/bulk/plan`
 
-Body: `{document_base64 | git: {repo_url, ref?, path?, repository_id?, linked_account_id?},
-filename?, include_documents?}` — exactly one source.
+Body: `{document_base64 | git: {repo_url, ref?, path?, paths?, repository_id?,
+linked_account_id?}, filename?, include_documents?}` — exactly one source.
 
 | Field | Meaning |
 |-------|---------|
@@ -154,6 +154,37 @@ is reported as `not-found` rather than failing the whole call.
 The batch itself is **stateless**: each job is an ordinary import job in the shared store, so
 `GET …/imports/{job_id}` remains the source of truth and this endpoint is only a roll-up.
 
+## Ticked files (BLK-1.5)
+
+The repository detail screen's Files tab has a different shape of intent from a selection: a
+reader ticks N specific rows. `git.paths` is that, and the Files tab's **Import Bulk Items**
+button sends exactly them.
+
+**It replaces `path` rather than filtering it.** A selection is answered by reading everything
+it matches, and neither way of doing that works for ticked files:
+
+| | Why not |
+|---|---|
+| Read the ticked files' shared directory | `protos/orders/orders.proto` imports `protos/common/types.proto`, one level up and outside the anchor. The item loses the sibling it compiles. |
+| Read the whole tree and filter afterwards | A monorepo is refused outright — `INPUT_TOO_LARGE`, the selection matches more files than `archive_max_entries` — however small the four ticked files are. |
+
+So `fetch_git_files` reads from the other end. The tree listing is one cheap call carrying no
+content; the ticked files are downloaded, scanned for the references they make (`$ref`,
+protobuf `import`, XSD/WSDL `schemaLocation`), and whatever those name is downloaded too,
+until the set closes over itself or `MAX_REFERENCE_HOPS` is reached. The intake budget applies
+to that closure, so it is bounded by what was asked for rather than by what the repository
+happens to contain.
+
+Members are keyed from the **repository root**, so an item's key, the path the Files tab shows,
+and the `format_metadata.gitPath` an earlier import recorded are all the same string — which is
+what BLK-1.2 reconciles a re-import against.
+
+A ticked path that is no item's root — a shared type file another *ticked* item already
+compiles — appears in `skipped` with reason `not-an-item-root` rather than vanishing. A path the
+commit no longer holds is skipped rather than failing the batch, since a file index can be
+stale. The batch ceiling applies to the **ticked** items, so a file ticked in a large directory
+is never cut by a limit it was nowhere near.
+
 ## Provenance
 
 An item from a repository records its own path — every item shares the repo, ref, and commit,
@@ -175,4 +206,8 @@ the same archive imported as one spec.
   the summary leads with "N new versions, M new projects", naming the policy when it is
   `always-create` or `always-ask`. Exits non-zero when any item failed.
 * **UI** — the Catalog import wizard's detect step offers bulk mode when a payload holds
-  more than one independent spec, and renders the per-item result list as the jobs finish.
+  more than one independent spec, and renders the per-item result list as the jobs finish. The
+  repository detail screen's Files tab offers **Import Bulk Items** as soon as a reader ticks
+  more than one row: it plans the ticked paths, shows what each one would do (append a version
+  to a project that already exists, or create a new one) and runs the batch on the same
+  submit-and-poll surface.
