@@ -78,10 +78,17 @@ const WIDTHS = [1440, DESKTOP_WIDTH, 1100, 1024, 900, 768, 640, 420];
 const FIXTURES = path.join(__dirname, 'fixtures', 'hive-repository-detail');
 
 /** The surfaces the jsdom suite dumps. */
-type Fixture = 'preview' | 'files' | 'settings' | 'file-detail' | 'map-import';
+type Fixture = 'preview' | 'files' | 'settings' | 'file-detail' | 'map-import' | 'batch-import';
 
-/** All five, for the sweeps that do not care which. */
-const ALL_FIXTURES: Fixture[] = ['preview', 'files', 'settings', 'file-detail', 'map-import'];
+/** All six, for the sweeps that do not care which. */
+const ALL_FIXTURES: Fixture[] = [
+  'preview',
+  'files',
+  'settings',
+  'file-detail',
+  'map-import',
+  'batch-import',
+];
 
 /**
  * One rendered surface, as the jsdom suite wrote it.
@@ -97,8 +104,8 @@ function fixture(name: Fixture): string {
  * Put markup on a page that has the real stylesheet compiled.
  *
  * The page fixtures are the `.page` column itself and need no wrapper beyond a canvas ground;
- * `map-import` is a portalled dialog, so it is given the same ground and left at its own
- * fixed position.
+ * `map-import` and `batch-import` are portalled dialogs, so they are given the same ground
+ * and left at their own fixed position.
  *
  * @param page The Playwright page.
  * @param name Which fixture.
@@ -417,6 +424,63 @@ test.describe('the Map & import overlay', () => {
 });
 
 /* -------------------------------------------------------------------------
+   The batch wizard (BLK-1.4)
+   ------------------------------------------------------------------------- */
+
+test.describe('the batch wizard', () => {
+  test('its review table scrolls inside its own wrapper, never the document', async ({ page }) => {
+    await page.setViewportSize({ width: 640, height: 900 });
+    await mount(page, 'batch-import');
+    const scroller = page.locator('.repo-batch-table').locator('xpath=..');
+    expect(await scroller.evaluate((node) => getComputedStyle(node).overflowX)).toBe('auto');
+    expect(await documentOverflows(page)).toBe(false);
+  });
+
+  test('holds no interactive control inside a label', async ({ page }) => {
+    await page.setViewportSize({ width: DESKTOP_WIDTH, height: 900 });
+    await mount(page, 'batch-import');
+    const nested = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('label')).reduce(
+        (total, label) =>
+          total +
+          label.querySelectorAll(
+            'button, select, textarea, a[href], input:not([type="radio"]):not([type="checkbox"])'
+          ).length,
+        0
+      )
+    );
+    expect(nested).toBe(0);
+  });
+
+  test('every per-row target control is named by its row', async ({ page }) => {
+    await page.setViewportSize({ width: DESKTOP_WIDTH, height: 900 });
+    await mount(page, 'batch-import');
+    const controls = page.locator('.repo-batch-select');
+    await expect(controls).toHaveCount(2);
+    for (const label of await controls.evaluateAll((nodes) =>
+      nodes.map((node) => node.getAttribute('aria-label') ?? '')
+    )) {
+      expect(label.startsWith('Target for ')).toBe(true);
+    }
+  });
+
+  test('a per-row target control shows a focus ring', async ({ page }) => {
+    await page.setViewportSize({ width: DESKTOP_WIDTH, height: 900 });
+    await mount(page, 'batch-import');
+    const control = page.locator('.repo-batch-select').first();
+    await control.focus();
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => resolve(null)))
+    );
+    const ring = await control.evaluate((node) => {
+      const style = getComputedStyle(node);
+      return style.outlineStyle !== 'none' || style.boxShadow !== 'none';
+    });
+    expect(ring).toBe(true);
+  });
+});
+
+/* -------------------------------------------------------------------------
    Accessibility
    ------------------------------------------------------------------------- */
 
@@ -447,6 +511,13 @@ test.describe('accessibility', () => {
     test(`the map-import surface is clean in the ${theme ?? 'light'} theme`, async ({ page }) => {
       await page.setViewportSize({ width: DESKTOP_WIDTH, height: 900 });
       await mount(page, 'map-import');
+      await applyPreferences(page, { theme });
+      expect(await blockingViolations(page)).toEqual([]);
+    });
+
+    test(`the batch-import surface is clean in the ${theme ?? 'light'} theme`, async ({ page }) => {
+      await page.setViewportSize({ width: DESKTOP_WIDTH, height: 900 });
+      await mount(page, 'batch-import');
       await applyPreferences(page, { theme });
       expect(await blockingViolations(page)).toEqual([]);
     });

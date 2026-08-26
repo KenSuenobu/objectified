@@ -75,7 +75,7 @@ async function proxyRestWrite(
   user: SessionUser,
   path: string,
   body?: unknown
-): Promise<{ data: unknown; error: string | null; status: number }> {
+): Promise<{ data: unknown; error: string | null; status: number; detail?: unknown }> {
   const response = await fetch(`${REST_API_BASE_URL}${path}`, {
     method,
     headers: createRestAuthHeaders(user),
@@ -91,8 +91,15 @@ async function proxyRestWrite(
 
   const data = await response.json();
   if (!response.ok) {
-    const detail = typeof data?.detail === 'string' ? data.detail : 'Request failed';
-    return { data: null, error: detail, status: response.status };
+    // A typed REST refusal (`detail: {code, message, …}`) is more than its message — the
+    // bulk submit's stale-plan refusal carries a per-item drift list (BLK-1.3). The message
+    // is still the `error`; the whole `detail` rides along for a route that wants it.
+    return {
+      data: null,
+      error: restErrorMessage(data),
+      status: response.status,
+      detail: data?.detail,
+    };
   }
 
   return { data, error: null, status: response.status };
@@ -102,7 +109,7 @@ export async function proxyRestPost(
   user: SessionUser,
   path: string,
   body?: unknown
-): Promise<{ data: unknown; error: string | null; status: number }> {
+): Promise<{ data: unknown; error: string | null; status: number; detail?: unknown }> {
   return proxyRestWrite('POST', user, path, body);
 }
 
@@ -110,7 +117,7 @@ export async function proxyRestPut(
   user: SessionUser,
   path: string,
   body?: unknown
-): Promise<{ data: unknown; error: string | null; status: number }> {
+): Promise<{ data: unknown; error: string | null; status: number; detail?: unknown }> {
   return proxyRestWrite('PUT', user, path, body);
 }
 
@@ -118,7 +125,7 @@ export async function proxyRestPatch(
   user: SessionUser,
   path: string,
   body?: unknown
-): Promise<{ data: unknown; error: string | null; status: number }> {
+): Promise<{ data: unknown; error: string | null; status: number; detail?: unknown }> {
   return proxyRestWrite('PATCH', user, path, body);
 }
 

@@ -14,6 +14,10 @@ export const dynamic = 'force-dynamic';
  * The response is the per-item start result: `accepted` rows carry a `job_id`, `failed` rows
  * carry a taxonomy-coded reason. A partial failure is normal and never aborts the batch, so
  * the wizard renders the rows rather than treating one failure as an error.
+ *
+ * The body may carry BLK-1.3's `overrides`, `plan_fingerprint` and `dry_run`; they pass
+ * through untouched. A 409 `TARGET_PLAN_STALE` refusal is returned with its `detail` intact,
+ * because its per-item `drift` list is what the reader needs to see.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -27,14 +31,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 });
     }
 
-    const { data, error, status } = await proxyRestPost(
+    const { data, error, status, detail } = await proxyRestPost(
       ctx.user,
       `/tenants/${encodeURIComponent(ctx.tenantSlug)}/import/bulk`,
       body,
     );
 
     if (error) {
-      return NextResponse.json({ success: false, error }, { status });
+      // The stale-plan refusal (BLK-1.3) names, per item, what drifted since the plan was
+      // reviewed. That list is the whole point of the refusal, so the typed `detail` is
+      // handed through beside the message rather than flattened into it.
+      return NextResponse.json({ success: false, error, detail }, { status });
     }
 
     return NextResponse.json({ success: true, ...(data as Record<string, unknown>) }, { status });

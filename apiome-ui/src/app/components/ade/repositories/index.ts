@@ -20,6 +20,7 @@
 export * from './repositoriesModel';
 export * from './addRepositoryModel';
 export * from './repositoryDetailModel';
+export * from './repositoryBatchImportModel';
 export { AddRepositorySourceChoice } from './AddRepositorySourceChoice';
 export { LinkedAccountPicker } from './LinkedAccountPicker';
 export { ProposedStepsCard } from './ProposedStepsCard';

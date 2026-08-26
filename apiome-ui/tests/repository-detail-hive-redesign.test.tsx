@@ -233,6 +233,72 @@ let routes: Record<string, { status?: number; body: unknown }>;
 let calls: { url: string; method: string; body?: unknown }[];
 
 /**
+ * The batch plan for the two indexed files (BLK-1.4): one re-imported, one new, and the
+ * shared type file another spec already compiles.
+ */
+const BULK_PLAN = {
+  items: [
+    {
+      key: FILES[0].path,
+      root_path: FILES[0].path,
+      members: [FILES[0].path],
+      total_bytes: FILES[0].size_bytes,
+      source_kind: 'openapi',
+      format: 'openapi-3.0',
+      confidence: 0.99,
+      importable: true,
+      predicted_target: 'project',
+      input_kind: 'file',
+      suggested_name: 'Payments API',
+      suggested_slug: 'payments-api',
+      reason: 'independent document',
+      resolution: 'append-version',
+      matched_project: { project_id: PROJECTS[0].id, name: PROJECTS[0].name, slug: PROJECTS[0].slug },
+      match_basis: 'repository-provenance',
+      match_detail: 'A previous import of this path created Payments API.',
+      match_confidence: 1,
+      proposed_version: { version_id: '2.4.0', derived_from: 'version-bump', previous_version_id: '2.3.1' },
+    },
+    {
+      key: FILES[1].path,
+      root_path: FILES[1].path,
+      members: [FILES[1].path],
+      total_bytes: FILES[1].size_bytes,
+      source_kind: 'asyncapi',
+      format: 'asyncapi-2',
+      confidence: 0.98,
+      importable: true,
+      predicted_target: 'catalog',
+      input_kind: 'file',
+      suggested_name: 'Orders Events',
+      suggested_slug: 'orders-events',
+      reason: 'independent document',
+      resolution: 'create-project',
+      matched_project: null,
+      proposed_version: { version_id: '1.0.0', derived_from: 'default' },
+    },
+  ],
+  skipped: [{ path: 'specs/common/types.proto', reason: 'not-an-item-root' }],
+  truncated: false,
+  total_items: 2,
+  max_items: 50,
+  source_label: 'acme/payments-specs@9f31ac2',
+  version_policy: 'append-when-matched',
+  version_policy_source: 'tenant',
+  plan_fingerprint: 'bp1.reviewed-plan',
+  summary: {
+    items: 2,
+    importable: 2,
+    unimportable: 0,
+    skipped_files: 1,
+    by_target: { project: 1, catalog: 1 },
+    by_format: { 'openapi-3.0': 1, 'asyncapi-2': 1 },
+    by_resolution: { 'append-version': 1, 'create-project': 1 },
+    matched: 1,
+  },
+};
+
+/**
  * Route one request to its canned response.
  *
  * Matching is by the first key whose pattern the URL contains, longest first, so
@@ -297,6 +363,7 @@ beforeEach(() => {
     },
     '/api/repositories/repo-1': { body: { success: true, repository: REPOSITORY } },
     '/api/projects': { body: { success: true, projects: PROJECTS } },
+    '/api/catalog/import/bulk/plan': { body: BULK_PLAN },
   };
 
   global.fetch = jest.fn(async (input: unknown, init?: { method?: string; body?: string }) => {
@@ -706,16 +773,21 @@ describe('the Files tab', () => {
     await waitFor(() => expect(selectAll.indeterminate).toBe(false));
   });
 
-  test('ticking more than one row offers the batch instead of the one-file wizard', async () => {
-    // BLK-1.5: this used to open Map & import on the first file and apologise for the rest.
+  test('ticking more than one row makes Import selected open the batch wizard', async () => {
+    // BLK-1.5 / BLK-1.4: this used to open Map & import on the first file and apologise for
+    // the rest. The same button now covers every ticked row.
     await renderScreen();
     await openFiles();
 
     fireEvent.click(screen.getByLabelText('Select all files on this page'));
 
-    const bulk = await screen.findByTestId('repository-import-bulk');
-    expect(bulk).toHaveTextContent('Import Bulk Items (2)');
-    expect(screen.queryByTestId('repository-import-selected')).not.toBeInTheDocument();
+    const button = screen.getByTestId('repository-import-selected');
+    expect(button).toHaveTextContent('Import selected (2)');
+    fireEvent.click(button);
+
+    expect(await screen.findByTestId('repository-bulk-import')).toBeInTheDocument();
+    expect(await screen.findByTestId('repository-batch-table')).toBeInTheDocument();
+    expect(screen.queryByTestId('repository-map-import')).not.toBeInTheDocument();
   });
 
   test('ticking exactly one row still opens Map & import for it', async () => {
@@ -1142,6 +1214,21 @@ describe('the browser fixtures', () => {
     await screen.findByTestId('repository-import-target-existing');
     await screen.findByTestId('repository-import-options');
     write('map-import', overlay('repository-map-import'));
+  });
+
+  it('renders the batch wizard (and writes its fixture on request)', async () => {
+    await renderScreen();
+    await openTab('files');
+    await screen.findByTestId('repository-files-table-wrap');
+    fireEvent.click(screen.getByLabelText('Select all files on this page'));
+    fireEvent.click(screen.getByTestId('repository-import-selected'));
+    await screen.findByTestId('repository-bulk-import');
+    // Wait for the plan and the project list, or the fixture is a dialog full of skeletons.
+    await screen.findByTestId('repository-batch-table');
+    expect(
+      (await screen.findAllByRole('option', { name: `New version of ${PROJECTS[1].name}` })).length,
+    ).toBeGreaterThan(0);
+    write('batch-import', overlay('repository-bulk-import'));
   });
 
   it('renders the file detail pane (and writes its fixture on request)', async () => {

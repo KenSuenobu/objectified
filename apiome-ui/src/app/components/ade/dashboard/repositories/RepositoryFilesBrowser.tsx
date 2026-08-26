@@ -28,13 +28,13 @@
  *    keys on the identity of the result *set* — the branch, the filters and the offset —
  *    which is the thing that actually invalidates a selection.
  *
- * ### A multi-row selection is its own request (BLK-1.5)
+ * ### *Import selected* opens the wizard the selection needs (BLK-1.5, BLK-1.4)
  *
  * Map & import maps **one** specification at a time, so ticking twelve rows used to open it on
- * the first file and tell the reader to re-select the rest afterward. Ticking more than one row
- * now offers *Import Bulk Items* instead — {@link RepositoryBulkImportPanel}, which sends the
- * ticked paths to the batch endpoints as `git.paths` — and the apology is gone with the flow
- * that needed it.
+ * the first file and tell the reader to re-select the rest afterward. One ticked row still
+ * opens it, unchanged. More than one opens the batch wizard — {@link RepositoryBulkImportPanel},
+ * which sends the ticked paths to the batch endpoints as `git.paths` and walks the reader
+ * through review, verify and apply — and the apology is gone with the flow that needed it.
  */
 
 import { FileCode2, GitCommitHorizontal, Layers, Loader2, RefreshCw, Upload } from 'lucide-react';
@@ -461,14 +461,19 @@ export function RepositoryFilesBrowser({
       return next;
     });
   };
+  /**
+   * Open the wizard the selection needs: Map & import for one row, the batch wizard for more.
+   *
+   * One button, because the reader's intent is the same either way — import what I ticked —
+   * and only the shape of the answer differs.
+   */
   const importSelected = () => {
     const chosen = pageFiles.filter((f) => selectedIds.has(f.id));
     if (chosen.length === 0) return;
-    setImportFile(chosen[0]);
-  };
-  const importBulkSelected = () => {
-    const chosen = pageFiles.filter((f) => selectedIds.has(f.id));
-    if (chosen.length < 2) return;
+    if (chosen.length === 1) {
+      setImportFile(chosen[0]);
+      return;
+    }
     setBulkPaths(chosen.map((f) => f.path));
   };
 
@@ -553,31 +558,21 @@ export function RepositoryFilesBrowser({
               <Loader2 className="size-4 shrink-0 animate-spin text-fg-muted" aria-hidden />
             ) : null}
             <div className="repo-det-table__bar-end">
-              {/* A multi-row selection is a different shape of request, not a bigger version of
-                  the same one: the wizard maps one spec at a time, so N ticked rows get the
-                  batch surface instead of the wizard-plus-an-apology. */}
-              {selectedIds.size > 1 ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={importBulkSelected}
-                  data-testid="repository-import-bulk"
-                >
-                  <Layers aria-hidden />
-                  Import Bulk Items ({selectedIds.size})
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={selectedIds.size === 0}
-                  onClick={importSelected}
-                  data-testid="repository-import-selected"
-                >
-                  <Upload aria-hidden />
-                  Import selected
-                </Button>
-              )}
+              {/* One verb for any selection size. A multi-row selection is a different shape of
+                  request — the one-file wizard maps one spec at a time — so N ticked rows open
+                  the batch wizard rather than the wizard-plus-an-apology, and the button says
+                  how many it will cover. */}
+              <Button
+                type="button"
+                size="sm"
+                disabled={selectedIds.size === 0}
+                onClick={importSelected}
+                data-testid="repository-import-selected"
+                data-batch={selectedIds.size > 1 ? 'true' : undefined}
+              >
+                {selectedIds.size > 1 ? <Layers aria-hidden /> : <Upload aria-hidden />}
+                Import selected{selectedIds.size > 1 ? ` (${selectedIds.size})` : ''}
+              </Button>
               <Button
                 type="button"
                 variant="ghost"

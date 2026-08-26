@@ -287,7 +287,9 @@ the same archive imported as one spec.
   substitution. Exits non-zero when any item failed.
 * **UI** — the Catalog import wizard's detect step offers bulk mode when a payload holds
   more than one independent spec, and renders the per-item result list as the jobs finish. The
-  repository detail screen's Files tab offers **Import Bulk Items** as soon as a reader ticks
-  more than one row: it plans the ticked paths, shows what each one would do (append a version
-  to a project that already exists, or create a new one) and runs the batch on the same
-  submit-and-poll surface.
+  repository detail screen's Files tab opens the **batch wizard** from *Import selected* as
+  soon as a reader ticks more than one row (BLK-1.4): a **Review** table of the plan with a
+  per-row target override feeding `overrides`, a **Verify** step that is the `dry_run` with
+  nothing written, and an **Apply** step reporting each item's realized destination — all on
+  the same submit-and-poll surface, echoing `plan_fingerprint` so a drifted plan is refused
+  with the rows named. One ticked row still opens the single-file Map & import wizard.

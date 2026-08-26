@@ -1,13 +1,14 @@
 /**
- * Repository detail → Files tab: ticking more than one row offers the batch (BLK-1.5).
+ * Repository detail → Files tab: *Import selected* opens the wizard the selection needs
+ * (BLK-1.5, BLK-1.4).
  *
  * The Map & import wizard maps one specification at a time, so a multi-row selection used to
- * open it on the first file and tell the reader to re-select the rest afterward. Ticking N rows
- * now offers *Import Bulk Items* instead, which plans the ticked paths as one batch.
+ * open it on the first file and tell the reader to re-select the rest afterward. One ticked
+ * row still opens it; N rows open the batch wizard covering all N, from the same button.
  */
 
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import {
@@ -27,15 +28,18 @@ jest.mock('@/app/components/ade/dashboard/repositories/RepositoryFileImportMappi
 }));
 
 // The batch overlay is exercised on its own; here it only has to prove it was opened with the
-// paths that were ticked.
+// paths that were ticked, and that closing it hands control back.
 const bulkProps: Array<{ paths: readonly string[]; repoUrl: string | null; branch: string }> = [];
+let closeBulk: ((open: boolean) => void) | null = null;
 jest.mock('@/app/components/ade/dashboard/repositories/RepositoryBulkImportPanel', () => ({
   RepositoryBulkImportPanel: (props: {
     paths: readonly string[];
     repoUrl: string | null;
     branch: string;
+    onOpenChange: (open: boolean) => void;
   }) => {
     bulkProps.push({ paths: props.paths, repoUrl: props.repoUrl, branch: props.branch });
+    closeBulk = props.onOpenChange;
     return <div data-testid="bulk-overlay" />;
   },
 }));
@@ -104,32 +108,38 @@ function tick(path: string): void {
 beforeEach(() => {
   jest.clearAllMocks();
   bulkProps.length = 0;
+  closeBulk = null;
   mockFiles();
 });
 
 describe('Files tab — importing a selection', () => {
-  it('offers the single-file wizard while exactly one row is ticked', async () => {
+  it('opens the single-file wizard while exactly one row is ticked', async () => {
     renderBrowser();
     await waitFor(() => expect(screen.getByText('openapi/orders.yaml')).toBeInTheDocument());
 
     tick('openapi/orders.yaml');
 
-    expect(screen.getByTestId('repository-import-selected')).toBeEnabled();
-    expect(screen.queryByTestId('repository-import-bulk')).not.toBeInTheDocument();
+    const button = screen.getByTestId('repository-import-selected');
+    expect(button).toBeEnabled();
+    expect(button).toHaveTextContent('Import selected');
+    expect(button).not.toHaveAttribute('data-batch');
+    fireEvent.click(button);
+
+    await waitFor(() => expect(screen.getByTestId('single-file-wizard')).toBeInTheDocument());
+    expect(screen.queryByTestId('bulk-overlay')).not.toBeInTheDocument();
   });
 
-  it('offers Import Bulk Items once more than one row is ticked', async () => {
+  it('says how many the batch will cover once more than one row is ticked', async () => {
     renderBrowser();
     await waitFor(() => expect(screen.getByText('openapi/orders.yaml')).toBeInTheDocument());
 
     tick('openapi/orders.yaml');
     tick('events/shipping.asyncapi.yaml');
 
-    const bulk = screen.getByTestId('repository-import-bulk');
-    expect(bulk).toBeEnabled();
-    expect(bulk).toHaveTextContent('Import Bulk Items (2)');
-    // The one-at-a-time wizard is not the offer for a multi-row selection.
-    expect(screen.queryByTestId('repository-import-selected')).not.toBeInTheDocument();
+    const button = screen.getByTestId('repository-import-selected');
+    expect(button).toBeEnabled();
+    expect(button).toHaveTextContent('Import selected (2)');
+    expect(button).toHaveAttribute('data-batch', 'true');
   });
 
   it('opens the batch with the ticked paths, the branch and the repository URL', async () => {
@@ -138,7 +148,7 @@ describe('Files tab — importing a selection', () => {
 
     tick('openapi/orders.yaml');
     tick('events/shipping.asyncapi.yaml');
-    fireEvent.click(screen.getByTestId('repository-import-bulk'));
+    fireEvent.click(screen.getByTestId('repository-import-selected'));
 
     await waitFor(() => expect(screen.getByTestId('bulk-overlay')).toBeInTheDocument());
     expect(bulkProps.at(-1)).toEqual({
@@ -150,11 +160,29 @@ describe('Files tab — importing a selection', () => {
     expect(screen.queryByTestId('single-file-wizard')).not.toBeInTheDocument();
   });
 
+  it('closing the batch returns to the Files tab with the selection intact', async () => {
+    // The HIVE-7.5 overlay guarantee: the wizard is drawn beside the list, not instead of it.
+    renderBrowser();
+    await waitFor(() => expect(screen.getByText('openapi/orders.yaml')).toBeInTheDocument());
+
+    tick('openapi/orders.yaml');
+    tick('events/shipping.asyncapi.yaml');
+    fireEvent.click(screen.getByTestId('repository-import-selected'));
+    await waitFor(() => expect(screen.getByTestId('bulk-overlay')).toBeInTheDocument());
+
+    act(() => closeBulk?.(false));
+
+    await waitFor(() => expect(screen.queryByTestId('bulk-overlay')).not.toBeInTheDocument());
+    expect(screen.getByTestId('repository-files-summary')).toHaveTextContent('2 selected');
+    expect(screen.getByTestId('repository-import-selected')).toHaveTextContent('Import selected (2)');
+    // And the list was not re-read — the reader is where they were.
+    expect((global.fetch as jest.Mock).mock.calls).toHaveLength(1);
+  });
+
   it('offers nothing to import while no row is ticked', async () => {
     renderBrowser();
     await waitFor(() => expect(screen.getByText('openapi/orders.yaml')).toBeInTheDocument());
 
     expect(screen.getByTestId('repository-import-selected')).toBeDisabled();
-    expect(screen.queryByTestId('repository-import-bulk')).not.toBeInTheDocument();
   });
 });
