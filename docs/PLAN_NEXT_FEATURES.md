@@ -243,8 +243,9 @@ Hosted SIM is closed. Package the same semantics for CLI/Docker/CI so ECA and SD
 | 5.5 | Mock CI action + conformance corpus — **Done** | **#4748** PMR-3.1 | #4948 | Y |
 | 5.6 | Serverless mock adapter — **Done** | **#4743** PMR-1.3 | #4946 | N |
 | 5.7 | Callback & webhook simulation — **Done** | **#4746** PMR-2.3 | #4947 | N |
+| 5.8 | Guarded proxy capture & replay — **Done** | **#4747** PMR-2.4 | #4947 | N |
 
-**Defer (Future):** proxy capture #4747, attestation #4749.
+**Defer (Future):** attestation #4749.
 
 **Exit evidence:** same fixture corpus passes against hosted SIM and `apiome mock` / Docker; CI job starts pinned mock, runs corpus, tears down.
 

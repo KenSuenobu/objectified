@@ -8334,6 +8334,74 @@ class Database:
             conn.rollback()
             raise e
 
+    #: Ownership predicate shared by every mock-settings write: the version creator, or a tenant
+    #: administrator. Kept as one string so the three settings keys can never drift apart on who
+    #: is allowed to change them.
+    _MOCK_SETTINGS_OWNER_PREDICATE = """
+                v.creator_id = %s
+                OR EXISTS (
+                  SELECT 1 FROM apiome.tenant_administrators ta
+                  WHERE ta.tenant_id = p.tenant_id AND ta.user_id = %s
+                )
+    """
+
+    def _replace_version_mock_settings_key(
+        self,
+        version_record_id: str,
+        tenant_id: str,
+        user_id: str,
+        *,
+        key: str,
+        value: Optional[Any],
+    ) -> Optional[Dict[str, Any]]:
+        """Replace exactly one top-level key of ``versions.mock_settings``.
+
+        The shared body behind the per-feature setters (fixture packs #4745, callbacks #4746,
+        capture policy #4747). Only ``key`` is rewritten; every other mock knob — scenarios, chaos,
+        the private-draft ``mode`` — is preserved. Passing ``None`` removes the key. The update
+        bumps ``updated_at`` so the mock spec-cache NOTIFY trigger fires and running mocks pick the
+        change up.
+
+        Args:
+            version_record_id: The ``versions.id`` UUID.
+            tenant_id: Tenant owning the version (scope check).
+            user_id: Acting user; must be the version creator or a tenant admin.
+            key: The ``mock_settings`` key to replace.
+            value: The canonical value to store, or ``None`` to remove the key.
+
+        Returns:
+            The updated version row, or ``None`` when the caller lacks ownership.
+        """
+        fragment = json.dumps({key: value}) if value is not None else "{}"
+        query = f"""
+            UPDATE apiome.versions v
+            SET mock_settings = (COALESCE(v.mock_settings, '{{}}'::jsonb) - %s) || %s::jsonb,
+                updated_at = CURRENT_TIMESTAMP
+            FROM apiome.projects p
+            WHERE v.id = %s
+              AND v.project_id = p.id
+              AND p.tenant_id = %s
+              AND v.deleted_at IS NULL
+              AND p.deleted_at IS NULL
+              AND ({self._MOCK_SETTINGS_OWNER_PREDICATE})
+            RETURNING v.id
+        """
+        conn = self.connect()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    query,
+                    (key, fragment, version_record_id, tenant_id, user_id, user_id),
+                )
+                updated = cursor.fetchone()
+                conn.commit()
+                if not updated:
+                    return None
+                return self.get_version_by_id(version_record_id, tenant_id)
+        except Exception as e:
+            conn.rollback()
+            raise e
+
     def set_version_mock_fixture_packs(
         self,
         version_record_id: str,
@@ -8358,41 +8426,13 @@ class Database:
         Returns:
             The updated version row, or ``None`` when the caller lacks ownership.
         """
-        fragment = json.dumps({"fixturePacks": packs}) if packs else "{}"
-        query = """
-            UPDATE apiome.versions v
-            SET mock_settings = (COALESCE(v.mock_settings, '{}'::jsonb) - 'fixturePacks') || %s::jsonb,
-                updated_at = CURRENT_TIMESTAMP
-            FROM apiome.projects p
-            WHERE v.id = %s
-              AND v.project_id = p.id
-              AND p.tenant_id = %s
-              AND v.deleted_at IS NULL
-              AND p.deleted_at IS NULL
-              AND (
-                v.creator_id = %s
-                OR EXISTS (
-                  SELECT 1 FROM apiome.tenant_administrators ta
-                  WHERE ta.tenant_id = p.tenant_id AND ta.user_id = %s
-                )
-              )
-            RETURNING v.id
-        """
-        conn = self.connect()
-        try:
-            with conn.cursor() as cursor:
-                cursor.execute(
-                    query,
-                    (fragment, version_record_id, tenant_id, user_id, user_id),
-                )
-                updated = cursor.fetchone()
-                conn.commit()
-                if not updated:
-                    return None
-                return self.get_version_by_id(version_record_id, tenant_id)
-        except Exception as e:
-            conn.rollback()
-            raise e
+        return self._replace_version_mock_settings_key(
+            version_record_id,
+            tenant_id,
+            user_id,
+            key="fixturePacks",
+            value=packs or None,
+        )
 
     def set_version_mock_callbacks(
         self,
@@ -8418,41 +8458,274 @@ class Database:
         Returns:
             The updated version row, or ``None`` when the caller lacks ownership.
         """
-        fragment = json.dumps({"callbacks": callbacks}) if callbacks else "{}"
-        query = """
-            UPDATE apiome.versions v
-            SET mock_settings = (COALESCE(v.mock_settings, '{}'::jsonb) - 'callbacks') || %s::jsonb,
-                updated_at = CURRENT_TIMESTAMP
-            FROM apiome.projects p
+        return self._replace_version_mock_settings_key(
+            version_record_id,
+            tenant_id,
+            user_id,
+            key="callbacks",
+            value=callbacks or None,
+        )
+
+    def set_version_mock_capture_policy(
+        self,
+        version_record_id: str,
+        tenant_id: str,
+        user_id: str,
+        *,
+        policy: Optional[Dict[str, Any]],
+    ) -> Optional[Dict[str, Any]]:
+        """Replace the ``proxyCapture`` key of ``versions.mock_settings`` (#4747, PMR-2.4).
+
+        The capture policy is the grant that lets the hosted mock record real upstream traffic:
+        who authorized it, until when, which upstreams are allowlisted, and what to redact. Only
+        that one key is rewritten; every other mock knob is preserved, and ``None`` revokes the
+        grant entirely.
+
+        Args:
+            version_record_id: The ``versions.id`` UUID.
+            tenant_id: Tenant owning the version (scope check).
+            user_id: Acting user; must be the version creator or a tenant admin.
+            policy: The canonical policy document, or ``None`` to revoke capture.
+
+        Returns:
+            The updated version row, or ``None`` when the caller lacks ownership.
+        """
+        return self._replace_version_mock_settings_key(
+            version_record_id,
+            tenant_id,
+            user_id,
+            key="proxyCapture",
+            value=policy or None,
+        )
+
+    def user_owns_version_mock_settings(
+        self, version_record_id: str, tenant_id: str, user_id: str
+    ) -> bool:
+        """Whether ``user_id`` may change this version's mock configuration (#4747, PMR-2.4).
+
+        The same predicate the mock-settings writes enforce inline, exposed for the operations
+        that gate on ownership without writing ``mock_settings`` — reviewing and publishing
+        captured traffic. Keeping one predicate means "who owns this mock" cannot mean two things.
+
+        Args:
+            version_record_id: The ``versions.id`` UUID.
+            tenant_id: Tenant owning the version.
+            user_id: The acting user.
+
+        Returns:
+            ``True`` when the user is the version creator or a tenant administrator.
+        """
+        if not is_uuid_string(str(version_record_id)):
+            return False
+        query = f"""
+            SELECT 1
+            FROM apiome.versions v
+            JOIN apiome.projects p ON p.id = v.project_id
             WHERE v.id = %s
-              AND v.project_id = p.id
               AND p.tenant_id = %s
               AND v.deleted_at IS NULL
               AND p.deleted_at IS NULL
-              AND (
-                v.creator_id = %s
-                OR EXISTS (
-                  SELECT 1 FROM apiome.tenant_administrators ta
-                  WHERE ta.tenant_id = p.tenant_id AND ta.user_id = %s
-                )
-              )
-            RETURNING v.id
+              AND ({self._MOCK_SETTINGS_OWNER_PREDICATE})
         """
-        conn = self.connect()
-        try:
-            with conn.cursor() as cursor:
-                cursor.execute(
-                    query,
-                    (fragment, version_record_id, tenant_id, user_id, user_id),
-                )
-                updated = cursor.fetchone()
-                conn.commit()
-                if not updated:
-                    return None
-                return self.get_version_by_id(version_record_id, tenant_id)
-        except Exception as e:
-            conn.rollback()
-            raise e
+        return bool(self.execute_query(query, (version_record_id, tenant_id, user_id, user_id)))
+
+    def list_mock_capture_exchanges(
+        self,
+        version_record_id: str,
+        tenant_id: str,
+        *,
+        review_state: Optional[str] = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> List[Dict[str, Any]]:
+        """List a version's captured exchanges, newest first (#4747, PMR-2.4).
+
+        Only rows the retention sweep has not yet reached are returned, so an expired capture is
+        invisible even before it is physically deleted.
+
+        Args:
+            version_record_id: The ``versions.id`` UUID whose mock recorded them.
+            tenant_id: Tenant scope.
+            review_state: Optional filter (``pending``/``approved``/``rejected``/``published``).
+            limit: Maximum rows to return.
+            offset: Rows to skip, for paging.
+
+        Returns:
+            The capture rows (empty when the version has none or the id is not a UUID).
+        """
+        if not is_uuid_string(str(version_record_id)):
+            return []
+        clauses = [
+            "c.version_id = %s",
+            "c.tenant_id = %s",
+            "c.expires_at > CURRENT_TIMESTAMP",
+        ]
+        params: List[Any] = [version_record_id, tenant_id]
+        if review_state:
+            clauses.append("c.review_state = %s")
+            params.append(review_state)
+        query = f"""
+            SELECT c.id, c.upstream, c.allowlist_entry, c.policy_digest, c.captured_at,
+                   c.captured_by, c.operation_key, c.request_method, c.request_path,
+                   c.status_code, c.exchange, c.exchange_digest, c.redactions,
+                   c.redaction_count, c.schema_valid, c.validation_errors,
+                   c.review_state, c.reviewed_by, c.reviewed_at, c.review_note,
+                   c.published_pack, c.expires_at
+            FROM apiome.mock_capture_exchange c
+            WHERE {' AND '.join(clauses)}
+            ORDER BY c.captured_at DESC, c.id DESC
+            LIMIT %s OFFSET %s
+        """
+        params.extend([max(1, min(int(limit), 500)), max(0, int(offset))])
+        return self.execute_query(query, tuple(params))
+
+    def count_mock_capture_exchanges(
+        self, version_record_id: str, tenant_id: str
+    ) -> Dict[str, int]:
+        """Return live capture counts per review state for one version (#4747, PMR-2.4).
+
+        Args:
+            version_record_id: The ``versions.id`` UUID.
+            tenant_id: Tenant scope.
+
+        Returns:
+            ``{review_state: count}`` for every state that has rows (empty when none do).
+        """
+        if not is_uuid_string(str(version_record_id)):
+            return {}
+        query = """
+            SELECT review_state, COUNT(*) AS total
+            FROM apiome.mock_capture_exchange
+            WHERE version_id = %s AND tenant_id = %s AND expires_at > CURRENT_TIMESTAMP
+            GROUP BY review_state
+        """
+        rows = self.execute_query(query, (version_record_id, tenant_id))
+        return {str(row["review_state"]): int(row["total"]) for row in rows}
+
+    def review_mock_capture_exchanges(
+        self,
+        version_record_id: str,
+        tenant_id: str,
+        user_id: str,
+        *,
+        capture_ids: List[str],
+        review_state: str,
+        note: Optional[str] = None,
+    ) -> List[str]:
+        """Approve or reject captured exchanges (#4747, PMR-2.4).
+
+        A capture that has already been published is never re-decided: publishing is terminal, and
+        silently flipping a published capture back to ``rejected`` would leave a fixture pack
+        claiming provenance from a capture that disowns it.
+
+        Args:
+            version_record_id: The ``versions.id`` UUID owning the captures.
+            tenant_id: Tenant scope.
+            user_id: The reviewing user, recorded on each row.
+            capture_ids: The capture UUIDs to decide.
+            review_state: ``"approved"`` or ``"rejected"``.
+            note: Optional reviewer note stored with the decision.
+
+        Returns:
+            The ids actually updated (ids that did not match are simply absent).
+        """
+        ids = [cid for cid in capture_ids if is_uuid_string(str(cid))]
+        if not ids or not is_uuid_string(str(version_record_id)):
+            return []
+        query = """
+            UPDATE apiome.mock_capture_exchange
+            SET review_state = %s,
+                reviewed_by = %s,
+                reviewed_at = CURRENT_TIMESTAMP,
+                review_note = %s
+            WHERE version_id = %s
+              AND tenant_id = %s
+              AND review_state <> 'published'
+              AND expires_at > CURRENT_TIMESTAMP
+              AND id = ANY(%s::uuid[])
+            RETURNING id
+        """
+        rows = self.execute_query(
+            query, (review_state, user_id, note, version_record_id, tenant_id, ids)
+        )
+        return [str(row["id"]) for row in rows]
+
+    def mark_mock_captures_published(
+        self,
+        version_record_id: str,
+        tenant_id: str,
+        *,
+        capture_ids: List[str],
+        pack_name: str,
+    ) -> List[str]:
+        """Mark approved captures as published into ``pack_name`` (#4747, PMR-2.4).
+
+        Only ``approved`` rows move, so a pending or rejected capture can never be swept into a
+        pack by a publish call that names it.
+
+        Args:
+            version_record_id: The ``versions.id`` UUID owning the captures.
+            tenant_id: Tenant scope.
+            capture_ids: The capture UUIDs being published.
+            pack_name: The fixture pack they became part of.
+
+        Returns:
+            The ids actually marked published.
+        """
+        ids = [cid for cid in capture_ids if is_uuid_string(str(cid))]
+        if not ids or not is_uuid_string(str(version_record_id)):
+            return []
+        query = """
+            UPDATE apiome.mock_capture_exchange
+            SET review_state = 'published',
+                published_pack = %s
+            WHERE version_id = %s
+              AND tenant_id = %s
+              AND review_state = 'approved'
+              AND expires_at > CURRENT_TIMESTAMP
+              AND id = ANY(%s::uuid[])
+            RETURNING id
+        """
+        rows = self.execute_query(query, (pack_name, version_record_id, tenant_id, ids))
+        return [str(row["id"]) for row in rows]
+
+    def delete_mock_capture_exchanges(
+        self,
+        version_record_id: str,
+        tenant_id: str,
+        *,
+        capture_ids: Optional[List[str]] = None,
+        review_state: Optional[str] = None,
+    ) -> int:
+        """Delete captured exchanges (#4747, PMR-2.4).
+
+        Discarding recorded traffic is always available and never soft: a capture the owner does
+        not want kept is removed, not flagged.
+
+        Args:
+            version_record_id: The ``versions.id`` UUID owning the captures.
+            tenant_id: Tenant scope.
+            capture_ids: Specific capture UUIDs, or ``None`` for every capture of the version.
+            review_state: Optional additional filter by review state.
+
+        Returns:
+            The number of rows removed.
+        """
+        if not is_uuid_string(str(version_record_id)):
+            return 0
+        clauses = ["version_id = %s", "tenant_id = %s"]
+        params: List[Any] = [version_record_id, tenant_id]
+        if capture_ids is not None:
+            ids = [cid for cid in capture_ids if is_uuid_string(str(cid))]
+            if not ids:
+                return 0
+            clauses.append("id = ANY(%s::uuid[])")
+            params.append(ids)
+        if review_state:
+            clauses.append("review_state = %s")
+            params.append(review_state)
+        query = f"DELETE FROM apiome.mock_capture_exchange WHERE {' AND '.join(clauses)}"
+        return self._execute_write(query, tuple(params))
 
     def version_has_data_records(self, version_record_id: str) -> bool:
         """Return True if any data_record exists for class_schema rows belonging to this version."""

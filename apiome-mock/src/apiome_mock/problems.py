@@ -203,6 +203,67 @@ def callbacks_disabled(detail: str, *, instance: str | None = None) -> JSONRespo
     )
 
 
+def capture_not_authorized(
+    detail: str,
+    *,
+    instance: str | None = None,
+    state: str,
+) -> JSONResponse:
+    """403 returned when a request asks to be captured without a live grant (#4747, PMR-2.4).
+
+    Deliberately loud rather than silent: a developer who set ``X-Mock-Capture: on`` and got a
+    mocked response back would believe they were recording real traffic when they were not.
+    ``captureState`` names which gate refused — unconfigured, disabled, no-upstreams,
+    unauthorized, expired, or no-api-key — so the fix is obvious from the response.
+    """
+    return problem_response(
+        status=403,
+        title="Capture Not Authorized",
+        detail=detail,
+        problem_type="capture-not-authorized",
+        instance=instance,
+        extra={"captureState": state},
+    )
+
+
+def capture_upstream_not_allowed(
+    detail: str,
+    *,
+    instance: str | None = None,
+    allowed: list[str] | None = None,
+) -> JSONResponse:
+    """403 returned when no allowlisted upstream authorizes capturing a path (#4747, PMR-2.4)."""
+    return problem_response(
+        status=403,
+        title="Upstream Not Allowlisted",
+        detail=detail,
+        problem_type="capture-upstream-not-allowed",
+        instance=instance,
+        extra={"allowedUpstreams": allowed or []},
+    )
+
+
+def capture_upstream_unreachable(
+    detail: str,
+    *,
+    instance: str | None = None,
+    upstream: str,
+) -> JSONResponse:
+    """502 returned when an allowlisted upstream could not be reached (#4747, PMR-2.4).
+
+    Also the answer when the SSRF guard refuses the address at connect time: from the caller's
+    side, an upstream that resolves somewhere it may not be fetched is simply unreachable.
+    """
+    return problem_response(
+        status=502,
+        title="Upstream Unreachable",
+        detail=detail,
+        problem_type="capture-upstream-unreachable",
+        instance=instance,
+        extra={"upstream": upstream},
+    )
+
+
 def session_required(detail: str, *, instance: str | None = None) -> JSONResponse:
     """400 returned when a session lifecycle operation lacks the X-Mock-Session header (#4745)."""
     return problem_response(

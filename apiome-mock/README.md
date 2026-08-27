@@ -225,6 +225,42 @@ Every attempt also emits a `mock_callback_attempt` log line and every delivery a
 its query string, header values, or payload. Full guide:
 [docs/guide/mock-callbacks.md](../docs/guide/mock-callbacks.md).
 
+## Guarded proxy capture (PMR-2.4)
+
+**Hosted only.** A mock can forward a request to a *real* upstream, return the real answer, and
+keep a redacted copy as a reviewable fixture candidate. Five gates stand between a request and a
+stored record: the `X-Mock-Capture: on` opt-in, a live owner-issued grant plus a tenant API key,
+the upstream allowlist (path-normalized, so traversal cannot escape an entry), the SSRF policy
+(public addresses only, revalidated on every hop, redirects never followed), and redaction
+followed by a credential re-scan that refuses storage outright if anything still looks like a
+secret.
+
+```bash
+# record one exchange against an allowlisted upstream
+curl -H 'X-Mock-Capture: on' -H 'X-Api-Key: ak_live_…' \
+     -H 'Authorization: Bearer <upstream token>' \
+     $MOCK/demo/petstore/1.0.0/pets/7
+# -> the upstream's real answer, plus:
+#    X-Mock-Capture: recorded | not-recorded
+#    X-Mock-Capture-Id / -Upstream / -Redactions / -Reason
+```
+
+The upstream receives your `Authorization` header — it has to — and that header is exactly what
+never reaches storage. Redaction removes rather than masks, and records every removal as a
+pointer, a rule, and a reason.
+
+Grant capture with `PUT /v1/versions/{tenant}/{project_id}/{version_record_id}/mock/capture-policy`
+(the authorization block is server-stamped and expires; the deployment flag
+`APIOME_MOCK_CAPTURE_ENABLED` must also be on). Review recorded exchanges with
+`GET .../mock/captures`, decide them with `POST .../mock/captures/review`, and convert approved
+ones into a fixture pack with `POST .../mock/captures/publish`.
+
+A published pack carries a `provenance` block (fixture pack format v2), so replay says where its
+data came from: `__mock__/fixture-packs` reports each pack's `origin` and `redactionStatus`, and
+`__mock__/session/reset` echoes the same facts plus `X-Mock-Fixture-Origin` /
+`X-Mock-Fixture-Redaction` headers. Full guide:
+[docs/guide/mock-proxy-capture.md](../docs/guide/mock-proxy-capture.md).
+
 ## Container image
 
 One image, two runtimes — `serve` (hosted, the default) and `run` (portable):

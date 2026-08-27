@@ -101,6 +101,32 @@ class Settings(BaseSettings):
         le=60.0,
         description="Ceiling on one callback delivery attempt (seconds).",
     )
+    capture_enabled: bool = Field(
+        default=False,
+        description="Permit guarded upstream proxy capture on this deployment (#4747, PMR-2.4).",
+    )
+    capture_allow_private_upstreams: bool = Field(
+        default=False,
+        description="Permit capture upstreams on loopback/private addresses; public-only otherwise.",
+    )
+    capture_timeout_seconds: float = Field(
+        default=10.0,
+        gt=0,
+        le=60.0,
+        description="Ceiling on one upstream capture fetch (seconds).",
+    )
+    capture_max_body_bytes: int = Field(
+        default=65_536,
+        ge=1024,
+        le=1_048_576,
+        description="Largest request/response body a capture stores; larger bodies are dropped.",
+    )
+    capture_retention_hours: int = Field(
+        default=168,
+        ge=1,
+        le=8760,
+        description="How long a recorded exchange survives before the retention sweep removes it.",
+    )
     session_store_backend: Literal["memory", "postgres"] = Field(
         default="memory",
         description="Stateful CRUD store backend (X-Mock-Session); memory for single-node, postgres for multi-replica.",

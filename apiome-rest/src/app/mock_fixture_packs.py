@@ -21,6 +21,11 @@ Packs live in ``versions.mock_settings`` under the ``"fixturePacks"`` key::
       }
     }
 
+A pack may also carry an optional ``provenance`` block (v2, PMR-2.4) recording where its data
+came from — hand-authored, or converted from reviewed proxy captures, with the upstreams it drew
+from and how many redactions were applied. A pack declares the *lowest* format version that can
+express it, so packs without provenance still declare (and digest as) v1.
+
 The two payload sections serve the two runtime consumers:
 
 * ``data`` — template fixture values, readable as ``{{fixture.<name>...}}`` in scenario
@@ -54,18 +59,23 @@ __all__ = [
     "MAX_DESCRIPTION_LENGTH",
     "MAX_PACKS",
     "MAX_PACK_BYTES",
+    "MAX_PROVENANCE_UPSTREAMS",
     "MAX_RESOURCES_PER_COLLECTION",
     "PACK_FORMAT",
     "PACK_FORMAT_VERSION",
+    "PACK_FORMAT_VERSION_PROVENANCE",
     "PACK_NAME_PATTERN",
+    "PACK_PROVENANCE_SOURCES",
     "SUPPORTED_PACK_FORMAT_VERSIONS",
     "canonical_fixture_pack",
+    "canonical_pack_provenance",
     "collection_resource_id",
     "fixture_pack_digest",
     "fixture_pack_digests",
     "fixture_packs_from_storage",
     "fixture_packs_to_storage",
     "merged_pack_data",
+    "pack_provenance",
     "validate_fixture_packs",
 ]
 
@@ -74,11 +84,25 @@ __all__ = [
 PACK_FORMAT = "apiome.mock.fixture-pack/v1"
 
 #: Additive revision of :data:`PACK_FORMAT`. Bumped when new *optional* fields appear; a runtime
-#: skips packs whose version is not in :data:`SUPPORTED_PACK_FORMAT_VERSIONS`.
+#: skips packs whose version is not in :data:`SUPPORTED_PACK_FORMAT_VERSIONS`. A pack declares the
+#: **lowest** version that can express it, so adding v2 never changed the digest of an existing v1
+#: pack — see :data:`PACK_FORMAT_VERSION_PROVENANCE`.
 PACK_FORMAT_VERSION = 1
 
+#: The version a pack carrying a ``provenance`` block declares (PMR-2.4, #4747). Only packs that
+#: actually record where their data came from declare it; everything else stays at v1.
+PACK_FORMAT_VERSION_PROVENANCE = 2
+
 #: Format versions this build can produce and consume.
-SUPPORTED_PACK_FORMAT_VERSIONS: Tuple[int, ...] = (1,)
+SUPPORTED_PACK_FORMAT_VERSIONS: Tuple[int, ...] = (1, 2)
+
+#: Where a pack's data came from. ``authored`` is hand-written seed data (the assumed default when
+#: no ``provenance`` block is present); ``capture`` is data converted from reviewed proxy captures
+#: (PMR-2.4), which is what makes a replayed fixture able to report its origin.
+PACK_PROVENANCE_SOURCES: Tuple[str, ...] = ("authored", "capture")
+
+#: Maximum upstream origins one provenance block may list.
+MAX_PROVENANCE_UPSTREAMS = 20
 
 #: Maximum named packs per version.
 MAX_PACKS = 20
@@ -103,7 +127,12 @@ PACK_NAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 #: Top-level keys a pack document may carry; anything else fails author-time validation so a typo
 #: (``"collecitons"``) is an error rather than silently dead data.
 _ALLOWED_PACK_KEYS = frozenset(
-    {"packFormat", "packFormatVersion", "description", "data", "collections"}
+    {"packFormat", "packFormatVersion", "description", "data", "collections", "provenance"}
+)
+
+#: Keys a ``provenance`` block may carry (PMR-2.4, #4747).
+_ALLOWED_PROVENANCE_KEYS = frozenset(
+    {"source", "capturedFrom", "captures", "redactions", "approvedBy", "approvedAt"}
 )
 
 _MAX_COLLECTION_PATH_LENGTH = 200
@@ -174,6 +203,55 @@ def _validate_collection(
         seen_ids[resource_id] = index
 
 
+def _validate_provenance(pack_name: str, provenance: Any, errors: List[str]) -> None:
+    """Validate one pack's optional ``provenance`` block (PMR-2.4, #4747).
+
+    The block records where the pack's data came from — hand-authored, or converted from reviewed
+    proxy captures — and is what the runtime reports back so a replayed fixture can always say its
+    origin and redaction status. It is optional; a pack without one is treated as ``authored``.
+    """
+    if provenance is None:
+        return
+    label = f"Pack '{pack_name}' provenance"
+    if not isinstance(provenance, dict):
+        errors.append(f"{label}: must be an object.")
+        return
+    unknown = sorted(set(provenance) - _ALLOWED_PROVENANCE_KEYS)
+    if unknown:
+        errors.append(f"{label}: unknown keys: {', '.join(unknown)}.")
+
+    source = provenance.get("source")
+    if source is not None and source not in PACK_PROVENANCE_SOURCES:
+        errors.append(
+            f"{label}: source {source!r} is not one of {', '.join(PACK_PROVENANCE_SOURCES)}."
+        )
+
+    captured_from = provenance.get("capturedFrom")
+    if captured_from is not None:
+        if not isinstance(captured_from, list):
+            errors.append(f"{label}: capturedFrom must be a list of upstream URLs.")
+        elif len(captured_from) > MAX_PROVENANCE_UPSTREAMS:
+            errors.append(f"{label}: at most {MAX_PROVENANCE_UPSTREAMS} upstreams may be listed.")
+        else:
+            for index, entry in enumerate(captured_from):
+                if not isinstance(entry, str) or not entry.strip() or len(entry) > 2000:
+                    errors.append(f"{label}: capturedFrom[{index}] must be a non-blank URL string.")
+
+    for key in ("captures", "redactions"):
+        value = provenance.get(key)
+        if value is None:
+            continue
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            errors.append(f"{label}: {key} must be a non-negative integer.")
+
+    for key in ("approvedBy", "approvedAt"):
+        value = provenance.get(key)
+        if value is None:
+            continue
+        if not isinstance(value, str) or not value.strip() or len(value) > 200:
+            errors.append(f"{label}: {key} must be a non-blank string of at most 200 characters.")
+
+
 def _validate_pack(name: str, pack: Any, errors: List[str]) -> None:
     """Validate one pack document against the v1 schema."""
     if not isinstance(name, str) or not PACK_NAME_PATTERN.match(name):
@@ -234,6 +312,8 @@ def _validate_pack(name: str, pack: Any, errors: List[str]) -> None:
             for path, resources in collections.items():
                 _validate_collection(name, path, resources, errors)
 
+    _validate_provenance(name, pack.get("provenance"), errors)
+
     canonical = canonical_fixture_pack(pack)
     if len(canonical_json(canonical).encode("utf-8")) > MAX_PACK_BYTES:
         errors.append(f"Pack '{name}' exceeds the {MAX_PACK_BYTES} byte size limit.")
@@ -263,9 +343,13 @@ def canonical_fixture_pack(pack: Mapping[str, Any]) -> Dict[str, Any]:
     """Return the canonical (digestible, storable) form of one pack document.
 
     The canonical form always declares the format id and version, keeps ``description`` /
-    ``data`` / ``collections`` only when non-empty, and drops every unknown key. Digesting this
-    shape — rather than the raw input — means cosmetic differences (an omitted-vs-explicit
-    format id, an empty ``data`` object) never change a pack's digest.
+    ``data`` / ``collections`` / ``provenance`` only when non-empty, and drops every unknown key.
+    Digesting this shape — rather than the raw input — means cosmetic differences (an
+    omitted-vs-explicit format id, an empty ``data`` object) never change a pack's digest.
+
+    The declared ``packFormatVersion`` is the *lowest* version that can express the pack: v1
+    unless it carries a ``provenance`` block, in which case v2. Adding provenance therefore left
+    every existing pack's digest — and every runtime that only understands v1 — untouched.
 
     Args:
         pack: A pack document (validated author-side, or lenient-parsed runtime-side).
@@ -273,9 +357,10 @@ def canonical_fixture_pack(pack: Mapping[str, Any]) -> Dict[str, Any]:
     Returns:
         The canonical pack document.
     """
+    provenance = canonical_pack_provenance(pack.get("provenance"))
     canonical: Dict[str, Any] = {
         "packFormat": PACK_FORMAT,
-        "packFormatVersion": PACK_FORMAT_VERSION,
+        "packFormatVersion": PACK_FORMAT_VERSION_PROVENANCE if provenance else PACK_FORMAT_VERSION,
     }
     description = pack.get("description")
     if isinstance(description, str) and description.strip():
@@ -286,7 +371,58 @@ def canonical_fixture_pack(pack: Mapping[str, Any]) -> Dict[str, Any]:
     collections = pack.get("collections")
     if isinstance(collections, Mapping) and collections:
         canonical["collections"] = {path: list(resources) for path, resources in collections.items()}
+    if provenance:
+        canonical["provenance"] = provenance
     return canonical
+
+
+def canonical_pack_provenance(provenance: Any) -> Dict[str, Any]:
+    """Return the canonical form of a pack's ``provenance`` block (``{}`` when there is none).
+
+    Drops unknown and blank fields, sorts and de-duplicates ``capturedFrom`` so the same set of
+    upstreams always digests identically, and omits a block that says nothing beyond the default
+    ``authored`` source — a pack that records no real origin should stay a v1 pack.
+
+    Args:
+        provenance: The raw ``provenance`` value from a pack document.
+
+    Returns:
+        The canonical provenance block, or ``{}``.
+    """
+    if not isinstance(provenance, Mapping):
+        return {}
+    block: Dict[str, Any] = {}
+    source = provenance.get("source")
+    if source in PACK_PROVENANCE_SOURCES:
+        block["source"] = source
+    captured_from = provenance.get("capturedFrom")
+    if isinstance(captured_from, (list, tuple)):
+        entries = sorted({entry.strip() for entry in captured_from if isinstance(entry, str) and entry.strip()})
+        if entries:
+            block["capturedFrom"] = entries
+    for key in ("captures", "redactions"):
+        value = provenance.get(key)
+        if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+            block[key] = value
+    for key in ("approvedBy", "approvedAt"):
+        value = provenance.get(key)
+        if isinstance(value, str) and value.strip():
+            block[key] = value.strip()
+    if set(block) <= {"source"} and block.get("source", "authored") == "authored":
+        return {}
+    return block
+
+
+def pack_provenance(pack: Mapping[str, Any]) -> Dict[str, Any]:
+    """Return one pack's canonical provenance block, or ``{}`` when it records none.
+
+    Args:
+        pack: A pack document (stored or canonical shape).
+
+    Returns:
+        The provenance block; ``{}`` means hand-authored data with nothing further recorded.
+    """
+    return canonical_pack_provenance(pack.get("provenance"))
 
 
 def fixture_pack_digest(pack: Mapping[str, Any]) -> str:

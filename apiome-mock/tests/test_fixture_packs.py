@@ -1,4 +1,8 @@
-"""Runtime fixture pack parsing tests (#4745, PMR-2.2)."""
+"""Runtime fixture pack parsing tests (#4745, PMR-2.2).
+
+Also covers replay reporting (#4747, PMR-2.4): a pack built from reviewed proxy captures reports
+its origin and redaction status wherever the runtime describes it.
+"""
 
 from __future__ import annotations
 
@@ -161,5 +165,69 @@ class TestPackSummary:
             "fixtures": ["pets"],
             "collections": {"/orders": 1, "/pets": 2},
             "resources": 3,
+            "origin": "authored",
+            "redactionStatus": "not-applicable",
         }
         assert "Rex" not in json.dumps(summary)
+
+
+CAPTURED_PACK = {
+    "packFormat": PACK_FORMAT,
+    "packFormatVersion": 2,
+    "description": "Recorded from staging.",
+    "collections": {"/pets": [{"id": 7, "name": "Rex"}]},
+    "provenance": {
+        "source": "capture",
+        "capturedFrom": ["https://api.example.com/v1"],
+        "captures": 3,
+        "redactions": 5,
+        "approvedBy": "user-1",
+        "approvedAt": "2026-08-26T19:00:00Z",
+    },
+}
+
+
+class TestPackProvenance:
+    def test_an_authored_pack_reports_its_origin_and_that_redaction_does_not_apply(self) -> None:
+        pack = parse_fixture_packs(_settings({"smoke": VALID_PACK}))["smoke"]
+        assert pack.origin == "authored"
+        assert pack.redaction_status == "not-applicable"
+        assert pack.provenance == {}
+
+    def test_a_captured_pack_reports_where_it_came_from(self) -> None:
+        pack = parse_fixture_packs(_settings({"staging": CAPTURED_PACK}))["staging"]
+        assert pack.format_version == 2
+        assert pack.origin == "capture"
+        assert pack.redaction_status == "redacted"
+        assert pack.provenance["capturedFrom"] == ["https://api.example.com/v1"]
+
+    def test_a_capture_that_needed_no_redaction_says_clean(self) -> None:
+        clean = {**CAPTURED_PACK, "provenance": {**CAPTURED_PACK["provenance"], "redactions": 0}}
+        pack = parse_fixture_packs(_settings({"staging": clean}))["staging"]
+        assert pack.redaction_status == "clean"
+
+    def test_the_runtime_digest_matches_what_the_authoring_api_computed(self) -> None:
+        pack = parse_fixture_packs(_settings({"staging": CAPTURED_PACK}))["staging"]
+        assert pack.digest == fixture_pack_digest(CAPTURED_PACK)
+
+    def test_the_summary_carries_origin_redaction_status_and_provenance(self) -> None:
+        pack = parse_fixture_packs(_settings({"staging": CAPTURED_PACK}))["staging"]
+        summary = pack_summary(pack)
+        assert summary["origin"] == "capture"
+        assert summary["redactionStatus"] == "redacted"
+        assert summary["provenance"]["captures"] == 3
+        assert summary["packFormatVersion"] == 2
+
+    def test_an_authored_summary_omits_the_provenance_block(self) -> None:
+        pack = parse_fixture_packs(_settings({"smoke": VALID_PACK}))["smoke"]
+        assert "provenance" not in pack_summary(pack)
+
+    def test_a_malformed_provenance_block_is_ignored_not_fatal(self) -> None:
+        broken = {**CAPTURED_PACK, "provenance": "nope"}
+        pack = parse_fixture_packs(_settings({"staging": broken}))["staging"]
+        assert pack.origin == "authored"
+        assert pack.collections["/pets"]
+
+    def test_a_pack_declaring_an_unsupported_version_is_skipped_whole(self) -> None:
+        future = {**CAPTURED_PACK, "packFormatVersion": 99}
+        assert parse_fixture_packs(_settings({"staging": future})) == {}

@@ -4182,6 +4182,10 @@ class MockFixturePackSpec(BaseModel):
         default_factory=dict,
         description='Seed resources per CRUD collection path (e.g. "/pets"), applied on session reset.',
     )
+    provenance: Optional["MockFixturePackProvenanceSpec"] = Field(
+        default=None,
+        description="Where this pack's data came from; present on packs built from reviewed captures (#4747).",
+    )
 
 
 class VersionMockFixturePacksRequest(BaseModel):
@@ -4347,6 +4351,375 @@ class VersionMockCallbacksResponse(BaseModel):
     digests: Dict[str, str] = Field(
         default_factory=dict,
         description="sha256:<hex> content digest of each definition — the identity a test pins.",
+    )
+
+
+class MockFixturePackProvenanceSpec(BaseModel):
+    """Where a fixture pack's data came from (#4747 PMR-2.4).
+
+    Present only on packs that record an origin; a pack without one is hand-authored. The runtime
+    reports this block back on every pack listing and session reset, which is what lets a replayed
+    fixture say where it came from and how heavily it was redacted.
+    """
+
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    source: Literal["authored", "capture"] = Field(
+        default="authored",
+        description="How the pack's data was produced.",
+    )
+    captured_from: List[str] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("capturedFrom", "captured_from"),
+        serialization_alias="capturedFrom",
+        description="Allowlisted upstreams the captures were recorded from.",
+    )
+    captures: Optional[int] = Field(
+        default=None, ge=0, description="How many reviewed captures were converted into this pack."
+    )
+    redactions: Optional[int] = Field(
+        default=None, ge=0, description="Total redactions applied across those captures."
+    )
+    approved_by: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("approvedBy", "approved_by"),
+        serialization_alias="approvedBy",
+        description="User id that approved publication.",
+    )
+    approved_at: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("approvedAt", "approved_at"),
+        serialization_alias="approvedAt",
+        description="ISO 8601 instant of the approval.",
+    )
+
+
+class MockCaptureRedactionSpec(BaseModel):
+    """Extra redaction rules a version's owner adds on top of the always-on ones (#4747 PMR-2.4)."""
+
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    headers: List[str] = Field(
+        default_factory=list,
+        description="Additional header names whose values are never persisted.",
+    )
+    query_params: List[str] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("queryParams", "query_params"),
+        serialization_alias="queryParams",
+        description="Additional query parameter names whose values are never persisted.",
+    )
+    body_fields: List[str] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("bodyFields", "body_fields"),
+        serialization_alias="bodyFields",
+        description=(
+            "Body fields to drop: a bare name matches at any depth, an entry starting with '/' is "
+            "a body-relative RFC 6901 pointer."
+        ),
+    )
+    patterns: List[str] = Field(
+        default_factory=list,
+        description="Opt-in value detectors for personal data (email, phone, creditCard, nationalId, ipv4).",
+    )
+
+
+class MockCaptureAuthorizationSpec(BaseModel):
+    """The server-stamped record of who authorized capture, and until when (#4747 PMR-2.4)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    authorized_by: str = Field(
+        validation_alias=AliasChoices("authorizedBy", "authorized_by"),
+        serialization_alias="authorizedBy",
+        description="User id that granted capture.",
+    )
+    authorized_at: str = Field(
+        validation_alias=AliasChoices("authorizedAt", "authorized_at"),
+        serialization_alias="authorizedAt",
+        description="ISO 8601 instant of the grant.",
+    )
+    expires_at: str = Field(
+        validation_alias=AliasChoices("expiresAt", "expires_at"),
+        serialization_alias="expiresAt",
+        description="ISO 8601 instant the grant lapses; capture stops on its own at this point.",
+    )
+
+
+class MockCapturePolicySpec(BaseModel):
+    """A version's stored guarded-proxy capture policy (#4747 PMR-2.4)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    policy_format: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("policyFormat", "policy_format"),
+        serialization_alias="policyFormat",
+        description='Policy format id; "apiome.mock.capture-policy/v1".',
+    )
+    policy_format_version: Optional[int] = Field(
+        default=None,
+        validation_alias=AliasChoices("policyFormatVersion", "policy_format_version"),
+        serialization_alias="policyFormatVersion",
+        description="Policy format revision.",
+    )
+    enabled: bool = Field(default=False, description="Whether capture is switched on.")
+    upstreams: List[str] = Field(
+        default_factory=list,
+        description="Allowlisted upstream base URLs; only these may ever be fetched.",
+    )
+    authorization: Optional[MockCaptureAuthorizationSpec] = Field(
+        default=None, description="Who authorized capture and when the grant lapses."
+    )
+    redaction: Optional[MockCaptureRedactionSpec] = Field(
+        default=None, description="Redaction rules added on top of the always-on credential rules."
+    )
+    validate_responses: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("validateResponses", "validate_responses"),
+        serialization_alias="validateResponses",
+        description="Check each captured response against the version's declared contract.",
+    )
+
+
+class VersionMockCapturePolicyRequest(BaseModel):
+    """Grant, change, or switch off guarded proxy capture for a version (#4747 PMR-2.4).
+
+    The authorization block is never accepted from the client: the API stamps the authenticated
+    user and clamps the lifetime itself, so "who authorized this" cannot be claimed.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    enabled: bool = Field(
+        default=True, description="Switch capture on (the default) or off without losing the allowlist."
+    )
+    upstreams: List[str] = Field(
+        default_factory=list,
+        description="Absolute http(s) base URLs capture may fetch; at least one is required.",
+    )
+    redaction: Optional[MockCaptureRedactionSpec] = Field(
+        default=None, description="Extra redaction rules on top of the always-on credential rules."
+    )
+    validate_responses: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("validateResponses", "validate_responses"),
+        serialization_alias="validateResponses",
+        description="Check each captured response against the version's declared contract.",
+    )
+    ttl_hours: Optional[int] = Field(
+        default=None,
+        ge=1,
+        validation_alias=AliasChoices("ttlHours", "ttl_hours"),
+        serialization_alias="ttlHours",
+        description="Requested authorization lifetime in hours (clamped to at most 168).",
+    )
+    acknowledged: bool = Field(
+        default=False,
+        description=(
+            "Explicit confirmation that the caller is authorized to record traffic from these "
+            "upstreams. Capture cannot be granted without it."
+        ),
+    )
+
+
+class VersionMockCapturePolicyResponse(BaseModel):
+    """The version's stored capture policy, its digest, and whether capture is live (#4747 PMR-2.4)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    policy: Optional[MockCapturePolicySpec] = Field(
+        default=None, description="The stored policy, or null when capture was never configured."
+    )
+    digest: Optional[str] = Field(
+        default=None, description="sha256:<hex> digest of the policy; recorded on every capture."
+    )
+    state: str = Field(
+        description=(
+            "Why capture is or is not live: authorized, unconfigured, disabled, no-upstreams, "
+            "unauthorized, or expired."
+        )
+    )
+    captures: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Live capture counts by review state (pending/approved/rejected/published).",
+    )
+
+
+class MockCaptureRedactionDecision(BaseModel):
+    """One thing a capture's redaction removed, and why (#4747 PMR-2.4)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    pointer: str = Field(description="RFC 6901 pointer to the removed location in the capture record.")
+    rule: str = Field(description="The rule family that fired (always-header, policy-field, ...).")
+    reason: str = Field(description="Human-readable explanation of the removal.")
+
+
+class MockCaptureSummary(BaseModel):
+    """One recorded exchange awaiting (or past) review (#4747 PMR-2.4)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str = Field(description="Capture id.")
+    upstream: str = Field(description="Upstream URL fetched, query string removed.")
+    allowlist_entry: str = Field(
+        validation_alias=AliasChoices("allowlistEntry", "allowlist_entry"),
+        serialization_alias="allowlistEntry",
+        description="The allowlist entry that authorized the fetch.",
+    )
+    policy_digest: str = Field(
+        validation_alias=AliasChoices("policyDigest", "policy_digest"),
+        serialization_alias="policyDigest",
+        description="Digest of the capture policy in force at capture time.",
+    )
+    captured_at: str = Field(
+        validation_alias=AliasChoices("capturedAt", "captured_at"),
+        serialization_alias="capturedAt",
+        description="ISO 8601 instant of the capture.",
+    )
+    operation_key: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("operationKey", "operation_key"),
+        serialization_alias="operationKey",
+        description='Spec operation the request matched, e.g. "GET /pets/{petId}".',
+    )
+    method: str = Field(description="Request method.")
+    path: str = Field(description="Request path, relative to the mock version prefix.")
+    status: int = Field(description="Upstream response status.")
+    digest: str = Field(description="sha256:<hex> digest of the redacted capture document.")
+    redaction_count: int = Field(
+        validation_alias=AliasChoices("redactionCount", "redaction_count"),
+        serialization_alias="redactionCount",
+        description="How many values redaction removed.",
+    )
+    redactions: List[MockCaptureRedactionDecision] = Field(
+        default_factory=list, description="Every redaction decision, retained for review."
+    )
+    schema_valid: Optional[bool] = Field(
+        default=None,
+        validation_alias=AliasChoices("schemaValid", "schema_valid"),
+        serialization_alias="schemaValid",
+        description="Whether the captured response matched the declared contract (null if unchecked).",
+    )
+    validation_errors: List[str] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("validationErrors", "validation_errors"),
+        serialization_alias="validationErrors",
+        description="Schema validation errors for the captured response.",
+    )
+    review_state: str = Field(
+        validation_alias=AliasChoices("reviewState", "review_state"),
+        serialization_alias="reviewState",
+        description="pending, approved, rejected, or published.",
+    )
+    review_note: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("reviewNote", "review_note"),
+        serialization_alias="reviewNote",
+        description="Reviewer note stored with the decision.",
+    )
+    published_pack: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("publishedPack", "published_pack"),
+        serialization_alias="publishedPack",
+        description="Fixture pack this capture was published into.",
+    )
+    expires_at: str = Field(
+        validation_alias=AliasChoices("expiresAt", "expires_at"),
+        serialization_alias="expiresAt",
+        description="When retention removes this capture.",
+    )
+    exchange: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="The full redacted apiome.mock.capture/v1 document (omitted from list reads).",
+    )
+
+
+class VersionMockCapturesResponse(BaseModel):
+    """A version's recorded exchanges awaiting review (#4747 PMR-2.4)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    captures: List[MockCaptureSummary] = Field(
+        default_factory=list, description="Recorded exchanges, newest first."
+    )
+    counts: Dict[str, int] = Field(
+        default_factory=dict, description="Live capture counts by review state."
+    )
+
+
+class VersionMockCaptureReviewRequest(BaseModel):
+    """Approve or reject recorded exchanges (#4747 PMR-2.4)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    capture_ids: List[str] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("captureIds", "capture_ids"),
+        serialization_alias="captureIds",
+        description="Capture ids to decide.",
+    )
+    decision: Literal["approve", "reject"] = Field(description="The review decision to record.")
+    note: Optional[str] = Field(
+        default=None, max_length=500, description="Optional note stored with the decision."
+    )
+
+
+class VersionMockCaptureReviewResponse(BaseModel):
+    """The result of a review decision (#4747 PMR-2.4)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    reviewed: List[str] = Field(
+        default_factory=list, description="Capture ids whose review state changed."
+    )
+    counts: Dict[str, int] = Field(
+        default_factory=dict, description="Live capture counts by review state after the decision."
+    )
+
+
+class VersionMockCapturePublishRequest(BaseModel):
+    """Convert approved captures into a fixture pack (#4747 PMR-2.4)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    pack_name: str = Field(
+        validation_alias=AliasChoices("packName", "pack_name"),
+        serialization_alias="packName",
+        description="Name of the fixture pack to create or replace.",
+    )
+    capture_ids: List[str] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("captureIds", "capture_ids"),
+        serialization_alias="captureIds",
+        description="Approved capture ids to publish; empty means every approved capture.",
+    )
+    description: str = Field(
+        default="", max_length=500, description="Description stored on the resulting pack."
+    )
+
+
+class VersionMockCapturePublishResponse(BaseModel):
+    """The fixture pack produced from reviewed captures (#4747 PMR-2.4)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    pack_name: str = Field(
+        validation_alias=AliasChoices("packName", "pack_name"),
+        serialization_alias="packName",
+        description="The pack that was written.",
+    )
+    digest: str = Field(description="sha256:<hex> digest of the published pack.")
+    published: List[str] = Field(
+        default_factory=list, description="Capture ids marked published."
+    )
+    notes: List[str] = Field(
+        default_factory=list,
+        description="What the conversion skipped and why, so nothing is dropped silently.",
+    )
+    provenance: MockFixturePackProvenanceSpec = Field(
+        description="The provenance block stamped on the pack — its origin and redaction totals."
     )
 
 

@@ -19,6 +19,7 @@ from apiome_mock.callback_dispatch import (
     CallbackDispatcher,
     DispatchRequest,
 )
+from apiome_mock.capture import CaptureProxy, parse_capture_policy, wants_capture
 from apiome_mock.chaos import (
     CHAOS_DELAY_HEADER,
     CHAOS_HEADER,
@@ -261,11 +262,34 @@ async def handle_mock_request(
     api_key: ValidatedApiKey | None = None,
     session_store: SessionStore | None = None,
     callback_dispatcher: CallbackDispatcher | None = None,
+    capture_proxy: CaptureProxy | None = None,
 ) -> Response:
     """Serve a mock response for ``/{tenant}/{project}/{version}/{path}`` (hosted, Postgres-backed).
 
     Resolves access and the compiled spec from the database, then delegates the actual behavior to
-    :func:`serve_compiled_request`.
+    :func:`serve_compiled_request` — unless the request opted into guarded proxy capture, in which
+    case it is forwarded to an allowlisted upstream and recorded instead (#4747, PMR-2.4).
+
+    Capture lives here rather than in :func:`serve_compiled_request` on purpose: it needs the
+    control-plane database for both the grant and the review queue, so it is structurally
+    unavailable to the portable runtime, which shares only the serving function.
+
+    Args:
+        request: The incoming request.
+        tenant: Tenant slug from the URL.
+        project: Project slug from the URL.
+        version: Version label from the URL.
+        path: Request path relative to the version prefix.
+        pool: Database pool backing spec resolution, capture storage, and the audit ledger.
+        cache: Compiled-spec cache.
+        api_key: The validated tenant API key, when the caller sent one.
+        session_store: Store backing ``X-Mock-Session`` state.
+        callback_dispatcher: Delivers contract callbacks (#4746, PMR-2.3).
+        capture_proxy: Guarded upstream proxy (#4747, PMR-2.4); ``None`` disables capture for the
+            whole deployment, whatever any version's policy says.
+
+    Returns:
+        The mock (or, when capturing, the upstream) response.
     """
     instance = _instance_path(tenant, project, version, path)
     raw_api_key = request.headers.get("X-Api-Key") or request.headers.get("x-api-key")
@@ -305,6 +329,23 @@ async def handle_mock_request(
         return not_found(
             f"No published spec for {tenant}/{project}/{version}.",
             instance=instance,
+        )
+
+    if capture_proxy is not None and wants_capture(request):
+        relative_path = "/" + path.strip("/") if path.strip("/") else "/"
+        operation, _, _ = match_request(compiled.operations, request.method, relative_path)
+        return await capture_proxy.capture(
+            request,
+            spec=compiled.spec,
+            policy=compiled.capture_policy or parse_capture_policy(None),
+            operation=operation,
+            tenant=tenant,
+            project=project,
+            version=version,
+            relative_path=relative_path,
+            instance=instance,
+            api_key=api_key,
+            pool=pool,
         )
 
     return await serve_compiled_request(

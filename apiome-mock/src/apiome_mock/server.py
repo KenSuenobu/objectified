@@ -14,6 +14,7 @@ from psycopg_pool import AsyncConnectionPool
 from apiome_mock.api_key import validate_api_key_for_tenant
 from apiome_mock.callback_dispatch import build_dispatcher
 from apiome_mock.canonical_spec_cache import CanonicalSpecCache
+from apiome_mock.capture import build_capture_proxy
 from apiome_mock.database_pool import create_async_pool, ping_pool
 from apiome_mock.event_transport import handle_event_sse, handle_event_websocket
 from apiome_mock.grpc_transport import GrpcMockRuntime
@@ -35,6 +36,7 @@ MOCK_SPEC_CACHE_KEY = "spec_cache"
 MOCK_CANONICAL_CACHE_KEY = "canonical_spec_cache"
 MOCK_SESSION_STORE_KEY = "session_store"
 MOCK_CALLBACK_DISPATCHER_KEY = "callback_dispatcher"
+MOCK_CAPTURE_PROXY_KEY = "capture_proxy"
 
 
 @asynccontextmanager
@@ -83,12 +85,20 @@ async def lifespan(app: FastAPI) -> AsyncIterator[dict[str, object]]:
         allow_private_destinations=settings.callback_allow_private,
         timeout_seconds=settings.callback_timeout_seconds,
     )
+    capture_proxy = build_capture_proxy(
+        enabled=settings.capture_enabled,
+        allow_private_upstreams=settings.capture_allow_private_upstreams,
+        timeout_seconds=settings.capture_timeout_seconds,
+        max_body_bytes=settings.capture_max_body_bytes,
+        retention_hours=settings.capture_retention_hours,
+    )
 
     app.state.db_pool = pool
     app.state.spec_cache = cache
     app.state.canonical_spec_cache = canonical_cache
     app.state.session_store = session_store
     app.state.callback_dispatcher = callback_dispatcher
+    app.state.capture_proxy = capture_proxy
     app.state.grpc_runtime = grpc_runtime
     yield {
         MOCK_DB_POOL_KEY: pool,
@@ -96,12 +106,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[dict[str, object]]:
         MOCK_CANONICAL_CACHE_KEY: canonical_cache,
         MOCK_SESSION_STORE_KEY: session_store,
         MOCK_CALLBACK_DISPATCHER_KEY: callback_dispatcher,
+        MOCK_CAPTURE_PROXY_KEY: capture_proxy,
     }
 
     stop_event.set()
     await grpc_runtime.stop()
     if callback_dispatcher is not None:
         await callback_dispatcher.aclose()
+    if capture_proxy is not None:
+        await capture_proxy.aclose()
     if listener_task is not None:
         listener_task.cancel()
         try:
@@ -196,6 +209,7 @@ def create_app() -> FastAPI:
         cache: SpecCache = app.state.spec_cache
         session_store = getattr(app.state, "session_store", None)
         callback_dispatcher = getattr(app.state, "callback_dispatcher", None)
+        capture_proxy = getattr(app.state, "capture_proxy", None)
         settings = get_settings()
         raw_api_key = request.headers.get("X-Api-Key") or request.headers.get("x-api-key")
         validated_key = await validate_api_key_for_tenant(
@@ -227,6 +241,7 @@ def create_app() -> FastAPI:
             api_key=validated_key,
             session_store=session_store,
             callback_dispatcher=callback_dispatcher,
+            capture_proxy=capture_proxy,
         )
         if limits is not None:
             record_mock_request(

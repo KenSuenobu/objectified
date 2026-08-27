@@ -15,7 +15,10 @@ portable runtime expose them identically, under the same version prefix as the m
     its stateful CRUD resources and sequence counters. With a JSON body ``{"pack": "<name>"}``
     the session is seeded with that pack's collections instead of left empty, giving the test
     deterministic state: the same pack always produces the same resources, and the response
-    echoes the pack digest so the test can assert exactly what it got.
+    echoes the pack digest so the test can assert exactly what it got. It also echoes the pack's
+    *origin* and *redaction status* — in the body and in ``X-Mock-Fixture-Origin`` /
+    ``X-Mock-Fixture-Redaction`` — so a session replaying data captured from a real upstream
+    (#4747, PMR-2.4) always says so.
 
 Callback and webhook simulation (#4746, PMR-2.3) adds three more, so a consumer can discover,
 exercise, and audit the *outbound* half of the contract:
@@ -73,6 +76,8 @@ from apiome_mock.spec_loader import CompiledSpec
 from apiome_mock.stateful_handler import parse_mock_session_token
 
 __all__ = [
+    "FIXTURE_ORIGIN_HEADER",
+    "FIXTURE_REDACTION_HEADER",
     "MOCK_CONTROL_SEGMENT",
     "is_lifecycle_path",
     "handle_lifecycle_request",
@@ -80,6 +85,14 @@ __all__ = [
 
 #: Reserved first path segment for runtime control routes; spec paths never shadow it.
 MOCK_CONTROL_SEGMENT = "__mock__"
+
+#: Response header on a session reset naming where the seeded fixture data came from
+#: (``authored`` or ``capture``) — the header form of the same fact the body carries (#4747).
+FIXTURE_ORIGIN_HEADER = "X-Mock-Fixture-Origin"
+
+#: Response header on a session reset saying whether the seeded data went through redaction
+#: (``redacted``, ``clean``, or ``not-applicable`` for hand-authored packs) (#4747).
+FIXTURE_REDACTION_HEADER = "X-Mock-Fixture-Redaction"
 
 _FIXTURE_PACKS_PATH = f"/{MOCK_CONTROL_SEGMENT}/fixture-packs"
 _SESSION_RESET_PATH = f"/{MOCK_CONTROL_SEGMENT}/session/reset"
@@ -175,8 +188,19 @@ async def _reset_session(
         "packDigest": pack.digest if pack is not None else None,
         "collections": len(seed),
         "resources": resource_count,
+        # Replay says where its data came from (#4747, PMR-2.4). A session seeded from a pack
+        # built out of reviewed proxy captures reports that fact — and that the captured data was
+        # redacted — at the moment the test seeds it, not only in the pack listing.
+        "origin": pack.origin if pack is not None else None,
+        "redactionStatus": pack.redaction_status if pack is not None else None,
     }
-    return JSONResponse(payload)
+    if pack is not None and pack.provenance:
+        payload["provenance"] = dict(pack.provenance)
+    response = JSONResponse(payload)
+    if pack is not None:
+        response.headers[FIXTURE_ORIGIN_HEADER] = pack.origin
+        response.headers[FIXTURE_REDACTION_HEADER] = pack.redaction_status
+    return response
 
 
 def _list_callbacks(compiled: CompiledSpec, dispatcher: CallbackDispatcher | None) -> Response:
