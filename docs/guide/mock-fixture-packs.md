@@ -61,12 +61,42 @@ Every pack declares `packFormat` and `packFormatVersion`. A breaking layout chan
 `/v2`; additive optional fields bump the version, and a runtime **skips** packs whose version it
 does not support rather than misreading them.
 
+A pack declares the **lowest** version that can express it. Today that means v1, unless it carries
+the optional `provenance` block described below, which makes it v2. That rule is why adding
+provenance left every existing pack's digest — and every runtime that only understands v1 —
+untouched.
+
 A pack's **digest** is `sha256:<hex>` over the canonical JSON (recursively sorted keys, compact
 separators) of its canonicalized document — cosmetic differences such as an omitted-vs-explicit
 format id or an empty `data` object never change it. The digest is returned on save, listed by
 the runtime's `__mock__/fixture-packs` endpoint, and echoed by every reset, so a test can pin the
 exact data it seeded. Saving the same pack content always yields the same digest, hosted or
 portable.
+
+## Provenance: where a pack's data came from
+
+A pack may carry an optional `provenance` block (v2) saying where its data originated. Packs
+written by hand have none, and are treated as `authored`. Packs produced by
+[guarded proxy capture](mock-proxy-capture.md) carry one:
+
+```jsonc
+"provenance": {
+  "source": "capture",                            // "authored" | "capture"
+  "capturedFrom": ["https://api.example.com/v1"], // allowlisted upstreams it drew from
+  "captures": 12,                                 // reviewed captures converted
+  "redactions": 37,                               // values redaction removed on the way in
+  "approvedBy": "…",
+  "approvedAt": "2026-08-26T19:00:00Z"
+}
+```
+
+The runtime reports it wherever it describes a pack — see the two endpoints below — so a fixture
+replayed months later can still say whether it was written by hand or recorded off a real system,
+and whether redaction had to remove anything.
+
+`source: "capture"` cannot be set by hand: `PUT …/mock/fixture-packs` refuses a pack claiming it
+unless the block matches what publishing captures already stored under that name. Editing a
+capture-derived pack through the normal editor therefore keeps its provenance intact.
 
 ## Data lifecycle endpoints
 
@@ -91,11 +121,17 @@ resource counts (never resource bodies):
       "packFormatVersion": 1,
       "fixtures": ["pets"],
       "collections": {"/orders": 1, "/pets": 2},
-      "resources": 3
+      "resources": 3,
+      "origin": "authored",
+      "redactionStatus": "not-applicable"
     }
   ]
 }
 ```
+
+`origin` is `authored` or `capture`; `redactionStatus` is `not-applicable` for authored data,
+and `clean` or `redacted` for captured data. A pack with a `provenance` block also echoes it here
+in full.
 
 ### `POST …/{version}/__mock__/session/reset`
 
@@ -115,9 +151,15 @@ curl -X POST -H "X-Mock-Session: test-1" -H "Content-Type: application/json" \
   "pack": "smoke",
   "packDigest": "sha256:…",
   "collections": 2,
-  "resources": 3
+  "resources": 3,
+  "origin": "authored",
+  "redactionStatus": "not-applicable"
 }
 ```
+
+The same two facts are also stamped on the response as `X-Mock-Fixture-Origin` and
+`X-Mock-Fixture-Redaction`, and a captured pack's full `provenance` block is included in the body —
+so a test seeding from recorded traffic always knows it is doing so.
 
 A reset discards *everything* in the session namespace — CRUD resources and scenario sequence
 counters — and the replacement is all-or-nothing: when the seed would exceed the session's

@@ -102,8 +102,21 @@ BIG_PACK = {
     },
 }
 
+CAPTURED_PACK = {
+    "description": "Recorded from staging and reviewed.",
+    "collections": {"/pets": [{"id": 7, "name": "Rex"}]},
+    "provenance": {
+        "source": "capture",
+        "capturedFrom": ["https://api.example.com/v1"],
+        "captures": 1,
+        "redactions": 4,
+        "approvedBy": "user-1",
+        "approvedAt": "2026-08-26T19:00:00Z",
+    },
+}
+
 MOCK_SETTINGS = {
-    "fixturePacks": {"smoke": SMOKE_PACK, "too-big": BIG_PACK},
+    "fixturePacks": {"smoke": SMOKE_PACK, "too-big": BIG_PACK, "from-capture": CAPTURED_PACK},
     "scenarios": {
         "flaky": {
             "description": "Fails once, then succeeds.",
@@ -187,8 +200,8 @@ def test_list_fixture_packs(mock_client: TestClient) -> None:
     response = mock_client.get(f"{CONTROL}/fixture-packs")
     assert response.status_code == 200
     packs = response.json()["packs"]
-    assert [pack["name"] for pack in packs] == ["smoke", "too-big"]
-    smoke = packs[0]
+    assert [pack["name"] for pack in packs] == ["from-capture", "smoke", "too-big"]
+    smoke = next(pack for pack in packs if pack["name"] == "smoke")
     assert smoke["digest"] == fixture_pack_digest(SMOKE_PACK)
     assert smoke["packFormatVersion"] == 1
     assert smoke["fixtures"] == ["greeting"]
@@ -236,6 +249,8 @@ def test_reset_to_pack_seeds_deterministic_state(mock_client: TestClient) -> Non
         "packDigest": fixture_pack_digest(SMOKE_PACK),
         "collections": 1,
         "resources": 2,
+        "origin": "authored",
+        "redactionStatus": "not-applicable",
     }
 
     listed = mock_client.get(f"{BASE}/pets", headers={"X-Mock-Session": "s1"})
@@ -260,6 +275,8 @@ def test_reset_without_pack_clears_session(mock_client: TestClient) -> None:
         "packDigest": None,
         "collections": 0,
         "resources": 0,
+        "origin": None,
+        "redactionStatus": None,
     }
     listed = mock_client.get(f"{BASE}/pets", headers={"X-Mock-Session": "s1"})
     assert listed.json() == []
@@ -292,7 +309,7 @@ def test_reset_to_unknown_pack_lists_available(mock_client: TestClient) -> None:
     assert response.status_code == 400
     body = response.json()
     assert body["type"].endswith("/unknown-fixture-pack")
-    assert body["availablePacks"] == ["smoke", "too-big"]
+    assert body["availablePacks"] == ["from-capture", "smoke", "too-big"]
 
 
 def test_reset_rejects_malformed_bodies(mock_client: TestClient) -> None:
@@ -393,8 +410,9 @@ def test_portable_runtime_serves_the_same_lifecycle(tmp_path) -> None:
     with TestClient(create_portable_app(bundle, settings)) as client:
         listed = client.get(f"{CONTROL}/fixture-packs")
         assert listed.status_code == 200
-        assert [pack["name"] for pack in listed.json()["packs"]] == ["smoke", "too-big"]
-        assert listed.json()["packs"][0]["digest"] == fixture_pack_digest(SMOKE_PACK)
+        assert [pack["name"] for pack in listed.json()["packs"]] == ["from-capture", "smoke", "too-big"]
+        listed_packs = {pack["name"]: pack for pack in listed.json()["packs"]}
+        assert listed_packs["smoke"]["digest"] == fixture_pack_digest(SMOKE_PACK)
 
         reset = _reset(client, session="ci-1", pack="smoke")
         assert reset.status_code == 200
@@ -405,3 +423,43 @@ def test_portable_runtime_serves_the_same_lifecycle(tmp_path) -> None:
             {"id": 1, "name": "Rex"},
             {"id": 2, "name": "Bella"},
         ]
+
+
+# ---------------------------------------------------------------------------
+# Replay reports its fixture origin and redaction status (#4747, PMR-2.4)
+# ---------------------------------------------------------------------------
+
+
+def test_listing_reports_each_pack_origin_and_redaction_status(mock_client: TestClient) -> None:
+    packs = {pack["name"]: pack for pack in mock_client.get(f"{CONTROL}/fixture-packs").json()["packs"]}
+    assert packs["smoke"]["origin"] == "authored"
+    assert packs["smoke"]["redactionStatus"] == "not-applicable"
+    captured = packs["from-capture"]
+    assert captured["origin"] == "capture"
+    assert captured["redactionStatus"] == "redacted"
+    assert captured["provenance"]["capturedFrom"] == ["https://api.example.com/v1"]
+
+
+def test_reset_to_a_captured_pack_reports_its_origin(mock_client: TestClient) -> None:
+    response = _reset(mock_client, session="capture-1", pack="from-capture")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["origin"] == "capture"
+    assert body["redactionStatus"] == "redacted"
+    assert body["provenance"]["redactions"] == 4
+    assert response.headers["X-Mock-Fixture-Origin"] == "capture"
+    assert response.headers["X-Mock-Fixture-Redaction"] == "redacted"
+
+
+def test_reset_to_an_authored_pack_says_redaction_does_not_apply(mock_client: TestClient) -> None:
+    response = _reset(mock_client, session="authored-1", pack="smoke")
+    assert response.headers["X-Mock-Fixture-Origin"] == "authored"
+    assert response.headers["X-Mock-Fixture-Redaction"] == "not-applicable"
+    assert "provenance" not in response.json()
+
+
+def test_a_captured_pack_still_seeds_real_session_state(mock_client: TestClient) -> None:
+    assert _reset(mock_client, session="capture-2", pack="from-capture").status_code == 200
+    listed = mock_client.get(f"{BASE}/pets", headers={"X-Mock-Session": "capture-2"})
+    assert listed.status_code == 200
+    assert listed.json() == [{"id": 7, "name": "Rex"}]

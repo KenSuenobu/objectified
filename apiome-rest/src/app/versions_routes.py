@@ -8,7 +8,7 @@ All endpoints are tenant and project-scoped and require authentication via JWT t
 import logging
 import re
 from datetime import date as date_cls
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Optional
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
@@ -28,7 +28,21 @@ from .mock_callbacks import (
     callbacks_to_storage,
     validate_mock_callbacks,
 )
+from .mock_capture import (
+    MAX_AUTHORIZATION_HOURS,
+    authorization_block,
+    canonical_capture_policy,
+    capture_authorization_state,
+    capture_policy_digest,
+    capture_policy_from_storage,
+    capture_policy_to_storage,
+    fixture_pack_from_captures,
+    validate_capture_policy,
+)
 from .mock_fixture_packs import (
+    PACK_NAME_PATTERN,
+    canonical_pack_provenance,
+    fixture_pack_digest,
     fixture_pack_digests,
     fixture_packs_from_storage,
     fixture_packs_to_storage,
@@ -44,8 +58,11 @@ from .mock_scenario_settings import (
 )
 from .models import (
     BreakingPublishGuardrailOut,
+    MockCapturePolicySpec,
+    MockCaptureSummary,
     MockChaosSpec,
     MockCallbackSpec,
+    MockFixturePackProvenanceSpec,
     MockFixturePackSpec,
     MockScenarioSpec,
     SunsetTimelineEntryOut,
@@ -54,6 +71,13 @@ from .models import (
     VersionForkRequest,
     VersionMockCallbacksRequest,
     VersionMockCallbacksResponse,
+    VersionMockCapturePolicyRequest,
+    VersionMockCapturePolicyResponse,
+    VersionMockCapturePublishRequest,
+    VersionMockCapturePublishResponse,
+    VersionMockCaptureReviewRequest,
+    VersionMockCaptureReviewResponse,
+    VersionMockCapturesResponse,
     VersionMockFixturePacksRequest,
     VersionMockFixturePacksResponse,
     VersionMockScenariosRequest,
@@ -2439,6 +2463,41 @@ def _stored_fixture_packs_response(mock_settings: Any, version_record_id: str) -
     )
 
 
+def _capture_provenance_errors(proposed: Dict[str, Any], mock_settings: Any) -> List[str]:
+    """Reject hand-written claims of capture provenance on a fixture pack (#4747, PMR-2.4).
+
+    A pack's ``provenance`` block is the answer to "where did this fixture come from", and the
+    runtime reports it verbatim on every listing and reset. A ``source: capture`` block that an
+    author simply typed would turn that answer into a claim, so it is only accepted when it
+    matches — byte for byte, in canonical form — what publishing captures already stored under the
+    same pack name. Editing a capture-derived pack through the normal editor therefore keeps its
+    provenance, and minting a fresh capture claim is impossible.
+
+    Args:
+        proposed: The proposed ``{name: pack}`` mapping.
+        mock_settings: The version's current raw ``mock_settings``.
+
+    Returns:
+        One error sentence per pack that claims unearned capture provenance (empty when clean).
+    """
+    stored = fixture_packs_from_storage(mock_settings)
+    errors: List[str] = []
+    for name, pack in proposed.items():
+        provenance = canonical_pack_provenance(pack.get("provenance") if isinstance(pack, dict) else None)
+        if provenance.get("source") != "capture":
+            continue
+        current = stored.get(name)
+        existing_provenance = canonical_pack_provenance(
+            current.get("provenance") if isinstance(current, dict) else None
+        )
+        if provenance != existing_provenance:
+            errors.append(
+                f"Pack '{name}': capture provenance cannot be set by hand. Publish reviewed "
+                "captures with POST .../mock/captures/publish instead."
+            )
+    return errors
+
+
 @router.get("/{tenant_slug}/{project_id}/{version_record_id}/mock/fixture-packs")
 async def get_version_mock_fixture_packs(
     tenant_slug: str,
@@ -2469,7 +2528,7 @@ async def set_version_mock_fixture_packs(
     session to the pack. An empty ``packs`` map clears them.
     """
     enforce_permission(db, auth_data, Resource.VERSIONS, Action.EDIT)
-    _get_version_for_mock_scenarios(project_id, version_record_id, auth_data["tenant_id"])
+    existing = _get_version_for_mock_scenarios(project_id, version_record_id, auth_data["tenant_id"])
 
     user_id = get_authenticated_user_id(auth_data)
     if not user_id:
@@ -2483,6 +2542,7 @@ async def set_version_mock_fixture_packs(
         for name, spec in request.packs.items()
     }
     errors = validate_fixture_packs(proposed)
+    errors.extend(_capture_provenance_errors(proposed, existing.get("mock_settings")))
     if errors:
         raise HTTPException(
             status_code=422,
@@ -2589,6 +2649,464 @@ async def set_version_mock_callbacks(
             detail="Only the version creator or a tenant administrator can change mock settings",
         )
     return _stored_callbacks_response(updated.get("mock_settings"), version_record_id)
+
+
+# ==================================================================================================
+# Guarded proxy capture (#4747, PMR-2.4)
+# ==================================================================================================
+
+
+def _capture_policy_response(
+    mock_settings: Any,
+    *,
+    version_record_id: str,
+    tenant_id: str,
+) -> VersionMockCapturePolicyResponse:
+    """Build the capture-policy response from a stored ``mock_settings`` value (#4747, PMR-2.4).
+
+    Reports the policy, its digest, *why* capture is or is not live right now, and how many
+    recorded exchanges are waiting in each review state — the four things an owner needs to answer
+    "is my mock recording, and what has it recorded".
+    """
+    stored = capture_policy_from_storage(mock_settings)
+    if not stored:
+        return VersionMockCapturePolicyResponse(
+            policy=None,
+            digest=None,
+            state="unconfigured",
+            captures=db.count_mock_capture_exchanges(version_record_id, tenant_id),
+        )
+    canonical = canonical_capture_policy(stored)
+    try:
+        policy = MockCapturePolicySpec.model_validate(canonical)
+    except ValueError:
+        # A malformed stored blob never breaks the editor; it is reported as unconfigured and
+        # logged, exactly as the runtime skips it.
+        logger.warning("Skipping malformed mock capture policy on version %s", version_record_id)
+        return VersionMockCapturePolicyResponse(
+            policy=None,
+            digest=None,
+            state="unconfigured",
+            captures=db.count_mock_capture_exchanges(version_record_id, tenant_id),
+        )
+    return VersionMockCapturePolicyResponse(
+        policy=policy,
+        digest=capture_policy_digest(canonical),
+        state=capture_authorization_state(canonical, now=datetime.now(timezone.utc)),
+        captures=db.count_mock_capture_exchanges(version_record_id, tenant_id),
+    )
+
+
+def _require_mock_owner(
+    project_id: str, version_record_id: str, auth_data: Dict[str, Any]
+) -> str:
+    """Resolve the acting user and confirm they own this version's mock configuration.
+
+    Capture grants, review decisions, and publication all change what a mock will record or serve,
+    so they carry the same ownership rule as every other mock-settings write: the version creator
+    or a tenant administrator, acting as an identifiable user.
+
+    Args:
+        project_id: The project that must own the version.
+        version_record_id: The version record id.
+        auth_data: The authentication context.
+
+    Returns:
+        The acting user id.
+
+    Raises:
+        HTTPException: 403 when the caller is anonymous or does not own the mock; 404 when the
+            version does not exist in the project.
+    """
+    _get_version_for_mock_scenarios(project_id, version_record_id, auth_data["tenant_id"])
+    user_id = get_authenticated_user_id(auth_data)
+    if not user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Mock settings require user authentication (JWT token or API key with attribution)",
+        )
+    if not db.user_owns_version_mock_settings(version_record_id, auth_data["tenant_id"], user_id):
+        raise HTTPException(
+            status_code=403,
+            detail="Only the version creator or a tenant administrator can change mock settings",
+        )
+    return user_id
+
+
+def _capture_summary(row: Dict[str, Any], *, include_exchange: bool) -> MockCaptureSummary:
+    """Project one stored capture row into its API representation."""
+    redactions = row.get("redactions")
+    validation_errors = row.get("validation_errors")
+    return MockCaptureSummary(
+        id=str(row["id"]),
+        upstream=str(row.get("upstream") or ""),
+        allowlist_entry=str(row.get("allowlist_entry") or ""),
+        policy_digest=str(row.get("policy_digest") or ""),
+        captured_at=_isoformat(row.get("captured_at")),
+        operation_key=row.get("operation_key"),
+        method=str(row.get("request_method") or ""),
+        path=str(row.get("request_path") or ""),
+        status=int(row.get("status_code") or 0),
+        digest=str(row.get("exchange_digest") or ""),
+        redaction_count=int(row.get("redaction_count") or 0),
+        redactions=redactions if isinstance(redactions, list) else [],
+        schema_valid=row.get("schema_valid"),
+        validation_errors=validation_errors if isinstance(validation_errors, list) else [],
+        review_state=str(row.get("review_state") or "pending"),
+        review_note=row.get("review_note"),
+        published_pack=row.get("published_pack"),
+        expires_at=_isoformat(row.get("expires_at")),
+        exchange=row.get("exchange") if include_exchange else None,
+    )
+
+
+def _isoformat(value: Any) -> str:
+    """Render a timestamp column as an ISO 8601 string (``""`` when absent)."""
+    if isinstance(value, datetime):
+        return value.isoformat()
+    return str(value) if value is not None else ""
+
+
+@router.get("/{tenant_slug}/{project_id}/{version_record_id}/mock/capture-policy")
+async def get_version_mock_capture_policy(
+    tenant_slug: str,
+    project_id: str,
+    version_record_id: str,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> VersionMockCapturePolicyResponse:
+    """Return the version's guarded proxy capture policy and its current state (#4747, PMR-2.4)."""
+    enforce_permission(db, auth_data, Resource.VERSIONS, Action.VIEW)
+    existing = _get_version_for_mock_scenarios(project_id, version_record_id, auth_data["tenant_id"])
+    return _capture_policy_response(
+        existing.get("mock_settings"),
+        version_record_id=version_record_id,
+        tenant_id=auth_data["tenant_id"],
+    )
+
+
+@router.put("/{tenant_slug}/{project_id}/{version_record_id}/mock/capture-policy")
+async def set_version_mock_capture_policy(
+    tenant_slug: str,
+    project_id: str,
+    version_record_id: str,
+    request: VersionMockCapturePolicyRequest,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> VersionMockCapturePolicyResponse:
+    """Authorize (or switch off) guarded proxy capture for a version (#4747, PMR-2.4).
+
+    Capture lets the hosted mock forward a request to a **real** upstream and record the exchange
+    as a reviewable fixture candidate. Three things gate it, and this endpoint is where two of them
+    are set:
+
+    * **Explicit owner authorization.** The caller must own the mock (version creator or tenant
+      administrator) and must set ``acknowledged`` — an affirmative statement that they are
+      permitted to record traffic from these upstreams. The ``authorization`` block recording who
+      they were, when, and when the grant lapses is stamped by the server; it is never accepted
+      from the client, and it is clamped to at most ``MAX_AUTHORIZATION_HOURS``. Capture stops on
+      its own when the grant expires.
+    * **An upstream allowlist.** ``upstreams`` is the complete set of base URLs capture may ever
+      fetch. A request whose path does not fall under one of them is refused rather than proxied,
+      which is what keeps capture from becoming an SSRF pivot.
+
+    The third gate — address-level SSRF policy, public addresses only, re-checked on every redirect
+    hop — is enforced by the runtime at fetch time and cannot be configured away here.
+
+    ``redaction`` adds rules on top of the always-on credential rules; it can never subtract from
+    them. Sending ``enabled: false`` keeps the allowlist but stops recording.
+    """
+    enforce_permission(db, auth_data, Resource.VERSIONS, Action.EDIT)
+    user_id = _require_mock_owner(project_id, version_record_id, auth_data)
+
+    if request.enabled and not request.acknowledged:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "Capture requires explicit authorization.",
+                "errors": [
+                    "Set 'acknowledged' to true to confirm you are permitted to record traffic "
+                    "from the listed upstreams."
+                ],
+            },
+        )
+    if request.ttl_hours is not None and request.ttl_hours > MAX_AUTHORIZATION_HOURS:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "Capture policy failed validation.",
+                "errors": [
+                    f"ttlHours may not exceed {MAX_AUTHORIZATION_HOURS}; renew the grant instead."
+                ],
+            },
+        )
+
+    proposed: Dict[str, Any] = {
+        "enabled": bool(request.enabled),
+        "upstreams": list(request.upstreams),
+        "validateResponses": bool(request.validate_responses),
+        "authorization": authorization_block(
+            authorized_by=user_id,
+            now=datetime.now(timezone.utc),
+            ttl_hours=request.ttl_hours,
+        ),
+    }
+    if request.redaction is not None:
+        proposed["redaction"] = request.redaction.model_dump(by_alias=True, exclude_none=True)
+
+    errors = validate_capture_policy(proposed)
+    if errors:
+        raise HTTPException(
+            status_code=422,
+            detail={"message": "Capture policy failed validation.", "errors": errors},
+        )
+
+    updated = db.set_version_mock_capture_policy(
+        version_record_id,
+        auth_data["tenant_id"],
+        user_id,
+        policy=capture_policy_to_storage(proposed),
+    )
+    if not updated:
+        raise HTTPException(
+            status_code=403,
+            detail="Only the version creator or a tenant administrator can change mock settings",
+        )
+    return _capture_policy_response(
+        updated.get("mock_settings"),
+        version_record_id=version_record_id,
+        tenant_id=auth_data["tenant_id"],
+    )
+
+
+@router.delete("/{tenant_slug}/{project_id}/{version_record_id}/mock/capture-policy")
+async def delete_version_mock_capture_policy(
+    tenant_slug: str,
+    project_id: str,
+    version_record_id: str,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> VersionMockCapturePolicyResponse:
+    """Revoke guarded proxy capture entirely (#4747, PMR-2.4).
+
+    Removes the policy — allowlist, authorization, redaction rules — so nothing can be recorded
+    until a new grant is made. Already-recorded exchanges are deliberately left alone: revoking
+    permission to record must not destroy the evidence of what was recorded. Discard those
+    explicitly with ``DELETE .../mock/captures``.
+    """
+    enforce_permission(db, auth_data, Resource.VERSIONS, Action.EDIT)
+    user_id = _require_mock_owner(project_id, version_record_id, auth_data)
+    updated = db.set_version_mock_capture_policy(
+        version_record_id, auth_data["tenant_id"], user_id, policy=None
+    )
+    if not updated:
+        raise HTTPException(
+            status_code=403,
+            detail="Only the version creator or a tenant administrator can change mock settings",
+        )
+    return _capture_policy_response(
+        updated.get("mock_settings"),
+        version_record_id=version_record_id,
+        tenant_id=auth_data["tenant_id"],
+    )
+
+
+@router.get("/{tenant_slug}/{project_id}/{version_record_id}/mock/captures")
+async def list_version_mock_captures(
+    tenant_slug: str,
+    project_id: str,
+    version_record_id: str,
+    state: Optional[Literal["pending", "approved", "rejected", "published"]] = Query(
+        default=None, description="Filter by review state."
+    ),
+    limit: int = Query(default=50, ge=1, le=500, description="Maximum captures to return."),
+    offset: int = Query(default=0, ge=0, description="Captures to skip, for paging."),
+    include_exchange: bool = Query(
+        default=False,
+        alias="includeExchange",
+        description="Include each capture's full redacted document, not only its summary.",
+    ),
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> VersionMockCapturesResponse:
+    """List the exchanges guarded capture has recorded for this version (#4747, PMR-2.4).
+
+    This is the review queue. Every entry is already redacted — the runtime never stores anything
+    else — and carries the full list of redaction decisions plus the provenance of the fetch, so a
+    reviewer can see what was removed and where the data came from before approving anything.
+    """
+    enforce_permission(db, auth_data, Resource.VERSIONS, Action.VIEW)
+    _get_version_for_mock_scenarios(project_id, version_record_id, auth_data["tenant_id"])
+    rows = db.list_mock_capture_exchanges(
+        version_record_id,
+        auth_data["tenant_id"],
+        review_state=state,
+        limit=limit,
+        offset=offset,
+    )
+    return VersionMockCapturesResponse(
+        captures=[_capture_summary(row, include_exchange=include_exchange) for row in rows],
+        counts=db.count_mock_capture_exchanges(version_record_id, auth_data["tenant_id"]),
+    )
+
+
+@router.post("/{tenant_slug}/{project_id}/{version_record_id}/mock/captures/review")
+async def review_version_mock_captures(
+    tenant_slug: str,
+    project_id: str,
+    version_record_id: str,
+    request: VersionMockCaptureReviewRequest,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> VersionMockCaptureReviewResponse:
+    """Approve or reject recorded exchanges (#4747, PMR-2.4).
+
+    Nothing a capture recorded reaches a fixture pack without passing through here first. A capture
+    already published is never re-decided: the pack that carries its provenance would otherwise be
+    left claiming a source that disowns it.
+    """
+    enforce_permission(db, auth_data, Resource.VERSIONS, Action.EDIT)
+    user_id = _require_mock_owner(project_id, version_record_id, auth_data)
+    if not request.capture_ids:
+        raise HTTPException(status_code=422, detail="captureIds must name at least one capture.")
+
+    reviewed = db.review_mock_capture_exchanges(
+        version_record_id,
+        auth_data["tenant_id"],
+        user_id,
+        capture_ids=request.capture_ids,
+        review_state="approved" if request.decision == "approve" else "rejected",
+        note=request.note,
+    )
+    return VersionMockCaptureReviewResponse(
+        reviewed=reviewed,
+        counts=db.count_mock_capture_exchanges(version_record_id, auth_data["tenant_id"]),
+    )
+
+
+@router.post("/{tenant_slug}/{project_id}/{version_record_id}/mock/captures/publish")
+async def publish_version_mock_captures(
+    tenant_slug: str,
+    project_id: str,
+    version_record_id: str,
+    request: VersionMockCapturePublishRequest,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> VersionMockCapturePublishResponse:
+    """Convert approved captures into a fixture pack (#4747, PMR-2.4).
+
+    The publish half of "review before publish": only captures an owner has explicitly **approved**
+    are converted, and the resulting pack is stamped with a ``provenance`` block naming the
+    upstreams it drew from, how many captures went into it, and how many redactions were applied.
+    That block is what the runtime reports back on every pack listing and session reset, so a
+    fixture replayed months later still says where it came from.
+
+    Successful JSON responses whose operation identifies a CRUD collection become session seed
+    resources; everything else becomes named template fixture data. Anything that could not be
+    converted is reported in ``notes`` rather than dropped silently. Publishing to an existing pack
+    name replaces that pack.
+    """
+    enforce_permission(db, auth_data, Resource.VERSIONS, Action.EDIT)
+    user_id = _require_mock_owner(project_id, version_record_id, auth_data)
+
+    pack_name = request.pack_name.strip()
+    if not PACK_NAME_PATTERN.match(pack_name):
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "Fixture pack name is invalid.",
+                "errors": [f"Pack names must match {PACK_NAME_PATTERN.pattern}."],
+            },
+        )
+
+    page_size = 500
+    approved = db.list_mock_capture_exchanges(
+        version_record_id,
+        auth_data["tenant_id"],
+        review_state="approved",
+        limit=page_size,
+    )
+    truncated = len(approved) == page_size
+    if request.capture_ids:
+        wanted = set(request.capture_ids)
+        approved = [row for row in approved if str(row["id"]) in wanted]
+    if not approved:
+        raise HTTPException(
+            status_code=409,
+            detail="No approved captures to publish; approve captures before publishing them.",
+        )
+
+    approved_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    pack, notes = fixture_pack_from_captures(
+        [row["exchange"] for row in approved if isinstance(row.get("exchange"), dict)],
+        description=request.description,
+        approved_by=user_id,
+        approved_at=approved_at,
+    )
+    if truncated:
+        # Never truncate silently: a partial publication that reads as complete is how a fixture
+        # pack ends up quietly missing half the traffic it claims to represent.
+        notes.append(
+            f"Only the {page_size} most recent approved captures were considered; "
+            "publish again to convert the rest."
+        )
+
+    existing = _get_version_for_mock_scenarios(project_id, version_record_id, auth_data["tenant_id"])
+    packs = fixture_packs_from_storage(existing.get("mock_settings"))
+    packs[pack_name] = pack
+    errors = validate_fixture_packs(packs)
+    if errors:
+        raise HTTPException(
+            status_code=422,
+            detail={"message": "The converted fixture pack failed validation.", "errors": errors},
+        )
+
+    updated = db.set_version_mock_fixture_packs(
+        version_record_id,
+        auth_data["tenant_id"],
+        user_id,
+        packs=fixture_packs_to_storage(packs),
+    )
+    if not updated:
+        raise HTTPException(
+            status_code=403,
+            detail="Only the version creator or a tenant administrator can change mock settings",
+        )
+
+    published = db.mark_mock_captures_published(
+        version_record_id,
+        auth_data["tenant_id"],
+        capture_ids=[str(row["id"]) for row in approved],
+        pack_name=pack_name,
+    )
+    return VersionMockCapturePublishResponse(
+        pack_name=pack_name,
+        digest=fixture_pack_digest(pack),
+        published=published,
+        notes=notes,
+        provenance=MockFixturePackProvenanceSpec.model_validate(pack["provenance"]),
+    )
+
+
+@router.delete("/{tenant_slug}/{project_id}/{version_record_id}/mock/captures")
+async def delete_version_mock_captures(
+    tenant_slug: str,
+    project_id: str,
+    version_record_id: str,
+    state: Optional[Literal["pending", "approved", "rejected", "published"]] = Query(
+        default=None, description="Discard only captures in this review state."
+    ),
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> Dict[str, Any]:
+    """Discard recorded exchanges (#4747, PMR-2.4).
+
+    Recorded traffic is the one thing here that should never accumulate: this removes it outright
+    rather than flagging it. Captures also expire on their own; this is the manual path for an
+    owner who wants them gone now.
+    """
+    enforce_permission(db, auth_data, Resource.VERSIONS, Action.EDIT)
+    _require_mock_owner(project_id, version_record_id, auth_data)
+    removed = db.delete_mock_capture_exchanges(
+        version_record_id, auth_data["tenant_id"], review_state=state
+    )
+    return {
+        "deleted": removed,
+        "counts": db.count_mock_capture_exchanges(version_record_id, auth_data["tenant_id"]),
+    }
 
 
 def _bundle_filename(project_slug: str, version_label: str) -> str:

@@ -260,7 +260,9 @@
               "packFormatVersion": 1,
               "fixtures": ["catalog"],
               "collections": { "/pets": 2 },
-              "resources": 2
+              "resources": 2,
+              "origin": "authored",
+              "redactionStatus": "not-applicable"
             }
           ]
         }
@@ -283,7 +285,9 @@
           "pack": "seeded-pets",
           "packDigest": "sha256:b1f5da7f9be8d3b0a5545866aabccf862d05ddfeaaf2c7d84619f27c26544167",
           "collections": 1,
-          "resources": 2
+          "resources": 2,
+          "origin": "authored",
+          "redactionStatus": "not-applicable"
         }
       }
     },

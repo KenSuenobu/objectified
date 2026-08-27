@@ -80,6 +80,7 @@ __all__ = [
     "content_digest",
     "find_credential_fields",
     "manifest_digest",
+    "redact_credentials",
     "redact_mock_settings",
     "verify_bundle",
     "version_digest",
@@ -360,10 +361,32 @@ def redact_mock_settings(mock_settings: Any) -> Tuple[Dict[str, Any], Tuple[str,
     subset: Dict[str, Any] = {
         key: parsed[key] for key in BUNDLED_SETTINGS_KEYS if key in parsed and parsed[key] is not None
     }
-    redactions: List[str] = []
-    cleaned = _redact(subset, "", redactions)
+    cleaned, redactions = redact_credentials(subset)
     if not isinstance(cleaned, dict):  # pragma: no cover - subset is always a dict
         cleaned = {}
+    return cleaned, redactions
+
+
+def redact_credentials(value: Any) -> Tuple[Any, Tuple[str, ...]]:
+    """Return ``value`` with every credential-shaped field removed, plus where they were.
+
+    The removal counterpart of :func:`find_credential_fields`, applicable to any JSON-shaped
+    value rather than only to bundled settings. Removal — not masking — keeps even the *length*
+    of a secret out of whatever is stored next.
+
+    Shared with guarded proxy capture (PMR-2.4), which runs it over every recorded request and
+    response so one definition of "credential-shaped" governs both what a bundle may carry and
+    what a capture may persist.
+
+    Args:
+        value: Any JSON-shaped value.
+
+    Returns:
+        ``(cleaned, pointers)`` — the copy with credential fields dropped, and the sorted RFC 6901
+        pointers (relative to ``value``) of everything removed.
+    """
+    redactions: List[str] = []
+    cleaned = _redact(value, "", redactions)
     return cleaned, tuple(sorted(redactions))
 
 
