@@ -25,6 +25,7 @@ from apiome_mock.guard import (
 )
 from apiome_mock.handler import handle_mock_request
 from apiome_mock.logging_config import configure_logging
+from apiome_mock.preview_routes import create_preview_router
 from apiome_mock.session_store_factory import create_session_store
 from apiome_mock.settings import get_settings
 from apiome_mock.spec_cache import SpecCache, run_notify_listener
@@ -131,6 +132,11 @@ def create_app() -> FastAPI:
     @app.get("/health")
     async def health() -> JSONResponse:
         return JSONResponse({"status": "ok"})
+
+    # Internal dry-run preview (#5528, MSC-1.2). Registered before the data-plane catch-alls: its
+    # path is a single reserved segment, so it could not be shadowed by the three-segment mock
+    # routes anyway, but declaring it first keeps the reserved surface visible in one place.
+    app.include_router(create_preview_router())
 
     @app.websocket("/{tenant}/{project}/{version}/events/ws/{channel_key:path}")
     async def event_websocket(

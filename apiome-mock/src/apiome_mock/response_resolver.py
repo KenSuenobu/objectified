@@ -15,14 +15,63 @@ from apiome_mock.schema_synthesizer import generate_example, validate_value
 _NOT_FOUND = object()
 
 
+#: The body came from an author-provided example on the media type object.
+SOURCE_EXAMPLES = "examples"
+
+#: The body came from the media type object's singular ``example``.
+SOURCE_EXAMPLE = "example"
+
+#: The body came from an ``example`` on the response schema itself.
+SOURCE_SCHEMA_EXAMPLE = "schema-example"
+
+#: The body came from the response schema's ``default``.
+SOURCE_SCHEMA_DEFAULT = "schema-default"
+
+#: The body is the first member of the response schema's ``enum``.
+SOURCE_SCHEMA_ENUM = "schema-enum"
+
+#: The body was synthesized from the response schema.
+SOURCE_SYNTHESIS = "synthesis"
+
+#: The response declares no body (or none could be resolved).
+SOURCE_NONE = "none"
+
+#: Sources that mean "the author wrote this value down", as opposed to synthesis. The dry-run
+#: preview (#5528, MSC-1.2) collapses to this distinction when it names the layer that produced a
+#: body; everything finer stays available in :attr:`ResolvedResponseBody.source`.
+AUTHORED_SOURCES = frozenset(
+    {
+        SOURCE_EXAMPLES,
+        SOURCE_EXAMPLE,
+        SOURCE_SCHEMA_EXAMPLE,
+        SOURCE_SCHEMA_DEFAULT,
+        SOURCE_SCHEMA_ENUM,
+    }
+)
+
+
 @dataclass(frozen=True)
 class ResolvedResponseBody:
-    """A resolved mock response body for one operation status."""
+    """A resolved mock response body for one operation status.
+
+    Attributes:
+        body: The resolved body value (``None`` when the response declares no content).
+        media_type: The media type the body is served as.
+        validation_error: Why a *synthesized* body failed its own schema, when it did.
+        not_acceptable: True when no declared content type satisfies ``Accept``.
+        source: Which link of the example-first chain produced the body — one of the
+            ``SOURCE_*`` constants. Recorded so the preview's decision trace (#5528, MSC-1.2) can
+            tell an author whether they are looking at their own example or at synthesis.
+        example_name: The key of the named example used, when ``source`` is
+            :data:`SOURCE_EXAMPLES`.
+    """
 
     body: Any
     media_type: str
     validation_error: str | None = None
     not_acceptable: bool = False
+    source: str = SOURCE_NONE
+    example_name: str | None = None
 
 
 def parse_prefer_code(prefer_header: str | None) -> int | None:
@@ -233,34 +282,47 @@ def _resolve_body_at_media_type(
     prefer_example: str | None,
     seed: int,
     field: str,
-) -> tuple[Any, str | None]:
-    """Resolve a body for one media type object; ``_NOT_FOUND`` when nothing applies."""
+) -> tuple[Any, str | None, str, str | None]:
+    """Resolve a body for one media type object.
+
+    Args:
+        media_obj: The media type object from the response's ``content`` map.
+        spec: The full OpenAPI document, for ``$ref`` resolution.
+        prefer_example: Named example requested via ``Prefer: example=<name>``.
+        seed: Synthesis seed.
+        field: Field name hint passed to the synthesizer.
+
+    Returns:
+        ``(body, validation_error, source, example_name)``. ``body`` is ``_NOT_FOUND`` when this
+        media type declares nothing usable; ``source`` is one of the ``SOURCE_*`` constants and
+        ``example_name`` is set only for a named example.
+    """
     examples = media_obj.get("examples")
     if isinstance(examples, dict) and examples:
         if prefer_example and prefer_example in examples:
-            return _example_value(examples[prefer_example]), None
+            return _example_value(examples[prefer_example]), None, SOURCE_EXAMPLES, prefer_example
         first_key = next(iter(examples))
-        return _example_value(examples[first_key]), None
+        return _example_value(examples[first_key]), None, SOURCE_EXAMPLES, str(first_key)
 
     if "example" in media_obj:
-        return media_obj["example"], None
+        return media_obj["example"], None, SOURCE_EXAMPLE, None
 
     schema = media_obj.get("schema")
     if not isinstance(schema, dict):
-        return _NOT_FOUND, None
+        return _NOT_FOUND, None, SOURCE_NONE, None
 
     schema = _deref_schema(schema, spec)
     if "example" in schema:
-        return schema["example"], None
+        return schema["example"], None, SOURCE_SCHEMA_EXAMPLE, None
     if "default" in schema:
-        return schema["default"], None
+        return schema["default"], None, SOURCE_SCHEMA_DEFAULT, None
     enum = schema.get("enum")
     if isinstance(enum, list) and enum:
-        return enum[0], None
+        return enum[0], None, SOURCE_SCHEMA_ENUM, None
 
     body = generate_example(schema, spec, seed=seed, field=field)
     error = validate_value(body, schema, spec)
-    return body, error
+    return body, error, SOURCE_SYNTHESIS, None
 
 
 def response_schema_for_media_type(
@@ -344,7 +406,7 @@ def resolve_response_body(
         media_obj = content.get(media_type)
         if not isinstance(media_obj, dict):
             continue
-        body, validation_error = _resolve_body_at_media_type(
+        body, validation_error, source, example_name = _resolve_body_at_media_type(
             media_obj,
             spec,
             prefer_example=prefer_example,
@@ -356,6 +418,8 @@ def resolve_response_body(
                 body=body,
                 media_type=media_type,
                 validation_error=validation_error,
+                source=source,
+                example_name=example_name,
             )
 
     return ResolvedResponseBody(

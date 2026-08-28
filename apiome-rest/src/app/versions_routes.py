@@ -5,8 +5,10 @@ Provides CRUD endpoints for managing versions within projects.
 All endpoints are tenant and project-scoped and require authentication via JWT token or API key.
 """
 
+import json
 import logging
 import re
+import time
 from datetime import date as date_cls
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Optional
@@ -43,6 +45,17 @@ from .mock_correlation import (
     correlation_from_storage,
     correlation_to_storage,
     validate_mock_correlation,
+)
+from .mock_preview import (
+    FORWARDED_PREVIEW_STATUSES,
+    NOT_CONFIGURED_DETAIL,
+    MockPreviewError,
+    MockPreviewRejected,
+    MockPreviewUnavailable,
+    effective_mock_settings,
+    preview_is_configured,
+    request_mock_preview,
+    validate_draft_settings,
 )
 from .mock_fixture_packs import (
     PACK_NAME_PATTERN,
@@ -88,6 +101,8 @@ from .models import (
     VersionMockCorrelationResponse,
     VersionMockFixturePacksRequest,
     VersionMockFixturePacksResponse,
+    VersionMockPreviewRequest,
+    VersionMockPreviewResponse,
     VersionMockScenariosRequest,
     VersionMockScenariosResponse,
     VersionMockToggleRequest,
@@ -100,6 +115,7 @@ from .publication_change_report import (
     generate_change_report_on_publish,
     validate_manual_baseline_revision,
 )
+from .rate_limit import FixedWindowRateLimiter
 from .publication_changelog import generate_version_changelog_on_publish
 from .publish_notifications import notify_version_published_on_publish
 from .permissions import enforce_permission, Resource, Action
@@ -2534,6 +2550,180 @@ async def set_version_mock_correlation(
             detail="Only the version creator or a tenant administrator can change mock settings",
         )
     return _stored_correlation_response(updated.get("mock_settings"), version_record_id)
+
+
+# Per-version fixed-window limiter for dry-run mock preview (#5528, MSC-1.2). Every accepted call
+# generates the version's OpenAPI document, builds a bundle, and asks the mock runtime to render a
+# response — real work on caller-supplied input — so it is throttled per version in addition to the
+# global per-tenant middleware. In-process (per replica), matching that limiter's semantics.
+_mock_preview_limiter = FixedWindowRateLimiter()
+
+#: Window the preview rate limit is measured over.
+_MOCK_PREVIEW_WINDOW_SECONDS = 60
+
+
+def _enforce_preview_rate_limit(tenant_id: str, version_record_id: str) -> None:
+    """Throttle preview renders per version.
+
+    Args:
+        tenant_id: The caller's tenant, so one tenant's bucket cannot be consumed by another.
+        version_record_id: The version being previewed.
+
+    Raises:
+        HTTPException: ``429`` with the standard rate-limit headers when the window is exhausted.
+    """
+    limit = settings.mock_preview_rate_limit_per_minute
+    allowed, remaining, reset_after, retry_after = _mock_preview_limiter.check(
+        f"mockpreview:{tenant_id}:{version_record_id}",
+        limit,
+        _MOCK_PREVIEW_WINDOW_SECONDS,
+        time.monotonic(),
+    )
+    if not allowed:
+        raise HTTPException(
+            status_code=429,
+            detail="Mock preview rate limit exceeded for this version; slow down and retry later.",
+            headers={
+                "Retry-After": str(retry_after),
+                "X-RateLimit-Limit": str(limit),
+                "X-RateLimit-Remaining": str(remaining),
+                "X-RateLimit-Reset": str(reset_after),
+            },
+        )
+
+
+def _enforce_preview_body_size(body: Any) -> None:
+    """Reject a synthetic request body larger than a preview will render.
+
+    Args:
+        body: The declared request body.
+
+    Raises:
+        HTTPException: ``413`` when the body exceeds ``mock_preview_max_body_bytes``.
+    """
+    if body is None:
+        return
+    payload = body if isinstance(body, str) else json.dumps(body, default=str)
+    size = len(payload.encode("utf-8"))
+    if size > settings.mock_preview_max_body_bytes:
+        raise HTTPException(
+            status_code=413,
+            detail=(
+                f"Preview request body is {size} bytes; the maximum is "
+                f"{settings.mock_preview_max_body_bytes}."
+            ),
+        )
+
+
+@router.post("/{tenant_slug}/{project_id}/{version_record_id}/mock/preview")
+async def preview_version_mock(
+    tenant_slug: str,
+    project_id: str,
+    version_record_id: str,
+    request: VersionMockPreviewRequest,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> VersionMockPreviewResponse:
+    """Render one synthetic request against this version's mock, without sending it (#5528, MSC-1.2).
+
+    Answers the question an author actually has — *what comes back?* — with no mock enabled, no
+    instance provisioned, and no live request. The response carries the status, headers, media type
+    and body the mock would serve, plus a **decision trace** naming which layer produced the body: a
+    scenario (and which rule), session-scoped CRUD, correlation (and which pointers), or a declared
+    example versus schema synthesis.
+
+    The render happens in apiome-mock, through the very function its data plane calls, so a preview
+    cannot disagree with the served response. This route builds the version's portable mock bundle —
+    the same document the bundle export produces — and asks the runtime to render it. Two
+    consequences worth knowing: the preview reflects the *bundled* settings keys (scenarios, chaos,
+    fixture packs, callbacks, correlation), and it works on a version whose mock is disabled,
+    because nothing about serving access is involved.
+
+    Nothing is written. Session state lives and dies inside the render, no callback is delivered, no
+    usage or provisioning row is touched, and an unsaved ``settings`` override leaves the stored
+    settings exactly as they were. Chaos is *reported* rather than applied: a preview that slept for
+    a configured latency, or that randomly answered 500, would be answering a different question.
+
+    Args:
+        tenant_slug: The tenant slug.
+        project_id: The project ID that must own the version.
+        version_record_id: The version record ID (UUID) to preview.
+        request: The synthetic request and, optionally, an unsaved settings override.
+        auth_data: Authentication context; requires ``versions:view``, and ``versions:edit`` when a
+            ``settings`` override is supplied.
+
+    Returns:
+        The rendered response and its decision trace.
+
+    Raises:
+        HTTPException: 404 when the version does not exist in the project; 413 when the synthetic
+            body is too large; 422 when a draft override fails the same validation its save route
+            applies, or the runtime rejects the request; 429 when the per-version preview rate limit
+            is exhausted; 502 when the mock runtime cannot be reached; 503 when preview is not
+            configured on this deployment.
+    """
+    enforce_permission(db, auth_data, Resource.VERSIONS, Action.VIEW)
+    if request.settings is not None:
+        # A draft override is the caller asserting a configuration the version does not have, so it
+        # is gated like an edit even though nothing is written.
+        enforce_permission(db, auth_data, Resource.VERSIONS, Action.EDIT)
+
+    existing = _get_version_for_mock_scenarios(project_id, version_record_id, auth_data["tenant_id"])
+    if not preview_is_configured():
+        # Checked before any work: generating the version's OpenAPI document and building a bundle
+        # only to discover there is nowhere to send them wastes the most expensive part of the call.
+        raise HTTPException(status_code=503, detail=NOT_CONFIGURED_DETAIL)
+    _enforce_preview_rate_limit(str(auth_data["tenant_id"]), version_record_id)
+    _enforce_preview_body_size(request.request.body)
+
+    spec = _generated_spec_for_version(existing, tenant_slug)
+    errors = validate_draft_settings(request.settings, spec)
+    if errors:
+        raise HTTPException(
+            status_code=422,
+            detail={"message": "Draft mock settings failed validation.", "errors": errors},
+        )
+
+    project_slug = str(existing.get("project_slug") or existing["project_id"])
+    bundle = build_bundle(
+        identity=BundleIdentity(
+            tenant=tenant_slug,
+            project=project_slug,
+            version=str(existing["version_id"]),
+            revision_id=str(existing["id"]),
+            published=bool(existing.get("published")),
+            protocol="openapi",
+        ),
+        spec=spec,
+        mock_settings=effective_mock_settings(existing.get("mock_settings"), request.settings),
+        # Deliberately unsigned: this bundle crosses one authenticated internal hop and is built
+        # moments before it is rendered, so a signature would attest to nothing the shared token has
+        # not already established. Content digests still travel and are verified on arrival.
+        secret=None,
+    )
+
+    try:
+        result = await request_mock_preview(
+            bundle=bundle,
+            request=request.request.model_dump(by_alias=True),
+        )
+    except MockPreviewUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except MockPreviewRejected as exc:
+        # A refusal about the *caller's* payload is forwarded verbatim, so they see the structured
+        # reason (a failed bundle verification lists its problems). Anything else — a rejected
+        # service token, an internal fault — is a deployment problem the caller can do nothing
+        # about and must not be told the details of, so it becomes a plain 502.
+        if exc.status_code in FORWARDED_PREVIEW_STATUSES:
+            raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+        logger.error("Mock preview runtime refused the render with %s: %s", exc.status_code, exc.detail)
+        raise HTTPException(
+            status_code=502,
+            detail="The mock runtime refused to render this preview.",
+        ) from exc
+    except MockPreviewError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    return VersionMockPreviewResponse.model_validate({**result, "draft": request.settings is not None})
 
 
 def _stored_fixture_packs_response(mock_settings: Any, version_record_id: str) -> VersionMockFixturePacksResponse:

@@ -5,6 +5,47 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.304.0] - 2026-08-28
+
+### Added
+- **Mock response preview endpoint (#5528, MSC-1.2)** — `POST
+  /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/mock/preview` answers the question a
+  mock author actually has: *given this request, what does the mock return?* Send a synthetic
+  request (`method`, `path`, `headers`, `query`, `body`, plus `scenario`/`seed` shorthands) and get
+  back the status, headers, media type and body the mock would serve — with no mock enabled, no
+  instance provisioned, and no live request.
+
+  Every response carries a **decision trace** naming which layer produced the body: `scenario`
+  (with the matched rule's zero-based index), `stateful`, `correlation` (with the mode and the
+  JSON Pointers it bound), `example` or `synthesis` — plus `forced-status`, `request-invalid`,
+  `no-operation`, `method-not-allowed`, `unknown-scenario`, `not-acceptable` and `template-limit`
+  for the paths that produce no ordinary body. Without it an author can see *that* a value
+  appeared but not *why*, which is most of the value of a preview.
+
+  The render is **not** re-implemented here. REST authenticates and authorizes the caller, builds
+  the version's portable mock bundle, and asks apiome-mock's internal `/__preview__` endpoint to
+  render it through `serve_compiled_request` — the same function its data plane and the portable
+  runtime call. A preview therefore cannot disagree with the served response, and apiome-mock's
+  suite asserts exactly that by rendering one correlated request both ways.
+
+  An optional `settings` override previews an **unsaved draft**: it overlays the stored settings
+  per key (scenarios, chaos, fixture packs, callbacks, correlation), is canonicalized and validated
+  with the same rules its save route applies — so a draft that could never be saved is a 422 rather
+  than a silently ignored no-op — and persists nothing. It requires `versions:edit`; previewing the
+  stored settings needs only `versions:view`.
+
+  Preview never writes: session state lives and dies inside the render, no callback is delivered,
+  and no usage, audit or provisioning row is touched. Chaos is *reported* rather than applied, so a
+  preview never sleeps for a configured latency or randomly answers 500. Renders are rate limited
+  per version (`APIOME_MOCK_PREVIEW_RATE_LIMIT_PER_MINUTE`, default 120) and the synthetic body is
+  capped (`APIOME_MOCK_PREVIEW_MAX_BODY_BYTES`, default 256 KiB).
+
+  Configuration: `APIOME_MOCK_INTERNAL_BASE_URL` (the mock service's **internal** address) and
+  `APIOME_MOCK_INTERNAL_TOKEN` (shared with apiome-mock). Both are required — with either unset the
+  endpoint fails closed with 503. The token is deliberately not `INTERNAL_SERVICE_TOKEN`:
+  rendering a preview should not carry the secret that unseals auth-provider credentials. See
+  [docs/guide/mock-response-preview.md](../docs/guide/mock-response-preview.md).
+
 ## [1.303.0] - 2026-08-28
 
 ### Added

@@ -4403,6 +4403,250 @@ class VersionMockCallbacksResponse(BaseModel):
     )
 
 
+class MockPreviewSettingsSpec(BaseModel):
+    """An unsaved mock configuration to preview against, instead of the stored one (#5528 MSC-1.2).
+
+    Every field is optional and overlays the version's stored settings *per key*: a field the
+    draft declares replaces the stored value outright, a field it omits keeps the stored value,
+    and an explicit ``null`` clears it. So an editor previewing a reworked correlation block sends
+    only ``correlation`` and keeps the version's scenarios, chaos and fixtures.
+
+    The keys are exactly the ones that travel inside a portable mock bundle — the behaviour
+    surface. Access control (the private-mock ``mode``) and the proxy-capture grant are hosted
+    concerns with no meaning in a render and are deliberately not previewable.
+
+    Supplying this object requires ``versions:edit``: it is the caller asserting a configuration
+    the version does not have.
+    """
+
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    scenarios: Optional[Dict[str, MockScenarioSpec]] = Field(
+        default=None,
+        description="Draft scenario definitions keyed by name; replaces the stored map.",
+    )
+    chaos: Optional[MockChaosSpec] = Field(
+        default=None,
+        description="Draft version-level latency/chaos knobs. Chaos is reported, never applied, in a preview.",
+    )
+    fixture_packs: Optional[Dict[str, MockFixturePackSpec]] = Field(
+        default=None,
+        validation_alias=AliasChoices("fixturePacks", "fixture_packs"),
+        serialization_alias="fixturePacks",
+        description="Draft fixture packs; replaces the stored map.",
+    )
+    callbacks: Optional[Dict[str, MockCallbackSpec]] = Field(
+        default=None,
+        description="Draft callback definitions; replaces the stored map. A preview never delivers them.",
+    )
+    correlation: Optional[MockResponseCorrelationSpec] = Field(
+        default=None,
+        validation_alias=AliasChoices("responseCorrelation", "correlation"),
+        serialization_alias="correlation",
+        description="Draft response-correlation block; replaces the stored one.",
+    )
+
+
+class MockPreviewRequestSpec(BaseModel):
+    """The synthetic request to render (#5528 MSC-1.2).
+
+    Declared a second time as ``apiome_mock.preview_routes.PreviewRequestModel``, which is what
+    actually receives it: apiome-mock depends on this package, so the wire shape cannot be shared
+    as a type. The fields must stay identical; apiome-mock's suite asserts they do.
+    """
+
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    method: str = Field(default="GET", max_length=16, description="HTTP method.")
+    path: str = Field(
+        default="/",
+        max_length=2048,
+        description=(
+            "Path relative to the version root — /pets/42, not /acme/petstore/1.0.0/pets/42. "
+            "A ?query suffix is accepted and merged into `query`."
+        ),
+    )
+    headers: Dict[str, str] = Field(default_factory=dict, description="Request headers.")
+    query: Dict[str, Union[str, List[str]]] = Field(
+        default_factory=dict,
+        description="Query parameters; a bare string is a single-valued parameter.",
+    )
+    body: Any = Field(
+        default=None,
+        description="Request body: a JSON value (sent as application/json), a raw string, or null.",
+    )
+    scenario: Optional[str] = Field(
+        default=None,
+        max_length=200,
+        description="Shorthand for the X-Mock-Scenario header; an explicit header wins.",
+    )
+    seed: Optional[int] = Field(
+        default=None,
+        description="Shorthand for the ?__seed= parameter that pins synthesis.",
+    )
+
+
+class MockPreviewTrace(BaseModel):
+    """Why the previewed response looks the way it does (#5528 MSC-1.2).
+
+    Without this an author can see *that* a value appeared but not *why*, which is most of the
+    value of a preview.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    layer: str = Field(
+        description=(
+            "Which layer produced the body: scenario, stateful, correlation, example, synthesis, "
+            "empty, forced-status, request-invalid, chaos-error, no-operation, method-not-allowed, "
+            "unknown-scenario, not-acceptable, template-limit, or lifecycle."
+        )
+    )
+    detail: str = Field(default="", description="One sentence naming what happened.")
+    scenario: Optional[str] = Field(default=None, description="The scenario that applied, if any.")
+    rule_index: Optional[int] = Field(
+        default=None,
+        validation_alias=AliasChoices("ruleIndex", "rule_index"),
+        serialization_alias="ruleIndex",
+        description="Zero-based index of the matched rule in the operation's stored `rules` array.",
+    )
+    seed: Optional[int] = Field(default=None, description="The synthesis seed the body was rendered with.")
+    seed_source: str = Field(
+        default="default",
+        validation_alias=AliasChoices("seedSource", "seed_source"),
+        serialization_alias="seedSource",
+        description='Where the seed came from: "request", "correlation", or "default".',
+    )
+    correlation_mode: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("correlationMode", "correlation_mode"),
+        serialization_alias="correlationMode",
+        description="The correlation mode in effect, when correlation ran.",
+    )
+    correlation_applied: List[str] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("correlationApplied", "correlation_applied"),
+        serialization_alias="correlationApplied",
+        description="The correlation passes that bound something.",
+    )
+    correlation_pointers: List[str] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("correlationPointers", "correlation_pointers"),
+        serialization_alias="correlationPointers",
+        description="The explicit JSON Pointers correlation wrote to.",
+    )
+    schema_valid: Optional[bool] = Field(
+        default=None,
+        validation_alias=AliasChoices("schemaValid", "schema_valid"),
+        serialization_alias="schemaValid",
+        description="Whether the served body validates against the response schema; null when unchecked.",
+    )
+    body_source: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("bodySource", "body_source"),
+        serialization_alias="bodySource",
+        description="The finer example-first source: examples, example, schema-example, schema-default, "
+        "schema-enum, synthesis, or none.",
+    )
+    example_name: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("exampleName", "example_name"),
+        serialization_alias="exampleName",
+        description="The named example used, when one was.",
+    )
+
+
+class MockPreviewChaos(BaseModel):
+    """The chaos the data plane would have applied to this request, and did not (#5528 MSC-1.2)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    suppressed: bool = Field(
+        default=False,
+        description="True when chaos is configured for this operation; a preview reports it rather than applying it.",
+    )
+    delay_ms: int = Field(
+        default=0,
+        validation_alias=AliasChoices("delayMs", "delay_ms"),
+        serialization_alias="delayMs",
+        description="Base injected delay the data plane would have slept.",
+    )
+    jitter_ms: int = Field(
+        default=0,
+        validation_alias=AliasChoices("jitterMs", "jitter_ms"),
+        serialization_alias="jitterMs",
+        description="Uniform jitter half-width around that delay.",
+    )
+    error_rate: float = Field(
+        default=0.0,
+        validation_alias=AliasChoices("errorRate", "error_rate"),
+        serialization_alias="errorRate",
+        description="Percent probability the data plane would have injected an error.",
+    )
+
+
+class VersionMockPreviewRequest(BaseModel):
+    """Render one synthetic request against the version's mock (#5528 MSC-1.2)."""
+
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    request: MockPreviewRequestSpec = Field(
+        default_factory=MockPreviewRequestSpec,
+        description="The synthetic request; defaults to GET / when omitted.",
+    )
+    settings: Optional[MockPreviewSettingsSpec] = Field(
+        default=None,
+        description=(
+            "An unsaved configuration to render against instead of the stored one. Requires "
+            "versions:edit; nothing is persisted."
+        ),
+    )
+
+
+class VersionMockPreviewResponse(BaseModel):
+    """What the mock would serve for the previewed request, and why (#5528 MSC-1.2)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    operation: Optional[str] = Field(
+        default=None,
+        description='Matched operation key ("GET /pets/{petId}"); null when nothing matched.',
+    )
+    path_params: Dict[str, str] = Field(
+        default_factory=dict,
+        validation_alias=AliasChoices("pathParams", "path_params"),
+        serialization_alias="pathParams",
+        description="Path template parameters routing extracted from the request.",
+    )
+    status: int = Field(description="The HTTP status the mock would return.")
+    headers: Dict[str, str] = Field(
+        default_factory=dict,
+        description="Response headers the mock would return, including the X-Mock-* family.",
+    )
+    media_type: str = Field(
+        default="application/json",
+        validation_alias=AliasChoices("mediaType", "media_type"),
+        serialization_alias="mediaType",
+        description="Negotiated response media type.",
+    )
+    body: Any = Field(default=None, description="The response body, per bodyEncoding.")
+    body_encoding: str = Field(
+        default="empty",
+        validation_alias=AliasChoices("bodyEncoding", "body_encoding"),
+        serialization_alias="bodyEncoding",
+        description="How `body` is carried: json, text, base64, or empty.",
+    )
+    trace: MockPreviewTrace = Field(description="Which layer produced the body, and why.")
+    chaos: MockPreviewChaos = Field(
+        default_factory=MockPreviewChaos,
+        description="What chaos the data plane would have applied.",
+    )
+    draft: bool = Field(
+        default=False,
+        description="True when an unsaved settings override was rendered instead of the stored settings.",
+    )
+
+
 class MockFixturePackProvenanceSpec(BaseModel):
     """Where a fixture pack's data came from (#4747 PMR-2.4).
 

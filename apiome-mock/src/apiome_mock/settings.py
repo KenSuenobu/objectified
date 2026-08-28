@@ -49,6 +49,13 @@ class Settings(BaseSettings):
         min_length=1,
         description="Postgres NOTIFY channel for publish-driven cache invalidation.",
     )
+    internal_token: str | None = Field(
+        default=None,
+        description=(
+            "Shared secret gating the internal dry-run preview endpoint (#5528, MSC-1.2). Must "
+            "match APIOME_MOCK_INTERNAL_TOKEN on apiome-rest; unset disables the endpoint."
+        ),
+    )
     rate_limit_enabled: bool = Field(
         default=True,
         description="Enforce per-tenant RPS and monthly mock quotas from license tier.",
