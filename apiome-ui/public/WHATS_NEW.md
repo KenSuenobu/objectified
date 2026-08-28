@@ -33,6 +33,8 @@ We continue to improve the platform based on your feedback with improvements and
       retention, column documentation, row identity, classification and declared quality checks
   - Added pills to supported format list to show the source and type that the API format provides
   - Every format now declares which versions it reads and writes, and which version an export produces by default
+- Mock Services:
+  - Several mock services have been improved including mock rules and testing via UI and JSON rules
 
 ## Bug Fixes
 
