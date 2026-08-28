@@ -46,6 +46,10 @@ Export the bundle in an earlier step (or commit it) with
 | `container` | Container name (removed automatically). |
 | `port` | Host port that was published. |
 
+`bundle-digest` and `runtime-version` are two of the four identities a release-proof mock
+attestation records. To turn a job's run into that evidence, follow it with `apiome-mock attest` —
+see [mock-release-attestation.md](../docs/guide/mock-release-attestation.md).
+
 ## What it guarantees
 
 **A safe service URL.** The runtime publishes on `127.0.0.1` by default, so nothing off the runner

@@ -16,6 +16,12 @@ audited moment a definition becomes traffic, and it re-checks DNS and the enable
 what already happened must not fail because the target has since been disabled — or worse, write an
 audit entry claiming a fresh selection.
 
+**A mock-targeted run always says which mock.** A run whose target environment is ``mock`` is
+written with a mock attestation row either way: the submitted one, or — when nothing was attached —
+an explicitly *missing* one (:func:`app.mock_attestation.missing_mock_attestation`). Storing nothing
+would read identically to a run that never involved a mock, and telling those two apart is the whole
+point of PMR-3.2.
+
 **A retried upload does not mint a second run.** Evidence is immutable, so a runner that uploads and
 loses the response has no way to correct a duplicate. An ``idempotency_key`` is looked up before the
 insert and again if the unique index rejects a concurrent one, and the original run is returned.
@@ -28,6 +34,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from .database import db
+from .mock_attestation import MockAttestationRecord, missing_mock_attestation
 from .verification_evidence import (
     CODE_RUN_NOT_FOUND,
     CODE_TARGET_NOT_FOUND,
@@ -42,15 +49,17 @@ from .verification_evidence import (
     duration_ms_between,
     record_from_rows,
     summary_from_row,
+    validate_mock_attestation_input,
     validate_run_input,
 )
-from .verification_target import TargetValidationError, target_identity
+from .verification_target import ENVIRONMENT_MOCK, TargetValidationError, target_identity
 from .verification_target_store import TargetActor, actor_from_auth, get_target
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
     "MAX_LIST_LIMIT",
+    "MOCK_TARGET_ENVIRONMENT",
     "RecordedRun",
     "TargetActor",
     "actor_from_auth",
@@ -62,6 +71,11 @@ __all__ = [
 #: Ceiling on a list read, mirroring the store-side clamp. A gate asks for the newest few; nobody
 #: needs a tenant's entire history in one response.
 MAX_LIST_LIMIT = 200
+
+#: The ECA-1.2 environment class that means "this ran against a mock" — re-exported rather than
+#: re-spelled, so the two modules cannot drift. A run in this environment must say which mock it
+#: used, even when the answer is "it did not say" (PMR-3.2, #4749).
+MOCK_TARGET_ENVIRONMENT = ENVIRONMENT_MOCK
 
 
 @dataclass(frozen=True)
@@ -175,6 +189,73 @@ def _artifact_payload(artifact: ArtifactReferenceInput) -> Dict[str, Any]:
     }
 
 
+def _mock_payload(record: MockAttestationRecord) -> Dict[str, Any]:
+    """Flatten a validated mock attestation into the row shape the database layer writes.
+
+    Args:
+        record: The attestation, already validated and with its status derived.
+
+    Returns:
+        The ``verification_run_mock`` row map. A record with no bundle or runtime — one that says
+        its verification is missing — writes NULLs there rather than placeholders, so the row
+        cannot be mistaken for one naming a real mock.
+    """
+    bundle = record.bundle
+    runtime = record.runtime
+    conformance = record.conformance
+    return {
+        "status": record.status,
+        "reason_code": record.reason_code,
+        "reason": record.reason,
+        "bundle_digest": bundle.digest if bundle else None,
+        "bundle_format": bundle.format if bundle else None,
+        "bundle_format_version": bundle.format_version if bundle else None,
+        "bundle_signed": bool(bundle.signed) if bundle else False,
+        "bundle_api": bundle.api.model_dump(mode="json") if bundle else {},
+        "runtime_name": runtime.name if runtime else None,
+        "runtime_version": runtime.version if runtime else None,
+        "runtime_image": runtime.image if runtime else None,
+        "corpus_format": conformance.corpus_format if conformance else None,
+        "corpus_version": conformance.corpus_version if conformance else None,
+        "corpus_digest": conformance.corpus_digest if conformance else None,
+        "corpus_case_count": conformance.corpus_case_count if conformance else None,
+        "conformance_total": conformance.total if conformance else 0,
+        "conformance_passed": conformance.passed if conformance else 0,
+        "conformance_failed": conformance.failed if conformance else 0,
+        "failed_cases": list(conformance.failed_cases) if conformance else [],
+        "fixture_packs": [pack.model_dump(mode="json") for pack in record.fixture_packs],
+    }
+
+
+def _mock_row_for(
+    run: VerificationRunInput, environment: Optional[str]
+) -> Optional[Dict[str, Any]]:
+    """Decide what mock attestation, if any, this run stores.
+
+    Three cases, and the middle one is the reason this function exists:
+
+    * an attestation was attached → store it (already validated by ``validate_run_input``);
+    * none was attached but the run targeted a ``mock`` environment → store an **explicitly
+      missing** attestation, so the gap is a recorded fact rather than an absence;
+    * none was attached and the target was not a mock → store nothing; there is no mock to describe.
+
+    Args:
+        run: The submitted run.
+        environment: The target's environment class, from the identity snapshot.
+
+    Returns:
+        The row map, or ``None`` when the run has no mock to record.
+    """
+    if run.mock is not None:
+        # Re-validated here, not merely trusted from ``validate_run_input``: the store is the single
+        # door to the tables, and it applies the rule whichever way it was entered. The wrapper is
+        # used so a refusal stays in the evidence taxonomy every caller already branches on.
+        return _mock_payload(validate_mock_attestation_input(run.mock))
+    if environment == MOCK_TARGET_ENVIRONMENT:
+        return _mock_payload(missing_mock_attestation())
+    return None
+
+
 def record_run(
     tenant_id: str, run: VerificationRunInput, *, actor: TargetActor
 ) -> RecordedRun:
@@ -239,10 +320,11 @@ def record_run(
         _operation_payload(index, operation) for index, operation in enumerate(run.operations)
     ]
     artifacts = [_artifact_payload(artifact) for artifact in run.artifacts]
+    mock = _mock_row_for(run, identity.get("environment"))
 
     try:
         stored = db.insert_verification_evidence(
-            run=run_row, operations=operations, artifacts=artifacts
+            run=run_row, operations=operations, artifacts=artifacts, mock=mock
         )
     except Exception as exc:  # noqa: BLE001 - narrowed by the idempotency re-check below
         # A concurrent upload with the same key loses the unique-index race. Evidence is immutable,
@@ -274,7 +356,7 @@ def get_run(tenant_id: str, run_id: str) -> VerificationRunRecord:
         run_id: The run id.
 
     Returns:
-        The complete record.
+        The complete record, including the mock attestation (PMR-3.2) when the run recorded one.
 
     Raises:
         EvidenceValidationError: ``evidence-run-not-found`` when nothing matches in this tenant.
@@ -289,6 +371,7 @@ def get_run(tenant_id: str, run_id: str) -> VerificationRunRecord:
         db.list_verification_run_operations(run_id, tenant_id),
         db.list_verification_run_assertions(run_id, tenant_id),
         db.list_verification_run_artifacts(run_id, tenant_id),
+        db.get_verification_run_mock(run_id, tenant_id),
     )
 
 

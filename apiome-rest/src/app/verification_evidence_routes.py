@@ -13,6 +13,13 @@ the only legitimate removal is the retention sweep.
 request with the same ``idempotency_key`` and gets the original run back with ``200`` instead of a
 duplicate under a new id. A fresh record answers ``201``.
 
+**A mock-backed run carries its attestation.** A run recorded against a `mock` environment always
+stores a mock attestation (PMR-3.2) — the bundle digest it was served from, the runtime version, the
+conformance corpus and result, and the fixture-pack digests — or, when the runner attached none, an
+explicitly *missing* one. ``GET .../{run_id}/mock-attestation`` renders it as a signed in-toto
+statement in a DSSE envelope, which self-hosted verification tooling checks offline with the shared
+attestation secret.
+
 **Exports reproduce the stored record**, they do not recompute it: the JUnit counters come from the
 stored counts and the case list is the stored one in stored order. See
 :mod:`app.verification_evidence_export`.
@@ -26,9 +33,16 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from .auth import validate_authentication
+from .config import settings
 from .database import db
+from .mock_attestation import (
+    MOCK_PREDICATE_TYPE,
+    build_mock_attestation_statement,
+    mock_attestation_envelope,
+)
 from .permissions import Action, Resource, enforce_permission
 from .verification_evidence import (
+    CODE_MOCK_ATTESTATION_ABSENT,
     CODE_RUN_NOT_FOUND,
     CODE_TARGET_NOT_FOUND,
     RUN_OUTCOMES,
@@ -54,6 +68,7 @@ router = APIRouter(prefix="/v1/tenants", tags=["contract-assurance"])
 _STATUS_BY_CODE = {
     CODE_RUN_NOT_FOUND: 404,
     CODE_TARGET_NOT_FOUND: 404,
+    CODE_MOCK_ATTESTATION_ABSENT: 404,
 }
 
 
@@ -253,6 +268,88 @@ async def read_verification_run(
         return get_run(_tenant_id(auth_data), run_id)
     except EvidenceValidationError as exc:
         raise _http_error(exc) from exc
+
+
+@router.get(
+    "/{tenant_slug}/verification-runs/{run_id}/mock-attestation",
+    summary="Read a run's mock attestation as a signed in-toto statement",
+    description=(
+        "Render the run's release-proof mock attestation (PMR-3.2) as an **in-toto Statement v1** "
+        "inside a **DSSE envelope**, so a release pipeline can prove offline which mock backed a "
+        "verification.\n\n"
+        "The statement's subject is the mock bundle itself, digested with a plain `sha256` over "
+        "the bundle's `manifestDigest` value — so a holder of the bundle file ties it to this "
+        "statement without any Apiome-specific knowledge. The predicate carries the bundle "
+        "coordinates, the runtime version and image, the conformance corpus identity and result, "
+        "every fixture-pack digest, and the verification run it belongs to. Identities and "
+        "verdicts only: never spec text, fixture bodies, or credentials.\n\n"
+        "**A missing or failed verification is still attested.** A run whose mock says `missing` "
+        "or `failed` returns a statement saying exactly that, signed — silence is never the "
+        "answer. `404` is returned only when the run recorded no mock at all.\n\n"
+        "The envelope is HMAC-SHA256 signed with the shared attestation secret and names the same "
+        "key id as a lint gate attestation, so a verifier that already holds that secret needs no "
+        "new configuration. Without a configured secret the envelope is well-formed but its "
+        "`signatures` list is empty.\n\n"
+        "Requires `verification_evidence:view`."
+    ),
+)
+async def read_verification_run_mock_attestation(
+    tenant_slug: str,
+    run_id: str,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> Dict[str, Any]:
+    """Render one run's mock attestation as a signed DSSE envelope.
+
+    Args:
+        tenant_slug: The tenant in the URL.
+        run_id: The run id.
+        auth_data: The authenticated principal.
+
+    Returns:
+        ``{"predicateType", "signed", "keyId", "envelope"}`` — the envelope plus the two facts a
+        client needs before trying to verify it.
+
+    Raises:
+        HTTPException: 404 when the run does not exist or recorded no mock, 403 without
+            ``verification_evidence:view``.
+    """
+    enforce_permission(db, auth_data, Resource.VERIFICATION_EVIDENCE, Action.VIEW)
+    _ = tenant_slug
+    try:
+        record = get_run(_tenant_id(auth_data), run_id)
+    except EvidenceValidationError as exc:
+        raise _http_error(exc) from exc
+
+    if record.mock is None:
+        raise _http_error(
+            EvidenceValidationError(
+                CODE_MOCK_ATTESTATION_ABSENT,
+                f"verification run '{run_id}' recorded no mock; it did not run against one",
+            )
+        )
+
+    statement = build_mock_attestation_statement(
+        record.mock,
+        run={
+            "id": record.id,
+            "suiteDigest": record.suite_digest,
+            "outcome": record.outcome,
+            "targetSlug": record.target_slug,
+            "targetEnvironment": record.target_environment,
+            "startedAt": record.started_at.isoformat() if record.started_at else None,
+            "finishedAt": record.finished_at.isoformat() if record.finished_at else None,
+        },
+    )
+    envelope = mock_attestation_envelope(
+        statement, secret=settings.lint_attestation_signing_secret
+    )
+    signatures = envelope.get("signatures") or []
+    return {
+        "predicateType": MOCK_PREDICATE_TYPE,
+        "signed": bool(signatures),
+        "keyId": signatures[0].get("keyid") if signatures else None,
+        "envelope": envelope,
+    }
 
 
 @router.get(

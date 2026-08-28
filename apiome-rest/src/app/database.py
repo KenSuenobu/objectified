@@ -27921,12 +27921,23 @@ class Database:
         size_bytes, content_sha256, redacted, redaction, created_at
     """
 
+    #: The columns of one stored mock attestation (PMR-3.2, #4749).
+    _VERIFICATION_RUN_MOCK_COLUMNS = """
+        id::text AS id, run_id::text AS run_id, status, reason_code, reason,
+        bundle_digest, bundle_format, bundle_format_version, bundle_signed, bundle_api,
+        runtime_name, runtime_version, runtime_image,
+        corpus_format, corpus_version, corpus_digest, corpus_case_count,
+        conformance_total, conformance_passed, conformance_failed, failed_cases,
+        fixture_packs, created_at
+    """
+
     def insert_verification_evidence(
         self,
         *,
         run: Dict[str, Any],
         operations: Optional[List[Dict[str, Any]]] = None,
         artifacts: Optional[List[Dict[str, Any]]] = None,
+        mock: Optional[Dict[str, Any]] = None,
     ) -> Optional[Dict[str, Any]]:
         """Write one complete run — cases, assertions, and artifact references — atomically.
 
@@ -27940,6 +27951,9 @@ class Database:
             operations: Case rows in stored order, each optionally carrying ``assertions`` and
                 ``artifacts`` lists.
             artifacts: Run-level artifact rows (``operation_id`` is NULL for these).
+            mock: The run's mock attestation row (PMR-3.2), when it has one. Written in the same
+                transaction as the run, because an attestation that could arrive later would be a
+                second, mutable truth about immutable evidence.
 
         Returns:
             The stored run row, or ``None`` when ``tenant_id`` is not a UUID.
@@ -28080,6 +28094,9 @@ class Database:
                         cursor, tenant_id, run_id, None, artifact
                     )
 
+                if mock is not None:
+                    self._insert_verification_run_mock(cursor, tenant_id, run_id, mock)
+
             conn.commit()
             return run_row
         except Exception:
@@ -28128,6 +28145,95 @@ class Database:
                 json.dumps(artifact.get("redaction") or {}, sort_keys=True, default=str),
             ),
         )
+
+    @staticmethod
+    def _insert_verification_run_mock(
+        cursor: Any,
+        tenant_id: str,
+        run_id: str,
+        mock: Dict[str, Any],
+    ) -> None:
+        """Insert one mock attestation on an open cursor (PMR-3.2, #4749).
+
+        Written inside the run's own transaction, so a release proof can never exist with a mock
+        attestation half-attached: either the whole run — cases, artifacts, and the mock it ran
+        against — is stored, or none of it is.
+
+        Args:
+            cursor: The open cursor inside the run's transaction.
+            tenant_id: The run's tenant, stamped on the child row and re-checked by the composite
+                foreign key against the parent.
+            run_id: The owning run.
+            mock: The attestation row map.
+        """
+        cursor.execute(
+            """
+            INSERT INTO apiome.verification_run_mock (
+                tenant_id, run_id, status, reason_code, reason,
+                bundle_digest, bundle_format, bundle_format_version, bundle_signed, bundle_api,
+                runtime_name, runtime_version, runtime_image,
+                corpus_format, corpus_version, corpus_digest, corpus_case_count,
+                conformance_total, conformance_passed, conformance_failed, failed_cases,
+                fixture_packs
+            )
+            VALUES (
+                %s::uuid, %s::uuid, %s, %s, %s,
+                %s, %s, %s, %s, %s::jsonb,
+                %s, %s, %s,
+                %s, %s, %s, %s,
+                %s, %s, %s, %s::jsonb,
+                %s::jsonb
+            )
+            """,
+            (
+                tenant_id,
+                run_id,
+                mock.get("status"),
+                mock.get("reason_code"),
+                mock.get("reason"),
+                mock.get("bundle_digest"),
+                mock.get("bundle_format"),
+                mock.get("bundle_format_version"),
+                bool(mock.get("bundle_signed")),
+                json.dumps(mock.get("bundle_api") or {}, sort_keys=True, default=str),
+                mock.get("runtime_name"),
+                mock.get("runtime_version"),
+                mock.get("runtime_image"),
+                mock.get("corpus_format"),
+                mock.get("corpus_version"),
+                mock.get("corpus_digest"),
+                mock.get("corpus_case_count"),
+                int(mock.get("conformance_total") or 0),
+                int(mock.get("conformance_passed") or 0),
+                int(mock.get("conformance_failed") or 0),
+                json.dumps(mock.get("failed_cases") or [], default=str),
+                json.dumps(mock.get("fixture_packs") or [], default=str),
+            ),
+        )
+
+    def get_verification_run_mock(self, run_id: str, tenant_id: str) -> Optional[Dict[str, Any]]:
+        """The mock attestation recorded on one run, if it has one (PMR-3.2, #4749).
+
+        Args:
+            run_id: The run id.
+            tenant_id: Tenant the caller is acting in; a run in another tenant reads as absent.
+
+        Returns:
+            The attestation row, or ``None`` when the run recorded no mock.
+        """
+        if not run_id or not is_uuid_string(str(run_id)):
+            return None
+        if not tenant_id or not is_uuid_string(str(tenant_id)):
+            return None
+        rows = self.execute_query(
+            f"""
+            SELECT {self._VERIFICATION_RUN_MOCK_COLUMNS}
+            FROM apiome.verification_run_mock
+            WHERE run_id = %s::uuid AND tenant_id = %s::uuid
+            """,
+            (run_id, tenant_id),
+        )
+        return rows[0] if rows else None
 
     def get_verification_run(self, run_id: str, tenant_id: str) -> Optional[Dict[str, Any]]:
         """One run by id, scoped to a tenant (ECA-1.3, #4731).

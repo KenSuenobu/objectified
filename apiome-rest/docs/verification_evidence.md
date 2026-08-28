@@ -25,7 +25,9 @@ Evidence answers all four with four immutable, tenant-scoped tables and two expo
 | `app/verification_evidence_store.py` | The only door to the tables: validates, snapshots the target, writes the whole run in one transaction, and handles idempotent replay. |
 | `app/verification_evidence_export.py` | JSON and JUnit renderings of a stored record. |
 | `app/verification_evidence_routes.py` | `/v1/tenants/{tenant}/verification-runs[...]`, gated on the `verification_evidence` RBAC resource. |
+| `app/mock_attestation.py` | The pure release-proof **mock attestation** contract (PMR-3.2): bundle digest, runtime, conformance corpus and result, fixture-pack digests, plus the in-toto statement builder. Imports nothing from this module, so the dependency runs one way only. |
 | `apiome-db` V212 | `verification_run`, `verification_run_operation`, `verification_run_assertion`, `verification_run_artifact`, the retention sweep, and the RBAC grid update. |
+| `apiome-db` V249 | `verification_run_mock` — the mock attestation, one row per run, immutable and tenant-scoped like the other four. |
 
 ## The four tables
 
@@ -35,6 +37,9 @@ Evidence answers all four with four immutable, tenant-scoped tables and two expo
 | `verification_run_operation` | One executed case: which operation, which outcome, and — when it did not pass — the failure code and redacted message that say why. |
 | `verification_run_assertion` | The individual checks inside a case (status code, response schema, header, content type, latency, custom), each with expected vs actual. |
 | `verification_run_artifact` | **References** to redacted artifacts: a URI, a size, a content hash. Never the bytes. |
+
+A fifth table, `verification_run_mock` (V249), holds the release-proof mock attestation — see
+[Mock attestation](#mock-attestation-pmr-32) below.
 
 ## Evidence is immutable
 
@@ -131,6 +136,7 @@ its request.
 | `GET` | `/v1/tenants/{tenant}/verification-runs` | `verification_evidence:view` |
 | `GET` | `/v1/tenants/{tenant}/verification-runs/{run_id}` | `verification_evidence:view` |
 | `GET` | `/v1/tenants/{tenant}/verification-runs/{run_id}/export?format=json\|junit` | `verification_evidence:view` |
+| `GET` | `/v1/tenants/{tenant}/verification-runs/{run_id}/mock-attestation` | `verification_evidence:view` |
 
 The list read takes the filters a gate asks with: `suite_digest`, `target_id`, `outcome`, `limit`.
 
@@ -186,6 +192,16 @@ Every refusal carries `{"code", "message"}`; a client branches on the code.
 | `evidence-export-format-unsupported` | A format outside `json` \| `junit` | 400 |
 | `evidence-target-not-found` | The run named a target this tenant does not have | 404 |
 | `evidence-run-not-found` | No such run in this tenant | 404 |
+| `evidence-mock-attestation-absent` | A mock attestation was asked for on a run that recorded none | 404 |
+| `mock-bundle-digest-invalid` | The attested bundle digest is not `sha256:<64 hex>` | 400 |
+| `mock-bundle-mutable` | The attested bundle pins an unpublished revision, or names no revision id | 400 |
+| `mock-runtime-version-invalid` | The runtime version is not a semantic version | 400 |
+| `mock-runtime-incompatible` | The runtime falls outside the bundle format's runtime window | 400 |
+| `mock-corpus-unidentified` | A conformance result arrived with no corpus digest | 400 |
+| `mock-conformance-counts-mismatch` | Conformance counts do not sum, or a failure names no case | 400 |
+| `mock-status-mismatch` | A declared mock status contradicts its conformance result | 400 |
+| `mock-status-invalid` | A status or reason code outside the closed vocabularies | 400 |
+| `mock-fixture-digest-invalid` | A fixture-pack digest is not `sha256:<64 hex>` | 400 |
 
 ## Example
 
@@ -262,3 +278,41 @@ curl -H "Authorization: Bearer $APIOME_TOKEN" \
 * **ECA-3.1 (evidence-backed policy evaluator)** reads it back: "a passing run of digest *X* against
   an environment of class *Y*, no older than *Z*" is a list read with `suite_digest` and `outcome`
   filters, and a decision cites the run id it relied on.
+
+## Mock attestation (PMR-3.2)
+
+A run recorded against a **`mock` target environment** must say *which* mock. The optional `mock`
+field on a submission — and the `mock` block on every read and export — carries four identities:
+
+| Field | What it pins |
+|---|---|
+| `bundle.digest` | The PMR-1.1 `manifestDigest` of the served bundle |
+| `runtime.version` / `runtime.image` | Which apiome-mock produced the behavior |
+| `conformance.corpus_digest` + counts | Which PMR-3.1 corpus judged it, and how it went |
+| `fixture_packs[].digest` | Which PMR-2.2 seed data it was proved against |
+
+Four rules, each enforced in `app/mock_attestation.py` and again by a V249 CHECK:
+
+1. **Only immutable digests are linked** — `sha256:<64 hex>`, over a **published** revision with a
+   revision id. A draft can still change (`mock-bundle-mutable`).
+2. **The runtime and corpus are identified** — a semantic runtime version inside the bundle
+   format's window, and a corpus digest behind every conformance result.
+3. **The status is derived** — `verified` / `failed` / `missing` comes from the conformance counts;
+   a contradicting declaration is refused, exactly as a run outcome is.
+4. **A gap is explicit** — every non-`verified` status carries a `reason_code`, and a mock-targeted
+   run that attaches nothing stores `missing` / `mock-attestation-missing` rather than nothing at
+   all. A run against staging stores no mock block, which stays distinguishable from an unverified
+   one.
+
+The attestation is written in the **run's own transaction**, so immutable evidence is never left
+half-attached.
+
+`GET …/{run_id}/mock-attestation` renders it as an in-toto Statement v1 in a DSSE envelope, whose
+subject is the bundle (plain `sha256`) and whose signature uses the shared
+`lint_attestation_signing_secret` and key id `apiome-lint-hmac-v1` — so a verifier that already
+holds the CLX-4.2 secret needs no new configuration. A `missing` or `failed` mock is still attested,
+signed; `404` means the run recorded no mock at all.
+
+Producer side: `apiome-mock attest` emits the block ready to attach; `apiome mock verify-attestation`
+verifies the envelope offline. See
+[docs/guide/mock-release-attestation.md](../../docs/guide/mock-release-attestation.md).

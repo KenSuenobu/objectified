@@ -1,5 +1,6 @@
 {
   "corpusFormat": "apiome.mock.conformance/v1",
+  "corpusVersion": "1.0.0",
   "description": "Shared mock conformance corpus (#4742, PMR-1.2). Every deployment of the mock runtime - the in-process app, `apiome mock run`, and the official container image - must answer these requests identically while serving conformance_data/bundle.json.",
   "bundle": "bundle.json",
   "cases": [

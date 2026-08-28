@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.164.0
+  version: 1.167.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -7096,6 +7096,101 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for readoneverificationrunresponse422.
+  /v1/tenants/{tenant_slug}/verification-runs/{run_id}/mock-attestation:
+    get:
+      tags:
+      - contract-assurance
+      summary: Read a run's mock attestation as a signed in-toto statement
+      description: 'Render the run''s release-proof mock attestation (PMR-3.2) as
+        an **in-toto Statement v1** inside a **DSSE envelope**, so a release pipeline
+        can prove offline which mock backed a verification.
+
+
+        The statement''s subject is the mock bundle itself, digested with a plain
+        `sha256` over the bundle''s `manifestDigest` value — so a holder of the bundle
+        file ties it to this statement without any Apiome-specific knowledge. The
+        predicate carries the bundle coordinates, the runtime version and image, the
+        conformance corpus identity and result, every fixture-pack digest, and the
+        verification run it belongs to. Identities and verdicts only: never spec text,
+        fixture bodies, or credentials.
+
+
+        **A missing or failed verification is still attested.** A run whose mock says
+        `missing` or `failed` returns a statement saying exactly that, signed — silence
+        is never the answer. `404` is returned only when the run recorded no mock
+        at all.
+
+
+        The envelope is HMAC-SHA256 signed with the shared attestation secret and
+        names the same key id as a lint gate attestation, so a verifier that already
+        holds that secret needs no new configuration. Without a configured secret
+        the envelope is well-formed but its `signatures` list is empty.
+
+
+        Requires `verification_evidence:view`.'
+      operationId: read_verification_run_mock_attestation_v1_tenants__tenant_slug__verification_runs__run_id__mock_attestation_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Run Id
+          description: Run Id schema.
+        description: Path parameter identifying the run id segment.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Readarunsmockattestationasasignedintotosauthorization schema.
+          - type: 'null'
+            description: Readarunsmockattestationasasignedintotosauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Readarunsmockattestationasasignedintotos Xapikey schema.
+          - type: 'null'
+            description: Readarunsmockattestationasasignedintotos Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for read a run's mock attestation as a
+            signed in-toto statement.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Read Verification Run Mock Attestation V1 Tenants  Tenant
+                  Slug  Verification Runs  Run Id  Mock Attestation Get
+                description: Response Read Verification Run Mock Attestation V1 Tenants  Tenant
+                  Slug  Verification Runs  Run Id  Mock Attestation Get schema.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for readarunsmockattestationasasignedintotosresponse422.
   /v1/tenants/{tenant_slug}/verification-runs/{run_id}/export:
     get:
       tags:
@@ -14678,6 +14773,861 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for set version mock fixture packsresponse422.
+  /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/mock/callbacks:
+    get:
+      tags:
+      - versions
+      summary: Get Version Mock Callbacks
+      description: Return the version's mock callback definitions and their content
+        digests (#4746, PMR-2.3).
+      operationId: get_version_mock_callbacks_v1_versions__tenant_slug___project_id___version_record_id__mock_callbacks_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Id
+          description: Project Id schema.
+        description: Project identifier that scopes the request.
+      - name: version_record_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Record Id
+          description: Version Record Id schema.
+        description: Version row identifier (``versions.id`` UUID).
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Version Mock Callbacksauthorization schema.
+          - type: 'null'
+            description: Get Version Mock Callbacksauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Version Mock Callbacks Xapikey schema.
+          - type: 'null'
+            description: Get Version Mock Callbacks Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for get version mock callbacks.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionMockCallbacksResponse'
+                description: Response payload for get version mock callbacksresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for get version mock callbacksresponse422.
+    put:
+      tags:
+      - versions
+      summary: Set Version Mock Callbacks
+      description: 'Replace the version''s mock callback definitions (#4746, PMR-2.3).
+
+
+        Definitions are validated against the versioned callback schema *and* against
+        this version''s
+
+        generated OpenAPI document: a trigger must name a real operation, a ``payloadSchema``
+        ``$ref``
+
+        must resolve, every destination must be a safe absolute http(s) URL, and the
+        retry schedule
+
+        must stay inside its cost ceiling. Valid definitions are stored canonically
+        in
+
+        ``versions.mock_settings`` under ``callbacks``, alongside the other mock knobs,
+        and travel
+
+        inside portable mock bundles. The response echoes each definition''s content
+        digest — the
+
+        identity a test asserts when it exercises the callback. An empty ``callbacks``
+        map clears them.'
+      operationId: set_version_mock_callbacks_v1_versions__tenant_slug___project_id___version_record_id__mock_callbacks_put
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Id
+          description: Project Id schema.
+        description: Project identifier that scopes the request.
+      - name: version_record_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Record Id
+          description: Version Record Id schema.
+        description: Version row identifier (``versions.id`` UUID).
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Set Version Mock Callbacksauthorization schema.
+          - type: 'null'
+            description: Set Version Mock Callbacksauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Set Version Mock Callbacks Xapikey schema.
+          - type: 'null'
+            description: Set Version Mock Callbacks Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionMockCallbacksRequest'
+              description: Request body for set version mock callbacksrequest.
+        description: Request body for set version mock callbacks.
+      responses:
+        '200':
+          description: Successful response for set version mock callbacks.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionMockCallbacksResponse'
+                description: Response payload for set version mock callbacksresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for set version mock callbacksresponse422.
+  /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/mock/capture-policy:
+    get:
+      tags:
+      - versions
+      summary: Get Version Mock Capture Policy
+      description: Return the version's guarded proxy capture policy and its current
+        state (#4747, PMR-2.4).
+      operationId: get_version_mock_capture_policy_v1_versions__tenant_slug___project_id___version_record_id__mock_capture_policy_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Id
+          description: Project Id schema.
+        description: Project identifier that scopes the request.
+      - name: version_record_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Record Id
+          description: Version Record Id schema.
+        description: Version row identifier (``versions.id`` UUID).
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Version Mock Capture Policyauthorization schema.
+          - type: 'null'
+            description: Get Version Mock Capture Policyauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Version Mock Capture Policy Xapikey schema.
+          - type: 'null'
+            description: Get Version Mock Capture Policy Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for get version mock capture policy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionMockCapturePolicyResponse'
+                description: Response payload for get version mock capture policyresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for get version mock capture policyresponse422.
+    put:
+      tags:
+      - versions
+      summary: Set Version Mock Capture Policy
+      description: "Authorize (or switch off) guarded proxy capture for a version\
+        \ (#4747, PMR-2.4).\n\nCapture lets the hosted mock forward a request to a\
+        \ **real** upstream and record the exchange\nas a reviewable fixture candidate.\
+        \ Three things gate it, and this endpoint is where two of them\nare set:\n\
+        \n* **Explicit owner authorization.** The caller must own the mock (version\
+        \ creator or tenant\n  administrator) and must set ``acknowledged`` — an affirmative\
+        \ statement that they are\n  permitted to record traffic from these upstreams.\
+        \ The ``authorization`` block recording who\n  they were, when, and when the\
+        \ grant lapses is stamped by the server; it is never accepted\n  from the\
+        \ client, and it is clamped to at most ``MAX_AUTHORIZATION_HOURS``. Capture\
+        \ stops on\n  its own when the grant expires.\n* **An upstream allowlist.**\
+        \ ``upstreams`` is the complete set of base URLs capture may ever\n  fetch.\
+        \ A request whose path does not fall under one of them is refused rather than\
+        \ proxied,\n  which is what keeps capture from becoming an SSRF pivot.\n\n\
+        The third gate — address-level SSRF policy, public addresses only, re-checked\
+        \ on every redirect\nhop — is enforced by the runtime at fetch time and cannot\
+        \ be configured away here.\n\n``redaction`` adds rules on top of the always-on\
+        \ credential rules; it can never subtract from\nthem. Sending ``enabled: false``\
+        \ keeps the allowlist but stops recording."
+      operationId: set_version_mock_capture_policy_v1_versions__tenant_slug___project_id___version_record_id__mock_capture_policy_put
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Id
+          description: Project Id schema.
+        description: Project identifier that scopes the request.
+      - name: version_record_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Record Id
+          description: Version Record Id schema.
+        description: Version row identifier (``versions.id`` UUID).
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Set Version Mock Capture Policyauthorization schema.
+          - type: 'null'
+            description: Set Version Mock Capture Policyauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Set Version Mock Capture Policy Xapikey schema.
+          - type: 'null'
+            description: Set Version Mock Capture Policy Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionMockCapturePolicyRequest'
+              description: Request body for set version mock capture policyrequest.
+        description: Request body for set version mock capture policy.
+      responses:
+        '200':
+          description: Successful response for set version mock capture policy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionMockCapturePolicyResponse'
+                description: Response payload for set version mock capture policyresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for set version mock capture policyresponse422.
+    delete:
+      tags:
+      - versions
+      summary: Delete Version Mock Capture Policy
+      description: 'Revoke guarded proxy capture entirely (#4747, PMR-2.4).
+
+
+        Removes the policy — allowlist, authorization, redaction rules — so nothing
+        can be recorded
+
+        until a new grant is made. Already-recorded exchanges are deliberately left
+        alone: revoking
+
+        permission to record must not destroy the evidence of what was recorded. Discard
+        those
+
+        explicitly with ``DELETE .../mock/captures``.'
+      operationId: delete_version_mock_capture_policy_v1_versions__tenant_slug___project_id___version_record_id__mock_capture_policy_delete
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Id
+          description: Project Id schema.
+        description: Project identifier that scopes the request.
+      - name: version_record_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Record Id
+          description: Version Record Id schema.
+        description: Version row identifier (``versions.id`` UUID).
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Delete Version Mock Capture Policyauthorization schema.
+          - type: 'null'
+            description: Delete Version Mock Capture Policyauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Delete Version Mock Capture Policy Xapikey schema.
+          - type: 'null'
+            description: Delete Version Mock Capture Policy Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for delete version mock capture policy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionMockCapturePolicyResponse'
+                description: Response payload for delete version mock capture policyresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for delete version mock capture policyresponse422.
+  /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/mock/captures:
+    get:
+      tags:
+      - versions
+      summary: List Version Mock Captures
+      description: 'List the exchanges guarded capture has recorded for this version
+        (#4747, PMR-2.4).
+
+
+        This is the review queue. Every entry is already redacted — the runtime never
+        stores anything
+
+        else — and carries the full list of redaction decisions plus the provenance
+        of the fetch, so a
+
+        reviewer can see what was removed and where the data came from before approving
+        anything.'
+      operationId: list_version_mock_captures_v1_versions__tenant_slug___project_id___version_record_id__mock_captures_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Id
+          description: Project Id schema.
+        description: Project identifier that scopes the request.
+      - name: version_record_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Record Id
+          description: Version Record Id schema.
+        description: Version row identifier (``versions.id`` UUID).
+      - name: state
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - enum:
+            - pending
+            - approved
+            - rejected
+            - published
+            type: string
+            description: List Version Mock Capturesstate schema.
+          - type: 'null'
+            description: List Version Mock Capturesstate schema.
+          description: Filter by review state.
+          title: State
+        description: Filter by review state.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          description: Maximum captures to return.
+          default: 50
+          title: Limit
+        description: Maximum captures to return.
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          description: Captures to skip, for paging.
+          default: 0
+          title: Offset
+        description: Captures to skip, for paging.
+      - name: includeExchange
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Include each capture's full redacted document, not only its
+            summary.
+          default: false
+          title: Includeexchange
+        description: Include each capture's full redacted document, not only its summary.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: List Version Mock Capturesauthorization schema.
+          - type: 'null'
+            description: List Version Mock Capturesauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: List Version Mock Captures Xapikey schema.
+          - type: 'null'
+            description: List Version Mock Captures Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for list version mock captures.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionMockCapturesResponse'
+                description: Response payload for list version mock capturesresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for list version mock capturesresponse422.
+    delete:
+      tags:
+      - versions
+      summary: Delete Version Mock Captures
+      description: 'Discard recorded exchanges (#4747, PMR-2.4).
+
+
+        Recorded traffic is the one thing here that should never accumulate: this
+        removes it outright
+
+        rather than flagging it. Captures also expire on their own; this is the manual
+        path for an
+
+        owner who wants them gone now.'
+      operationId: delete_version_mock_captures_v1_versions__tenant_slug___project_id___version_record_id__mock_captures_delete
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Id
+          description: Project Id schema.
+        description: Project identifier that scopes the request.
+      - name: version_record_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Record Id
+          description: Version Record Id schema.
+        description: Version row identifier (``versions.id`` UUID).
+      - name: state
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - enum:
+            - pending
+            - approved
+            - rejected
+            - published
+            type: string
+            description: Delete Version Mock Capturesstate schema.
+          - type: 'null'
+            description: Delete Version Mock Capturesstate schema.
+          description: Discard only captures in this review state.
+          title: State
+        description: Discard only captures in this review state.
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Delete Version Mock Capturesauthorization schema.
+          - type: 'null'
+            description: Delete Version Mock Capturesauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Delete Version Mock Captures Xapikey schema.
+          - type: 'null'
+            description: Delete Version Mock Captures Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for delete version mock captures.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Delete Version Mock Captures V1 Versions  Tenant Slug   Project
+                  Id   Version Record Id  Mock Captures Delete
+                description: Response Delete Version Mock Captures V1 Versions  Tenant
+                  Slug   Project Id   Version Record Id  Mock Captures Delete schema.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for delete version mock capturesresponse422.
+  /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/mock/captures/review:
+    post:
+      tags:
+      - versions
+      summary: Review Version Mock Captures
+      description: 'Approve or reject recorded exchanges (#4747, PMR-2.4).
+
+
+        Nothing a capture recorded reaches a fixture pack without passing through
+        here first. A capture
+
+        already published is never re-decided: the pack that carries its provenance
+        would otherwise be
+
+        left claiming a source that disowns it.'
+      operationId: review_version_mock_captures_v1_versions__tenant_slug___project_id___version_record_id__mock_captures_review_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Id
+          description: Project Id schema.
+        description: Project identifier that scopes the request.
+      - name: version_record_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Record Id
+          description: Version Record Id schema.
+        description: Version row identifier (``versions.id`` UUID).
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Review Version Mock Capturesauthorization schema.
+          - type: 'null'
+            description: Review Version Mock Capturesauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Review Version Mock Captures Xapikey schema.
+          - type: 'null'
+            description: Review Version Mock Captures Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionMockCaptureReviewRequest'
+              description: Request body for review version mock capturesrequest.
+        description: Request body for review version mock captures.
+      responses:
+        '200':
+          description: Successful response for review version mock captures.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionMockCaptureReviewResponse'
+                description: Response payload for review version mock capturesresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for review version mock capturesresponse422.
+  /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/mock/captures/publish:
+    post:
+      tags:
+      - versions
+      summary: Publish Version Mock Captures
+      description: 'Convert approved captures into a fixture pack (#4747, PMR-2.4).
+
+
+        The publish half of "review before publish": only captures an owner has explicitly
+        **approved**
+
+        are converted, and the resulting pack is stamped with a ``provenance`` block
+        naming the
+
+        upstreams it drew from, how many captures went into it, and how many redactions
+        were applied.
+
+        That block is what the runtime reports back on every pack listing and session
+        reset, so a
+
+        fixture replayed months later still says where it came from.
+
+
+        Successful JSON responses whose operation identifies a CRUD collection become
+        session seed
+
+        resources; everything else becomes named template fixture data. Anything that
+        could not be
+
+        converted is reported in ``notes`` rather than dropped silently. Publishing
+        to an existing pack
+
+        name replaces that pack.'
+      operationId: publish_version_mock_captures_v1_versions__tenant_slug___project_id___version_record_id__mock_captures_publish_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Id
+          description: Project Id schema.
+        description: Project identifier that scopes the request.
+      - name: version_record_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Record Id
+          description: Version Record Id schema.
+        description: Version row identifier (``versions.id`` UUID).
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Publish Version Mock Capturesauthorization schema.
+          - type: 'null'
+            description: Publish Version Mock Capturesauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Publish Version Mock Captures Xapikey schema.
+          - type: 'null'
+            description: Publish Version Mock Captures Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionMockCapturePublishRequest'
+              description: Request body for publish version mock capturesrequest.
+        description: Request body for publish version mock captures.
+      responses:
+        '200':
+          description: Successful response for publish version mock captures.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionMockCapturePublishResponse'
+                description: Response payload for publish version mock capturesresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for publish version mock capturesresponse422.
   /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/mock/bundle:
     get:
       tags:
@@ -58248,7 +59198,7 @@ components:
           type: string
           title: Operation Uuid
           description: The apiome.path_operation UUID.
-          example: 6d5ab96a-07ad-402d-8e75-e1f7cadecd7e
+          example: 215af785-8604-4948-ba4b-c3e87fab1751
         method:
           type: string
           title: Method
@@ -60240,7 +61190,7 @@ components:
           type: string
           title: Generated At
           description: Statement timestamp (ISO-8601, UTC).
-          example: '2026-08-26T17:50:45Z'
+          example: '2026-08-28T02:14:10Z'
         envelope:
           additionalProperties: true
           type: object
@@ -80105,6 +81055,678 @@ components:
 
         teaches operators the data is unreliable, which is more expensive than the
         missing point.'
+    MockAttestationInput:
+      properties:
+        bundle:
+          $ref: '#/components/schemas/MockBundleRef'
+          description: Bundle.
+        runtime:
+          $ref: '#/components/schemas/MockRuntimeRef'
+          description: The runtime that served it.
+        conformance:
+          anyOf:
+          - $ref: '#/components/schemas/MockConformanceResult'
+          - type: 'null'
+            description: Mock Attestation Input schema.
+          description: The conformance result. `null` records an explicitly unverified
+            mock — a status of `missing` with a stated reason, never silence.
+        fixture_packs:
+          items:
+            $ref: '#/components/schemas/MockFixturePackRef'
+          type: array
+          title: Fixture Packs
+          description: Digest of every fixture pack the bundle carried.
+          maxItems: 1000
+        status:
+          anyOf:
+          - type: string
+            description: Mock Attestation Input schema.
+          - type: 'null'
+            description: Mock Attestation Input schema.
+          title: Status
+          description: Optional declared status. It is *checked* against the status
+            derived from the conformance result and refused when it disagrees.
+        reason_code:
+          anyOf:
+          - type: string
+            maxLength: 100
+            description: Mock Attestation Input schema.
+          - type: 'null'
+            description: Mock Attestation Input schema.
+          title: Reason Code
+          description: 'Why the mock is not verified. One of: mock-conformance-failed,
+            mock-conformance-missing, mock-attestation-missing.'
+        reason:
+          anyOf:
+          - type: string
+            description: Mock Attestation Input schema.
+          - type: 'null'
+            description: Mock Attestation Input schema.
+          title: Reason
+          description: Human-readable explanation, scrubbed for credentials.
+      additionalProperties: false
+      type: object
+      required:
+      - bundle
+      - runtime
+      title: MockAttestationInput
+      description: 'The mock attestation a runner attaches to a verification run.
+
+
+        This is exactly the shape ``apiome-mock attest`` emits under its ``mock``
+        key, so a CI job
+
+        merges the record into its evidence submission without reshaping anything.'
+    MockAttestationRecord:
+      properties:
+        status:
+          type: string
+          title: Status
+          description: 'One of: verified, failed, missing.'
+          example: active
+        reason_code:
+          anyOf:
+          - type: string
+            description: Mock Attestation schema.
+          - type: 'null'
+            description: Mock Attestation schema.
+          title: Reason Code
+          description: Why the mock is not verified; `null` only when verified.
+        reason:
+          anyOf:
+          - type: string
+            description: Mock Attestation schema.
+          - type: 'null'
+            description: Mock Attestation schema.
+          title: Reason
+          description: Human-readable explanation.
+        bundle:
+          anyOf:
+          - $ref: '#/components/schemas/MockBundleRef'
+          - type: 'null'
+            description: Mock Attestation schema.
+          description: The attested bundle; absent when no attestation was attached.
+        runtime:
+          anyOf:
+          - $ref: '#/components/schemas/MockRuntimeRef'
+          - type: 'null'
+            description: Mock Attestation schema.
+          description: The runtime; absent when no attestation was attached.
+        conformance:
+          anyOf:
+          - $ref: '#/components/schemas/MockConformanceResult'
+          - type: 'null'
+            description: Mock Attestation schema.
+          description: The conformance result; absent when no corpus ran.
+        fixture_packs:
+          items:
+            $ref: '#/components/schemas/MockFixturePackRef'
+          type: array
+          title: Fixture Packs
+          description: Fixture packs the bundle carried.
+          maxItems: 1000
+      additionalProperties: false
+      type: object
+      required:
+      - status
+      title: MockAttestationRecord
+      description: 'A stored mock attestation, as every reader and both exporters
+        see it.
+
+
+        ``bundle`` and ``runtime`` are optional here but required on the input: a
+        record whose status is
+
+        ``missing`` because *no attestation was attached* has neither, and writing
+        that absence down is
+
+        the point (see :func:`missing_mock_attestation`).'
+    MockBundleApi:
+      properties:
+        tenant:
+          type: string
+          maxLength: 200
+          title: Tenant
+          description: Tenant slug the bundle was exported for.
+          example: example
+        project:
+          type: string
+          maxLength: 200
+          title: Project
+          description: Project slug.
+          example: example
+        version:
+          type: string
+          maxLength: 200
+          title: Version
+          description: Version label the bundle pins.
+          example: 1.0.0
+        revision_id:
+          type: string
+          maxLength: 100
+          title: Revision Id
+          description: 'The immutable `versions.id` of the pinned revision. Required
+            for a linkable attestation: without it the digest names no fixed revision.'
+          default: ''
+          example: revision_01h2xcejqtf3fz5y5j0v8k9m2p
+        published:
+          type: boolean
+          title: Published
+          description: Whether the pinned revision was published. A draft can still
+            change, so an attestation over one is refused.
+          default: false
+          example: false
+        protocol:
+          anyOf:
+          - type: string
+            maxLength: 50
+            description: Mock Bundle API schema.
+          - type: 'null'
+            description: Mock Bundle API schema.
+          title: Protocol
+          description: Protocol/paradigm label (e.g. `openapi`).
+      additionalProperties: false
+      type: object
+      required:
+      - tenant
+      - project
+      - version
+      title: MockBundleApi
+      description: The API coordinates the attested bundle pins — the manifest's own
+        ``api`` block.
+    MockBundleRef:
+      properties:
+        digest:
+          type: string
+          maxLength: 100
+          title: Digest
+          description: The bundle's `manifestDigest` (`sha256:<hex>`) — what the proof
+            links.
+          example: example
+        format:
+          anyOf:
+          - type: string
+            maxLength: 100
+            description: Mock Bundle Ref schema.
+          - type: 'null'
+            description: Mock Bundle Ref schema.
+          title: Format
+          description: Bundle format id (`apiome.mock.bundle/v1`).
+        format_version:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Mock Bundle Ref schema.
+          - type: 'null'
+            description: Mock Bundle Ref schema.
+          title: Format Version
+          description: Additive revision of the bundle format.
+        signed:
+          type: boolean
+          title: Signed
+          description: Whether the bundle carried a manifest signature.
+          default: false
+          example: false
+        api:
+          $ref: '#/components/schemas/MockBundleApi'
+          description: The API coordinates the bundle pins.
+      additionalProperties: false
+      type: object
+      required:
+      - digest
+      - api
+      title: MockBundleRef
+      description: The immutable identity of the served bundle.
+    MockCallbackRequestSpec:
+      properties:
+        method:
+          anyOf:
+          - type: string
+            description: Request body for mock callback request spec.
+          - type: 'null'
+            description: Request body for mock callback request spec.
+          title: Method
+          description: Outbound HTTP method (POST, PUT, PATCH, DELETE, GET); defaults
+            to POST.
+        headers:
+          additionalProperties:
+            type: string
+          type: object
+          title: Headers
+          description: Outbound headers; values may embed {{ ... }} templates (#4744
+            PMR-2.1).
+        body:
+          anyOf:
+          - description: Request body for mock callback request spec.
+          - type: 'null'
+            description: Request body for mock callback request spec.
+          title: Body
+          description: Outbound payload; may embed {{ ... }} templates over request
+            and fixture data.
+      additionalProperties: false
+      type: object
+      title: MockCallbackRequestSpec
+      description: The outbound message a callback sends (#4746 PMR-2.3).
+    MockCallbackRetrySpec:
+      properties:
+        maxAttempts:
+          anyOf:
+          - type: integer
+            description: Mock Callback Retry Spec schema.
+          - type: 'null'
+            description: Mock Callback Retry Spec schema.
+          title: Maxattempts
+          description: Total attempts including the first; defaults to 3.
+        backoffMs:
+          anyOf:
+          - type: integer
+            description: Mock Callback Retry Spec schema.
+          - type: 'null'
+            description: Mock Callback Retry Spec schema.
+          title: Backoffms
+          description: Delay before the first retry, in milliseconds; defaults to
+            100.
+        backoffMultiplier:
+          anyOf:
+          - type: number
+            description: Mock Callback Retry Spec schema.
+          - type: 'null'
+            description: Mock Callback Retry Spec schema.
+          title: Backoffmultiplier
+          description: Growth factor applied per retry; defaults to 2.0. No jitter
+            — the schedule is deterministic.
+        retryOn:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+            description: Mock Callback Retry Spec schema.
+          - type: 'null'
+            description: Mock Callback Retry Spec schema.
+          title: Retryon
+          description: Response statuses worth retrying; defaults to the transient
+            ones (408, 425, 429, 5xx).
+        timeoutMs:
+          anyOf:
+          - type: integer
+            description: Mock Callback Retry Spec schema.
+          - type: 'null'
+            description: Mock Callback Retry Spec schema.
+          title: Timeoutms
+          description: Per-attempt request timeout in milliseconds; defaults to 5000.
+      additionalProperties: false
+      type: object
+      title: MockCallbackRetrySpec
+      description: The deterministic delivery schedule for one callback (#4746 PMR-2.3).
+    MockCallbackSpec:
+      properties:
+        callbackFormat:
+          anyOf:
+          - type: string
+            description: Mock Callback Spec schema.
+          - type: 'null'
+            description: Mock Callback Spec schema.
+          title: Callbackformat
+          description: Callback format id; defaults to "apiome.mock.callback/v1" when
+            omitted.
+        callbackFormatVersion:
+          anyOf:
+          - type: integer
+            description: Mock Callback Spec schema.
+          - type: 'null'
+            description: Mock Callback Spec schema.
+          title: Callbackformatversion
+          description: Callback format revision; defaults to the current version when
+            omitted.
+        description:
+          type: string
+          maxLength: 500
+          title: Description
+          description: Human summary of the event.
+          default: ''
+          example: A pet available for adoption in the store.
+        trigger:
+          anyOf:
+          - $ref: '#/components/schemas/MockCallbackTriggerSpec'
+          - type: 'null'
+            description: Mock Callback Spec schema.
+          description: What fires the callback; omit for trigger-on-demand only.
+        destinations:
+          items:
+            type: string
+          type: array
+          title: Destinations
+          description: Allowlisted delivery targets. At least one is required — the
+            mock delivers nowhere else.
+          maxItems: 1000
+        request:
+          anyOf:
+          - $ref: '#/components/schemas/MockCallbackRequestSpec'
+          - type: 'null'
+            description: Mock Callback Spec schema.
+          description: The outbound message (method, headers, templated body).
+        payloadSchema:
+          anyOf:
+          - additionalProperties: true
+            type: object
+            description: Mock Callback Spec schema.
+          - type: 'null'
+            description: Mock Callback Spec schema.
+          title: Payloadschema
+          description: JSON Schema (inline, or a local $ref) the rendered payload
+            must satisfy before delivery.
+        retry:
+          anyOf:
+          - $ref: '#/components/schemas/MockCallbackRetrySpec'
+          - type: 'null'
+            description: Mock Callback Spec schema.
+          description: Delivery retry schedule; omit for the defaults.
+      additionalProperties: false
+      type: object
+      title: MockCallbackSpec
+      description: One callback/webhook the mock simulates on this version's behalf
+        (#4746 PMR-2.3).
+    MockCallbackTriggerSpec:
+      properties:
+        operation:
+          anyOf:
+          - type: string
+            description: Mock Callback Trigger Spec schema.
+          - type: 'null'
+            description: Mock Callback Trigger Spec schema.
+          title: Operation
+          description: Operation whose response fires the callback, as "METHOD /path/{template}".
+            Omit for a callback that only ever fires from an explicit __mock__ trigger.
+        statuses:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+            description: Mock Callback Trigger Spec schema.
+          - type: 'null'
+            description: Mock Callback Trigger Spec schema.
+          title: Statuses
+          description: Response statuses that fire it; omit to fire on any 2xx.
+      additionalProperties: false
+      type: object
+      title: MockCallbackTriggerSpec
+      description: 'What fires a callback: an operation, optionally narrowed to certain
+        statuses (#4746 PMR-2.3).'
+    MockCaptureAuthorizationSpec:
+      properties:
+        authorizedBy:
+          type: string
+          title: Authorizedby
+          description: User id that granted capture.
+          example: example
+        authorizedAt:
+          type: string
+          title: Authorizedat
+          description: ISO 8601 instant of the grant.
+          example: example
+        expiresAt:
+          type: string
+          title: Expiresat
+          description: ISO 8601 instant the grant lapses; capture stops on its own
+            at this point.
+          example: example
+      type: object
+      required:
+      - authorizedBy
+      - authorizedAt
+      - expiresAt
+      title: MockCaptureAuthorizationSpec
+      description: The server-stamped record of who authorized capture, and until
+        when (#4747 PMR-2.4).
+    MockCapturePolicySpec:
+      properties:
+        policyFormat:
+          anyOf:
+          - type: string
+            description: Mock Capture Policy Spec schema.
+          - type: 'null'
+            description: Mock Capture Policy Spec schema.
+          title: Policyformat
+          description: Policy format id; "apiome.mock.capture-policy/v1".
+        policyFormatVersion:
+          anyOf:
+          - type: integer
+            description: Mock Capture Policy Spec schema.
+          - type: 'null'
+            description: Mock Capture Policy Spec schema.
+          title: Policyformatversion
+          description: Policy format revision.
+        enabled:
+          type: boolean
+          title: Enabled
+          description: Whether capture is switched on.
+          default: false
+          example: true
+        upstreams:
+          items:
+            type: string
+          type: array
+          title: Upstreams
+          description: Allowlisted upstream base URLs; only these may ever be fetched.
+          maxItems: 1000
+        authorization:
+          anyOf:
+          - $ref: '#/components/schemas/MockCaptureAuthorizationSpec'
+          - type: 'null'
+            description: Mock Capture Policy Spec schema.
+          description: Who authorized capture and when the grant lapses.
+        redaction:
+          anyOf:
+          - $ref: '#/components/schemas/MockCaptureRedactionSpec'
+          - type: 'null'
+            description: Mock Capture Policy Spec schema.
+          description: Redaction rules added on top of the always-on credential rules.
+        validateResponses:
+          type: boolean
+          title: Validateresponses
+          description: Check each captured response against the version's declared
+            contract.
+          default: true
+          example: false
+      type: object
+      title: MockCapturePolicySpec
+      description: A version's stored guarded-proxy capture policy (#4747 PMR-2.4).
+    MockCaptureRedactionDecision:
+      properties:
+        pointer:
+          type: string
+          title: Pointer
+          description: RFC 6901 pointer to the removed location in the capture record.
+          example: example
+        rule:
+          type: string
+          title: Rule
+          description: The rule family that fired (always-header, policy-field, ...).
+          example: documentation.schema-missing-description
+        reason:
+          type: string
+          title: Reason
+          description: Human-readable explanation of the removal.
+          example: example
+      type: object
+      required:
+      - pointer
+      - rule
+      - reason
+      title: MockCaptureRedactionDecision
+      description: One thing a capture's redaction removed, and why (#4747 PMR-2.4).
+    MockCaptureRedactionSpec:
+      properties:
+        headers:
+          items:
+            type: string
+          type: array
+          title: Headers
+          description: Additional header names whose values are never persisted.
+          maxItems: 1000
+        queryParams:
+          items:
+            type: string
+          type: array
+          title: Queryparams
+          description: Additional query parameter names whose values are never persisted.
+          maxItems: 1000
+        bodyFields:
+          items:
+            type: string
+          type: array
+          title: Bodyfields
+          description: 'Body fields to drop: a bare name matches at any depth, an
+            entry starting with ''/'' is a body-relative RFC 6901 pointer.'
+          maxItems: 1000
+        patterns:
+          items:
+            type: string
+          type: array
+          title: Patterns
+          description: Opt-in value detectors for personal data (email, phone, creditCard,
+            nationalId, ipv4).
+          maxItems: 1000
+      additionalProperties: false
+      type: object
+      title: MockCaptureRedactionSpec
+      description: Extra redaction rules a version's owner adds on top of the always-on
+        ones (#4747 PMR-2.4).
+    MockCaptureSummary:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Capture id.
+          example: res_01h2xcejqtf3fz5y5j0v8k9m2p
+        upstream:
+          type: string
+          title: Upstream
+          description: Upstream URL fetched, query string removed.
+          example: example
+        allowlistEntry:
+          type: string
+          title: Allowlistentry
+          description: The allowlist entry that authorized the fetch.
+          example: example
+        policyDigest:
+          type: string
+          title: Policydigest
+          description: Digest of the capture policy in force at capture time.
+          example: example
+        capturedAt:
+          type: string
+          title: Capturedat
+          description: ISO 8601 instant of the capture.
+          example: example
+        operationKey:
+          anyOf:
+          - type: string
+            description: Mock Capture schema.
+          - type: 'null'
+            description: Mock Capture schema.
+          title: Operationkey
+          description: Spec operation the request matched, e.g. "GET /pets/{petId}".
+        method:
+          type: string
+          title: Method
+          description: Request method.
+          example: example
+        path:
+          type: string
+          title: Path
+          description: Request path, relative to the mock version prefix.
+          example: /resources/{id}
+        status:
+          type: integer
+          title: Status
+          description: Upstream response status.
+          example: 1
+        digest:
+          type: string
+          title: Digest
+          description: sha256:<hex> digest of the redacted capture document.
+          example: example
+        redactionCount:
+          type: integer
+          title: Redactioncount
+          description: How many values redaction removed.
+          example: 1
+        redactions:
+          items:
+            $ref: '#/components/schemas/MockCaptureRedactionDecision'
+          type: array
+          title: Redactions
+          description: Every redaction decision, retained for review.
+          maxItems: 1000
+        schemaValid:
+          anyOf:
+          - type: boolean
+            description: Mock Capture schema.
+          - type: 'null'
+            description: Mock Capture schema.
+          title: Schemavalid
+          description: Whether the captured response matched the declared contract
+            (null if unchecked).
+        validationErrors:
+          items:
+            type: string
+          type: array
+          title: Validationerrors
+          description: Schema validation errors for the captured response.
+          maxItems: 1000
+        reviewState:
+          type: string
+          title: Reviewstate
+          description: pending, approved, rejected, or published.
+          example: example
+        reviewNote:
+          anyOf:
+          - type: string
+            description: Mock Capture schema.
+          - type: 'null'
+            description: Mock Capture schema.
+          title: Reviewnote
+          description: Reviewer note stored with the decision.
+        publishedPack:
+          anyOf:
+          - type: string
+            description: Mock Capture schema.
+          - type: 'null'
+            description: Mock Capture schema.
+          title: Publishedpack
+          description: Fixture pack this capture was published into.
+        expiresAt:
+          type: string
+          title: Expiresat
+          description: When retention removes this capture.
+          example: example
+        exchange:
+          anyOf:
+          - additionalProperties: true
+            type: object
+            description: Mock Capture schema.
+          - type: 'null'
+            description: Mock Capture schema.
+          title: Exchange
+          description: The full redacted apiome.mock.capture/v1 document (omitted
+            from list reads).
+      type: object
+      required:
+      - id
+      - upstream
+      - allowlistEntry
+      - policyDigest
+      - capturedAt
+      - method
+      - path
+      - status
+      - digest
+      - redactionCount
+      - reviewState
+      - expiresAt
+      title: MockCaptureSummary
+      description: One recorded exchange awaiting (or past) review (#4747 PMR-2.4).
     MockChaosKnobsSpec:
       properties:
         delayMs:
@@ -80170,6 +81792,200 @@ components:
       title: MockChaosSpec
       description: 'Chaos knobs for a version or one scenario: a default plus per-operation
         overrides (#4455 SIM-4.3).'
+    MockConformanceResult:
+      properties:
+        corpus_format:
+          anyOf:
+          - type: string
+            maxLength: 100
+            description: Mock Conformance schema.
+          - type: 'null'
+            description: Mock Conformance schema.
+          title: Corpus Format
+          description: Corpus format id (`apiome.mock.conformance/v1`).
+        corpus_version:
+          anyOf:
+          - type: string
+            maxLength: 100
+            description: Mock Conformance schema.
+          - type: 'null'
+            description: Mock Conformance schema.
+          title: Corpus Version
+          description: Version label the corpus document declared.
+        corpus_digest:
+          type: string
+          maxLength: 100
+          title: Corpus Digest
+          description: '`sha256:<hex>` over the corpus document''s canonical JSON
+            — the identity that makes two conformance results comparable.'
+          example: example
+        corpus_case_count:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Mock Conformance schema.
+          - type: 'null'
+            description: Mock Conformance schema.
+          title: Corpus Case Count
+          description: How many cases the corpus declared.
+        total:
+          type: integer
+          minimum: 0.0
+          title: Total
+          description: Cases executed.
+          example: 1
+        passed:
+          type: integer
+          minimum: 0.0
+          title: Passed
+          description: Cases that passed.
+          example: 1
+        failed:
+          type: integer
+          minimum: 0.0
+          title: Failed
+          description: Cases that failed.
+          example: 1
+        failed_cases:
+          items:
+            type: string
+          type: array
+          title: Failed Cases
+          description: Names of failing cases (at most 20).
+          maxItems: 1000
+      additionalProperties: false
+      type: object
+      required:
+      - corpus_digest
+      - total
+      - passed
+      - failed
+      title: MockConformanceResult
+      description: What the shared conformance corpus (PMR-3.1) said about the running
+        runtime.
+    MockFixturePackProvenanceSpec:
+      properties:
+        source:
+          type: string
+          enum:
+          - authored
+          - capture
+          title: Source
+          description: How the pack's data was produced.
+          default: authored
+          example: authored
+        capturedFrom:
+          items:
+            type: string
+          type: array
+          title: Capturedfrom
+          description: Allowlisted upstreams the captures were recorded from.
+          maxItems: 1000
+        captures:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Mock Fixture Pack Provenance Spec schema.
+          - type: 'null'
+            description: Mock Fixture Pack Provenance Spec schema.
+          title: Captures
+          description: How many reviewed captures were converted into this pack.
+        redactions:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Mock Fixture Pack Provenance Spec schema.
+          - type: 'null'
+            description: Mock Fixture Pack Provenance Spec schema.
+          title: Redactions
+          description: Total redactions applied across those captures.
+        approvedBy:
+          anyOf:
+          - type: string
+            description: Mock Fixture Pack Provenance Spec schema.
+          - type: 'null'
+            description: Mock Fixture Pack Provenance Spec schema.
+          title: Approvedby
+          description: User id that approved publication.
+        approvedAt:
+          anyOf:
+          - type: string
+            description: Mock Fixture Pack Provenance Spec schema.
+          - type: 'null'
+            description: Mock Fixture Pack Provenance Spec schema.
+          title: Approvedat
+          description: ISO 8601 instant of the approval.
+      additionalProperties: false
+      type: object
+      title: MockFixturePackProvenanceSpec
+      description: 'Where a fixture pack''s data came from (#4747 PMR-2.4).
+
+
+        Present only on packs that record an origin; a pack without one is hand-authored.
+        The runtime
+
+        reports this block back on every pack listing and session reset, which is
+        what lets a replayed
+
+        fixture say where it came from and how heavily it was redacted.'
+    MockFixturePackRef:
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          title: Name
+          description: Pack name.
+          example: Pet
+        digest:
+          type: string
+          maxLength: 100
+          title: Digest
+          description: '`sha256:<hex>` over the pack''s canonical content.'
+          example: example
+        format:
+          anyOf:
+          - type: string
+            maxLength: 100
+            description: Mock Fixture Pack Ref schema.
+          - type: 'null'
+            description: Mock Fixture Pack Ref schema.
+          title: Format
+          description: Pack format id.
+        format_version:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+            description: Mock Fixture Pack Ref schema.
+          - type: 'null'
+            description: Mock Fixture Pack Ref schema.
+          title: Format Version
+          description: Declared `packFormatVersion`.
+        origin:
+          anyOf:
+          - type: string
+            maxLength: 50
+            description: Mock Fixture Pack Ref schema.
+          - type: 'null'
+            description: Mock Fixture Pack Ref schema.
+          title: Origin
+          description: '`authored` or `capture` (PMR-2.4), so replayed data says where
+            it came from.'
+        redaction_status:
+          anyOf:
+          - type: string
+            maxLength: 50
+            description: Mock Fixture Pack Ref schema.
+          - type: 'null'
+            description: Mock Fixture Pack Ref schema.
+          title: Redaction Status
+          description: '`not-applicable`, `clean`, or `redacted` for a captured pack.'
+      additionalProperties: false
+      type: object
+      required:
+      - name
+      - digest
+      title: MockFixturePackRef
+      description: One fixture pack the attested bundle carried, by digest.
     MockFixturePackSpec:
       properties:
         packFormat:
@@ -80213,6 +82029,13 @@ components:
           title: Collections
           description: Seed resources per CRUD collection path (e.g. "/pets"), applied
             on session reset.
+        provenance:
+          anyOf:
+          - $ref: '#/components/schemas/MockFixturePackProvenanceSpec'
+          - type: 'null'
+            description: Mock Fixture Pack Spec schema.
+          description: Where this pack's data came from; present on packs built from
+            reviewed captures (#4747).
       additionalProperties: false
       type: object
       title: MockFixturePackSpec
@@ -80479,6 +82302,38 @@ components:
         validation
 
         (regex compilation, list caps) happens in ``app.mock_match.validate_when``.'
+    MockRuntimeRef:
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          title: Name
+          description: Runtime that served the bundle.
+          default: apiome-mock
+          example: Pet
+        version:
+          type: string
+          maxLength: 100
+          title: Version
+          description: Runtime version (semantic). A conformance pass means nothing
+            without it.
+          example: 1.0.0
+        image:
+          anyOf:
+          - type: string
+            maxLength: 500
+            description: Mock Runtime Ref schema.
+          - type: 'null'
+            description: Mock Runtime Ref schema.
+          title: Image
+          description: Container image reference the runtime ran as. Pin a digest
+            in CI; a floating tag identifies nothing.
+      additionalProperties: false
+      type: object
+      required:
+      - version
+      title: MockRuntimeRef
+      description: Which runtime served the bundle.
     MockScenario:
       properties:
         name:
@@ -88867,7 +90722,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-26T17:50:45Z'
+          example: '2026-08-28T02:14:10Z'
       additionalProperties: false
       type: object
       required:
@@ -100614,13 +102469,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-26T17:50:45Z'
+          example: '2026-08-28T02:14:10Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-26T17:50:45Z'
+          example: '2026-08-28T02:14:10Z'
         outcome:
           anyOf:
           - type: string
@@ -100668,6 +102523,16 @@ components:
           title: Artifacts
           description: Run-level artifact references (the runner log, a summary report).
           maxItems: 1000
+        mock:
+          anyOf:
+          - $ref: '#/components/schemas/MockAttestationInput'
+          - type: 'null'
+            description: Verification Run Input schema.
+          description: 'Release-proof mock attestation (PMR-3.2): the immutable bundle
+            digest the run was served from, the runtime version, the conformance corpus
+            and result, and every fixture-pack digest. Attach it verbatim from `apiome-mock
+            attest`. A run against a `mock` environment that omits it is recorded
+            as an *explicitly* missing mock verification rather than as silence.'
       additionalProperties: false
       type: object
       required:
@@ -100888,6 +102753,14 @@ components:
           title: Artifacts
           description: Run-level artifact references.
           maxItems: 1000
+        mock:
+          anyOf:
+          - $ref: '#/components/schemas/MockAttestationRecord'
+          - type: 'null'
+            description: Verification Run schema.
+          description: 'The run''s mock attestation (PMR-3.2). Present whenever the
+            run named a mock — carrying `status: missing` with a reason when nothing
+            was attested — and `null` for a run that had nothing to do with a mock.'
       additionalProperties: false
       type: object
       required:
@@ -102703,6 +104576,260 @@ components:
       title: VersionForkRequest
       description: Fork a schema version line into another project from a source revision
         (cross-project sandbox).
+    VersionMockCallbacksRequest:
+      properties:
+        callbacks:
+          additionalProperties:
+            $ref: '#/components/schemas/MockCallbackSpec'
+          type: object
+          title: Callbacks
+          description: Callback definitions keyed by callback name; an empty map clears
+            them.
+      type: object
+      title: VersionMockCallbacksRequest
+      description: Replace the version's mock callback definitions (#4746 PMR-2.3).
+    VersionMockCallbacksResponse:
+      properties:
+        callbacks:
+          additionalProperties:
+            $ref: '#/components/schemas/MockCallbackSpec'
+          type: object
+          title: Callbacks
+          description: Callback definitions keyed by callback name, in canonical stored
+            form.
+        digests:
+          additionalProperties:
+            type: string
+          type: object
+          title: Digests
+          description: sha256:<hex> content digest of each definition — the identity
+            a test pins.
+      type: object
+      title: VersionMockCallbacksResponse
+      description: The version's persisted mock callback definitions and their content
+        digests (#4746 PMR-2.3).
+    VersionMockCapturePolicyRequest:
+      properties:
+        enabled:
+          type: boolean
+          title: Enabled
+          description: Switch capture on (the default) or off without losing the allowlist.
+          default: true
+          example: true
+        upstreams:
+          items:
+            type: string
+          type: array
+          title: Upstreams
+          description: Absolute http(s) base URLs capture may fetch; at least one
+            is required.
+          maxItems: 1000
+        redaction:
+          anyOf:
+          - $ref: '#/components/schemas/MockCaptureRedactionSpec'
+          - type: 'null'
+            description: Request body for version mock capture policy.
+          description: Extra redaction rules on top of the always-on credential rules.
+        validateResponses:
+          type: boolean
+          title: Validateresponses
+          description: Check each captured response against the version's declared
+            contract.
+          default: true
+          example: false
+        ttlHours:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+            description: Request body for version mock capture policy.
+          - type: 'null'
+            description: Request body for version mock capture policy.
+          title: Ttlhours
+          description: Requested authorization lifetime in hours (clamped to at most
+            168).
+        acknowledged:
+          type: boolean
+          title: Acknowledged
+          description: Explicit confirmation that the caller is authorized to record
+            traffic from these upstreams. Capture cannot be granted without it.
+          default: false
+          example: false
+      type: object
+      title: VersionMockCapturePolicyRequest
+      description: 'Grant, change, or switch off guarded proxy capture for a version
+        (#4747 PMR-2.4).
+
+
+        The authorization block is never accepted from the client: the API stamps
+        the authenticated
+
+        user and clamps the lifetime itself, so "who authorized this" cannot be claimed.'
+    VersionMockCapturePolicyResponse:
+      properties:
+        policy:
+          anyOf:
+          - $ref: '#/components/schemas/MockCapturePolicySpec'
+          - type: 'null'
+            description: Response payload for version mock capture policy.
+          description: The stored policy, or null when capture was never configured.
+        digest:
+          anyOf:
+          - type: string
+            description: Response payload for version mock capture policy.
+          - type: 'null'
+            description: Response payload for version mock capture policy.
+          title: Digest
+          description: sha256:<hex> digest of the policy; recorded on every capture.
+        state:
+          type: string
+          title: State
+          description: 'Why capture is or is not live: authorized, unconfigured, disabled,
+            no-upstreams, unauthorized, or expired.'
+          example: example
+        captures:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Captures
+          description: Live capture counts by review state (pending/approved/rejected/published).
+      type: object
+      required:
+      - state
+      title: VersionMockCapturePolicyResponse
+      description: The version's stored capture policy, its digest, and whether capture
+        is live (#4747 PMR-2.4).
+    VersionMockCapturePublishRequest:
+      properties:
+        packName:
+          type: string
+          title: Packname
+          description: Name of the fixture pack to create or replace.
+          example: Example
+        captureIds:
+          items:
+            type: string
+          type: array
+          title: Captureids
+          description: Approved capture ids to publish; empty means every approved
+            capture.
+          maxItems: 1000
+        description:
+          type: string
+          maxLength: 500
+          title: Description
+          description: Description stored on the resulting pack.
+          default: ''
+          example: A pet available for adoption in the store.
+      type: object
+      required:
+      - packName
+      title: VersionMockCapturePublishRequest
+      description: Convert approved captures into a fixture pack (#4747 PMR-2.4).
+    VersionMockCapturePublishResponse:
+      properties:
+        packName:
+          type: string
+          title: Packname
+          description: The pack that was written.
+          example: Example
+        digest:
+          type: string
+          title: Digest
+          description: sha256:<hex> digest of the published pack.
+          example: example
+        published:
+          items:
+            type: string
+          type: array
+          title: Published
+          description: Capture ids marked published.
+          maxItems: 1000
+        notes:
+          items:
+            type: string
+          type: array
+          title: Notes
+          description: What the conversion skipped and why, so nothing is dropped
+            silently.
+          maxItems: 1000
+        provenance:
+          $ref: '#/components/schemas/MockFixturePackProvenanceSpec'
+          description: The provenance block stamped on the pack — its origin and redaction
+            totals.
+      type: object
+      required:
+      - packName
+      - digest
+      - provenance
+      title: VersionMockCapturePublishResponse
+      description: The fixture pack produced from reviewed captures (#4747 PMR-2.4).
+    VersionMockCaptureReviewRequest:
+      properties:
+        captureIds:
+          items:
+            type: string
+          type: array
+          title: Captureids
+          description: Capture ids to decide.
+          maxItems: 1000
+        decision:
+          type: string
+          enum:
+          - approve
+          - reject
+          title: Decision
+          description: The review decision to record.
+          example: approve
+        note:
+          anyOf:
+          - type: string
+            maxLength: 500
+            description: Request body for version mock capture review.
+          - type: 'null'
+            description: Request body for version mock capture review.
+          title: Note
+          description: Optional note stored with the decision.
+      type: object
+      required:
+      - decision
+      title: VersionMockCaptureReviewRequest
+      description: Approve or reject recorded exchanges (#4747 PMR-2.4).
+    VersionMockCaptureReviewResponse:
+      properties:
+        reviewed:
+          items:
+            type: string
+          type: array
+          title: Reviewed
+          description: Capture ids whose review state changed.
+          maxItems: 1000
+        counts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Counts
+          description: Live capture counts by review state after the decision.
+      type: object
+      title: VersionMockCaptureReviewResponse
+      description: The result of a review decision (#4747 PMR-2.4).
+    VersionMockCapturesResponse:
+      properties:
+        captures:
+          items:
+            $ref: '#/components/schemas/MockCaptureSummary'
+          type: array
+          title: Captures
+          description: Recorded exchanges, newest first.
+          maxItems: 1000
+        counts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Counts
+          description: Live capture counts by review state.
+      type: object
+      title: VersionMockCapturesResponse
+      description: A version's recorded exchanges awaiting review (#4747 PMR-2.4).
     VersionMockFixturePacksRequest:
       properties:
         packs:

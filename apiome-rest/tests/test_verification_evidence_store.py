@@ -151,6 +151,7 @@ class _FakeDb:
         run_row: Optional[Dict[str, Any]] = None,
         existing: Optional[Dict[str, Any]] = None,
         insert_error: Optional[Exception] = None,
+        mock_row: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Build the double.
 
@@ -158,8 +159,10 @@ class _FakeDb:
             run_row: The row every run read returns.
             existing: The row an idempotency-key lookup returns, if any.
             insert_error: Raised by the insert, to simulate a unique-index race.
+            mock_row: The ``verification_run_mock`` row a run read returns (PMR-3.2).
         """
         self.run_row = run_row if run_row is not None else _run_row()
+        self.mock_row = mock_row
         self.existing = existing
         self.insert_error = insert_error
         self.inserts: List[Dict[str, Any]] = []
@@ -172,9 +175,15 @@ class _FakeDb:
         run: Dict[str, Any],
         operations: Optional[List[Dict[str, Any]]] = None,
         artifacts: Optional[List[Dict[str, Any]]] = None,
+        mock: Optional[Dict[str, Any]] = None,
     ) -> Optional[Dict[str, Any]]:
         self.inserts.append(
-            {"run": run, "operations": operations or [], "artifacts": artifacts or []}
+            {
+                "run": run,
+                "operations": operations or [],
+                "artifacts": artifacts or [],
+                "mock": mock,
+            }
         )
         if self.insert_error is not None:
             raise self.insert_error
@@ -197,6 +206,9 @@ class _FakeDb:
 
     def list_verification_run_artifacts(self, run_id: str, tenant_id: str) -> List[Dict[str, Any]]:
         return []
+
+    def get_verification_run_mock(self, run_id: str, tenant_id: str) -> Optional[Dict[str, Any]]:
+        return self.mock_row
 
     def list_verification_runs(self, tenant_id: str, **kwargs: Any) -> List[Dict[str, Any]]:
         self.list_calls.append({"tenant_id": tenant_id, **kwargs})

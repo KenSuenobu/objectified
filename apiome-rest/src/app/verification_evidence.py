@@ -10,7 +10,10 @@ This module owns the record that replaces it — a **normalized, immutable** acc
   makes "it failed" into "``GET /pets/{petId}`` returned 500 where the contract declares 200";
 * :class:`ArtifactReferenceInput` — a *link* to a redacted artifact, never the artifact;
 * :class:`VerificationRunRecord` and friends — stored evidence, as every reader (and both exporters)
-  sees it.
+  sees it;
+* the optional ``mock`` block (:mod:`app.mock_attestation`, PMR-3.2) — the immutable mock bundle
+  digest, runtime version, conformance result, and fixture-pack digests that let a release proof
+  claim a runnable mock, and that say so *explicitly* when it cannot.
 
 Four invariants hold this module together, each mirrored by a CHECK constraint in apiome-db V212, so
 neither layer is the only thing standing between a mistake and the evidence:
@@ -48,6 +51,13 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from .intake_secret_scrub import scrub_message
+from .mock_attestation import (
+    MockAttestationError,
+    MockAttestationInput,
+    MockAttestationRecord,
+    attestation_from_row,
+    validate_mock_attestation,
+)
 
 __all__ = [
     "ARTIFACT_KINDS",
@@ -77,6 +87,7 @@ __all__ = [
     "CODE_DUPLICATE_CASE",
     "CODE_EXPORT_FORMAT",
     "CODE_FAILURE_DETAIL_REQUIRED",
+    "CODE_MOCK_ATTESTATION_ABSENT",
     "CODE_NO_OPERATIONS",
     "CODE_OUTCOME_MISMATCH",
     "CODE_RUN_NOT_FOUND",
@@ -86,6 +97,8 @@ __all__ = [
     "EvidenceValidationError",
     "FIELD_TEXT_LIMIT",
     "MESSAGE_TEXT_LIMIT",
+    "MockAttestationInput",
+    "MockAttestationRecord",
     "OPERATION_OUTCOMES",
     "OPERATION_OUTCOME_ERRORED",
     "OPERATION_OUTCOME_FAILED",
@@ -109,6 +122,7 @@ __all__ = [
     "redact_text",
     "summary_from_row",
     "validate_artifact_uri",
+    "validate_mock_attestation_input",
     "validate_run_input",
 ]
 
@@ -242,6 +256,9 @@ CODE_TARGET_NOT_FOUND = "evidence-target-not-found"
 CODE_RUN_NOT_FOUND = "evidence-run-not-found"
 #: An export format outside ``json`` | ``junit``.
 CODE_EXPORT_FORMAT = "evidence-export-format-unsupported"
+#: A mock attestation was asked for on a run that recorded none — a run that never involved a mock
+#: (PMR-3.2). Distinct from a run whose attestation says ``missing``, which *is* returned.
+CODE_MOCK_ATTESTATION_ABSENT = "evidence-mock-attestation-absent"
 
 
 class EvidenceValidationError(ValueError):
@@ -662,6 +679,16 @@ class VerificationRunInput(BaseModel):
         default_factory=list,
         description="Run-level artifact references (the runner log, a summary report).",
     )
+    mock: Optional[MockAttestationInput] = Field(
+        default=None,
+        description=(
+            "Release-proof mock attestation (PMR-3.2): the immutable bundle digest the run was "
+            "served from, the runtime version, the conformance corpus and result, and every "
+            "fixture-pack digest. Attach it verbatim from `apiome-mock attest`. A run against a "
+            "`mock` environment that omits it is recorded as an *explicitly* missing mock "
+            "verification rather than as silence."
+        ),
+    )
 
     @field_validator("outcome")
     @classmethod
@@ -830,6 +857,31 @@ def _validate_artifact(artifact: ArtifactReferenceInput) -> None:
     validate_artifact_uri(artifact.uri)
 
 
+def validate_mock_attestation_input(
+    attestation: MockAttestationInput,
+) -> MockAttestationRecord:
+    """Validate an attached mock attestation, in this module's taxonomy (PMR-3.2, #4749).
+
+    :mod:`app.mock_attestation` owns the rules and deliberately does not import this module — the
+    dependency runs one way only, so the mock contract stays usable on its own. This is the single
+    seam that translates its refusal into an :class:`EvidenceValidationError` carrying the *same*
+    code, so every evidence caller keeps branching on one exception type and one taxonomy.
+
+    Args:
+        attestation: The submitted mock block.
+
+    Returns:
+        The record that will be stored, with its status derived from the conformance result.
+
+    Raises:
+        EvidenceValidationError: with the ``mock-*`` code naming which rule failed.
+    """
+    try:
+        return validate_mock_attestation(attestation)
+    except MockAttestationError as exc:
+        raise EvidenceValidationError(exc.code, str(exc)) from exc
+
+
 def validate_run_input(run: VerificationRunInput) -> Dict[str, int]:
     """Vet a submitted run end to end and return its derived counts.
 
@@ -837,7 +889,8 @@ def validate_run_input(run: VerificationRunInput) -> Dict[str, int]:
     CLI — applies the same rules. What is checked, in the order a mistake is most likely to be
     made: the suite digest's shape, the run's own timing, that there is something to record at all,
     each case (detail, timing, assertions, artifacts), no duplicate case, the run-level artifacts,
-    and finally that any *declared* outcome agrees with the one the records imply.
+    the mock attestation when one is attached, and finally that any *declared* outcome agrees with
+    the one the records imply.
 
     Args:
         run: The submitted run.
@@ -875,6 +928,9 @@ def validate_run_input(run: VerificationRunInput) -> Dict[str, int]:
 
     for artifact in run.artifacts:
         _validate_artifact(artifact)
+
+    if run.mock is not None:
+        validate_mock_attestation_input(run.mock)
 
     counts = derive_counts(run.operations)
     derived = derive_outcome(counts)
@@ -1011,6 +1067,14 @@ class VerificationRunRecord(VerificationRunSummary):
     artifacts: List[ArtifactRecord] = Field(
         default_factory=list, description="Run-level artifact references."
     )
+    mock: Optional[MockAttestationRecord] = Field(
+        default=None,
+        description=(
+            "The run's mock attestation (PMR-3.2). Present whenever the run named a mock — "
+            "carrying `status: missing` with a reason when nothing was attested — and `null` for "
+            "a run that had nothing to do with a mock."
+        ),
+    )
 
 
 def _text(value: Any) -> Optional[str]:
@@ -1115,6 +1179,7 @@ def record_from_rows(
     operation_rows: Sequence[Mapping[str, Any]] = (),
     assertion_rows: Sequence[Mapping[str, Any]] = (),
     artifact_rows: Sequence[Mapping[str, Any]] = (),
+    mock_row: Optional[Mapping[str, Any]] = None,
 ) -> VerificationRunRecord:
     """Assemble stored rows into one :class:`VerificationRunRecord`.
 
@@ -1126,6 +1191,7 @@ def record_from_rows(
         operation_rows: Its ``verification_run_operation`` rows, in stored order.
         assertion_rows: Every ``verification_run_assertion`` row for the run, in stored order.
         artifact_rows: Every ``verification_run_artifact`` row for the run.
+        mock_row: The run's ``verification_run_mock`` row, when it has one (PMR-3.2).
 
     Returns:
         The complete record. Artifacts with no ``operation_id`` become run-level ones; the rest are
@@ -1174,5 +1240,8 @@ def record_from_rows(
         )
 
     return VerificationRunRecord(
-        **_summary_fields(run_row), operations=operations, artifacts=run_artifacts
+        **_summary_fields(run_row),
+        operations=operations,
+        artifacts=run_artifacts,
+        mock=attestation_from_row(mock_row) if mock_row is not None else None,
     )

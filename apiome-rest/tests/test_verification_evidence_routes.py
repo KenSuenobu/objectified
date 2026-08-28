@@ -11,7 +11,10 @@ cover it); what is asserted here is the endpoint's own contract:
 * the export is served with the media type its format is served as, and its body is the stored
   evidence;
 * there is **no** update or delete route — evidence is immutable, and the API says so by having
-  nowhere to say otherwise.
+  nowhere to say otherwise;
+* the mock-attestation route (PMR-3.2) renders a run's mock as a signed DSSE envelope — including
+  when what it has to say is "this was never verified" — and 404s only when the run recorded no
+  mock at all.
 """
 
 from __future__ import annotations
@@ -24,9 +27,21 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.auth import validate_authentication
+from app.config import settings
 from app.main import app
+from app.mock_attestation import (
+    MOCK_PREDICATE_TYPE,
+    MOCK_STATUS_MISSING,
+    MOCK_STATUS_VERIFIED,
+    REASON_ATTESTATION_MISSING,
+    MockAttestationRecord,
+    MockBundleApi,
+    MockBundleRef,
+    MockRuntimeRef,
+)
 from app.verification_evidence import (
     CODE_ARTIFACT_EMBEDDED,
+    CODE_MOCK_ATTESTATION_ABSENT,
     CODE_OUTCOME_MISMATCH,
     CODE_RUN_NOT_FOUND,
     CODE_TARGET_NOT_FOUND,
@@ -95,7 +110,9 @@ def _record(**overrides: Any) -> VerificationRunRecord:
 
 def _summary() -> VerificationRunSummary:
     """A run summary, as a list read returns one."""
-    return VerificationRunSummary(**_record().model_dump(exclude={"operations", "artifacts"}))
+    return VerificationRunSummary(
+        **_record().model_dump(exclude={"operations", "artifacts", "mock"})
+    )
 
 
 def _submission(**overrides: Any) -> Dict[str, Any]:
@@ -357,3 +374,80 @@ def test_no_evidence_route_advertises_a_mutating_verb() -> None:
     assert paths, "the evidence router must be mounted"
     for route in paths:
         assert not {"PUT", "PATCH", "DELETE"} & set(getattr(route, "methods", set()))
+
+
+# ===========================================================================
+# Mock attestation (PMR-3.2, #4749)
+# ===========================================================================
+
+
+def _verified_mock() -> MockAttestationRecord:
+    """A stored attestation over a published bundle with a passing corpus."""
+    return MockAttestationRecord(
+        status=MOCK_STATUS_VERIFIED,
+        bundle=MockBundleRef(
+            digest="sha256:" + "e" * 64,
+            format="apiome.mock.bundle/v1",
+            format_version=1,
+            signed=True,
+            api=MockBundleApi(
+                tenant="acme",
+                project="petstore",
+                version="1.0.0",
+                revision_id="55555555-5555-4555-8555-555555555555",
+                published=True,
+            ),
+        ),
+        runtime=MockRuntimeRef(version="0.9.0"),
+    )
+
+
+def test_the_mock_attestation_route_returns_a_signed_dsse_envelope() -> None:
+    with (
+        patch(
+            "app.verification_evidence_routes.get_run",
+            return_value=_record(mock=_verified_mock()),
+        ),
+        patch.object(settings, "lint_attestation_signing_secret", "shared-secret"),
+    ):
+        response = client.get(f"{_BASE}/{_RUN}/mock-attestation")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["predicateType"] == MOCK_PREDICATE_TYPE
+    assert body["signed"] is True
+    assert body["keyId"] == "apiome-lint-hmac-v1"
+    assert body["envelope"]["payloadType"] == "application/vnd.in-toto+json"
+
+
+def test_an_unverified_mock_is_still_attested_rather_than_404() -> None:
+    missing = MockAttestationRecord(
+        status=MOCK_STATUS_MISSING,
+        reason_code=REASON_ATTESTATION_MISSING,
+        reason="nothing was attached",
+    )
+    with patch(
+        "app.verification_evidence_routes.get_run", return_value=_record(mock=missing)
+    ):
+        response = client.get(f"{_BASE}/{_RUN}/mock-attestation")
+
+    assert response.status_code == 200
+    assert response.json()["envelope"]["payload"]
+
+
+def test_a_run_that_recorded_no_mock_answers_404_with_its_code() -> None:
+    with patch("app.verification_evidence_routes.get_run", return_value=_record()):
+        response = client.get(f"{_BASE}/{_RUN}/mock-attestation")
+
+    assert response.status_code == 404
+    assert response.json()["detail"]["code"] == CODE_MOCK_ATTESTATION_ABSENT
+
+
+def test_an_unknown_run_answers_404_from_the_mock_attestation_route() -> None:
+    with patch(
+        "app.verification_evidence_routes.get_run",
+        side_effect=EvidenceValidationError(CODE_RUN_NOT_FOUND, "no such run"),
+    ):
+        response = client.get(f"{_BASE}/{_RUN}/mock-attestation")
+
+    assert response.status_code == 404

@@ -9,12 +9,13 @@ Two runtimes live behind one command:
     network, and no credentials — the command ``apiome mock run`` and the official image both
     execute.
 
-``verify``, ``conformance``, ``parity``, and ``serverless`` support the portable path: the first
-proves a bundle is loadable before a job depends on it, the second proves a *running* runtime
-answers the shared conformance corpus correctly (how the CLI and the image are held to identical
-behavior), the third (#4748, PMR-3.1) diffs a hosted deployment against a portable one response by
-response, and the fourth (#4743, PMR-1.3) checks a bundle against a function environment's
-published limits and can run the corpus through that provider's real event shape.
+``verify``, ``conformance``, ``parity``, ``serverless``, and ``attest`` support the portable path:
+the first proves a bundle is loadable before a job depends on it, the second proves a *running*
+runtime answers the shared conformance corpus correctly (how the CLI and the image are held to
+identical behavior), the third (#4748, PMR-3.1) diffs a hosted deployment against a portable one
+response by response, the fourth (#4743, PMR-1.3) checks a bundle against a function environment's
+published limits and can run the corpus through that provider's real event shape, and the fifth
+(#4749, PMR-3.2) turns what the others proved into the record a release proof attaches.
 
 Every ``run`` flag is generated from :data:`apiome_mock.portable_config.RUNTIME_OPTIONS`, so the
 help text, the environment variables, and the documented reference table cannot drift apart.
@@ -35,7 +36,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     Returns:
         The parser, with the ``serve``, ``run``, ``verify``, ``conformance``, ``parity``,
-        ``selftest``, and ``serverless`` subcommands.
+        ``selftest``, ``serverless``, and ``attest`` subcommands.
     """
     parser = argparse.ArgumentParser(
         prog="apiome-mock",
@@ -228,6 +229,71 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Emit the preflight report as JSON.",
     )
 
+    attest_parser = subparsers.add_parser(
+        "attest",
+        help="Emit a release-proof mock verification record for a bundle.",
+        description=(
+            "Produce the mock verification record a release proof attaches (#4749, PMR-3.2): the "
+            "bundle's immutable digest, this runtime's version, the conformance corpus identity "
+            "and result, and every fixture-pack digest. A record is always emitted — a mock that "
+            "was never verified says so explicitly rather than being absent."
+        ),
+    )
+    add_runtime_arguments(attest_parser)
+    attest_parser.add_argument(
+        "--base-url",
+        default=None,
+        metavar="URL",
+        help=(
+            "Run the conformance corpus against this already-running runtime before attesting. "
+            "Omit (and omit --conformance) to record an explicitly unverified mock."
+        ),
+    )
+    attest_parser.add_argument(
+        "--conformance",
+        default=None,
+        metavar="PATH",
+        help="Attest from an existing `conformance --json` report instead of running the corpus.",
+    )
+    attest_parser.add_argument(
+        "--corpus",
+        default=None,
+        metavar="PATH",
+        help="Corpus document to run with --base-url (default: the corpus shipped here).",
+    )
+    attest_parser.add_argument(
+        "--mount",
+        default=None,
+        metavar="PREFIX",
+        help="Path prefix the spec is served under (default: read from the runtime's /ready).",
+    )
+    attest_parser.add_argument(
+        "--wait",
+        type=float,
+        default=30.0,
+        metavar="SECONDS",
+        help="With --base-url, wait this long for /ready before running (0 disables waiting).",
+    )
+    attest_parser.add_argument(
+        "--timeout",
+        type=float,
+        default=10.0,
+        metavar="SECONDS",
+        help="Per-request timeout when running the corpus.",
+    )
+    attest_parser.add_argument(
+        "--image",
+        default=None,
+        metavar="REF",
+        help="Container image the runtime ran as. Pin a digest; a floating tag identifies nothing.",
+    )
+    attest_parser.add_argument(
+        "--out",
+        default=None,
+        metavar="PATH",
+        help="Write the record to this file as well as printing it.",
+    )
+
     selftest_parser = subparsers.add_parser(
         "selftest",
         help="Serve the packaged conformance bundle and run the corpus against it.",
@@ -297,7 +363,15 @@ def main(argv: list[str] | None = None) -> int:
         _serve(args)
         return 0
 
-    if args.command in {"run", "verify", "conformance", "parity", "selftest", "serverless"}:
+    if args.command in {
+        "run",
+        "verify",
+        "conformance",
+        "parity",
+        "selftest",
+        "serverless",
+        "attest",
+    }:
         from apiome_mock import cli_run
 
         handlers = {
@@ -307,6 +381,7 @@ def main(argv: list[str] | None = None) -> int:
             "parity": cli_run.parity_command,
             "selftest": cli_run.selftest_command,
             "serverless": cli_run.serverless_command,
+            "attest": cli_run.attest_command,
         }
         return handlers[args.command](args)
 
