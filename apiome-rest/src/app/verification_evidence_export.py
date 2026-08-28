@@ -4,7 +4,9 @@ Stored evidence has to leave the platform in two shapes, for two audiences:
 
 * **JSON** — the whole record, for a gate, a diff between two runs, or an auditor's archive. It is
   the stored record verbatim (timestamps in ISO-8601, keys sorted), so "the export" and "the
-  evidence" are never two different truths.
+  evidence" are never two different truths. That includes the run's mock attestation (PMR-3.2) when
+  it recorded one — bundle digest, runtime, corpus, and result — which is what makes the export
+  consumable by self-hosted release-proof tooling.
 * **JUnit XML** — the lingua franca every CI system already renders. GitHub Actions, GitLab,
   Jenkins, and Buildkite all display it natively, which is what lets contract verification appear
   in a build's test tab without anyone writing a reporter.
@@ -179,6 +181,39 @@ def _failure_detail(operation: OperationRecord) -> str:
     return "\n".join(lines)
 
 
+def _mock_properties(record: VerificationRunRecord) -> Dict[str, Optional[str]]:
+    """The mock attestation properties a JUnit export carries (PMR-3.2, #4749).
+
+    A CI viewer showing a green contract run should not have to open the JSON export to learn
+    whether the mock behind it was verified — and, crucially, should see it when it was **not**.
+    So ``apiome.mock.status`` is emitted for every run that recorded a mock, including one whose
+    status is ``missing``; a run with no mock at all emits nothing, because it has nothing to say.
+
+    Args:
+        record: The stored evidence.
+
+    Returns:
+        Property name/value pairs; empty when the run recorded no mock.
+    """
+    mock = record.mock
+    if mock is None:
+        return {}
+    values: Dict[str, Optional[str]] = {
+        "apiome.mock.status": mock.status,
+        "apiome.mock.reason_code": mock.reason_code,
+    }
+    if mock.bundle is not None:
+        values["apiome.mock.bundle_digest"] = mock.bundle.digest
+    if mock.runtime is not None:
+        values["apiome.mock.runtime_version"] = mock.runtime.version
+    if mock.conformance is not None:
+        values["apiome.mock.corpus_digest"] = mock.conformance.corpus_digest
+        values["apiome.mock.conformance"] = (
+            f"{mock.conformance.passed}/{mock.conformance.total} passed"
+        )
+    return values
+
+
 def _properties_element(record: VerificationRunRecord) -> ElementTree.Element:
     """The ``<properties>`` block carrying what identifies the run.
 
@@ -205,6 +240,7 @@ def _properties_element(record: VerificationRunRecord) -> ElementTree.Element:
         "apiome.started_at": _iso(record.started_at),
         "apiome.finished_at": _iso(record.finished_at),
     }
+    values.update(_mock_properties(record))
     for name, value in values.items():
         if value is None:
             continue

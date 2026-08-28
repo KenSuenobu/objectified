@@ -220,6 +220,26 @@ rules and bounded templates, chaos injection and delay reporting, session-scoped
 isolation, fixture packs and the session-reset lifecycle, seeded deterministic synthesis, and the
 two operational endpoints.
 
+The corpus document declares a `corpusVersion` and resolves a content digest over its canonical
+JSON, both reported in `--json` output under `corpus`. That identity is what a release-proof mock
+attestation records, so "which corpus proved this" survives long after the job's logs are gone.
+
+## Attesting a run
+
+`attest` turns what `verify` and `conformance` proved into the record a release proof attaches
+(PMR-3.2): the bundle digest, this runtime's version, the corpus identity and result, and every
+fixture-pack digest.
+
+```bash
+apiome-mock conformance --base-url http://127.0.0.1:8775 --json > conformance.json
+apiome-mock attest --bundle ./mock-bundle.json --conformance conformance.json --out mock-attestation.json
+```
+
+A record is always written — a failing corpus produces one saying `failed`, and no corpus at all
+produces one saying `missing`, never silence. The exit code is what fails the job (`5` on
+conformance failure). See
+[mock-release-attestation.md](mock-release-attestation.md).
+
 ## Hosted/portable parity
 
 Passing the corpus proves each deployment is correct on its own. `parity` proves the two *agree* —

@@ -1,7 +1,7 @@
-"""``apiome-mock run``/``verify``/``conformance``/``parity``/``serverless`` implementations.
+"""``apiome-mock run``/``verify``/``conformance``/``parity``/``serverless``/``attest``.
 
 The portable-runtime command implementations (#4742, PMR-1.2; ``parity`` #4748, PMR-3.1;
-``serverless`` #4743, PMR-1.3).
+``serverless`` #4743, PMR-1.3; ``attest`` #4749, PMR-3.2).
 
 These are the portable-runtime commands: they never touch Postgres, and everything they need comes
 from a mock bundle plus the knobs declared in :mod:`apiome_mock.portable_config`. ``parity``
@@ -50,6 +50,7 @@ from apiome_mock.conformance import (
     discover_mount,
     http_sender,
     load_corpus,
+    report_from_dict,
     run_corpus,
     wait_for_ready,
 )
@@ -68,6 +69,7 @@ __all__ = [
     "EXIT_OK",
     "EXIT_PARITY_FAILED",
     "EXIT_SERVERLESS_FAILED",
+    "attest_command",
     "conformance_command",
     "parity_command",
     "run_command",
@@ -285,6 +287,77 @@ def selftest_command(args: argparse.Namespace) -> int:
     else:
         _print_report(report)
     return EXIT_OK if report.ok else EXIT_CONFORMANCE_FAILED
+
+
+def attest_command(args: argparse.Namespace) -> int:
+    """Emit the release-proof mock verification record for a bundle (#4749, PMR-3.2).
+
+    Three inputs are accepted for the conformance half, in falling order of preference:
+
+    * ``--base-url`` — run the corpus against an already-running runtime now;
+    * ``--conformance PATH`` — read a report a previous ``conformance --json`` step wrote, which is
+      the usual CI shape (one job runs the corpus, another attests);
+    * neither — record an **explicitly unverified** mock. This is not an error and not silence: the
+      record says ``status: missing`` with a reason, because a release proof that simply omits its
+      mock block cannot be told from one whose verification was skipped.
+
+    The record is always written. A failing corpus still produces a record — it just says ``failed``
+    — so the evidence of a bad build is as durable as the evidence of a good one; the exit code is
+    what fails the job.
+
+    Args:
+        args: Parsed ``attest`` namespace.
+
+    Returns:
+        0 when the record says ``verified`` or ``missing``, 5 when conformance failed.
+
+    Raises:
+        SystemExit: 2 (configuration, unreadable report, or unwritable ``--out``), 3, or 4 — see
+            the module docstring.
+    """
+    from apiome_mock.attestation import STATUS_FAILED, build_verification_record
+
+    settings = _resolve_settings(args)
+    configure_portable_logging("WARNING")
+    bundle = _load(settings)
+
+    report: ConformanceReport | None = None
+    if args.base_url:
+        base_url = str(args.base_url).rstrip("/")
+        if args.wait > 0 and not wait_for_ready(base_url, timeout=args.wait):
+            print(f"{base_url} did not become ready within {args.wait:g}s.", file=sys.stderr)
+            raise SystemExit(EXIT_CONFIG_ERROR)
+        try:
+            corpus = load_corpus(args.corpus)
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            print(f"Conformance corpus could not be loaded: {exc}", file=sys.stderr)
+            raise SystemExit(EXIT_CONFIG_ERROR) from exc
+        mount = args.mount if args.mount is not None else discover_mount(base_url)
+        report = run_corpus(
+            http_sender(base_url, mount=mount, timeout=args.timeout),
+            corpus=corpus,
+            base_url=base_url,
+        )
+    elif args.conformance:
+        try:
+            document = json.loads(Path(args.conformance).read_text(encoding="utf-8"))
+            report = report_from_dict(document)
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            print(f"Conformance report could not be read: {exc}", file=sys.stderr)
+            raise SystemExit(EXIT_CONFIG_ERROR) from exc
+
+    record = build_verification_record(bundle, report, image=args.image)
+    rendered = json.dumps(record, indent=2, sort_keys=True)
+
+    if args.out:
+        try:
+            Path(args.out).write_text(rendered + "\n", encoding="utf-8")
+        except OSError as exc:
+            print(f"Cannot write {args.out}: {exc}", file=sys.stderr)
+            raise SystemExit(EXIT_CONFIG_ERROR) from exc
+
+    print(rendered)
+    return EXIT_CONFORMANCE_FAILED if record["mock"]["status"] == STATUS_FAILED else EXIT_OK
 
 
 @contextmanager

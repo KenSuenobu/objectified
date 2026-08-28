@@ -48,6 +48,7 @@ project in ~10 minutes") and the [Golden Path](../GOLDEN_PATH.md) (the executabl
 | **Guarded proxy capture** (record real upstream traffic into reviewed, redacted fixtures — allowlists, redaction decisions, provenance on replay) | [mock-proxy-capture.md](mock-proxy-capture.md) |
 | **Serverless mock adapter** (run a bundle as a Lambda / Cloud Run / Azure function — limits, cold start, preflight) | [serverless-mock-adapter.md](serverless-mock-adapter.md) |
 | **Mock CI action** (start a pinned mock in a job, service URL, digests, auto-cleanup) | [mock-action/README.md](../../mock-action/README.md) |
+| **Release-proof mock attestation** (bundle digest + runtime + conformance result + fixture digests on a verification run, signed for offline verification) | [mock-release-attestation.md](mock-release-attestation.md) |
 | **CLI** quick-start (`apiome …`) | [cli-quickstart.md](cli-quickstart.md) |
 | **CI contract gate** (GitHub Action `apiome/diff-action`) | [ci-diff-gate.md](ci-diff-gate.md) |
 | **CI contract gate on GitLab & Bitbucket** (container image + copy-paste pipelines) | [ci-gitlab-bitbucket.md](ci-gitlab-bitbucket.md) |

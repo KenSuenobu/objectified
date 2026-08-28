@@ -93,6 +93,25 @@ cleanup), use the [mock action](../mock-action/README.md).
 
 Full guide: [docs/guide/portable-mock-runtime.md](../docs/guide/portable-mock-runtime.md).
 
+## Release-proof attestation (PMR-3.2)
+
+**`attest`** turns what `verify` and `conformance` proved into the record a release proof attaches:
+the immutable bundle digest, this runtime's version and image, the conformance corpus identity
+(declared `corpusVersion` plus a content digest) and result, and every fixture-pack digest.
+
+```bash
+uv run apiome-mock conformance --base-url http://127.0.0.1:8775 --json > conformance.json
+uv run apiome-mock attest --bundle bundle.json --conformance conformance.json --out mock-attestation.json
+```
+
+The status is **derived** from the corpus result, so a job cannot record a verified mock over a red
+one, and a record is always written: a failing corpus yields `failed` (exit `5`) and no corpus at
+all yields `missing` — never silence. The emitted `mock` block is exactly what
+`POST /v1/tenants/{tenant}/verification-runs` accepts, and `apiome mock verify-attestation` checks
+the server's signed statement offline.
+
+Full guide: [docs/guide/mock-release-attestation.md](../docs/guide/mock-release-attestation.md).
+
 ## Declarative matching and templates (PMR-2.1)
 
 Scenario operation overrides may carry ordered **match rules** — request predicates plus the

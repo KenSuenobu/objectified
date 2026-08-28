@@ -39,6 +39,7 @@ proves nothing repeatable:
 
 from __future__ import annotations
 
+import hashlib
 import json
 import time
 import urllib.error
@@ -59,9 +60,11 @@ __all__ = [
     "ConformanceRequest",
     "ConformanceResponse",
     "Sender",
+    "corpus_digest",
     "discover_mount",
     "http_sender",
     "load_corpus",
+    "report_from_dict",
     "run_corpus",
     "wait_for_ready",
 ]
@@ -76,6 +79,25 @@ DEFAULT_CORPUS_PATH = _CONFORMANCE_DIR / "corpus.json"
 
 #: Bundle the shipped corpus runs against.
 DEFAULT_BUNDLE_PATH = _CONFORMANCE_DIR / "bundle.json"
+
+
+def corpus_digest(document: Mapping[str, Any]) -> str:
+    """Content digest of a corpus document — its immutable identity (#4749, PMR-3.2).
+
+    The digest is taken over the document's *canonical* JSON (sorted keys, compact separators), so
+    reindenting or reordering the file does not change it while adding, removing, or editing a case
+    does. That is what makes "these two runs executed the same corpus" answerable from the record
+    rather than from a filename, and it is the identity a release-proof mock attestation carries
+    alongside the declared ``corpusVersion``.
+
+    Args:
+        document: The parsed corpus document.
+
+    Returns:
+        ``sha256:<hex>`` over the canonical bytes.
+    """
+    payload = json.dumps(document, sort_keys=True, separators=(",", ":"), default=str)
+    return "sha256:" + hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -167,6 +189,9 @@ class ConformanceCorpus:
         bundle: Bundle filename the corpus expects the runtime to be serving.
         cases: The cases, in document order.
         source: Path the corpus was read from.
+        version: Label the document declared as ``corpusVersion`` (``""`` when undeclared).
+        digest: ``sha256:<hex>`` over the document's canonical JSON — the corpus identity a
+            release-proof mock attestation records (#4749, PMR-3.2).
     """
 
     format: str
@@ -174,6 +199,22 @@ class ConformanceCorpus:
     bundle: str
     cases: tuple[ConformanceCase, ...]
     source: Path | None = None
+    version: str = ""
+    digest: str = ""
+
+    def identity(self) -> dict[str, Any]:
+        """The corpus identity a verification record carries (#4749, PMR-3.2).
+
+        Returns:
+            ``{"format", "version", "digest", "caseCount"}``. ``version`` is the label the document
+            declared (``""`` when it declared none); ``digest`` is the authoritative identity.
+        """
+        return {
+            "format": self.format,
+            "version": self.version,
+            "digest": self.digest,
+            "caseCount": len(self.cases),
+        }
 
 
 @dataclass(frozen=True)
@@ -212,10 +253,14 @@ class ConformanceReport:
     Attributes:
         results: One entry per case, in corpus order.
         base_url: The runtime the corpus ran against, when it ran over the network.
+        corpus: Identity of the corpus that was executed (:meth:`ConformanceCorpus.identity`).
+            Carried so a report can say *which* corpus produced it — the identity a release-proof
+            mock attestation records (#4749, PMR-3.2).
     """
 
     results: tuple[CaseResult, ...]
     base_url: str | None = None
+    corpus: Mapping[str, Any] | None = None
 
     @property
     def ok(self) -> bool:
@@ -237,11 +282,53 @@ class ConformanceReport:
         return {
             "ok": self.ok,
             "baseUrl": self.base_url,
+            "corpus": dict(self.corpus) if self.corpus is not None else None,
             "total": len(self.results),
             "passed": len(self.results) - len(self.failed),
             "failed": len(self.failed),
             "cases": [result.as_dict() for result in self.results],
         }
+
+
+def report_from_dict(document: Mapping[str, Any]) -> ConformanceReport:
+    """Rebuild a report from its ``--json`` rendering — the inverse of :meth:`ConformanceReport.as_dict`.
+
+    A CI pipeline usually runs the corpus in one step and attests in another, so the report has to
+    survive a round trip through a file. This is that loader; keeping it beside :meth:`as_dict`
+    is what stops the two shapes drifting.
+
+    Args:
+        document: A parsed conformance report document.
+
+    Returns:
+        The report. Unknown keys are ignored; a missing ``cases`` array yields an empty report.
+
+    Raises:
+        ValueError: The document is not an object, or a case entry is not one.
+    """
+    body = _require_mapping(document, "report")
+    raw_cases = body.get("cases") or []
+    if not isinstance(raw_cases, Sequence) or isinstance(raw_cases, (str, bytes)):
+        raise ValueError("Conformance report 'cases' must be an array.")
+    results = []
+    for entry in raw_cases:
+        case = _require_mapping(entry, "report case")
+        failures = case.get("failures") or []
+        results.append(
+            CaseResult(
+                name=str(case.get("name", "")),
+                why=str(case.get("why", "")),
+                passed=bool(case.get("passed")),
+                failures=tuple(str(failure) for failure in failures),
+                status=case.get("status"),
+            )
+        )
+    corpus = body.get("corpus")
+    return ConformanceReport(
+        results=tuple(results),
+        base_url=body.get("baseUrl"),
+        corpus=dict(corpus) if isinstance(corpus, Mapping) else None,
+    )
 
 
 # ==================================================================================================
@@ -330,6 +417,8 @@ def load_corpus(path: str | Path | None = None) -> ConformanceCorpus:
         bundle=str(body.get("bundle", "")),
         cases=tuple(cases),
         source=corpus_path,
+        version=str(body.get("corpusVersion", "")).strip(),
+        digest=corpus_digest(body),
     )
 
 
@@ -453,7 +542,7 @@ def run_corpus(
                 status=response.status,
             )
         )
-    return ConformanceReport(results=tuple(results), base_url=base_url)
+    return ConformanceReport(results=tuple(results), base_url=base_url, corpus=active.identity())
 
 
 def _build_url(base_url: str, mount: str, request: ConformanceRequest) -> str:

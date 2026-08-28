@@ -8,16 +8,22 @@ Two surfaces live here:
   the other version commands (human table + global ``--json``).
 * **Portable mock runtime** — ``run`` (PMR-1.2, #4742). Launches a version-pinned mock bundle
   locally or in a container, with no control-plane connection at all.
+* **Release-proof attestation** — ``verify-attestation`` (PMR-3.2, #4749). Verifies a mock
+  attestation offline with the shared HMAC secret and prints what it attests, with no server round
+  trip at all. It is the mirror of ``apiome lint verify-attestation``: the same envelope, the same
+  secret, the same ~10 lines of stdlib verification.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 from pathlib import Path
 
 import typer
 
+from apiome_cli.attestation import attestation_statement, verify_attestation_envelope
 from apiome_cli.client.mock_run import (
     SECRET_ENV_VAR,
     MockRunPlan,
@@ -34,7 +40,7 @@ from apiome_cli.client.mock_settings import (
     set_version_mock,
 )
 from apiome_cli.client.version_scope import resolve_version_scope
-from apiome_cli.exit_codes import EXIT_USAGE
+from apiome_cli.exit_codes import EXIT_ERROR, EXIT_USAGE
 from apiome_cli.help_util import group_callback_without_subcommand
 from apiome_cli.output import emit_json, json_mode_from_context
 
@@ -262,3 +268,69 @@ def mock_disable(
         enabled=False,
     )
     emit_mock_toggle_result(record, json_mode=json_mode_from_context(ctx))
+
+
+@app.command("verify-attestation")
+def mock_verify_attestation(
+    file: Path = typer.Option(
+        ...,
+        "--file",
+        "-f",
+        help="Attestation envelope JSON, as GET …/verification-runs/{id}/mock-attestation returns.",
+    ),
+    secret: str = typer.Option(
+        ...,
+        "--secret",
+        "-s",
+        envvar="APIOME_LINT_ATTESTATION_SECRET",
+        help="Shared HMAC secret (server: APIOME_LINT_ATTESTATION_SIGNING_SECRET).",
+    ),
+) -> None:
+    """Verify a release-proof mock attestation offline (PMR-3.2, no server round-trip).
+
+    Recomputes the DSSE PAEv1 HMAC-SHA256 signature with the shared secret and compares it against
+    the envelope's signatures, then prints the four identities the attestation carries: the bundle
+    digest it was served from, the runtime that served it, the conformance corpus and result, and
+    the fixture packs.
+
+    Exits 0 only when the signature verifies **and** the attestation says the mock was verified —
+    a signed statement that the mock failed, or was never verified, is a valid attestation and an
+    unacceptable release proof, so the two are distinguished by the exit code rather than by prose.
+    """
+    try:
+        envelope = json.loads(file.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        typer.echo(f"Cannot read attestation file: {exc}", err=True)
+        raise typer.Exit(EXIT_USAGE) from exc
+
+    # The route wraps the envelope; accept either the wrapper or a bare envelope.
+    if isinstance(envelope, dict) and isinstance(envelope.get("envelope"), dict):
+        envelope = envelope["envelope"]
+
+    if not verify_attestation_envelope(envelope, secret):
+        typer.echo("Mock attestation verification FAILED.", err=True)
+        raise typer.Exit(EXIT_ERROR)
+
+    typer.echo("Mock attestation verified.")
+    statement = attestation_statement(envelope) or {}
+    predicate = statement.get("predicate") or {}
+    bundle = predicate.get("bundle") or {}
+    runtime = predicate.get("runtime") or {}
+    conformance = predicate.get("conformance") or {}
+    status = predicate.get("status")
+
+    typer.echo(f"Status: {status}")
+    if predicate.get("reasonCode"):
+        typer.echo(f"Reason: {predicate['reasonCode']} — {predicate.get('reason') or ''}".rstrip())
+    typer.echo(f"Bundle: {bundle.get('digest') or '(none)'}")
+    typer.echo(f"Runtime: {runtime.get('name') or '(unknown)'} {runtime.get('version') or ''}".rstrip())
+    if conformance:
+        typer.echo(
+            f"Corpus: {conformance.get('corpus_digest')} "
+            f"({conformance.get('passed')}/{conformance.get('total')} passed)"
+        )
+    for pack in predicate.get("fixturePacks") or []:
+        typer.echo(f"Fixture pack: {pack.get('name')} {pack.get('digest')}")
+
+    if status != "verified":
+        raise typer.Exit(EXIT_ERROR)
