@@ -236,6 +236,16 @@ def test_only_allowlisted_settings_keys_are_bundled() -> None:
     assert "mode" not in settings
 
 
+def test_response_correlation_travels_in_the_bundle() -> None:
+    """A correlated version must behave the same offline, so its block is bundled (#5527)."""
+    block = {"mode": "inferred", "operations": {"GET /pets/{petId}": {"/id": "{{request.path.petId}}"}}}
+
+    settings, redactions = redact_mock_settings({"mode": "private", "responseCorrelation": block})
+
+    assert settings == {"responseCorrelation": block}
+    assert redactions == ()
+
+
 def test_credential_keys_are_dropped_and_recorded() -> None:
     settings, redactions = redact_mock_settings(
         {

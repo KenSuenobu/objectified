@@ -256,7 +256,7 @@ apiome-mock serverless --provider aws-lambda --conformance
 Conformance through AWS Lambda events:
 [PASS] scenario-sequences-advance-per-session
 …
-30/30 conformance cases passed
+34/34 conformance cases passed
 ```
 
 Exit codes match the rest of the portable CLI: `0` success, `2` configuration, `3` invalid bundle,

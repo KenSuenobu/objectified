@@ -44,6 +44,11 @@ from app.mock_engine import MockOperation, extract_operations
 from apiome_mock import __version__
 from apiome_mock.callbacks import CallbackDefinition, parse_callbacks
 from apiome_mock.chaos import ChaosConfig, parse_chaos
+from apiome_mock.correlation import (
+    EMPTY_CORRELATION,
+    CorrelationConfig,
+    parse_response_correlation,
+)
 from apiome_mock.fixture_data import decode_bundle_fixtures
 from apiome_mock.fixture_packs import FixturePack, merged_template_data, parse_fixture_packs
 from apiome_mock.scenarios import Scenario, parse_scenarios
@@ -117,6 +122,9 @@ class LoadedBundle:
         callbacks: Outbound callback/webhook definitions parsed from the bundled settings, so a
             portable mock exercises the same contract callbacks the hosted one does
             (#4746, PMR-2.3).
+        correlation: Request-correlation settings parsed from the bundled settings, so a portable
+            mock correlates responses with requests exactly as the hosted one does
+            (#5527, MSC-1.1).
         signed: Whether the bundle carried a signature block.
         source: Filesystem path the bundle was read from, when it came from a file.
     """
@@ -131,6 +139,7 @@ class LoadedBundle:
     fixture_data: Mapping[str, Any] = field(default_factory=dict)
     fixture_packs: Mapping[str, FixturePack] = field(default_factory=dict)
     callbacks: Mapping[str, CallbackDefinition] = field(default_factory=dict)
+    correlation: CorrelationConfig = EMPTY_CORRELATION
     signed: bool = False
     source: Path | None = None
 
@@ -182,6 +191,7 @@ class LoadedBundle:
             fixtures={**self.fixture_data, **merged_template_data(self.fixture_packs)},
             fixture_packs=self.fixture_packs,
             callbacks=self.callbacks,
+            correlation=self.correlation,
         )
 
 
@@ -261,6 +271,7 @@ def load_bundle_document(
         fixture_data=decode_bundle_fixtures(fixture_entries, document.get("fixtures")),
         fixture_packs=parse_fixture_packs(settings),
         callbacks=parse_callbacks(settings),
+        correlation=parse_response_correlation(settings),
         signed=document.get("signature") is not None,
         source=source,
     )

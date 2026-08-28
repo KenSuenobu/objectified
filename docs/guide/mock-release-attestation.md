@@ -130,7 +130,7 @@ the verification run that carries it.
       "corpus_format": "apiome.mock.conformance/v1",
       "corpus_version": "1.0.0",                  // the label the corpus document declares
       "corpus_digest": "sha256:c21d3ee1…",        // sha256 over its canonical JSON — the identity
-      "corpus_case_count": 30,
+      "corpus_case_count": 34,
       "total": 30, "passed": 30, "failed": 0,
       "failed_cases": []                          // bounded; the full detail is in the run's cases
     },
@@ -196,7 +196,7 @@ apiome.mock.status          verified
 apiome.mock.bundle_digest   sha256:19632a39…
 apiome.mock.runtime_version 0.10.0
 apiome.mock.corpus_digest   sha256:c21d3ee1…
-apiome.mock.conformance     30/30 passed
+apiome.mock.conformance     34/34 passed
 ```
 
 ---
@@ -232,7 +232,7 @@ Mock attestation verified.
 Status: verified
 Bundle: sha256:19632a39…
 Runtime: apiome-mock 0.10.0
-Corpus: sha256:c21d3ee1… (30/30 passed)
+Corpus: sha256:c21d3ee1… (34/34 passed)
 Fixture pack: seeded-pets sha256:b1f5da7f…
 ```
 

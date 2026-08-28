@@ -361,6 +361,42 @@
       "why": "The reserved __mock__ namespace never falls through to spec routing, whatever is under it (#4745).",
       "request": { "method": "GET", "path": "/__mock__/nope" },
       "expect": { "status": 404, "contentType": "application/problem+json" }
+    },
+    {
+      "name": "correlation-binds-a-path-parameter-with-no-request-header",
+      "why": "The default path answers with the id that was asked for, with no scenario or session header (#5527).",
+      "request": { "method": "GET", "path": "/pets/77" },
+      "expect": {
+        "status": 200,
+        "headers": { "X-Mock-Correlation": "path-params", "X-Mock-Schema-Valid": "true" },
+        "jsonEquals": { "id": 77, "name": "Rex" }
+      }
+    },
+    {
+      "name": "correlation-echoes-the-request-body-and-applies-explicit-pointers",
+      "why": "Inferred echo and the explicit pointer map compose, and the map wins on the pointer it names (#5527).",
+      "request": {
+        "method": "POST",
+        "path": "/pets",
+        "json": { "id": 5, "name": "Zephyr" }
+      },
+      "expect": {
+        "status": 201,
+        "headers": { "X-Mock-Correlation": "inferred, explicit" },
+        "jsonEquals": { "id": 5, "name": "Zephyr" }
+      }
+    },
+    {
+      "name": "correlation-derives-the-unseeded-synthesis-seed-from-the-request",
+      "why": "With correlation on, an unseeded synthesized body is derived from the request, so every runtime invents the same one (#5527).",
+      "request": { "method": "GET", "path": "/pets/13/tags" },
+      "expect": { "status": 200, "jsonEquals": { "tags": ["ipsum", "ipsum"] } }
+    },
+    {
+      "name": "correlation-derives-a-different-body-for-a-different-path-parameter",
+      "why": "The derived seed varies with the path parameters, so /pets/13/tags and /pets/14/tags differ everywhere alike (#5527).",
+      "request": { "method": "GET", "path": "/pets/14/tags" },
+      "expect": { "status": 200, "jsonEquals": { "tags": ["elit", "dolor"] } }
     }
   ]
 }

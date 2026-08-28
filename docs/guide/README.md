@@ -45,6 +45,7 @@ project in ~10 minutes") and the [Golden Path](../GOLDEN_PATH.md) (the executabl
 | **Portable mock runtime** (`apiome mock run`, official image, readiness, structured logs, conformance) | [portable-mock-runtime.md](portable-mock-runtime.md) |
 | **Mock fixture packs** (versioned seed data, digests, `__mock__/session/reset` lifecycle) | [mock-fixture-packs.md](mock-fixture-packs.md) |
 | **Mock callbacks & webhooks** (contract callbacks the mock *sends* — allowlisted destinations, schema-checked payloads, deterministic retries) | [mock-callbacks.md](mock-callbacks.md) |
+| **Request-correlated responses** (answer `GET /pets/42` with id 42 — no request header, configured on the version) | [mock-response-correlation.md](mock-response-correlation.md) |
 | **Guarded proxy capture** (record real upstream traffic into reviewed, redacted fixtures — allowlists, redaction decisions, provenance on replay) | [mock-proxy-capture.md](mock-proxy-capture.md) |
 | **Serverless mock adapter** (run a bundle as a Lambda / Cloud Run / Azure function — limits, cold start, preflight) | [serverless-mock-adapter.md](serverless-mock-adapter.md) |
 | **Mock CI action** (start a pinned mock in a job, service URL, digests, auto-cleanup) | [mock-action/README.md](../../mock-action/README.md) |

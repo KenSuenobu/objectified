@@ -10,7 +10,6 @@ import pytest
 from app.mock_engine import extract_operations
 from fastapi.testclient import TestClient
 
-from apiome_mock.fixture_data import parse_fixtures
 from apiome_mock.memory_session_store import InMemorySessionStore
 from apiome_mock.scenarios import parse_scenarios
 from apiome_mock.session_store import SessionCaps
@@ -159,7 +158,9 @@ def _compiled() -> CompiledSpec:
         spec=PETSTORE_SPEC,
         operations=tuple(extract_operations(PETSTORE_SPEC)),
         scenarios=parse_scenarios(MOCK_SETTINGS),
-        fixtures=parse_fixtures(MOCK_SETTINGS),
+        # The flat map the fixture-pack loader would otherwise supply; #5527 dropped the dead
+        # ``mock_settings["fixtures"]`` reader, so the test hands the data over directly.
+        fixtures=MOCK_SETTINGS["fixtures"],
     )
 
 

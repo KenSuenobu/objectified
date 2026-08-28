@@ -5,6 +5,38 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.303.0] - 2026-08-28
+
+### Added
+- **Request-correlated mock responses (#5527, MSC-1.1)** — `GET`/`PUT
+  /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/mock/correlation` read and write a
+  `responseCorrelation` block in `versions.mock_settings`, alongside the existing `scenarios`,
+  `chaos`, `fixturePacks` and `callbacks` keys. The block makes the mock's **default** response
+  path answer with the request's own values — with no request header, so a generated SDK or a
+  browser app gets it too, where scenario overrides (`X-Mock-Scenario`) and stateful CRUD
+  (`X-Mock-Session`) could never reach.
+
+  Four modes: `off` (the default — byte-identical to today), `path-params` (a response property
+  named after a path parameter takes the request's value, at every depth and inside array
+  members), `inferred` (that plus echoing request-body fields back on `POST`/`PUT`/`PATCH`, while
+  `id`/`createdAt`/`updatedAt` and anything absent from the request stay synthesized), and
+  `explicit` (only a per-operation map of response JSON Pointer to template expression). The
+  pointer map applies in every mode except `off` and always wins for the pointer it names.
+
+  Expressions are the existing bounded `{{ … }}` language, validated on save with
+  `validate_template_value`, so a bad expression is a 422 rather than a serve-time surprise;
+  operation keys must name a real operation in the version's generated OpenAPI document; bindings
+  saved with `mode: "off"` are refused rather than silently ignored. Limits: 200 operations, 50
+  pointers each, 64 KiB. `responseCorrelation` is a bundled settings key, so a portable bundle
+  correlates identically offline (the PMR-3.1 parity harness asserts it). See
+  [docs/guide/mock-response-correlation.md](../docs/guide/mock-response-correlation.md).
+
+### Removed
+- **The dead `mock_settings.fixtures` reader (#5527)** — `apiome_mock.fixture_data.parse_fixtures`
+  read a flat fixtures map that nothing in apiome-rest ever wrote; only fixture *packs* are wired.
+  A configuration surface that silently did nothing was dropped rather than given a writer.
+  Hosted template fixture data comes from `fixturePacks` alone; the bundle path is unchanged.
+
 ## [1.263.0] - 2026-08-17
 
 ### Added

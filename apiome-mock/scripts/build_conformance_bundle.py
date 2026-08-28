@@ -180,8 +180,18 @@ SPEC: dict[str, Any] = {
 }
 
 #: Mock settings embedded in the bundle. Only the portable subset survives export (scenarios,
-#: chaos, and fixture packs); the redaction pass in ``app.mock_bundle`` drops everything else.
+#: chaos, fixture packs, callbacks, and response correlation); the redaction pass in
+#: ``app.mock_bundle`` drops everything else.
 SETTINGS: dict[str, Any] = {
+    # Request-correlated responses (#5527, MSC-1.1). Correlation is configuration on the version
+    # rather than a request header, so the corpus reaches it with no opt-in — which is the whole
+    # point of the feature and the thing hosted/portable parity has to reproduce. ``inferred``
+    # runs both inference passes; the explicit map binds the one field inference deliberately
+    # leaves alone (the server-assigned ``id``) back to what the client sent.
+    "responseCorrelation": {
+        "mode": "inferred",
+        "operations": {"POST /pets": {"/id": "{{request.body#/id}}"}},
+    },
     "fixturePacks": {
         # Deterministic seed data (#4745, PMR-2.2). ``collections`` seeds the session store on
         # reset; ``data`` is readable from response templates as {{fixture.<name>...}}.

@@ -39,6 +39,11 @@ from .mock_capture import (
     fixture_pack_from_captures,
     validate_capture_policy,
 )
+from .mock_correlation import (
+    correlation_from_storage,
+    correlation_to_storage,
+    validate_mock_correlation,
+)
 from .mock_fixture_packs import (
     PACK_NAME_PATTERN,
     canonical_pack_provenance,
@@ -64,6 +69,7 @@ from .models import (
     MockCallbackSpec,
     MockFixturePackProvenanceSpec,
     MockFixturePackSpec,
+    MockResponseCorrelationSpec,
     MockScenarioSpec,
     SunsetTimelineEntryOut,
     SunsetTimelineResponse,
@@ -78,6 +84,8 @@ from .models import (
     VersionMockCaptureReviewRequest,
     VersionMockCaptureReviewResponse,
     VersionMockCapturesResponse,
+    VersionMockCorrelationRequest,
+    VersionMockCorrelationResponse,
     VersionMockFixturePacksRequest,
     VersionMockFixturePacksResponse,
     VersionMockScenariosRequest,
@@ -2442,6 +2450,90 @@ async def set_version_mock_scenarios(
         scenarios={name: MockScenarioSpec.model_validate(raw) for name, raw in stored.items()},
         chaos=_parse_stored_chaos(updated.get("mock_settings"), version_record_id),
     )
+
+
+def _stored_correlation_response(mock_settings: Any, version_record_id: str) -> VersionMockCorrelationResponse:
+    """Build the correlation response from a stored ``mock_settings`` value (#5527, MSC-1.1).
+
+    A malformed stored block never breaks the editor: it is reported as "no correlation" and
+    logged, exactly as the runtime skips it.
+    """
+    stored, valid = correlation_from_storage(mock_settings)
+    if not valid or stored is None:
+        return VersionMockCorrelationResponse(correlation=None)
+    try:
+        return VersionMockCorrelationResponse(correlation=MockResponseCorrelationSpec.model_validate(stored))
+    except ValueError:
+        logger.warning("Skipping malformed mock correlation block on version %s", version_record_id)
+        return VersionMockCorrelationResponse(correlation=None)
+
+
+@router.get("/{tenant_slug}/{project_id}/{version_record_id}/mock/correlation")
+async def get_version_mock_correlation(
+    tenant_slug: str,
+    project_id: str,
+    version_record_id: str,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> VersionMockCorrelationResponse:
+    """Return the version's mock response-correlation settings (#5527, MSC-1.1)."""
+    enforce_permission(db, auth_data, Resource.VERSIONS, Action.VIEW)
+    existing = _get_version_for_mock_scenarios(project_id, version_record_id, auth_data["tenant_id"])
+    return _stored_correlation_response(existing.get("mock_settings"), version_record_id)
+
+
+@router.put("/{tenant_slug}/{project_id}/{version_record_id}/mock/correlation")
+async def set_version_mock_correlation(
+    tenant_slug: str,
+    project_id: str,
+    version_record_id: str,
+    request: VersionMockCorrelationRequest,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> VersionMockCorrelationResponse:
+    """Replace the version's mock response-correlation settings (#5527, MSC-1.1).
+
+    Correlation is what makes the default response path answer ``GET /pets/42`` with an id of
+    ``42`` — with no request header, so a generated SDK or a browser app gets it too. The block is
+    validated against this version's generated OpenAPI document (every operation key must name a
+    real operation) and against the bounded template language (every explicit expression must
+    parse), then stored canonically in ``versions.mock_settings`` under ``responseCorrelation``,
+    alongside the other mock knobs, and travels inside portable mock bundles.
+
+    Omitting ``correlation`` (or sending ``null``, or a block with ``mode: "off"``) clears the
+    stored block and reverts the version to today's static behaviour.
+    """
+    enforce_permission(db, auth_data, Resource.VERSIONS, Action.EDIT)
+    existing = _get_version_for_mock_scenarios(project_id, version_record_id, auth_data["tenant_id"])
+
+    user_id = get_authenticated_user_id(auth_data)
+    if not user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Mock settings require user authentication (JWT token or API key with attribution)",
+        )
+
+    spec = _generated_spec_for_version(existing, tenant_slug)
+    errors = validate_mock_correlation(request.correlation, spec)
+    if errors:
+        raise HTTPException(
+            status_code=422,
+            detail={"message": "Response correlation failed validation.", "errors": errors},
+        )
+
+    storage: Optional[Dict[str, Any]] = None
+    if request.correlation is not None and request.correlation.mode != "off":
+        storage = correlation_to_storage(request.correlation)
+    updated = db.set_version_mock_correlation(
+        version_record_id,
+        auth_data["tenant_id"],
+        user_id,
+        correlation=storage,
+    )
+    if not updated:
+        raise HTTPException(
+            status_code=403,
+            detail="Only the version creator or a tenant administrator can change mock settings",
+        )
+    return _stored_correlation_response(updated.get("mock_settings"), version_record_id)
 
 
 def _stored_fixture_packs_response(mock_settings: Any, version_record_id: str) -> VersionMockFixturePacksResponse:

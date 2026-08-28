@@ -8466,6 +8466,38 @@ class Database:
             value=callbacks or None,
         )
 
+    def set_version_mock_correlation(
+        self,
+        version_record_id: str,
+        tenant_id: str,
+        user_id: str,
+        *,
+        correlation: Optional[Dict[str, Any]],
+    ) -> Optional[Dict[str, Any]]:
+        """Replace the ``responseCorrelation`` key of ``versions.mock_settings`` (#5527, MSC-1.1).
+
+        Only that one key is rewritten; every other mock knob (scenarios, chaos, fixture packs,
+        callbacks, the private-draft ``mode``) is preserved. Passing ``None`` removes the key,
+        which is how correlation is switched back off. The update bumps ``updated_at`` so the mock
+        spec-cache NOTIFY trigger fires and running mocks pick the change up.
+
+        Args:
+            version_record_id: The ``versions.id`` UUID.
+            tenant_id: Tenant owning the version (scope check).
+            user_id: Acting user; must be the version creator or a tenant admin.
+            correlation: The canonical correlation block, or ``None`` to clear it.
+
+        Returns:
+            The updated version row, or ``None`` when the caller lacks ownership.
+        """
+        return self._replace_version_mock_settings_key(
+            version_record_id,
+            tenant_id,
+            user_id,
+            key="responseCorrelation",
+            value=correlation,
+        )
+
     def set_version_mock_capture_policy(
         self,
         version_record_id: str,

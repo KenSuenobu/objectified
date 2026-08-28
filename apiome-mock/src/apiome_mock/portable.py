@@ -91,6 +91,7 @@ def _bundle_summary(bundle: LoadedBundle) -> dict[str, object]:
         "scenarios": sorted(bundle.scenarios),
         "fixtures": sorted(str(entry.get("name", "")) for entry in bundle.fixtures),
         "callbacks": sorted(bundle.callbacks),
+        "correlation": bundle.correlation.mode,
     }
 
 
