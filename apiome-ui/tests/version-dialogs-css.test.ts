@@ -628,7 +628,18 @@ describe('contrast', () => {
     // sets the matching `-soft` background. The two exceptions are `--accent-fg`, which the
     // token layer does calibrate as ink on the surface (it clears 7:1 in all nine, measured
     // below), and `.vdlg-error`, which reproduces `FormField`'s app-wide error line.
-    const ACCENT_INK = new Set(['.vdlg-link', '.vdlg-changes__diff-link', '.vdlg-link:hover']);
+    // MSC-1.3 (#5529) adds one more: the chosen mode card's title and description. Its fill *is*
+    // stated — on the card one level up, which is inherent to the HIVE-2.1 scoped choice control
+    // (the card carries the tint, its children carry the ink). The pair is measured rather than
+    // assumed: `mock-correlation-css.test.ts` holds `--accent-fg` on `--accent-soft` to AA in all
+    // nine appearances, where it ranges 5.22:1 (Nord) to 11.40:1 (high contrast).
+    const ACCENT_INK = new Set([
+      '.vdlg-link',
+      '.vdlg-changes__diff-link',
+      '.vdlg-link:hover',
+      ".mock-corr__mode:has(input[type='radio']:checked) .mock-corr__mode-title, " +
+        ".mock-corr__mode:has(input[type='radio']:checked) .mock-corr__mode-desc",
+    ]);
     for (const rule of SECTION_RULES) {
       const declarations = parseDeclarations(rule.body);
       const color = declarations.get('color') ?? '';

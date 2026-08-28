@@ -23,6 +23,7 @@ from __future__ import annotations
 import json
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
+from .mock_correlation_rules import CORRELATION_MODES
 from .mock_engine import MockOperation, extract_operations
 from .mock_scenario_settings import normalize_operation_key
 from .mock_template import validate_template_value
@@ -37,13 +38,6 @@ __all__ = [
     "correlation_to_storage",
     "validate_mock_correlation",
 ]
-
-CORRELATION_MODES: Tuple[str, ...] = ("off", "path-params", "inferred", "explicit")
-"""Every accepted ``mode``, in increasing order of what it binds.
-
-Mirrors ``apiome_mock.correlation.CORRELATION_MODES``; the runtime skips a mode it does not know,
-so an unknown value saved here would silently disable correlation instead of failing loudly.
-"""
 
 MAX_CORRELATION_OPERATIONS = 200
 """Maximum operation entries in one explicit pointer map (matches the runtime's read cap)."""

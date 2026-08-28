@@ -4205,6 +4205,114 @@ class VersionMockCorrelationResponse(BaseModel):
     )
 
 
+class MockOperationParameterSpec(BaseModel):
+    """One request parameter an author can reference from a template expression (#5529 MSC-1.3)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    name: str = Field(description="The parameter name as the spec declares it.")
+    location: str = Field(description='Where it travels: "path", "query" or "header".')
+    required: bool = Field(default=False, description="Whether the spec marks it required.")
+    type: Optional[str] = Field(default=None, description="Declared JSON type, when the schema states one.")
+    token: str = Field(
+        description="The ready-to-insert template expression, e.g. {{request.path.petId}}.",
+    )
+
+
+class MockResponsePointerSpec(BaseModel):
+    """One JSON Pointer an explicit binding can target (#5529 MSC-1.3)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    pointer: str = Field(description="RFC 6901 pointer into the success response body.")
+    type: Optional[str] = Field(default=None, description="Declared JSON type at that pointer.")
+    repeated: bool = Field(
+        default=False,
+        description="True when the pointer passes through an array; the runtime binds every member.",
+    )
+
+
+class MockOperationBindingSpec(BaseModel):
+    """One binding an inference pass would make on this operation (#5529 MSC-1.3)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    pointer: str = Field(description="Where in the response body the request value lands.")
+    source: str = Field(
+        description=(
+            "The request value it takes, written as the template expression that would produce the "
+            "same result — so an author can pin the binding explicitly by copying it."
+        )
+    )
+    pass_name: str = Field(
+        validation_alias=AliasChoices("pass", "pass_name"),
+        serialization_alias="pass",
+        description='Which pass makes it: "path-params" or "inferred".',
+    )
+    repeated: bool = Field(
+        default=False,
+        description="True when the pointer passes through an array (every member binds).",
+    )
+
+
+class MockAuthoringOperationSpec(BaseModel):
+    """Everything the mock editors need about one operation (#5529 MSC-1.3)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    key: str = Field(description='Canonical "METHOD /path/{template}" identifier.')
+    method: str = Field(description="Upper-case HTTP method.")
+    path: str = Field(description="The path template.")
+    summary: str = Field(default="", description="The operation summary, its operationId, or empty.")
+    parameters: List[MockOperationParameterSpec] = Field(
+        default_factory=list,
+        description="Path, query and header parameters, in that order.",
+    )
+    request_fields: List[str] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("requestFields", "request_fields"),
+        serialization_alias="requestFields",
+        description="Top-level request-body property names, for {{request.body#/...}} tokens.",
+    )
+    response_pointers: List[MockResponsePointerSpec] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("responsePointers", "response_pointers"),
+        serialization_alias="responsePointers",
+        description="Pointers into the success response body an explicit binding can target.",
+    )
+    success_status: int = Field(
+        default=200,
+        validation_alias=AliasChoices("successStatus", "success_status"),
+        serialization_alias="successStatus",
+        description="The status the mock's default path answers with.",
+    )
+    bindings: List[MockOperationBindingSpec] = Field(
+        default_factory=list,
+        description="What the path-params and inferred passes would bind, in pass order.",
+    )
+
+
+class VersionMockOperationsResponse(BaseModel):
+    """The mock-authoring catalogue for one version (#5529 MSC-1.3).
+
+    What an author needs to configure correlation without hand-writing JSON: the version's own
+    operations and their parameters, the pointers a binding can target, the fixture names templates
+    can read, and — the part a preview exists for — which properties the ``path-params`` and
+    ``inferred`` passes would bind, computed with the same name-matching rules the runtime applies.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    operations: List[MockAuthoringOperationSpec] = Field(
+        default_factory=list,
+        description="One entry per operation, in document order.",
+    )
+    fixtures: List[str] = Field(
+        default_factory=list,
+        description="Fixture names readable as {{fixture.<name>}} on this version.",
+    )
+
+
 class MockFixturePackSpec(BaseModel):
     """One versioned fixture pack: deterministic seed data for stateful mocks (#4745 PMR-2.2)."""
 

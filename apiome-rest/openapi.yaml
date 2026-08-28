@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.169.0
+  version: 1.170.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -14782,6 +14782,100 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for set version mock correlationresponse422.
+  /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/mock/operations:
+    get:
+      tags:
+      - versions
+      summary: Get Version Mock Operations
+      description: "Return the mock-authoring catalogue for this version (#5529, MSC-1.3).\n\
+        \nThe editor that configures response correlation needs three things the stored\
+        \ settings do not\ncontain: the operations this version actually has (with\
+        \ their path, query and header\nparameters, so an author picks a token instead\
+        \ of memorizing the grammar), the JSON Pointers a\nbinding can target, and\
+        \ — the part that makes inference trustworthy — **which properties the\n``path-params``\
+        \ and ``inferred`` passes would bind, and to what**, before anything is saved.\n\
+        \nThose bindings are projected over the response schema with the very name-matching\
+        \ rules the\nruntime applies to a response body (:mod:`app.mock_correlation_rules`,\
+        \ imported by\n:mod:`apiome_mock.correlation`), so the preview cannot promise\
+        \ a binding the mock declines to\nmake. Two limits follow from working on\
+        \ a schema instead of a body and are reported rather than\nhidden: a pointer\
+        \ inside an array names member ``0`` and is flagged ``repeated`` (the runtime\n\
+        binds every member), and a ``oneOf``/``anyOf`` schema is projected through\
+        \ its first branch.\n\nRead-only and cheap: it generates the version's OpenAPI\
+        \ document and walks it. Nothing about\nmock serving is involved, so it answers\
+        \ for a version whose mock is switched off — which is\nexactly when correlation\
+        \ is being configured for the first time.\n\nArgs:\n    tenant_slug: The tenant\
+        \ slug.\n    project_id: The project ID that must own the version.\n    version_record_id:\
+        \ The version record ID (UUID) to describe.\n    auth_data: Authentication\
+        \ context; requires ``versions:view``.\n\nReturns:\n    The operations catalogue\
+        \ and the fixture names templates can read on this version.\n\nRaises:\n \
+        \   HTTPException: 404 when the version does not exist in the project."
+      operationId: get_version_mock_operations_v1_versions__tenant_slug___project_id___version_record_id__mock_operations_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Id
+          description: Project Id schema.
+        description: Project identifier that scopes the request.
+      - name: version_record_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Record Id
+          description: Version Record Id schema.
+        description: Version row identifier (``versions.id`` UUID).
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Version Mock Operationsauthorization schema.
+          - type: 'null'
+            description: Get Version Mock Operationsauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Version Mock Operations Xapikey schema.
+          - type: 'null'
+            description: Get Version Mock Operations Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for get version mock operations.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionMockOperationsResponse'
+                description: Response payload for get version mock operationsresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for get version mock operationsresponse422.
   /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/mock/preview:
     post:
       tags:
@@ -59484,7 +59578,7 @@ components:
           type: string
           title: Operation Uuid
           description: The apiome.path_operation UUID.
-          example: 0b5b0159-99f0-4671-b463-95ab903bef7a
+          example: d542d0c7-aa6c-4e2d-9000-02115297eac0
         method:
           type: string
           title: Method
@@ -61476,7 +61570,7 @@ components:
           type: string
           title: Generated At
           description: Statement timestamp (ISO-8601, UTC).
-          example: '2026-08-28T20:55:39Z'
+          example: '2026-08-28T22:14:39Z'
         envelope:
           additionalProperties: true
           type: object
@@ -81467,6 +81561,73 @@ components:
         that absence down is
 
         the point (see :func:`missing_mock_attestation`).'
+    MockAuthoringOperationSpec:
+      properties:
+        key:
+          type: string
+          title: Key
+          description: Canonical "METHOD /path/{template}" identifier.
+          example: example
+        method:
+          type: string
+          title: Method
+          description: Upper-case HTTP method.
+          example: example
+        path:
+          type: string
+          title: Path
+          description: The path template.
+          example: /resources/{id}
+        summary:
+          type: string
+          title: Summary
+          description: The operation summary, its operationId, or empty.
+          default: ''
+          example: List pets
+        parameters:
+          items:
+            $ref: '#/components/schemas/MockOperationParameterSpec'
+          type: array
+          title: Parameters
+          description: Path, query and header parameters, in that order.
+          maxItems: 1000
+        requestFields:
+          items:
+            type: string
+          type: array
+          title: Requestfields
+          description: Top-level request-body property names, for {{request.body#/...}}
+            tokens.
+          maxItems: 1000
+        responsePointers:
+          items:
+            $ref: '#/components/schemas/MockResponsePointerSpec'
+          type: array
+          title: Responsepointers
+          description: Pointers into the success response body an explicit binding
+            can target.
+          maxItems: 1000
+        successStatus:
+          type: integer
+          title: Successstatus
+          description: The status the mock's default path answers with.
+          default: 200
+          example: 1
+        bindings:
+          items:
+            $ref: '#/components/schemas/MockOperationBindingSpec'
+          type: array
+          title: Bindings
+          description: What the path-params and inferred passes would bind, in pass
+            order.
+          maxItems: 1000
+      type: object
+      required:
+      - key
+      - method
+      - path
+      title: MockAuthoringOperationSpec
+      description: Everything the mock editors need about one operation (#5529 MSC-1.3).
     MockBundleApi:
       properties:
         tenant:
@@ -82431,6 +82592,79 @@ components:
       - requestCount
       title: MockInstanceResponse
       description: Public view of a provisioned mock instance.
+    MockOperationBindingSpec:
+      properties:
+        pointer:
+          type: string
+          title: Pointer
+          description: Where in the response body the request value lands.
+          example: example
+        source:
+          type: string
+          title: Source
+          description: The request value it takes, written as the template expression
+            that would produce the same result — so an author can pin the binding
+            explicitly by copying it.
+          example: human
+        pass:
+          type: string
+          title: Pass
+          description: 'Which pass makes it: "path-params" or "inferred".'
+          example: example
+        repeated:
+          type: boolean
+          title: Repeated
+          description: True when the pointer passes through an array (every member
+            binds).
+          default: false
+          example: false
+      type: object
+      required:
+      - pointer
+      - source
+      - pass
+      title: MockOperationBindingSpec
+      description: One binding an inference pass would make on this operation (#5529
+        MSC-1.3).
+    MockOperationParameterSpec:
+      properties:
+        name:
+          type: string
+          title: Name
+          description: The parameter name as the spec declares it.
+          example: Pet
+        location:
+          type: string
+          title: Location
+          description: 'Where it travels: "path", "query" or "header".'
+          example: example
+        required:
+          type: boolean
+          title: Required
+          description: Whether the spec marks it required.
+          default: false
+          example: false
+        type:
+          anyOf:
+          - type: string
+            description: Mock Operation Parameter Spec schema.
+          - type: 'null'
+            description: Mock Operation Parameter Spec schema.
+          title: Type
+          description: Declared JSON type, when the schema states one.
+        token:
+          type: string
+          title: Token
+          description: The ready-to-insert template expression, e.g. {{request.path.petId}}.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example
+      type: object
+      required:
+      - name
+      - location
+      - token
+      title: MockOperationParameterSpec
+      description: One request parameter an author can reference from a template expression
+        (#5529 MSC-1.3).
     MockPreviewChaos:
       properties:
         suppressed:
@@ -82913,6 +83147,33 @@ components:
         binding for the
 
         same pointer.'
+    MockResponsePointerSpec:
+      properties:
+        pointer:
+          type: string
+          title: Pointer
+          description: RFC 6901 pointer into the success response body.
+          example: example
+        type:
+          anyOf:
+          - type: string
+            description: Response payload for mock response pointer spec.
+          - type: 'null'
+            description: Response payload for mock response pointer spec.
+          title: Type
+          description: Declared JSON type at that pointer.
+        repeated:
+          type: boolean
+          title: Repeated
+          description: True when the pointer passes through an array; the runtime
+            binds every member.
+          default: false
+          example: false
+      type: object
+      required:
+      - pointer
+      title: MockResponsePointerSpec
+      description: One JSON Pointer an explicit binding can target (#5529 MSC-1.3).
     MockRuntimeRef:
       properties:
         name:
@@ -91333,7 +91594,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-28T20:55:39Z'
+          example: '2026-08-28T22:14:39Z'
       additionalProperties: false
       type: object
       required:
@@ -103080,13 +103341,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-28T20:55:39Z'
+          example: '2026-08-28T22:14:39Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-28T20:55:39Z'
+          example: '2026-08-28T22:14:39Z'
         outcome:
           anyOf:
           - type: string
@@ -105497,6 +105758,38 @@ components:
       title: VersionMockFixturePacksResponse
       description: The version's persisted mock fixture packs and their content digests
         (#4745 PMR-2.2).
+    VersionMockOperationsResponse:
+      properties:
+        operations:
+          items:
+            $ref: '#/components/schemas/MockAuthoringOperationSpec'
+          type: array
+          title: Operations
+          description: One entry per operation, in document order.
+          maxItems: 1000
+        fixtures:
+          items:
+            type: string
+          type: array
+          title: Fixtures
+          description: Fixture names readable as {{fixture.<name>}} on this version.
+          maxItems: 1000
+      type: object
+      title: VersionMockOperationsResponse
+      description: 'The mock-authoring catalogue for one version (#5529 MSC-1.3).
+
+
+        What an author needs to configure correlation without hand-writing JSON: the
+        version''s own
+
+        operations and their parameters, the pointers a binding can target, the fixture
+        names templates
+
+        can read, and — the part a preview exists for — which properties the ``path-params``
+        and
+
+        ``inferred`` passes would bind, computed with the same name-matching rules
+        the runtime applies.'
     VersionMockPreviewRequest:
       properties:
         request:

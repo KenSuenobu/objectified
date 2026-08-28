@@ -46,6 +46,7 @@ from .mock_correlation import (
     correlation_to_storage,
     validate_mock_correlation,
 )
+from .mock_correlation_bindings import catalogue_payload
 from .mock_preview import (
     FORWARDED_PREVIEW_STATUSES,
     NOT_CONFIGURED_DETAIL,
@@ -101,6 +102,7 @@ from .models import (
     VersionMockCorrelationResponse,
     VersionMockFixturePacksRequest,
     VersionMockFixturePacksResponse,
+    VersionMockOperationsResponse,
     VersionMockPreviewRequest,
     VersionMockPreviewResponse,
     VersionMockScenariosRequest,
@@ -2550,6 +2552,52 @@ async def set_version_mock_correlation(
             detail="Only the version creator or a tenant administrator can change mock settings",
         )
     return _stored_correlation_response(updated.get("mock_settings"), version_record_id)
+
+
+@router.get("/{tenant_slug}/{project_id}/{version_record_id}/mock/operations")
+async def get_version_mock_operations(
+    tenant_slug: str,
+    project_id: str,
+    version_record_id: str,
+    auth_data: Dict[str, Any] = Depends(validate_authentication),
+) -> VersionMockOperationsResponse:
+    """Return the mock-authoring catalogue for this version (#5529, MSC-1.3).
+
+    The editor that configures response correlation needs three things the stored settings do not
+    contain: the operations this version actually has (with their path, query and header
+    parameters, so an author picks a token instead of memorizing the grammar), the JSON Pointers a
+    binding can target, and — the part that makes inference trustworthy — **which properties the
+    ``path-params`` and ``inferred`` passes would bind, and to what**, before anything is saved.
+
+    Those bindings are projected over the response schema with the very name-matching rules the
+    runtime applies to a response body (:mod:`app.mock_correlation_rules`, imported by
+    :mod:`apiome_mock.correlation`), so the preview cannot promise a binding the mock declines to
+    make. Two limits follow from working on a schema instead of a body and are reported rather than
+    hidden: a pointer inside an array names member ``0`` and is flagged ``repeated`` (the runtime
+    binds every member), and a ``oneOf``/``anyOf`` schema is projected through its first branch.
+
+    Read-only and cheap: it generates the version's OpenAPI document and walks it. Nothing about
+    mock serving is involved, so it answers for a version whose mock is switched off — which is
+    exactly when correlation is being configured for the first time.
+
+    Args:
+        tenant_slug: The tenant slug.
+        project_id: The project ID that must own the version.
+        version_record_id: The version record ID (UUID) to describe.
+        auth_data: Authentication context; requires ``versions:view``.
+
+    Returns:
+        The operations catalogue and the fixture names templates can read on this version.
+
+    Raises:
+        HTTPException: 404 when the version does not exist in the project.
+    """
+    enforce_permission(db, auth_data, Resource.VERSIONS, Action.VIEW)
+    existing = _get_version_for_mock_scenarios(project_id, version_record_id, auth_data["tenant_id"])
+    spec = _generated_spec_for_version(existing, tenant_slug)
+    return VersionMockOperationsResponse.model_validate(
+        catalogue_payload(spec, existing.get("mock_settings"))
+    )
 
 
 # Per-version fixed-window limiter for dry-run mock preview (#5528, MSC-1.2). Every accepted call

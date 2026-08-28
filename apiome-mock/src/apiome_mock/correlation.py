@@ -51,6 +51,13 @@ serve-time surprise.
 Parsing here is deliberately lenient (malformed entries are skipped, never raised) to mirror
 :mod:`apiome_mock.scenarios` and :mod:`apiome_mock.chaos`; author-time validation happens in
 apiome-rest (:mod:`app.mock_correlation`) when the settings are saved.
+
+The name-matching rules the two inference passes turn on — :func:`normalize_property_name`,
+:func:`path_parameter_aliases` and :data:`SERVER_OWNED_FIELDS` — live in
+:mod:`app.mock_correlation_rules` and are re-exported here (#5529, MSC-1.3). The ADE's editor
+projects the same rules over a response *schema* to show an author what inference would decide
+before anything is saved, and a preview that promised a binding this engine declines to make would
+be worse than no preview at all.
 """
 
 from __future__ import annotations
@@ -61,6 +68,17 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
+from app.mock_correlation_rules import (
+    CORRELATION_MODES,
+    ECHOED_METHODS,
+    MODE_EXPLICIT,
+    MODE_INFERRED,
+    MODE_OFF,
+    MODE_PATH_PARAMS,
+    SERVER_OWNED_FIELDS,
+    normalize_property_name,
+    path_parameter_aliases,
+)
 from app.mock_template import RenderBudget, RenderEnv, render_value, value_references_request_body
 
 from apiome_mock.scenarios import normalize_operation_key
@@ -94,55 +112,17 @@ Named to match the header the in-REST mock engine already sets (``app.mock_route
 vocabulary answers "did the served body drift from the contract" on both planes.
 """
 
-MODE_OFF = "off"
-"""No correlation; the version behaves exactly as it did before MSC-1.1."""
-
-MODE_PATH_PARAMS = "path-params"
-"""Bind response properties named after a path parameter to the request's value."""
-
-MODE_INFERRED = "inferred"
-"""``path-params`` plus echoing request-body fields back on writes."""
-
-MODE_EXPLICIT = "explicit"
-"""Only the per-operation pointer map; no inference."""
-
-CORRELATION_MODES: tuple[str, ...] = (MODE_OFF, MODE_PATH_PARAMS, MODE_INFERRED, MODE_EXPLICIT)
-"""Every accepted ``mode`` value, in increasing order of what they bind."""
-
-SERVER_OWNED_FIELDS: frozenset[str] = frozenset({"id", "createdat", "updatedat", "deletedat"})
-"""Normalized property names ``inferred`` never echoes from the request body.
-
-These are the fields a real server *assigns*: echoing a client-supplied ``id`` back would make the
-mock agree with a request the real API would have overruled. They are compared after
-:func:`normalize_property_name`, so ``created_at`` and ``createdAt`` are the same field. An author
-who genuinely wants one of them bound says so with an ``explicit`` pointer entry.
-"""
+# ``MODE_*``, ``CORRELATION_MODES``, ``SERVER_OWNED_FIELDS``, ``ECHOED_METHODS``,
+# ``normalize_property_name`` and ``path_parameter_aliases`` are imported from
+# :mod:`app.mock_correlation_rules` and re-exported above: the ADE's inferred-bindings preview
+# (#5529, MSC-1.3) projects the same name-matching rules over the response *schema*, and a
+# preview that promised a binding this engine does not make would be worse than no preview.
 
 MAX_CORRELATION_OPERATIONS = 200
 """Maximum operation entries read from one stored block; extras are skipped."""
 
 MAX_POINTERS_PER_OPERATION = 50
 """Maximum pointer bindings read from one operation entry; extras are skipped."""
-
-_ECHOED_METHODS = frozenset({"POST", "PUT", "PATCH"})
-"""Methods whose request body ``inferred`` echoes back."""
-
-_NON_ALPHANUMERIC = re.compile(r"[^a-z0-9]+")
-
-
-def normalize_property_name(name: str) -> str:
-    """Fold a property or path-parameter name to its comparison form.
-
-    Lower-cases and drops every non-alphanumeric character, so ``petId``, ``pet_id`` and ``Pet-Id``
-    all become ``petid``.
-
-    Args:
-        name: The raw property or parameter name.
-
-    Returns:
-        The normalized form used for name-based matching.
-    """
-    return _NON_ALPHANUMERIC.sub("", name.lower())
 
 
 @dataclass(frozen=True)
@@ -194,7 +174,7 @@ class CorrelationConfig:
         """
         if not self.enabled:
             return False
-        if self.echoes_request_body and operation_key.split(" ", 1)[0].upper() in _ECHOED_METHODS:
+        if self.echoes_request_body and operation_key.split(" ", 1)[0].upper() in ECHOED_METHODS:
             return True
         return any(value_references_request_body(expression) for _, expression in self.pointers_for(operation_key))
 
@@ -315,32 +295,6 @@ def derive_request_seed(method: str, path_template: str, path_params: Mapping[st
     parts.extend(f"{name}={value}" for name, value in sorted(path_params.items()))
     digest = hashlib.sha256("\x00".join(parts).encode("utf-8")).hexdigest()
     return int(digest[:16], 16)
-
-
-def path_parameter_aliases(path_params: Mapping[str, str]) -> dict[str, str]:
-    """Build the ``normalized property name -> request value`` map the name pass matches on.
-
-    Every parameter registers its own normalized name, and a parameter whose name *ends* in ``id``
-    (``petId``, ``pet_id``) additionally registers the bare ``id`` — the spelling most response
-    schemas actually use. When several parameters would claim the bare ``id``
-    (``/users/{userId}/pets/{petId}``) the **last** one wins: it addresses the resource the
-    response is about.
-
-    Args:
-        path_params: Path parameters as extracted by routing, in template order.
-
-    Returns:
-        Normalized property name to raw request value.
-    """
-    aliases: dict[str, str] = {}
-    for name, value in path_params.items():
-        normalized = normalize_property_name(name)
-        if not normalized:
-            continue
-        aliases[normalized] = value
-        if normalized.endswith("id") and len(normalized) > 2:
-            aliases["id"] = value
-    return aliases
 
 
 def _coerce_like(text: str, current: Any) -> Any:
@@ -590,7 +544,7 @@ def correlate_response_body(
             if changed:
                 applied.append(MODE_PATH_PARAMS)
 
-    if config.echoes_request_body and env.ctx.method in _ECHOED_METHODS and isinstance(env.ctx.body, Mapping):
+    if config.echoes_request_body and env.ctx.method in ECHOED_METHODS and isinstance(env.ctx.body, Mapping):
         result, changed = _echo_request_body(result, env.ctx.body)
         if changed:
             applied.append(MODE_INFERRED)

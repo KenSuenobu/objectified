@@ -15966,6 +15966,331 @@ button.auth-divider:disabled {
   font-size: var(--fs-xs);
 }
 
+/* ---- 8b · Response correlation, tokens & live preview (MSC-1.3, #5529) --- */
+/* The mode cards. The HIVE-2.1 scoped choice control: a card the reader is
+   choosing that carries fields of its own, so only the title labels the radio
+   and the ring is raised by the radio's focus rather than anything nested. */
+.mock-corr__modes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.mock-corr__mode {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--border);
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.mock-corr__mode:hover {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.mock-corr__mode:has(input[type='radio']:checked) {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.mock-corr__mode:has(> input[type='radio']:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.mock-corr__mode > input[type='radio'] {
+  margin-block-start: 0.1875rem;
+  inline-size: var(--icon-dense);
+  block-size: var(--icon-dense);
+  flex: none;
+  accent-color: var(--accent);
+}
+
+.mock-corr__mode-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+/* The title is the radio's `<label>` — the one part of the card that toggles
+   it, which is what lets the bindings preview below be read and scrolled. */
+.mock-corr__mode-title {
+  inline-size: fit-content;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.mock-corr__mode-desc {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* On the chosen card the ground is `--accent-soft`, where the muted ink no
+   longer measures; both lines take the vocabulary's tint-calibrated colour —
+   the same call HIVE-2.5's scope cards and the repository map cards made. */
+.mock-corr__mode:has(input[type='radio']:checked) .mock-corr__mode-title,
+.mock-corr__mode:has(input[type='radio']:checked) .mock-corr__mode-desc {
+  color: var(--accent-fg);
+}
+
+/* The read-only inferred-bindings preview, nested inside the chosen card. Its
+   own surface is restated: a transparent panel on `--accent-soft` reads as
+   part of the description rather than as the projection it is. */
+.mock-corr__inferred {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-block-size: 14rem;
+  overflow-y: auto;
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.mock-corr__inferred-list,
+.mock-corr__inferred-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mock-corr__inferred-op {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.mock-corr__inferred-key {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.mock-corr__inferred-rows {
+  padding-inline-start: var(--space-3);
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+/* The "(every array member)" aside. Distinguished by its slant rather than a
+   fainter ink: `--fg-subtle` measures 2.92:1 on this surface in Solarized. */
+.mock-corr__inferred-note {
+  font-style: italic;
+}
+
+/* One binding row: the operation and the pointer on one line, the expression
+   and its token picker on the next, so neither wraps into an unreadable
+   column on a narrow dialog. */
+.mock-corr__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.mock-corr__op {
+  flex: 1 1 16rem;
+  min-inline-size: 0;
+}
+
+.mock-corr__pointer {
+  flex: 1 1 10rem;
+  min-inline-size: 0;
+}
+
+.mock-corr__expression {
+  flex: 1 1 18rem;
+  min-inline-size: 0;
+}
+
+/* The row's own validation messages — client-side and the ones REST returned
+   for this exact binding, which is the whole point of attaching them here. */
+.mock-corr__row-errors {
+  margin: 0;
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-5);
+  border-radius: var(--r-md);
+  background: var(--danger-soft);
+  list-style: disc;
+  font-size: var(--fs-xs);
+  color: var(--danger-fg);
+}
+
+/* The token picker: a disclosure, not a popover — it sits inside a dialog
+   beside the field it types into, and a second focus trap over the first is
+   the one thing that would make it worse than typing. */
+.mock-tok {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.mock-tok__toggle {
+  align-self: flex-start;
+}
+
+.mock-tok__chevron--open {
+  transform: rotate(180deg);
+}
+
+/* A raised card, not a tint: `--fg-muted` measures 4.35:1 on `--bg-subtle` in
+   Solarized — just under AA — and 4.86:1 on `--bg-surface`. The ring is what
+   draws the boundary the tint used to. */
+.mock-tok__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-block-size: 12rem;
+  overflow-y: auto;
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.mock-tok__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.mock-tok__group-title {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.mock-tok__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.mock-tok__chip {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--r-sm);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.mock-tok__chip:hover {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.mock-tok__chip:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* The live preview: the synthetic request above, what the mock would answer
+   below, and the decision trace between them. */
+.mock-prev {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.mock-prev__request {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.mock-prev__line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.mock-prev__method {
+  inline-size: 6rem;
+  flex: none;
+}
+
+.mock-prev__path {
+  flex: 1 1 14rem;
+  min-inline-size: 0;
+}
+
+/* Three request fields side by side while there is room, stacked before the
+   dialog can scroll sideways. */
+.mock-prev__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--space-3);
+}
+
+.mock-prev__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-inline-size: 0;
+}
+
+.mock-prev__textarea {
+  min-block-size: 4rem;
+}
+
+/* Same call as the token panel: the trace lines beside it are `--fg-muted`. */
+.mock-prev__result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.mock-prev__media,
+.mock-prev__op {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+
+.mock-prev__trace {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.mock-prev__detail {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+}
+
+.mock-prev__body {
+  margin: 0;
+  max-block-size: 16rem;
+  overflow: auto;
+  padding: var(--space-3);
+  border-radius: var(--r-md);
+  background: var(--bg-subtle);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  color: var(--fg);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 /* ---- 9 · The test bench ------------------------------------------------- */
 .vdlg-bench {
   gap: var(--space-5);

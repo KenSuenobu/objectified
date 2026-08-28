@@ -5,6 +5,33 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.305.0] - 2026-08-28
+
+### Added
+- **Mock authoring catalogue endpoint (#5529, MSC-1.3)** — `GET
+  /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/mock/operations` describes a version
+  the way a mock editor needs it: every operation it has, with its path, query and header
+  parameters (each carrying the ready-to-insert `{{request.*}}` expression), the JSON Pointers the
+  success response body actually has, the top-level request-body field names, and the fixture names
+  `{{fixture.<name>}}` can read on this version.
+
+  The part that makes response correlation trustworthy is `bindings`: **which response properties
+  the `path-params` and `inferred` passes would bind, and to what**, projected before anything is
+  saved. Those are not a second implementation of inference — the name-matching rules moved into
+  the new `app.mock_correlation_rules`, which `apiome_mock.correlation` now imports, the same call
+  `app.mock_match` and `app.mock_template` already made. So the editor's preview cannot promise a
+  binding the runtime declines to make.
+
+  Two limits follow from projecting over a response *schema* rather than a rendered body, and are
+  reported rather than hidden: a pointer inside an array names member `0` and is flagged
+  `repeated` (the runtime binds every member), and a `oneOf`/`anyOf` schema is projected through
+  its first branch. The walk is bounded — depth 6, 200 pointers per operation, and a `$ref` cycle
+  guard — so a recursive schema terminates.
+
+  Read-only and cheap: it generates the version's OpenAPI document and walks it, needs only
+  `versions:view`, writes nothing, and answers for a version whose mock is switched **off** —
+  which is when correlation is usually configured for the first time.
+
 ## [1.304.0] - 2026-08-28
 
 ### Added

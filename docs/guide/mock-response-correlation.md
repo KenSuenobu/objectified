@@ -7,8 +7,9 @@ you do not control gets it too.
 
 | | |
 |---|---|
-| Author | `PUT /v1/versions/{tenant}/{project_id}/{version_record_id}/mock/correlation` |
+| Author | The **Correlation** editor on a version's mock cell, or `PUT /v1/versions/{tenant}/{project_id}/{version_record_id}/mock/correlation` |
 | Inspect | `GET /v1/versions/{tenant}/{project_id}/{version_record_id}/mock/correlation` |
+| Catalogue | `GET /v1/versions/{tenant}/{project_id}/{version_record_id}/mock/operations` |
 | Permission | `versions:edit` to save, `versions:view` to read |
 | Storage | `versions.mock_settings.responseCorrelation` (travels inside portable bundles) |
 | Producer | `app.mock_correlation` (apiome-rest) |
@@ -151,6 +152,35 @@ one it replaces — but it is never served *silently*: the header reports it and
 * Serve time is lenient: a malformed stored block is skipped, never raised, so a bad blob can only
   cost you correlation — never the mock.
 
+## Authoring it in the ADE
+
+Correlation is a per-version setting a version owner configures once and then trusts, so it has a
+surface of its own rather than a JSON textarea: **Correlation**, beside *Scenarios* on the version's
+mock cell.
+
+* **Mode cards** say what each mode does to a *response*, not what it is called.
+* Under `path-params` and `inferred`, a **read-only bindings preview** lists, per operation, which
+  response properties would take which request values — *before* anything is saved. It comes from
+  `GET .../mock/operations`, which projects the same name-matching rules the runtime applies
+  (`app.mock_correlation_rules`, imported by `apiome_mock.correlation`) over the response **schema**
+  instead of a response body. Two limits follow from that and are reported rather than hidden: a
+  pointer inside an array names member `0` and is flagged as repeating (the runtime binds every
+  member), and a `oneOf`/`anyOf` schema is projected through its first branch.
+* **Explicit bindings** are rows — pick the operation, point at a response property, insert a token
+  — with the operation list, the pointer suggestions and the `{{request.*}}` / `{{fixture.*}}` token
+  picker all drawn from what this version actually has. A save-time `422` attaches to the row that
+  caused it.
+* **Try it** renders a synthetic request against the settings on screen through the dry-run preview
+  ([mock-response-preview.md](mock-response-preview.md)), so changing the mode changes the answer
+  without a save.
+
+The same token picker and live preview are on the scenario editor, since it is the same template
+engine. Raw-JSON editing of match rules stays as the escape hatch there until a rule builder is
+scoped separately.
+
+The catalogue route is read-only, needs `versions:view`, and answers for a version whose mock is
+switched off — which is when correlation is usually configured for the first time.
+
 ## Portability
 
 `responseCorrelation` is one of the bundled settings keys
@@ -164,3 +194,4 @@ answers response by response.
 * [mock-fixture-packs.md](mock-fixture-packs.md) — the fixture data `{{fixture.*}}` expressions read
 * [mock-callbacks.md](mock-callbacks.md) — the same template language, on the outbound half
 * [mock-bundle-format.md](mock-bundle-format.md) — what travels offline
+* [mock-response-preview.md](mock-response-preview.md) — the dry-run render behind the editor's *Try it*
