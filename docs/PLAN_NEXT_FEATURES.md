@@ -38,6 +38,8 @@ Housekeeping that Phase 0 of this plan called for is **done**:
 | # | Title |
 |---|---|
 | 4411 | [SIM] Hosted Mock Servers & Portal Try-It Console (umbrella) |
+| 4945 | [PMR] Portable Mock Runtime (umbrella) — all nine issues #4741–#4749 shipped |
+| 4946–4948 | PMR-EPIC-1…3 |
 | 4759 | [MTG] MCP Configurability in Tenants (umbrella) — leftover: #4764 v2 |
 | 4425 | [GOV-EPIC-2] Governance UI |
 | 4459 | [CTG-EPIC-1] Breaking-Change Semantics |
@@ -50,7 +52,7 @@ Housekeeping that Phase 0 of this plan called for is **done**:
 | Track | Umbrella | Child epics |
 |---|---|---|
 | Executable contracts | [ECA #4941](https://github.com/apiome/apiome/issues/4941) | #4942 Foundation · #4943 Runners/CI · #4944 Evidence/Gates |
-| Portable mock | [PMR #4945](https://github.com/apiome/apiome/issues/4945) | #4946 Runtime · #4947 Fixtures · #4948 CI/attestation |
+| Portable mock | [PMR #4945](https://github.com/apiome/apiome/issues/4945) — ✅ complete | #4946 Runtime · #4947 Fixtures · #4948 CI/attestation (all closed) |
 | Git-native collab | [GNC #4949](https://github.com/apiome/apiome/issues/4949) (RC5) | #4950 Sync · #4951 Team flow |
 | SDK compatibility | [SGD #4952](https://github.com/apiome/apiome/issues/4952) | owns #4735 (MVP) / #4736 (v2) |
 
@@ -230,7 +232,7 @@ Five MVP emitters’ core tickets are largely closed; epics remain open for opti
 
 ---
 
-### Phase 5 — Portable Mock Runtime (PMR) · umbrella **#4945**
+### Phase 5 — Portable Mock Runtime (PMR) · umbrella **#4945** — ✅ **Complete**
 
 Hosted SIM is closed. Package the same semantics for CLI/Docker/CI so ECA and SDK validation have a deterministic offline target.
 
@@ -350,7 +352,7 @@ Unsafe concurrency: AGX with unfinished secret/SSRF rails; SDK packaging before 
 - [ ] CPDO epics #4790–#4793 meet MVP definition in their roadmap
 - [ ] MFI-29.4 + 29.6 closed; no secrets in catalog/analysis defaults
 - [ ] Export Studio deep-link + re-verify polish demoable
-- [ ] PMR MVP under #4945 (#4741, #4742, #4744, #4745, #4748) green in CI
+- [x] PMR MVP under #4945 (#4741, #4742, #4744, #4745, #4748) green in CI — and the v2 set (#4743, #4746, #4747, #4749) with it; `Apiome Mock` runs lint, format, mypy, and the corpus on every change
 - [ ] ECA MVP under #4941 (#4729–#4734) green against PMR
 - [ ] (Stretch) SDK TS+Python + SGD-2.1 (#4735 / #4952) + CLI/UI retrieve same artifact
 - [ ] OpenAPI version bumped for all REST contract changes (`AGENTS.md`)
@@ -386,8 +388,6 @@ Filter: [`milestone:RC4 is:open`](https://github.com/apiome/apiome/milestone/1).
 |---|---|
 | 4941 | [ECA] Executable Contract Assurance (umbrella) |
 | 4942–4944 | ECA-EPIC-1…3 |
-| 4945 | [PMR] Portable Mock Runtime (umbrella) |
-| 4946–4948 | PMR-EPIC-1…3 |
 | 4952 | [SGD] SDK Generation Delivery & Compatibility (umbrella) |
 
 ### Should-ship

@@ -127,9 +127,7 @@ def test_a_report_survives_a_round_trip_through_its_json_rendering() -> None:
     restored = report_from_dict(json.loads(json.dumps(original.as_dict())))
 
     assert restored.ok == original.ok
-    assert [result.name for result in restored.failed] == [
-        result.name for result in original.failed
-    ]
+    assert [result.name for result in restored.failed] == [result.name for result in original.failed]
     assert restored.corpus == original.corpus
 
 
@@ -266,9 +264,7 @@ def test_attest_from_a_failing_report_still_writes_the_record_but_fails_the_job(
     report.write_text(json.dumps(_report(failures=1).as_dict()), encoding="utf-8")
     out = tmp_path / "attestation.json"
 
-    exit_code = main(
-        ["attest", "--bundle", str(bundle), "--conformance", str(report), "--out", str(out)]
-    )
+    exit_code = main(["attest", "--bundle", str(bundle), "--conformance", str(report), "--out", str(out)])
 
     assert exit_code == EXIT_CONFORMANCE_FAILED
     assert json.loads(out.read_text(encoding="utf-8"))["mock"]["status"] == STATUS_FAILED
