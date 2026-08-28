@@ -714,6 +714,60 @@ class Settings(BaseSettings):
         description="Public base URL for hosted mock runtime (no trailing slash).",
     )
 
+    # Dry-run mock preview (#5528, MSC-1.2). The mock *engine* lives in apiome-mock, which depends
+    # on this package — so REST cannot import it, and a preview that rendered here would be a
+    # second implementation of the serving sequence, free to disagree with what the mock actually
+    # returns. Instead REST authenticates and authorizes the caller, builds the version's portable
+    # mock bundle, and asks apiome-mock's internal ``/__preview__`` endpoint to render it through
+    # the very function the data plane calls.
+    #
+    # This is the *internal* address (service DNS on the private network), never the public one:
+    # the endpoint is server-to-server and must not be reachable from a browser. Both halves are
+    # required — with either unset the preview route fails closed with 503 rather than reaching an
+    # unauthenticated endpoint. ``APIOME_MOCK_INTERNAL_TOKEN`` must match the value given to
+    # apiome-mock, and is deliberately *not* the ``INTERNAL_SERVICE_TOKEN`` shared with apiome-ui:
+    # rendering a preview should not carry the token that unseals provider secrets.
+    mock_internal_base_url: str = Field(
+        default="",
+        validation_alias=AliasChoices(
+            "APIOME_MOCK_INTERNAL_BASE_URL",
+            "mock_internal_base_url",
+        ),
+        description="Internal base URL of the apiome-mock service (no trailing slash); unset disables preview.",
+    )
+    mock_internal_token: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "APIOME_MOCK_INTERNAL_TOKEN",
+            "mock_internal_token",
+        ),
+        description="Shared secret presented to apiome-mock's internal preview endpoint.",
+    )
+    mock_preview_timeout_seconds: float = Field(
+        default=10.0,
+        validation_alias=AliasChoices(
+            "APIOME_MOCK_PREVIEW_TIMEOUT_SECONDS",
+            "mock_preview_timeout_seconds",
+        ),
+        description="Ceiling on one preview render round trip to apiome-mock.",
+    )
+    mock_preview_rate_limit_per_minute: int = Field(
+        default=120,
+        validation_alias=AliasChoices(
+            "APIOME_MOCK_PREVIEW_RATE_LIMIT_PER_MINUTE",
+            "mock_preview_rate_limit_per_minute",
+        ),
+        description="Preview renders one version may request per minute (real work on caller input).",
+    )
+    mock_preview_max_body_bytes: int = Field(
+        default=262_144,
+        validation_alias=AliasChoices(
+            "APIOME_MOCK_PREVIEW_MAX_BODY_BYTES",
+            "mock_preview_max_body_bytes",
+        ),
+        description="Largest synthetic request body a preview will render (256 KiB).",
+    )
+
     # Export test-drive mocks (MFX-44.5, #4371). The Export Studio provisions a *short-lived*
     # mock from an emitted artifact rather than a published version, so it gets its own TTL band
     # (minutes, not hours), its own per-tenant concurrency cap, and its own document-size ceiling.

@@ -51,6 +51,14 @@ from apiome_mock.problems import (
 )
 from apiome_mock.request_validator import ValidationFailure, validate_operation_request
 from apiome_mock.response_resolver import (
+    AUTHORED_SOURCES,
+    SOURCE_EXAMPLE,
+    SOURCE_EXAMPLES,
+    SOURCE_SCHEMA_DEFAULT,
+    SOURCE_SCHEMA_ENUM,
+    SOURCE_SCHEMA_EXAMPLE,
+    SOURCE_SYNTHESIS,
+    ResolvedResponseBody,
     parse_forced_status,
     resolve_response_body,
     response_schema_for_media_type,
@@ -76,21 +84,119 @@ SEED_QUERY_PARAM = "__seed"
 """Query parameter that pins the synthesis seed; present means the caller chose it."""
 
 
-@dataclass
-class _ServeTrace:
-    """What the serving pass learned that the callback pass needs (#4746, PMR-2.3).
+#: Decision-trace layers, in the order the serving pass can reach them. ``layer`` names *what
+#: produced the response*, which is the question an author previewing a request is actually
+#: asking (#5528, MSC-1.2).
+LAYER_UNRESOLVED = "unresolved"
+"""Nothing recorded a decision — the trace's default, so a new exit point that forgets to record
+shows up as "unresolved" rather than quietly claiming one of the real layers."""
 
-    :func:`_serve_matched_request` has many exit points; rather than thread a return tuple through
-    every one of them, it records the matched operation and its path parameters here, and the
-    public wrapper reads them once the response exists.
+LAYER_LIFECYCLE = "lifecycle"
+"""The reserved ``__mock__`` data-lifecycle control plane answered."""
+
+LAYER_NO_OPERATION = "no-operation"
+"""No operation in the spec matches the request path."""
+
+LAYER_METHOD_NOT_ALLOWED = "method-not-allowed"
+"""The path matches an operation, but not for this method."""
+
+LAYER_UNKNOWN_SCENARIO = "unknown-scenario"
+"""``X-Mock-Scenario`` named a scenario this version does not define."""
+
+LAYER_SCENARIO = "scenario"
+"""A scenario override served a canned (possibly templated) response."""
+
+LAYER_FORCED_STATUS = "forced-status"
+"""``Prefer: code=`` or ``?__status=`` pinned the status; the body came from that response."""
+
+LAYER_REQUEST_INVALID = "request-invalid"
+"""Request validation rejected the request (400/415)."""
+
+LAYER_CHAOS_ERROR = "chaos-error"
+"""Chaos injection replaced the response with an error."""
+
+LAYER_STATEFUL = "stateful"
+"""Session-scoped CRUD (``X-Mock-Session``) produced the body."""
+
+LAYER_CORRELATION = "correlation"
+"""Correlation rewrote the default-path body with values from the request."""
+
+LAYER_EXAMPLE = "example"
+"""The default path served an author-provided example, default, or enum member."""
+
+LAYER_SYNTHESIS = "synthesis"
+"""The default path synthesized the body from the response schema."""
+
+LAYER_EMPTY = "empty"
+"""The matched response declares no body."""
+
+LAYER_NOT_ACCEPTABLE = "not-acceptable"
+"""No declared content type satisfies the request's ``Accept`` header."""
+
+LAYER_TEMPLATE_LIMIT = "template-limit"
+"""A template exhausted its render budget; the limit problem was served instead."""
+
+
+@dataclass
+class ServeTrace:
+    """What the serving pass learned about how it answered one request.
+
+    Two callers read this. The callback pass (#4746, PMR-2.3) needs the matched operation and its
+    path parameters: :func:`_serve_matched_request` has many exit points, so rather than thread a
+    return tuple through every one of them it records them here and the public wrapper reads them
+    once the response exists. The dry-run preview (#5528, MSC-1.2) needs the rest — which layer
+    produced the body, and enough of *why* to answer an author's real question.
+
+    Nothing here changes the response. A caller that does not pass a trace still gets one (the
+    serving pass always allocates), so recording is unconditional and the two paths cannot drift.
 
     Attributes:
         operation: The operation the request matched, or ``None`` when nothing matched.
         path_params: Path template parameters extracted from the request.
+        layer: Which layer produced the response — one of the ``LAYER_*`` constants.
+        detail: One human-readable sentence naming what happened, safe to show an author.
+        scenario: The active scenario's name, when one applied.
+        rule_index: Zero-based index of the matched declarative rule within the operation's
+            ``rules`` array (``None`` for the plain fallback response list). Zero-based because it
+            addresses the stored array the editor edits; the ``X-Mock-Scenario-Rule`` response
+            header stays one-based for humans reading a live response.
+        seed: The synthesis seed the response was rendered with.
+        seed_source: Where that seed came from — ``"request"`` (``?__seed=``), ``"correlation"``
+            (derived from method + path template + path parameters), or ``"default"``.
+        correlation_mode: The version's correlation mode, when correlation ran.
+        correlation_applied: The correlation passes that bound something.
+        correlation_pointers: The explicit JSON Pointers correlation wrote to.
+        schema_valid: Whether the served body validates against the response schema. ``None`` when
+            no schema was checked.
+        body_source: The finer example-first source (a ``response_resolver.SOURCE_*`` value) for a
+            default-path body.
+        example_name: The named example used, when one was.
     """
 
     operation: MockOperation | None = None
     path_params: Mapping[str, str] = field(default_factory=dict)
+    layer: str = LAYER_UNRESOLVED
+    detail: str = ""
+    scenario: str | None = None
+    rule_index: int | None = None
+    seed: int | None = None
+    seed_source: str = "default"
+    correlation_mode: str | None = None
+    correlation_applied: tuple[str, ...] = ()
+    correlation_pointers: tuple[str, ...] = ()
+    schema_valid: bool | None = None
+    body_source: str | None = None
+    example_name: str | None = None
+
+    def record(self, layer: str, detail: str) -> None:
+        """Record the layer that produced the response and a one-line explanation.
+
+        Args:
+            layer: One of the ``LAYER_*`` constants.
+            detail: A human-readable sentence naming what happened.
+        """
+        self.layer = layer
+        self.detail = detail
 
 
 def _instance_path(tenant: str, project: str, version: str, path: str) -> str:
@@ -383,6 +489,7 @@ async def serve_compiled_request(
     path: str,
     session_store: SessionStore | None = None,
     callback_dispatcher: CallbackDispatcher | None = None,
+    trace: ServeTrace | None = None,
 ) -> Response:
     """Serve a mock response from an already-resolved :class:`CompiledSpec`.
 
@@ -403,12 +510,15 @@ async def serve_compiled_request(
         session_store: Store backing ``X-Mock-Session`` state; ``None`` disables stateful CRUD.
         callback_dispatcher: Delivers contract callbacks the served response fires (#4746,
             PMR-2.3); ``None`` disables outbound delivery entirely.
+        trace: Optional recorder the serving pass fills in with the decision it made. The data
+            plane ignores it; the dry-run preview (#5528, MSC-1.2) passes one and reads it, which
+            is how a preview reports *why* a value appeared without a second resolution path.
 
     Returns:
         The mock response (a spec-derived response, a canned scenario response, or a problem+json
         document describing why no response could be served).
     """
-    trace = _ServeTrace()
+    trace = trace if trace is not None else ServeTrace()
     response = await _serve_matched_request(
         request,
         compiled=compiled,
@@ -493,6 +603,55 @@ async def _fire_callbacks(
     response.headers[CALLBACK_HEADER] = ", ".join(outcomes)
 
 
+def _default_body_layer(source: str) -> str:
+    """Map an example-first resolution source onto the trace layer that names it.
+
+    Args:
+        source: A :mod:`apiome_mock.response_resolver` ``SOURCE_*`` value.
+
+    Returns:
+        :data:`LAYER_EXAMPLE`, :data:`LAYER_SYNTHESIS`, or :data:`LAYER_EMPTY`.
+    """
+    if source in AUTHORED_SOURCES:
+        return LAYER_EXAMPLE
+    if source == SOURCE_SYNTHESIS:
+        return LAYER_SYNTHESIS
+    return LAYER_EMPTY
+
+
+def _default_body_detail(
+    resolved: ResolvedResponseBody,
+    *,
+    operation_key: str,
+    status: int,
+) -> str:
+    """Explain, in one sentence, where a default-path body came from.
+
+    Args:
+        resolved: The resolved response body.
+        operation_key: The matched operation's canonical key.
+        status: The status code being served.
+
+    Returns:
+        A sentence naming the source, safe to show an author previewing a request.
+    """
+    where = f"{operation_key}'s {status} response"
+    if resolved.source == SOURCE_EXAMPLES:
+        named = f" '{resolved.example_name}'" if resolved.example_name else ""
+        return f"The named example{named} declared on {where} was served verbatim."
+    if resolved.source == SOURCE_EXAMPLE:
+        return f"The example declared on {where} was served verbatim."
+    if resolved.source == SOURCE_SCHEMA_EXAMPLE:
+        return f"The example on {where}'s schema was served verbatim."
+    if resolved.source == SOURCE_SCHEMA_DEFAULT:
+        return f"The default on {where}'s schema was served verbatim."
+    if resolved.source == SOURCE_SCHEMA_ENUM:
+        return f"The first enum member of {where}'s schema was served."
+    if resolved.source == SOURCE_SYNTHESIS:
+        return f"No example is declared, so the body was synthesized from {where}'s schema."
+    return f"{where} declares no body."
+
+
 async def _serve_matched_request(
     request: Request,
     *,
@@ -503,7 +662,7 @@ async def _serve_matched_request(
     path: str,
     session_store: SessionStore | None,
     callback_dispatcher: CallbackDispatcher | None,
-    trace: _ServeTrace,
+    trace: ServeTrace,
 ) -> Response:
     """Produce the mock response itself, recording the matched operation in ``trace``.
 
@@ -517,6 +676,7 @@ async def _serve_matched_request(
     # spec routing, and control responses skip scenarios and chaos — a chaos-delayed or
     # scenario-overridden reset would defeat the point of a deterministic test hook.
     if is_lifecycle_path(relative_path):
+        trace.record(LAYER_LIFECYCLE, f"The reserved data-lifecycle endpoint {relative_path} answered.")
         return await handle_lifecycle_request(
             request,
             relative_path=relative_path,
@@ -532,11 +692,20 @@ async def _serve_matched_request(
     operation, path_params, allowed_methods = match_request(compiled.operations, request.method, relative_path)
     if operation is None:
         if allowed_methods:
+            trace.record(
+                LAYER_METHOD_NOT_ALLOWED,
+                f"{relative_path} exists but declares no {request.method.upper()} operation "
+                f"(allowed: {', '.join(allowed_methods)}).",
+            )
             return method_not_allowed(
                 f"Method {request.method.upper()} is not allowed for {relative_path}.",
                 instance=instance,
                 allow=allowed_methods,
             )
+        trace.record(
+            LAYER_NO_OPERATION,
+            f"No operation in this version matches {request.method.upper()} {relative_path}.",
+        )
         return not_found(
             f"No operation matches {request.method.upper()} {relative_path}.",
             instance=instance,
@@ -556,6 +725,10 @@ async def _serve_matched_request(
     if scenario_name is not None:
         scenario = compiled.scenarios.get(scenario_name)
         if scenario is None:
+            trace.record(
+                LAYER_UNKNOWN_SCENARIO,
+                f"No scenario named '{scenario_name}' is defined for this version.",
+            )
             return unknown_scenario(
                 f"No scenario named '{scenario_name}' is defined for {tenant}/{project}/{version}.",
                 instance=instance,
@@ -567,6 +740,9 @@ async def _serve_matched_request(
     # applies to every matched-operation response (canned, forced, validation
     # problem, or resolved); error injection further down replaces only the
     # normal resolved response.
+    if scenario is not None:
+        trace.scenario = scenario.name
+
     chaos_config = scenario.chaos if scenario is not None and scenario.chaos is not None else compiled.chaos
     chaos_knobs = effective_knobs(chaos_config, operation.key)
     applied_delay_ms = await apply_chaos_delay(compute_delay_ms(chaos_knobs), tenant=tenant)
@@ -578,6 +754,9 @@ async def _serve_matched_request(
         return response
 
     seed = parse_mock_seed(request.query_params.get(SEED_QUERY_PARAM))
+    trace.seed = seed
+    if request.query_params.get(SEED_QUERY_PARAM) is not None:
+        trace.seed_source = "request"
 
     if scenario is not None:
         override = scenario.operations.get(operation.key)
@@ -594,8 +773,18 @@ async def _serve_matched_request(
             selection = select_scenario_responses(override, ctx)
             if selection is not None:
                 rule_index, canned_responses = selection
+                trace.rule_index = rule_index
                 client = request.client
                 try:
+                    trace.record(
+                        LAYER_SCENARIO,
+                        f"Scenario '{scenario.name}' overrides {operation.key}"
+                        + (
+                            f" and its rule at index {rule_index} matched this request."
+                            if rule_index is not None
+                            else " with a fallback response."
+                        ),
+                    )
                     return _with_chaos_delay(
                         await serve_scenario_response(
                             scenario=scenario,
@@ -614,6 +803,11 @@ async def _serve_matched_request(
                         )
                     )
                 except TemplateLimitError as exc:
+                    trace.record(
+                        LAYER_TEMPLATE_LIMIT,
+                        f"Scenario '{scenario.name}' response template for {operation.key} "
+                        f"exceeded its render limits: {exc}",
+                    )
                     return _with_chaos_delay(
                         template_limits_exceeded(
                             f"Scenario '{scenario.name}' response template for {operation.key} "
@@ -626,6 +820,12 @@ async def _serve_matched_request(
     accept = request.headers.get("accept")
     forced_status = parse_forced_status(prefer_header, request.query_params)
     if forced_status is not None:
+        # The pin wins outright, so it is the whole explanation: whether the operation actually
+        # declares that status (and what body it carries) is visible in the response itself.
+        trace.record(
+            LAYER_FORCED_STATUS,
+            f"The request pinned status {forced_status} for {operation.key}.",
+        )
         return _with_chaos_delay(
             _resolve_operation_response(
                 status=forced_status,
@@ -640,6 +840,10 @@ async def _serve_matched_request(
 
     failure = await validate_operation_request(request, operation, path_params, compiled.spec)
     if failure is not None:
+        trace.record(
+            LAYER_REQUEST_INVALID,
+            f"The request does not satisfy {operation.key}: {failure.detail}",
+        )
         return _with_chaos_delay(
             _validation_problem_response(
                 failure,
@@ -653,6 +857,7 @@ async def _serve_matched_request(
         )
 
     if should_inject_error(chaos_knobs):
+        trace.record(LAYER_CHAOS_ERROR, f"Chaos injection replaced the response for {operation.key}.")
         return _with_chaos_delay(
             _injected_error_response(
                 operation=operation,
@@ -680,6 +885,10 @@ async def _serve_matched_request(
             session_token=session_token,
         )
         if stateful is not None:
+            trace.record(
+                LAYER_STATEFUL,
+                f"Session-scoped CRUD state answered {operation.key} for this X-Mock-Session.",
+            )
             return _with_chaos_delay(stateful)
 
     status, response_obj = select_default_success_status(operation.operation)
@@ -693,6 +902,10 @@ async def _serve_matched_request(
     default_seed = seed
     if correlating and request.query_params.get(SEED_QUERY_PARAM) is None:
         default_seed = derive_request_seed(request.method, operation.path_template, path_params)
+        trace.seed_source = "correlation"
+    trace.seed = default_seed
+    if correlating:
+        trace.correlation_mode = compiled.correlation.mode
 
     resolved = resolve_response_body(
         response_obj,
@@ -703,12 +916,27 @@ async def _serve_matched_request(
         op_key=operation.key,
     )
     if resolved.not_acceptable:
+        trace.record(
+            LAYER_NOT_ACCEPTABLE,
+            f"{operation.key} declares no response content type the request's Accept header allows.",
+        )
         return _with_chaos_delay(
             not_acceptable(
                 "No response content type satisfies the request Accept header.",
                 instance=instance,
             )
         )
+
+    trace.body_source = resolved.source
+    trace.example_name = resolved.example_name
+    if resolved.source == SOURCE_SYNTHESIS:
+        # Synthesis is the only source the resolver schema-checks; an authored example is served
+        # as written (author-time validation owns that contract), so there is no verdict to report.
+        trace.schema_valid = resolved.validation_error is None
+    trace.record(
+        _default_body_layer(resolved.source),
+        _default_body_detail(resolved, operation_key=operation.key, status=status),
+    )
 
     body = resolved.body
     correlation_headers: dict[str, str] = {}
@@ -723,8 +951,13 @@ async def _serve_matched_request(
                 media_type=resolved.media_type,
                 body=body,
                 seed=default_seed,
+                trace=trace,
             )
         except TemplateLimitError as exc:
+            trace.record(
+                LAYER_TEMPLATE_LIMIT,
+                f"Response correlation for {operation.key} exceeded its render limits: {exc}",
+            )
             return _with_chaos_delay(
                 template_limits_exceeded(
                     f"Response correlation for {operation.key} exceeded its render limits: {exc}",
@@ -748,6 +981,7 @@ async def _correlate_default_body(
     media_type: str,
     body: Any,
     seed: int,
+    trace: ServeTrace,
 ) -> tuple[Any, dict[str, str]]:
     """Correlate one resolved default-path body and report the outcome (#5527, MSC-1.1).
 
@@ -767,6 +1001,8 @@ async def _correlate_default_body(
         media_type: The media type actually being served.
         body: The resolved default-path body.
         seed: The seed the body was synthesized with, reused for ``random.*`` expressions.
+        trace: The serving pass's decision recorder; annotated with which passes bound, which
+            pointers they wrote, and whether the correlated body still matches the schema.
 
     Returns:
         ``(body, headers)`` — the correlated body and the response headers describing what happened.
@@ -793,12 +1029,21 @@ async def _correlate_default_body(
         budget=RenderBudget(),
     )
     headers = {CORRELATION_HEADER: outcome.header_value()}
+    trace.correlation_applied = outcome.applied
+    trace.correlation_pointers = outcome.pointers
     if not outcome.changed:
         return outcome.body, headers
+
+    trace.record(
+        LAYER_CORRELATION,
+        f"Correlation ({', '.join(outcome.applied)}) rewrote the {operation.key} response with "
+        "values from the request" + (f" at {', '.join(outcome.pointers)}." if outcome.pointers else "."),
+    )
 
     schema = response_schema_for_media_type(response_obj, compiled.spec, media_type)
     error = validate_value(outcome.body, schema, compiled.spec) if schema is not None else None
     headers[SCHEMA_VALID_HEADER] = "false" if error else "true"
+    trace.schema_valid = not error
     if error:
         _log.warning(
             "mock.correlation.schema_drift",

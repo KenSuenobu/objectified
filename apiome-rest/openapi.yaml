@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.168.0
+  version: 1.169.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -14782,6 +14782,116 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for set version mock correlationresponse422.
+  /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/mock/preview:
+    post:
+      tags:
+      - versions
+      summary: Preview Version Mock
+      description: "Render one synthetic request against this version's mock, without\
+        \ sending it (#5528, MSC-1.2).\n\nAnswers the question an author actually\
+        \ has — *what comes back?* — with no mock enabled, no\ninstance provisioned,\
+        \ and no live request. The response carries the status, headers, media type\n\
+        and body the mock would serve, plus a **decision trace** naming which layer\
+        \ produced the body: a\nscenario (and which rule), session-scoped CRUD, correlation\
+        \ (and which pointers), or a declared\nexample versus schema synthesis.\n\n\
+        The render happens in apiome-mock, through the very function its data plane\
+        \ calls, so a preview\ncannot disagree with the served response. This route\
+        \ builds the version's portable mock bundle —\nthe same document the bundle\
+        \ export produces — and asks the runtime to render it. Two\nconsequences worth\
+        \ knowing: the preview reflects the *bundled* settings keys (scenarios, chaos,\n\
+        fixture packs, callbacks, correlation), and it works on a version whose mock\
+        \ is disabled,\nbecause nothing about serving access is involved.\n\nNothing\
+        \ is written. Session state lives and dies inside the render, no callback\
+        \ is delivered, no\nusage or provisioning row is touched, and an unsaved ``settings``\
+        \ override leaves the stored\nsettings exactly as they were. Chaos is *reported*\
+        \ rather than applied: a preview that slept for\na configured latency, or\
+        \ that randomly answered 500, would be answering a different question.\n\n\
+        Args:\n    tenant_slug: The tenant slug.\n    project_id: The project ID that\
+        \ must own the version.\n    version_record_id: The version record ID (UUID)\
+        \ to preview.\n    request: The synthetic request and, optionally, an unsaved\
+        \ settings override.\n    auth_data: Authentication context; requires ``versions:view``,\
+        \ and ``versions:edit`` when a\n        ``settings`` override is supplied.\n\
+        \nReturns:\n    The rendered response and its decision trace.\n\nRaises:\n\
+        \    HTTPException: 404 when the version does not exist in the project; 413\
+        \ when the synthetic\n        body is too large; 422 when a draft override\
+        \ fails the same validation its save route\n        applies, or the runtime\
+        \ rejects the request; 429 when the per-version preview rate limit\n     \
+        \   is exhausted; 502 when the mock runtime cannot be reached; 503 when preview\
+        \ is not\n        configured on this deployment."
+      operationId: preview_version_mock_v1_versions__tenant_slug___project_id___version_record_id__mock_preview_post
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Id
+          description: Project Id schema.
+        description: Project identifier that scopes the request.
+      - name: version_record_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Record Id
+          description: Version Record Id schema.
+        description: Version row identifier (``versions.id`` UUID).
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Preview Version Mockauthorization schema.
+          - type: 'null'
+            description: Preview Version Mockauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Preview Version Mock Xapikey schema.
+          - type: 'null'
+            description: Preview Version Mock Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionMockPreviewRequest'
+              description: Request body for preview version mockrequest.
+        description: Request body for preview version mock.
+      responses:
+        '200':
+          description: Successful response for preview version mock.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionMockPreviewResponse'
+                description: Response payload for preview version mockresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for preview version mockresponse422.
   /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/mock/fixture-packs:
     get:
       tags:
@@ -59374,7 +59484,7 @@ components:
           type: string
           title: Operation Uuid
           description: The apiome.path_operation UUID.
-          example: e2ee46e3-0808-4e31-b84d-3fa1d9b2f3de
+          example: 0b5b0159-99f0-4671-b463-95ab903bef7a
         method:
           type: string
           title: Method
@@ -61366,7 +61476,7 @@ components:
           type: string
           title: Generated At
           description: Statement timestamp (ISO-8601, UTC).
-          example: '2026-08-28T18:11:48Z'
+          example: '2026-08-28T20:55:39Z'
         envelope:
           additionalProperties: true
           type: object
@@ -82321,6 +82431,291 @@ components:
       - requestCount
       title: MockInstanceResponse
       description: Public view of a provisioned mock instance.
+    MockPreviewChaos:
+      properties:
+        suppressed:
+          type: boolean
+          title: Suppressed
+          description: True when chaos is configured for this operation; a preview
+            reports it rather than applying it.
+          default: false
+          example: false
+        delayMs:
+          type: integer
+          title: Delayms
+          description: Base injected delay the data plane would have slept.
+          default: 0
+          example: 1
+        jitterMs:
+          type: integer
+          title: Jitterms
+          description: Uniform jitter half-width around that delay.
+          default: 0
+          example: 1
+        errorRate:
+          type: number
+          title: Errorrate
+          description: Percent probability the data plane would have injected an error.
+          default: 0.0
+          example: 1.0
+      type: object
+      title: MockPreviewChaos
+      description: The chaos the data plane would have applied to this request, and
+        did not (#5528 MSC-1.2).
+    MockPreviewRequestSpec:
+      properties:
+        method:
+          type: string
+          maxLength: 16
+          title: Method
+          description: HTTP method.
+          default: GET
+          example: example
+        path:
+          type: string
+          maxLength: 2048
+          title: Path
+          description: Path relative to the version root — /pets/42, not /acme/petstore/1.0.0/pets/42.
+            A ?query suffix is accepted and merged into `query`.
+          default: /
+          example: /resources/{id}
+        headers:
+          additionalProperties:
+            type: string
+          type: object
+          title: Headers
+          description: Request headers.
+        query:
+          additionalProperties:
+            anyOf:
+            - type: string
+            - items:
+                type: string
+              type: array
+          type: object
+          title: Query
+          description: Query parameters; a bare string is a single-valued parameter.
+        body:
+          title: Body
+          description: 'Request body: a JSON value (sent as application/json), a raw
+            string, or null.'
+        scenario:
+          anyOf:
+          - type: string
+            maxLength: 200
+            description: Request body for mock preview request spec.
+          - type: 'null'
+            description: Request body for mock preview request spec.
+          title: Scenario
+          description: Shorthand for the X-Mock-Scenario header; an explicit header
+            wins.
+        seed:
+          anyOf:
+          - type: integer
+            description: Request body for mock preview request spec.
+          - type: 'null'
+            description: Request body for mock preview request spec.
+          title: Seed
+          description: Shorthand for the ?__seed= parameter that pins synthesis.
+      additionalProperties: false
+      type: object
+      title: MockPreviewRequestSpec
+      description: 'The synthetic request to render (#5528 MSC-1.2).
+
+
+        Declared a second time as ``apiome_mock.preview_routes.PreviewRequestModel``,
+        which is what
+
+        actually receives it: apiome-mock depends on this package, so the wire shape
+        cannot be shared
+
+        as a type. The fields must stay identical; apiome-mock''s suite asserts they
+        do.'
+    MockPreviewSettingsSpec:
+      properties:
+        scenarios:
+          anyOf:
+          - additionalProperties:
+              $ref: '#/components/schemas/MockScenarioSpecInput'
+            type: object
+            description: Mock Preview Settings Spec schema.
+          - type: 'null'
+            description: Mock Preview Settings Spec schema.
+          title: Scenarios
+          description: Draft scenario definitions keyed by name; replaces the stored
+            map.
+        chaos:
+          anyOf:
+          - $ref: '#/components/schemas/MockChaosSpec'
+          - type: 'null'
+            description: Mock Preview Settings Spec schema.
+          description: Draft version-level latency/chaos knobs. Chaos is reported,
+            never applied, in a preview.
+        fixturePacks:
+          anyOf:
+          - additionalProperties:
+              $ref: '#/components/schemas/MockFixturePackSpec'
+            type: object
+            description: Mock Preview Settings Spec schema.
+          - type: 'null'
+            description: Mock Preview Settings Spec schema.
+          title: Fixturepacks
+          description: Draft fixture packs; replaces the stored map.
+        callbacks:
+          anyOf:
+          - additionalProperties:
+              $ref: '#/components/schemas/MockCallbackSpec'
+            type: object
+            description: Mock Preview Settings Spec schema.
+          - type: 'null'
+            description: Mock Preview Settings Spec schema.
+          title: Callbacks
+          description: Draft callback definitions; replaces the stored map. A preview
+            never delivers them.
+        responseCorrelation:
+          anyOf:
+          - $ref: '#/components/schemas/MockResponseCorrelationSpec'
+          - type: 'null'
+            description: Mock Preview Settings Spec schema.
+          description: Draft response-correlation block; replaces the stored one.
+      additionalProperties: false
+      type: object
+      title: MockPreviewSettingsSpec
+      description: 'An unsaved mock configuration to preview against, instead of the
+        stored one (#5528 MSC-1.2).
+
+
+        Every field is optional and overlays the version''s stored settings *per key*:
+        a field the
+
+        draft declares replaces the stored value outright, a field it omits keeps
+        the stored value,
+
+        and an explicit ``null`` clears it. So an editor previewing a reworked correlation
+        block sends
+
+        only ``correlation`` and keeps the version''s scenarios, chaos and fixtures.
+
+
+        The keys are exactly the ones that travel inside a portable mock bundle —
+        the behaviour
+
+        surface. Access control (the private-mock ``mode``) and the proxy-capture
+        grant are hosted
+
+        concerns with no meaning in a render and are deliberately not previewable.
+
+
+        Supplying this object requires ``versions:edit``: it is the caller asserting
+        a configuration
+
+        the version does not have.'
+    MockPreviewTrace:
+      properties:
+        layer:
+          type: string
+          title: Layer
+          description: 'Which layer produced the body: scenario, stateful, correlation,
+            example, synthesis, empty, forced-status, request-invalid, chaos-error,
+            no-operation, method-not-allowed, unknown-scenario, not-acceptable, template-limit,
+            or lifecycle.'
+          example: example
+        detail:
+          type: string
+          title: Detail
+          description: One sentence naming what happened.
+          default: ''
+          example: example
+        scenario:
+          anyOf:
+          - type: string
+            description: Mock Preview Trace schema.
+          - type: 'null'
+            description: Mock Preview Trace schema.
+          title: Scenario
+          description: The scenario that applied, if any.
+        ruleIndex:
+          anyOf:
+          - type: integer
+            description: Mock Preview Trace schema.
+          - type: 'null'
+            description: Mock Preview Trace schema.
+          title: Ruleindex
+          description: Zero-based index of the matched rule in the operation's stored
+            `rules` array.
+        seed:
+          anyOf:
+          - type: integer
+            description: Mock Preview Trace schema.
+          - type: 'null'
+            description: Mock Preview Trace schema.
+          title: Seed
+          description: The synthesis seed the body was rendered with.
+        seedSource:
+          type: string
+          title: Seedsource
+          description: 'Where the seed came from: "request", "correlation", or "default".'
+          default: default
+          example: example
+        correlationMode:
+          anyOf:
+          - type: string
+            description: Mock Preview Trace schema.
+          - type: 'null'
+            description: Mock Preview Trace schema.
+          title: Correlationmode
+          description: The correlation mode in effect, when correlation ran.
+        correlationApplied:
+          items:
+            type: string
+          type: array
+          title: Correlationapplied
+          description: The correlation passes that bound something.
+          maxItems: 1000
+        correlationPointers:
+          items:
+            type: string
+          type: array
+          title: Correlationpointers
+          description: The explicit JSON Pointers correlation wrote to.
+          maxItems: 1000
+        schemaValid:
+          anyOf:
+          - type: boolean
+            description: Mock Preview Trace schema.
+          - type: 'null'
+            description: Mock Preview Trace schema.
+          title: Schemavalid
+          description: Whether the served body validates against the response schema;
+            null when unchecked.
+        bodySource:
+          anyOf:
+          - type: string
+            description: Mock Preview Trace schema.
+          - type: 'null'
+            description: Mock Preview Trace schema.
+          title: Bodysource
+          description: 'The finer example-first source: examples, example, schema-example,
+            schema-default, schema-enum, synthesis, or none.'
+        exampleName:
+          anyOf:
+          - type: string
+            description: Mock Preview Trace schema.
+          - type: 'null'
+            description: Mock Preview Trace schema.
+          title: Examplename
+          description: The named example used, when one was.
+      type: object
+      required:
+      - layer
+      title: MockPreviewTrace
+      description: 'Why the previewed response looks the way it does (#5528 MSC-1.2).
+
+
+        Without this an author can see *that* a value appeared but not *why*, which
+        is most of the
+
+        value of a preview.'
     MockProvisionRequest:
       properties:
         projectSlug:
@@ -90938,7 +91333,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-28T18:11:48Z'
+          example: '2026-08-28T20:55:39Z'
       additionalProperties: false
       type: object
       required:
@@ -102685,13 +103080,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-28T18:11:48Z'
+          example: '2026-08-28T20:55:39Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-28T18:11:48Z'
+          example: '2026-08-28T20:55:39Z'
         outcome:
           anyOf:
           - type: string
@@ -105102,6 +105497,87 @@ components:
       title: VersionMockFixturePacksResponse
       description: The version's persisted mock fixture packs and their content digests
         (#4745 PMR-2.2).
+    VersionMockPreviewRequest:
+      properties:
+        request:
+          $ref: '#/components/schemas/MockPreviewRequestSpec'
+          description: The synthetic request; defaults to GET / when omitted.
+        settings:
+          anyOf:
+          - $ref: '#/components/schemas/MockPreviewSettingsSpec'
+          - type: 'null'
+            description: Request body for version mock preview.
+          description: An unsaved configuration to render against instead of the stored
+            one. Requires versions:edit; nothing is persisted.
+      additionalProperties: false
+      type: object
+      title: VersionMockPreviewRequest
+      description: Render one synthetic request against the version's mock (#5528
+        MSC-1.2).
+    VersionMockPreviewResponse:
+      properties:
+        operation:
+          anyOf:
+          - type: string
+            description: Response payload for version mock preview.
+          - type: 'null'
+            description: Response payload for version mock preview.
+          title: Operation
+          description: Matched operation key ("GET /pets/{petId}"); null when nothing
+            matched.
+        pathParams:
+          additionalProperties:
+            type: string
+          type: object
+          title: Pathparams
+          description: Path template parameters routing extracted from the request.
+        status:
+          type: integer
+          title: Status
+          description: The HTTP status the mock would return.
+          example: 1
+        headers:
+          additionalProperties:
+            type: string
+          type: object
+          title: Headers
+          description: Response headers the mock would return, including the X-Mock-*
+            family.
+        mediaType:
+          type: string
+          title: Mediatype
+          description: Negotiated response media type.
+          default: application/json
+          example: example
+        body:
+          title: Body
+          description: The response body, per bodyEncoding.
+        bodyEncoding:
+          type: string
+          title: Bodyencoding
+          description: 'How `body` is carried: json, text, base64, or empty.'
+          default: empty
+          example: example
+        trace:
+          $ref: '#/components/schemas/MockPreviewTrace'
+          description: Which layer produced the body, and why.
+        chaos:
+          $ref: '#/components/schemas/MockPreviewChaos'
+          description: What chaos the data plane would have applied.
+        draft:
+          type: boolean
+          title: Draft
+          description: True when an unsaved settings override was rendered instead
+            of the stored settings.
+          default: false
+          example: 2020-12
+      type: object
+      required:
+      - status
+      - trace
+      title: VersionMockPreviewResponse
+      description: What the mock would serve for the previewed request, and why (#5528
+        MSC-1.2).
     VersionMockScenariosRequest:
       properties:
         scenarios:

@@ -280,6 +280,36 @@ data came from: `__mock__/fixture-packs` reports each pack's `origin` and `redac
 `X-Mock-Fixture-Redaction` headers. Full guide:
 [docs/guide/mock-proxy-capture.md](../docs/guide/mock-proxy-capture.md).
 
+## Dry-run response preview (MSC-1.2)
+
+**Hosted only, internal.** `POST /__preview__` answers "given this request, what does this mock
+return?" without a request ever reaching the data plane. It takes a portable mock bundle plus a
+synthetic request and renders it through `serve_compiled_request` — the *same* function the hosted
+runtime and `apiome mock run` call — so a preview can never disagree with a served response.
+
+```bash
+curl -X POST $MOCK/__preview__ \
+  -H 'X-Internal-Service-Token: <APIOME_MOCK_INTERNAL_TOKEN>' \
+  -H 'Content-Type: application/json' \
+  -d '{"bundle": {…}, "request": {"method": "GET", "path": "/pets/42"}}'
+# -> { operation, pathParams, status, headers, mediaType, body, bodyEncoding, trace, chaos }
+```
+
+The `trace` names which layer produced the body — `scenario` (with the matched rule index),
+`stateful`, `correlation` (with the mode and the pointers it bound), `example` or `synthesis` —
+which is most of the value of a preview.
+
+The endpoint exists because the engine lives here while the control plane (version records, RBAC,
+the editor, the CLI) lives in apiome-rest, which cannot import this package. apiome-rest
+authenticates the caller, builds the bundle — from stored settings or an unsaved draft — and asks
+for the render. It is **fail closed**: with no `APIOME_MOCK_INTERNAL_TOKEN` configured the endpoint
+answers `503` and renders for nobody, and the token is compared in constant time.
+
+A preview never writes (session state lives and dies inside the call, no callback is dispatched)
+and never applies chaos — configured latency and error injection are *reported* in `chaos` instead,
+so a preview does not sleep or randomly answer 500. Full guide:
+[docs/guide/mock-response-preview.md](../docs/guide/mock-response-preview.md).
+
 ## Container image
 
 One image, two runtimes — `serve` (hosted, the default) and `run` (portable):

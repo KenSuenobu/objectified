@@ -210,10 +210,15 @@ class CorrelationOutcome:
     Attributes:
         body: The correlated body (the input value unchanged when nothing bound).
         applied: The names of the passes that changed something, in application order.
+        pointers: The JSON Pointers the explicit pass actually wrote to, in application order.
+            Empty unless the ``explicit`` pass bound something. Recorded so the dry-run preview
+            (#5528, MSC-1.2) can tell an author *which* binding produced a value, not merely that
+            correlation ran.
     """
 
     body: Any
     applied: tuple[str, ...] = ()
+    pointers: tuple[str, ...] = ()
 
     @property
     def changed(self) -> bool:
@@ -516,19 +521,30 @@ def _bind_explicit(
     pointers: tuple[tuple[str, str], ...],
     env: RenderEnv,
     budget: RenderBudget,
-) -> tuple[Any, bool]:
+) -> tuple[Any, tuple[str, ...]]:
     """Render and apply each explicit pointer binding, in stored order.
+
+    Args:
+        node: The response body to bind into.
+        pointers: ``(json_pointer, expression)`` pairs in stored order.
+        env: Request facts, seeded RNG, and fixture data for the expressions.
+        budget: The shared render budget.
+
+    Returns:
+        ``(body, bound_pointers)`` — the rewritten body and the pointers that actually wrote a
+        value (a pointer whose parent is missing writes nothing and is not reported).
 
     Raises:
         TemplateLimitError: When a rendered expression exhausts the shared render budget.
     """
     body = node
-    changed = False
+    bound: list[str] = []
     for pointer, expression in pointers:
         rendered = render_value(expression, env, budget)
         body, applied = _set_at_pointer(body, _pointer_tokens(pointer), rendered)
-        changed = changed or applied
-    return body, changed
+        if applied:
+            bound.append(pointer)
+    return body, tuple(bound)
 
 
 def correlate_response_body(
@@ -554,7 +570,8 @@ def correlate_response_body(
         budget: The shared render budget for explicit expressions.
 
     Returns:
-        The correlated body and the names of the passes that bound something.
+        The correlated body, the names of the passes that bound something, and the explicit
+        pointers those passes wrote to.
 
     Raises:
         TemplateLimitError: When an explicit expression exhausts the render budget.
@@ -563,6 +580,7 @@ def correlate_response_body(
         return CorrelationOutcome(body=body)
 
     applied: list[str] = []
+    bound_pointers: tuple[str, ...] = ()
     result = body
 
     if config.binds_path_params:
@@ -579,8 +597,8 @@ def correlate_response_body(
 
     pointers = config.pointers_for(operation_key)
     if pointers:
-        result, changed = _bind_explicit(result, pointers, env, budget)
-        if changed:
+        result, bound_pointers = _bind_explicit(result, pointers, env, budget)
+        if bound_pointers:
             applied.append(MODE_EXPLICIT)
 
-    return CorrelationOutcome(body=result, applied=tuple(applied))
+    return CorrelationOutcome(body=result, applied=tuple(applied), pointers=bound_pointers)

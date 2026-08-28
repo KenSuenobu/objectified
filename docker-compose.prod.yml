@@ -69,6 +69,14 @@ services:
       # Surface backup freshness on the ops dashboard (RC1-3.2 reads RC1-1.3 manifests).
       APIOME_BACKUP_DIR: /var/backups/apiome
       APIOME_MOCK_PUBLIC_BASE_URL: https://${DEPLOY_MOCK_DOMAIN:?set DEPLOY_MOCK_DOMAIN in your .env}
+      # Dry-run mock preview (#5528, MSC-1.2). The base compose ships a well-known dev token so a
+      # local stack works out of the box; production must not inherit it, so it is overridden to
+      # empty here. Preview then fails closed with 503 until an operator sets
+      # APIOME_MOCK_INTERNAL_TOKEN in .env (the same value reaches the `mock` service below). The
+      # address stays internal Docker DNS — this endpoint is server-to-server and is deliberately
+      # not published through Caddy.
+      APIOME_MOCK_INTERNAL_BASE_URL: http://mock:8775
+      APIOME_MOCK_INTERNAL_TOKEN: ${APIOME_MOCK_INTERNAL_TOKEN:-}
       # Slate custom documentation domains (Slate 10.1, private-suite#119). The DNS target is
       # both what tenants are told to CNAME to and what verification compares an observed record
       # against, so one value drives both — set it to a hostname in *your* zone that resolves to
@@ -112,6 +120,8 @@ services:
   mock:
     environment:
       APIOME_MOCK_DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in your .env}@postgres:5432/${POSTGRES_DB:-apiome}
+      # Must match the value given to `rest` above; empty leaves /__preview__ disabled (#5528).
+      APIOME_MOCK_INTERNAL_TOKEN: ${APIOME_MOCK_INTERNAL_TOKEN:-}
     depends_on: !override
       postgres:
         condition: service_healthy

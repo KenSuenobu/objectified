@@ -95,6 +95,16 @@ services:
       POSTGRES_PORT: "5432"
       POSTGRES_DB: ${POSTGRES_DB:-apiome}
       APIOME_MOCK_PUBLIC_BASE_URL: ${APIOME_MOCK_PUBLIC_BASE_URL:-http://localhost:8775}
+      # ── Dry-run mock preview (#5528, MSC-1.2) ───────────────────────────────────────────────
+      # POST …/mock/preview renders a synthetic request through apiome-mock's *own* serving path
+      # rather than re-implementing it here, so REST needs the mock service's INTERNAL address
+      # (compose DNS on the shared network — never the public URL above) plus a shared token both
+      # containers hold. Both are required: with either unset the preview endpoint fails closed
+      # with 503 and the mock side refuses to render for an unauthenticated caller. Deliberately
+      # not INTERNAL_SERVICE_TOKEN — rendering a preview should not carry the secret that unseals
+      # auth-provider credentials.
+      APIOME_MOCK_INTERNAL_BASE_URL: ${APIOME_MOCK_INTERNAL_BASE_URL:-http://mock:8775}
+      APIOME_MOCK_INTERNAL_TOKEN: ${APIOME_MOCK_INTERNAL_TOKEN:-apiome-local-dev-preview-token}
       # ── DB-over-env sign-in provider configuration (OLO-8.3/8.4/8.5) ────────────────────────
       # A compose service only receives the variables listed here, and there is no `env_file`,
       # so anything absent from this block is simply not in the container no matter what the
@@ -182,6 +192,9 @@ services:
       APIOME_MOCK_DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-apiome_local_dev}@postgres:5432/${POSTGRES_DB:-apiome}
       APIOME_MOCK_HTTP_HOST: 0.0.0.0
       APIOME_MOCK_HTTP_PORT: 8775
+      # Gates the internal /__preview__ endpoint apiome-rest calls for dry-run renders (#5528,
+      # MSC-1.2). Must match the value given to `rest`; unset disables the endpoint entirely.
+      APIOME_MOCK_INTERNAL_TOKEN: ${APIOME_MOCK_INTERNAL_TOKEN:-apiome-local-dev-preview-token}
     depends_on:
       postgres:
         condition: service_healthy
