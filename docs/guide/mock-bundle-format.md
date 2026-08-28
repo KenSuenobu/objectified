@@ -64,7 +64,7 @@ project slug and version label.
     "sig": "…"
   },
   "spec": { "openapi": "3.1.0", "…": "…" },              // the version's generated document
-  "settings": { "scenarios": {…}, "chaos": {…}, "fixturePacks": {…}, "callbacks": {…} },  // portable settings subset
+  "settings": { "scenarios": {…}, "chaos": {…}, "fixturePacks": {…}, "callbacks": {…}, "responseCorrelation": {…} },  // portable settings subset
   "fixtures": { "pets.json": "<base64>" }                // embedded, so nothing else is needed
 }
 ```
@@ -115,9 +115,10 @@ first), each with a stable code:
 
 Three independent layers keep secrets out of a bundle:
 
-1. **Allowlist.** Only `scenarios`, `chaos`, `fixturePacks` (#4745, PMR-2.2), and `callbacks`
-   (#4746, PMR-2.3) travel from `versions.mock_settings`. Hosted-plane access control (the
-   private-mock `mode`) is meaningless offline and never leaves the server.
+1. **Allowlist.** Only `scenarios`, `chaos`, `fixturePacks` (#4745, PMR-2.2), `callbacks`
+   (#4746, PMR-2.3), and `responseCorrelation` (#5527, MSC-1.1) travel from
+   `versions.mock_settings`. Hosted-plane access control (the private-mock `mode`) is meaningless
+   offline and never leaves the server.
 2. **Redaction.** Credential-shaped fields inside that subset — `Authorization`, `*token*`,
    `*secret*`, `*password*`, `*apiKey*`, PEM blocks, `Bearer …` values — are *removed* (not masked,
    so not even a length leaks) and their JSON pointers are published in `manifest.redactions`.
@@ -147,7 +148,8 @@ compiled = bundle.to_compiled_spec()   # same serving unit the hosted path build
 ```
 
 `to_compiled_spec()` returns the identical `CompiledSpec` the database path produces, so routing,
-request validation, sessions, scenarios, and chaos behave exactly as they do hosted. A loaded
+request validation, sessions, scenarios, chaos, and
+[response correlation](mock-response-correlation.md) behave exactly as they do hosted. A loaded
 bundle reports the Unix epoch as its `updated_at` — bundles are immutable and timestamp-free by
 design.
 

@@ -117,7 +117,15 @@ DIGEST_ALGORITHM = "sha256"
 #: (#4745, PMR-2.2) rides along so portable sessions can seed and reset exactly like hosted ones,
 #: and ``callbacks`` (#4746, PMR-2.3) so a portable mock exercises the same outbound contract —
 #: the definitions carry destination allowlists and templates, never a credential.
-BUNDLED_SETTINGS_KEYS: Tuple[str, ...] = ("scenarios", "chaos", "fixturePacks", "callbacks")
+#: ``responseCorrelation`` (#5527, MSC-1.1) rides along too, so a bundle answers ``GET /pets/42``
+#: with the same correlated body the hosted mock does.
+BUNDLED_SETTINGS_KEYS: Tuple[str, ...] = (
+    "scenarios",
+    "chaos",
+    "fixturePacks",
+    "callbacks",
+    "responseCorrelation",
+)
 
 # --- verification problem codes ---------------------------------------------------------------
 

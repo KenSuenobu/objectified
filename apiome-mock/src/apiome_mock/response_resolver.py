@@ -263,6 +263,41 @@ def _resolve_body_at_media_type(
     return body, error
 
 
+def response_schema_for_media_type(
+    response_obj: dict[str, Any] | None,
+    spec: dict[str, Any],
+    media_type: str,
+) -> dict[str, Any] | None:
+    """Return the response schema declared for one media type, ``$ref`` resolved.
+
+    Correlation (#5527, MSC-1.1) rewrites a resolved body *after* it is chosen, so it needs the
+    same schema :func:`resolve_response_body` validated the synthesized body against in order to
+    re-check the correlated one. Kept here rather than duplicated in the caller so both the
+    resolution and the re-check read the response object the same way.
+
+    Args:
+        response_obj: The operation's response object for the served status.
+        spec: The full OpenAPI document, for ``$ref`` resolution.
+        media_type: The media type actually served.
+
+    Returns:
+        The schema object, or ``None`` when the response declares no schema for that media type.
+    """
+    if not isinstance(response_obj, dict):
+        return None
+    content = response_obj.get("content")
+    if not isinstance(content, dict):
+        return None
+    media_obj = content.get(media_type)
+    if not isinstance(media_obj, dict):
+        return None
+    schema = media_obj.get("schema")
+    if not isinstance(schema, dict):
+        return None
+    resolved = _deref_schema(schema, spec)
+    return resolved or None
+
+
 def _candidate_media_types(
     content: dict[str, Any],
     accept: str | None,

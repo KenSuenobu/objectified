@@ -63,6 +63,8 @@ COMPARED_HEADERS: tuple[str, ...] = (
     "x-mock-chaos",
     "x-mock-chaos-delay-ms",
     "x-mock-fixture",
+    "x-mock-correlation",
+    "x-mock-schema-valid",
 )
 
 

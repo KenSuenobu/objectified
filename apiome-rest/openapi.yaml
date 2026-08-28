@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.167.0
+  version: 1.168.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -14606,6 +14606,182 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
                 description: Response payload for set version mock scenariosresponse422.
+  /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/mock/correlation:
+    get:
+      tags:
+      - versions
+      summary: Get Version Mock Correlation
+      description: Return the version's mock response-correlation settings (#5527,
+        MSC-1.1).
+      operationId: get_version_mock_correlation_v1_versions__tenant_slug___project_id___version_record_id__mock_correlation_get
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Id
+          description: Project Id schema.
+        description: Project identifier that scopes the request.
+      - name: version_record_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Record Id
+          description: Version Record Id schema.
+        description: Version row identifier (``versions.id`` UUID).
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Version Mock Correlationauthorization schema.
+          - type: 'null'
+            description: Get Version Mock Correlationauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Get Version Mock Correlation Xapikey schema.
+          - type: 'null'
+            description: Get Version Mock Correlation Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      responses:
+        '200':
+          description: Successful response for get version mock correlation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionMockCorrelationResponse'
+                description: Response payload for get version mock correlationresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for get version mock correlationresponse422.
+    put:
+      tags:
+      - versions
+      summary: Set Version Mock Correlation
+      description: 'Replace the version''s mock response-correlation settings (#5527,
+        MSC-1.1).
+
+
+        Correlation is what makes the default response path answer ``GET /pets/42``
+        with an id of
+
+        ``42`` — with no request header, so a generated SDK or a browser app gets
+        it too. The block is
+
+        validated against this version''s generated OpenAPI document (every operation
+        key must name a
+
+        real operation) and against the bounded template language (every explicit
+        expression must
+
+        parse), then stored canonically in ``versions.mock_settings`` under ``responseCorrelation``,
+
+        alongside the other mock knobs, and travels inside portable mock bundles.
+
+
+        Omitting ``correlation`` (or sending ``null``, or a block with ``mode: "off"``)
+        clears the
+
+        stored block and reverts the version to today''s static behaviour.'
+      operationId: set_version_mock_correlation_v1_versions__tenant_slug___project_id___version_record_id__mock_correlation_put
+      parameters:
+      - name: tenant_slug
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Slug
+          description: Tenant Slug schema.
+        description: URL-safe tenant slug that scopes the request.
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Id
+          description: Project Id schema.
+        description: Project identifier that scopes the request.
+      - name: version_record_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Version Record Id
+          description: Version Record Id schema.
+        description: Version row identifier (``versions.id`` UUID).
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Set Version Mock Correlationauthorization schema.
+          - type: 'null'
+            description: Set Version Mock Correlationauthorization schema.
+          title: Authorization
+          description: Authorization schema.
+        description: 'JWT bearer token for authenticated access (``Authorization:
+          Bearer <token>``).'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            description: Set Version Mock Correlation Xapikey schema.
+          - type: 'null'
+            description: Set Version Mock Correlation Xapikey schema.
+          title: X-Api-Key
+          description: X-Api-Key schema.
+        description: Tenant-scoped API key used as an alternative to JWT bearer authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionMockCorrelationRequest'
+              description: Request body for set version mock correlationrequest.
+        description: Request body for set version mock correlation.
+      responses:
+        '200':
+          description: Successful response for set version mock correlation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionMockCorrelationResponse'
+                description: Response payload for set version mock correlationresponse200.
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+                description: Response payload for set version mock correlationresponse422.
   /v1/versions/{tenant_slug}/{project_id}/{version_record_id}/mock/fixture-packs:
     get:
       tags:
@@ -59198,7 +59374,7 @@ components:
           type: string
           title: Operation Uuid
           description: The apiome.path_operation UUID.
-          example: 215af785-8604-4948-ba4b-c3e87fab1751
+          example: e2ee46e3-0808-4e31-b84d-3fa1d9b2f3de
         method:
           type: string
           title: Method
@@ -61190,7 +61366,7 @@ components:
           type: string
           title: Generated At
           description: Statement timestamp (ISO-8601, UTC).
-          example: '2026-08-28T02:14:10Z'
+          example: '2026-08-28T18:11:48Z'
         envelope:
           additionalProperties: true
           type: object
@@ -82302,6 +82478,46 @@ components:
         validation
 
         (regex compilation, list caps) happens in ``app.mock_match.validate_when``.'
+    MockResponseCorrelationSpec:
+      properties:
+        mode:
+          type: string
+          enum:
+          - 'off'
+          - path-params
+          - inferred
+          - explicit
+          title: Mode
+          description: 'off: no correlation (the default). path-params: response properties
+            named after a path parameter take the request''s value. inferred: path-params
+            plus echoing request-body fields back on POST/PUT/PATCH. explicit: only
+            the operations pointer map.'
+          default: 'off'
+          example: 'off'
+        operations:
+          additionalProperties:
+            additionalProperties:
+              type: string
+            type: object
+          type: object
+          title: Operations
+          description: Explicit bindings keyed by "METHOD /path/{template}" operation
+            identifier, each a map of response JSON Pointer to a bounded {{ ... }}
+            template expression.
+      additionalProperties: false
+      type: object
+      title: MockResponseCorrelationSpec
+      description: 'How the mock correlates a default-path response with the request
+        (#5527 MSC-1.1).
+
+
+        ``mode`` chooses which inference passes run; the ``operations`` pointer map
+        is honoured in
+
+        every mode except ``off`` and always wins over an inferred or path-parameter
+        binding for the
+
+        same pointer.'
     MockRuntimeRef:
       properties:
         name:
@@ -90722,7 +90938,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-28T02:14:10Z'
+          example: '2026-08-28T18:11:48Z'
       additionalProperties: false
       type: object
       required:
@@ -102469,13 +102685,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-28T02:14:10Z'
+          example: '2026-08-28T18:11:48Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-28T02:14:10Z'
+          example: '2026-08-28T18:11:48Z'
         outcome:
           anyOf:
           - type: string
@@ -104830,6 +105046,32 @@ components:
       type: object
       title: VersionMockCapturesResponse
       description: A version's recorded exchanges awaiting review (#4747 PMR-2.4).
+    VersionMockCorrelationRequest:
+      properties:
+        correlation:
+          anyOf:
+          - $ref: '#/components/schemas/MockResponseCorrelationSpec'
+          - type: 'null'
+            description: Request body for version mock correlation.
+          description: The correlation block; omit or send null to clear it (correlation
+            reverts to off).
+      type: object
+      title: VersionMockCorrelationRequest
+      description: Replace the version's mock response-correlation settings (#5527
+        MSC-1.1).
+    VersionMockCorrelationResponse:
+      properties:
+        correlation:
+          anyOf:
+          - $ref: '#/components/schemas/MockResponseCorrelationSpec'
+          - type: 'null'
+            description: Response payload for version mock correlation.
+          description: The stored correlation block; null when the version has none
+            (correlation is off).
+      type: object
+      title: VersionMockCorrelationResponse
+      description: The version's persisted mock response-correlation settings (#5527
+        MSC-1.1).
     VersionMockFixturePacksRequest:
       properties:
         packs:

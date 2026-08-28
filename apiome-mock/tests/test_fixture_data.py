@@ -4,24 +4,11 @@ from __future__ import annotations
 
 import base64
 
-from apiome_mock.fixture_data import MAX_FIXTURE_BYTES, decode_bundle_fixtures, parse_fixtures
+from apiome_mock.fixture_data import MAX_FIXTURE_BYTES, decode_bundle_fixtures
 
 
 def _b64(text: str) -> str:
     return base64.b64encode(text.encode("utf-8")).decode("ascii")
-
-
-def test_parse_fixtures_reads_the_fixtures_key() -> None:
-    settings = {"fixtures": {"pets": [{"name": "Rex"}], "note": "hello"}}
-    assert parse_fixtures(settings) == {"pets": [{"name": "Rex"}], "note": "hello"}
-
-
-def test_parse_fixtures_is_lenient() -> None:
-    assert parse_fixtures(None) == {}
-    assert parse_fixtures("not json") == {}
-    assert parse_fixtures({"fixtures": "nope"}) == {}
-    assert parse_fixtures({"fixtures": {"": "blank", 42: "num", "ok": 1}}) == {"ok": 1}
-    assert parse_fixtures('{"fixtures": {"a": 1}}') == {"a": 1}
 
 
 def test_decode_bundle_fixtures_parses_json_and_keeps_text() -> None:

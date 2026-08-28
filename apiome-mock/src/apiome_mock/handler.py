@@ -6,8 +6,9 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
+import structlog
 from app.mock_engine import MockOperation
-from app.mock_template import TemplateLimitError
+from app.mock_template import RenderBudget, RenderEnv, TemplateLimitError, make_rng
 from fastapi import Request
 from fastapi.responses import JSONResponse, Response
 from psycopg_pool import AsyncConnectionPool
@@ -28,6 +29,12 @@ from apiome_mock.chaos import (
     effective_knobs,
     should_inject_error,
 )
+from apiome_mock.correlation import (
+    CORRELATION_HEADER,
+    SCHEMA_VALID_HEADER,
+    correlate_response_body,
+    derive_request_seed,
+)
 from apiome_mock.lifecycle import handle_lifecycle_request, is_lifecycle_path
 from apiome_mock.problems import (
     bad_request,
@@ -46,6 +53,7 @@ from apiome_mock.request_validator import ValidationFailure, validate_operation_
 from apiome_mock.response_resolver import (
     parse_forced_status,
     resolve_response_body,
+    response_schema_for_media_type,
     select_default_success_status,
     select_response_by_status,
 )
@@ -56,11 +64,16 @@ from apiome_mock.scenarios import (
     select_scenario_responses,
     serve_scenario_response,
 )
-from apiome_mock.schema_synthesizer import parse_mock_seed
+from apiome_mock.schema_synthesizer import parse_mock_seed, validate_value
 from apiome_mock.session_store import SessionStore
 from apiome_mock.spec_cache import SpecCache
 from apiome_mock.spec_loader import CompiledSpec, get_mock_access_status, load_compiled_spec
 from apiome_mock.stateful_handler import parse_mock_session_token, try_handle_stateful_crud
+
+_log = structlog.get_logger(__name__)
+
+SEED_QUERY_PARAM = "__seed"
+"""Query parameter that pins the synthesis seed; present means the caller chose it."""
 
 
 @dataclass
@@ -374,8 +387,8 @@ async def serve_compiled_request(
     """Serve a mock response from an already-resolved :class:`CompiledSpec`.
 
     This is the whole of the mock's request behavior — routing, scenarios, chaos, validation,
-    stateful CRUD, example-first response resolution, and outbound callback delivery — with no
-    dependency on Postgres. The hosted path (:func:`handle_mock_request`) reaches it after
+    stateful CRUD, example-first response resolution, request correlation, and outbound callback
+    delivery — with no dependency on Postgres. The hosted path (:func:`handle_mock_request`) reaches it after
     resolving the spec from the database; the portable runtime (:mod:`apiome_mock.portable`)
     reaches it with the spec compiled from a mock bundle. Sharing this function is what makes the
     two runtimes behave identically.
@@ -458,7 +471,7 @@ async def _fire_callbacks(
         path_params=path_params,
         needs_body=any(definition.needs_request_body for definition in fired),
     )
-    seed = parse_mock_seed(request.query_params.get("__seed"))
+    seed = parse_mock_seed(request.query_params.get(SEED_QUERY_PARAM))
     session_token = parse_mock_session_token(request)
     requested = request.headers.get(CALLBACK_URL_HEADER)
 
@@ -564,7 +577,7 @@ async def _serve_matched_request(
             response.headers[CHAOS_DELAY_HEADER] = str(applied_delay_ms)
         return response
 
-    seed = parse_mock_seed(request.query_params.get("__seed"))
+    seed = parse_mock_seed(request.query_params.get(SEED_QUERY_PARAM))
 
     if scenario is not None:
         override = scenario.operations.get(operation.key)
@@ -670,12 +683,23 @@ async def _serve_matched_request(
             return _with_chaos_delay(stateful)
 
     status, response_obj = select_default_success_status(operation.operation)
+
+    # Request-correlated responses (#5527, MSC-1.1). This is the path a consumer you do not
+    # control actually takes — no scenario header, no session header — so correlation is
+    # configuration on the version rather than an opt-in per request. It runs *after* the default
+    # body is resolved and *before* the schema re-check below, and only here: an active scenario
+    # override and stateful CRUD both returned above, and both still win.
+    correlating = compiled.correlation.applies_to(operation.key)
+    default_seed = seed
+    if correlating and request.query_params.get(SEED_QUERY_PARAM) is None:
+        default_seed = derive_request_seed(request.method, operation.path_template, path_params)
+
     resolved = resolve_response_body(
         response_obj,
         compiled.spec,
         accept=accept,
         prefer_header=prefer_header,
-        seed=seed,
+        seed=default_seed,
         op_key=operation.key,
     )
     if resolved.not_acceptable:
@@ -686,4 +710,100 @@ async def _serve_matched_request(
             )
         )
 
-    return _with_chaos_delay(_response_for_body(status=status, body=resolved.body, media_type=resolved.media_type))
+    body = resolved.body
+    correlation_headers: dict[str, str] = {}
+    if correlating:
+        try:
+            body, correlation_headers = await _correlate_default_body(
+                request,
+                compiled=compiled,
+                operation=operation,
+                path_params=path_params,
+                response_obj=response_obj,
+                media_type=resolved.media_type,
+                body=body,
+                seed=default_seed,
+            )
+        except TemplateLimitError as exc:
+            return _with_chaos_delay(
+                template_limits_exceeded(
+                    f"Response correlation for {operation.key} exceeded its render limits: {exc}",
+                    instance=instance,
+                )
+            )
+
+    response = _response_for_body(status=status, body=body, media_type=resolved.media_type)
+    for name, value in correlation_headers.items():
+        response.headers[name] = value
+    return _with_chaos_delay(response)
+
+
+async def _correlate_default_body(
+    request: Request,
+    *,
+    compiled: CompiledSpec,
+    operation: MockOperation,
+    path_params: Mapping[str, str],
+    response_obj: dict[str, Any] | None,
+    media_type: str,
+    body: Any,
+    seed: int,
+) -> tuple[Any, dict[str, str]]:
+    """Correlate one resolved default-path body and report the outcome (#5527, MSC-1.1).
+
+    Builds the same :class:`~app.mock_template.RenderEnv` the scenario renderer uses — so explicit
+    pointer expressions read exactly the request fields, seeded randomness, and fixture data a
+    scenario template can — then re-validates the correlated body against the response schema. A
+    correlated body that drifts from the contract is still served (refusing it would make a mock
+    less useful than the static one it replaces) but is *surfaced*: the response carries
+    ``X-Mock-Schema-Valid: false`` and the drift is logged with the operation and the violation.
+
+    Args:
+        request: The incoming request.
+        compiled: The compiled spec being served (correlation settings and fixture data).
+        operation: The matched operation.
+        path_params: Path template parameters extracted by routing.
+        response_obj: The operation's response object for the served status.
+        media_type: The media type actually being served.
+        body: The resolved default-path body.
+        seed: The seed the body was synthesized with, reused for ``random.*`` expressions.
+
+    Returns:
+        ``(body, headers)`` — the correlated body and the response headers describing what happened.
+
+    Raises:
+        TemplateLimitError: When an explicit expression exhausts its render budget.
+    """
+    correlation = compiled.correlation
+    ctx = await build_match_context(
+        request,
+        path_params=path_params,
+        needs_body=correlation.needs_request_body(operation.key),
+    )
+    env = RenderEnv(
+        ctx=ctx,
+        rng=make_rng(seed, operation.key, "correlation"),
+        fixtures=compiled.fixtures,
+    )
+    outcome = correlate_response_body(
+        body,
+        config=correlation,
+        operation_key=operation.key,
+        env=env,
+        budget=RenderBudget(),
+    )
+    headers = {CORRELATION_HEADER: outcome.header_value()}
+    if not outcome.changed:
+        return outcome.body, headers
+
+    schema = response_schema_for_media_type(response_obj, compiled.spec, media_type)
+    error = validate_value(outcome.body, schema, compiled.spec) if schema is not None else None
+    headers[SCHEMA_VALID_HEADER] = "false" if error else "true"
+    if error:
+        _log.warning(
+            "mock.correlation.schema_drift",
+            operation=operation.key,
+            applied=list(outcome.applied),
+            violation=error,
+        )
+    return outcome.body, headers

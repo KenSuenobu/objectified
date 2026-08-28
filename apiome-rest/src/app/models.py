@@ -4156,6 +4156,55 @@ class VersionMockScenariosResponse(BaseModel):
     )
 
 
+class MockResponseCorrelationSpec(BaseModel):
+    """How the mock correlates a default-path response with the request (#5527 MSC-1.1).
+
+    ``mode`` chooses which inference passes run; the ``operations`` pointer map is honoured in
+    every mode except ``off`` and always wins over an inferred or path-parameter binding for the
+    same pointer.
+    """
+
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    mode: Literal["off", "path-params", "inferred", "explicit"] = Field(
+        default="off",
+        description=(
+            "off: no correlation (the default). path-params: response properties named after a "
+            "path parameter take the request's value. inferred: path-params plus echoing "
+            "request-body fields back on POST/PUT/PATCH. explicit: only the operations pointer map."
+        ),
+    )
+    operations: Dict[str, Dict[str, str]] = Field(
+        default_factory=dict,
+        description=(
+            'Explicit bindings keyed by "METHOD /path/{template}" operation identifier, each a map '
+            "of response JSON Pointer to a bounded {{ ... }} template expression."
+        ),
+    )
+
+
+class VersionMockCorrelationRequest(BaseModel):
+    """Replace the version's mock response-correlation settings (#5527 MSC-1.1)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    correlation: Optional[MockResponseCorrelationSpec] = Field(
+        default=None,
+        description="The correlation block; omit or send null to clear it (correlation reverts to off).",
+    )
+
+
+class VersionMockCorrelationResponse(BaseModel):
+    """The version's persisted mock response-correlation settings (#5527 MSC-1.1)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    correlation: Optional[MockResponseCorrelationSpec] = Field(
+        default=None,
+        description="The stored correlation block; null when the version has none (correlation is off).",
+    )
+
+
 class MockFixturePackSpec(BaseModel):
     """One versioned fixture pack: deterministic seed data for stateful mocks (#4745 PMR-2.2)."""
 
