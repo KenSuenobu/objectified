@@ -12,6 +12,12 @@ Two surfaces live here:
   attestation offline with the shared HMAC secret and prints what it attests, with no server round
   trip at all. It is the mirror of ``apiome lint verify-attestation``: the same envelope, the same
   secret, the same ~10 lines of stdlib verification.
+* **Configuration as a file** — ``config pull`` / ``config push`` / ``config diff`` and
+  ``preview`` (MSC-1.4, #5530). The settings that decide what a mock *returns* become one
+  reviewable document that can be committed, diffed in a pull request, checked for drift in CI,
+  and promoted from one version to another. ``preview`` renders a single request through the
+  MSC-1.2 dry-run endpoint — or, with ``--bundle``, through the portable runtime with no control
+  plane at all.
 """
 
 from __future__ import annotations
@@ -31,17 +37,40 @@ from apiome_cli.client.mock_run import (
     build_run_plan,
     read_bundle_mount,
 )
+from apiome_cli.client.mock_preview_local import (
+    OfflinePreviewError,
+    build_preview_plan,
+    run_preview_plan,
+)
 from apiome_cli.client.mock_settings import (
     emit_mock_status,
     emit_mock_toggle_result,
+    fetch_mock_config,
     fetch_mock_usage,
     fetch_project_slug,
     fetch_version_record,
+    push_mock_config,
+    request_hosted_preview,
     set_version_mock,
 )
 from apiome_cli.client.version_scope import resolve_version_scope
-from apiome_cli.exit_codes import EXIT_ERROR, EXIT_USAGE
+from apiome_cli.exit_codes import EXIT_ERROR, EXIT_SUCCESS, EXIT_USAGE
 from apiome_cli.help_util import group_callback_without_subcommand
+from apiome_cli.mock_config import (
+    MockConfigError,
+    diff_documents,
+    document_sections,
+    read_document,
+    serialize_document,
+)
+from apiome_cli.mock_config_output import (
+    emit_config_diff,
+    emit_config_document,
+    emit_config_errors,
+    emit_preview_result,
+    emit_push_outcome,
+)
+from apiome_cli.mock_preview_request import PreviewRequestError, build_preview_request
 from apiome_cli.output import emit_json, json_mode_from_context
 
 app = typer.Typer(
@@ -334,3 +363,418 @@ def mock_verify_attestation(
 
     if status != "verified":
         raise typer.Exit(EXIT_ERROR)
+
+
+config_app = typer.Typer(
+    name="config",
+    help="Read, write and diff a version's mock configuration as one reviewable document.",
+    context_settings={"help_option_names": ["-h", "--help"]},
+    add_completion=False,
+)
+app.add_typer(config_app, name="config")
+
+_CONFIG_FILE_OPTION = typer.Option(
+    ...,
+    "--file",
+    "-f",
+    metavar="FILE",
+    help="Mock configuration document (write one with 'apiome mock config pull').",
+)
+
+
+@config_app.callback(invoke_without_command=True)
+def mock_config_group(ctx: typer.Context) -> None:
+    """Mock configuration command group."""
+    group_callback_without_subcommand(ctx)
+
+
+def _read_config_file(path: Path) -> dict[str, object]:
+    """Read a configuration document, turning a bad one into a caller-fault exit."""
+    try:
+        return read_document(path)
+    except MockConfigError as exc:
+        typer.secho(str(exc), err=True, fg="red")
+        raise typer.Exit(EXIT_USAGE) from exc
+
+
+@config_app.command("pull")
+def mock_config_pull(
+    ctx: typer.Context,
+    project: str = _PROJECT_ARGUMENT,
+    version: str = _VERSION_ARGUMENT,
+    out: Path | None = typer.Option(
+        None,
+        "--out",
+        "-o",
+        metavar="FILE",
+        help="Write the document here instead of to stdout.",
+    ),
+) -> None:
+    """Write a version's whole mock configuration as one canonical document (MSC-1.4).
+
+    Correlation, scenarios, chaos and fixture packs, exactly as the control plane stores them,
+    with keys sorted at every depth. The output depends only on the settings, so committing the
+    file and pulling it again produces no diff — which is what lets 'apiome mock config diff'
+    serve as a CI drift check.
+
+    The document carries no tenant, project or version, so the same file can be pushed to a
+    staging version and then to a production one.
+    """
+    client, tenant_slug, project_id, version_id = resolve_version_scope(
+        ctx,
+        project=project,
+        version=version,
+    )
+    document = fetch_mock_config(client, tenant_slug, project_id, version_id)
+    json_mode = json_mode_from_context(ctx)
+
+    if out is None:
+        emit_config_document(document, json_mode=json_mode)
+        return
+
+    try:
+        out.write_text(serialize_document(document), encoding="utf-8")
+    except OSError as exc:
+        typer.secho(f"Cannot write {out}: {exc}", err=True, fg="red")
+        raise typer.Exit(EXIT_USAGE) from exc
+    if json_mode:
+        emit_json({"path": str(out), "document": document})
+    else:
+        typer.echo(f"Wrote {out}")
+
+
+@config_app.command("push")
+def mock_config_push(
+    ctx: typer.Context,
+    project: str = _PROJECT_ARGUMENT,
+    version: str = _VERSION_ARGUMENT,
+    file: Path = _CONFIG_FILE_OPTION,
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Validate the document and report what would change, without writing anything.",
+    ),
+) -> None:
+    """Validate and apply a mock configuration document to a version (MSC-1.4).
+
+    The document replaces every section it carries — a section it omits is cleared, not left
+    alone — so a committed file is the whole truth about what the mock returns.
+
+    Validation is the server's: the document is checked through the very routes that would store
+    it, all of them, before any of them writes. A rejected document therefore leaves the version
+    untouched and reports every problem at once, each against the path in the file that caused it.
+    Exits 2 when the document is rejected.
+    """
+    document = _read_config_file(file)
+    client, tenant_slug, project_id, version_id = resolve_version_scope(
+        ctx,
+        project=project,
+        version=version,
+    )
+    subject = f"{project} {version}"
+    json_mode = json_mode_from_context(ctx)
+
+    remote = fetch_mock_config(client, tenant_slug, project_id, version_id)
+    changes = diff_documents(remote, document, remote_label=subject, local_label=str(file))
+    outcome = push_mock_config(
+        client,
+        tenant_slug,
+        project_id,
+        version_id,
+        document=document,
+        dry_run=dry_run,
+    )
+
+    if not outcome.valid:
+        if json_mode:
+            emit_json({**outcome.as_dict(), "diff": changes.as_dict()})
+        else:
+            emit_config_errors(outcome.errors, source=str(file))
+        raise typer.Exit(EXIT_USAGE)
+
+    emit_push_outcome(outcome, changes, source=str(file), subject=subject, json_mode=json_mode)
+
+
+@config_app.command("diff")
+def mock_config_diff(
+    ctx: typer.Context,
+    project: str = _PROJECT_ARGUMENT,
+    version: str = _VERSION_ARGUMENT,
+    file: Path = _CONFIG_FILE_OPTION,
+) -> None:
+    """Show what pushing a mock configuration document would change (MSC-1.4).
+
+    Built for CI: exit 0 means the committed file and the version agree, exit 1 means they have
+    drifted, and exit 2 means the check could not run at all (bad file, auth, network). That is
+    the same split 'apiome diff' uses, for the same reason — a drift check that cannot tell "they
+    differ" from "the server was down" is not a check.
+    """
+    document = _read_config_file(file)
+    subject = f"{project} {version}"
+
+    # Remap setup/HTTP EXIT_ERROR → 2 so drift (1) stays distinguishable.
+    try:
+        client, tenant_slug, project_id, version_id = resolve_version_scope(
+            ctx,
+            project=project,
+            version=version,
+        )
+        remote = fetch_mock_config(client, tenant_slug, project_id, version_id)
+    except typer.Exit as exc:
+        if exc.exit_code == EXIT_ERROR:
+            raise typer.Exit(EXIT_USAGE) from exc
+        raise
+
+    changes = diff_documents(remote, document, remote_label=subject, local_label=str(file))
+    emit_config_diff(
+        changes,
+        subject=f"{file} against {subject}",
+        json_mode=json_mode_from_context(ctx),
+    )
+    raise typer.Exit(EXIT_ERROR if changes.changed else EXIT_SUCCESS)
+
+
+@app.command("preview")
+def mock_preview(
+    ctx: typer.Context,
+    project: str | None = typer.Argument(
+        None,
+        metavar="[PROJECT]",
+        help="Project UUID or slug (omit with --bundle).",
+    ),
+    version: str | None = typer.Argument(
+        None,
+        metavar="[VERSION]",
+        help="Version UUID, slug, or label (omit with --bundle).",
+    ),
+    method: str = typer.Option("GET", "--method", "-X", help="HTTP method."),
+    path: str = typer.Option(
+        "/",
+        "--path",
+        help="Path relative to the version root (/pets/42); a ?query suffix is accepted.",
+    ),
+    header: list[str] = typer.Option(
+        [],
+        "--header",
+        "-H",
+        metavar="'NAME: VALUE'",
+        help="Request header; repeatable.",
+    ),
+    query: list[str] = typer.Option(
+        [],
+        "--query",
+        "-q",
+        metavar="NAME=VALUE",
+        help="Query parameter; repeat a name for a multi-valued parameter.",
+    ),
+    body: str | None = typer.Option(
+        None,
+        "--body",
+        help="Request body: a literal value, @FILE, or @- for stdin. Parsed as JSON when it is JSON.",
+    ),
+    scenario: str | None = typer.Option(
+        None,
+        "--scenario",
+        help="Scenario to select (shorthand for the X-Mock-Scenario header).",
+    ),
+    seed: int | None = typer.Option(
+        None,
+        "--seed",
+        help="Pin schema synthesis to this seed (shorthand for ?__seed=).",
+    ),
+    file: Path | None = typer.Option(
+        None,
+        "--file",
+        "-f",
+        metavar="FILE",
+        help="Render against this local configuration document instead of the stored settings.",
+    ),
+    bundle: Path | None = typer.Option(
+        None,
+        "--bundle",
+        metavar="BUNDLE",
+        help="Render offline against a mock bundle, with no control-plane connection.",
+    ),
+    runtime: str = typer.Option(
+        "auto",
+        "--runtime",
+        help="With --bundle: auto (prefer a local apiome-mock), local, or docker.",
+    ),
+    image: str | None = typer.Option(
+        None,
+        "--image",
+        help="With --bundle --runtime docker: the container image (default: the official image).",
+    ),
+    require_signature: bool = typer.Option(
+        False,
+        "--require-signature",
+        help="With --bundle: refuse an unsigned bundle.",
+    ),
+) -> None:
+    """Render one request against a mock and print what it would return, and why (MSC-1.4).
+
+    Nothing is sent and nothing is written. The response carries the status, headers, media type
+    and body the mock would serve, plus the decision trace naming which layer produced the body —
+    a scenario and which rule, session-scoped CRUD, correlation and which pointers, or a declared
+    example versus schema synthesis.
+
+    Two ways to reach the renderer, one answer either way, because both render through the
+    portable runtime:
+
+    * PROJECT VERSION previews the hosted version through the MSC-1.2 dry-run endpoint. With
+      --file the render uses a local configuration document instead of the stored settings, so an
+      author can iterate before pushing.
+    * --bundle renders a portable mock bundle offline, launching the runtime the way 'mock run'
+      does. No API key, no tenant scope, no network.
+
+    Chaos is reported rather than applied: a preview that slept for a configured latency, or that
+    randomly answered 500, would be answering a different question. The exit code reports whether
+    the preview ran, not what the mock would answer — a previewed 404 exits 0.
+    """
+    json_mode = json_mode_from_context(ctx)
+
+    if bundle is not None and (project or version):
+        typer.secho(
+            "Pass either PROJECT VERSION (hosted preview) or --bundle (offline preview), not both.",
+            err=True,
+            fg="red",
+        )
+        raise typer.Exit(EXIT_USAGE)
+    if bundle is None and not (project and version):
+        typer.secho(
+            "Preview needs a target: PROJECT VERSION for the hosted mock, or --bundle for a "
+            "portable bundle.",
+            err=True,
+            fg="red",
+        )
+        raise typer.Exit(EXIT_USAGE)
+    if bundle is not None and file is not None:
+        typer.secho(
+            "--file overrides stored settings and has no meaning with --bundle: a bundle already "
+            "carries its own configuration.",
+            err=True,
+            fg="red",
+        )
+        raise typer.Exit(EXIT_USAGE)
+
+    try:
+        request = build_preview_request(
+            method=method,
+            path=path,
+            headers=header,
+            query=query,
+            body=body,
+            scenario=scenario,
+            seed=seed,
+        )
+    except PreviewRequestError as exc:
+        typer.secho(str(exc), err=True, fg="red")
+        raise typer.Exit(EXIT_USAGE) from exc
+
+    if bundle is not None:
+        result = _preview_against_bundle(
+            bundle,
+            request,
+            runtime=runtime,
+            image=image,
+            require_signature=require_signature,
+        )
+    else:
+        result = _preview_against_version(
+            ctx,
+            project=str(project),
+            version=str(version),
+            request=request,
+            file=file,
+        )
+
+    emit_preview_result(result, method=method, path=path, json_mode=json_mode)
+
+
+def _preview_against_bundle(
+    bundle: Path,
+    request: dict[str, object],
+    *,
+    runtime: str,
+    image: str | None,
+    require_signature: bool,
+) -> dict[str, object]:
+    """Render a preview offline, through the portable runtime.
+
+    Args:
+        bundle: The bundle to render against.
+        request: The synthetic request document.
+        runtime: ``auto``, ``local``, or ``docker``.
+        image: Container image for the Docker plan.
+        require_signature: Refuse an unsigned bundle.
+
+    Returns:
+        The preview result, in the same shape the hosted endpoint returns (``draft`` is always
+        false: a bundle is a stored configuration, not a draft laid over one).
+    """
+    if runtime not in {"auto", "local", "docker"}:
+        typer.secho(f"Unknown --runtime '{runtime}' (expected auto, local, or docker).", err=True, fg="red")
+        raise typer.Exit(EXIT_USAGE)
+    if not bundle.is_file():
+        typer.secho(f"Bundle not found: {bundle}", err=True, fg="red")
+        raise typer.Exit(EXIT_USAGE)
+
+    try:
+        plan = build_preview_plan(
+            bundle,
+            runtime=runtime,  # type: ignore[arg-type]
+            image=image,
+            require_signature=require_signature,
+            secret_present=bool(os.environ.get(SECRET_ENV_VAR)),
+        )
+        result = run_preview_plan(plan, request)
+    except MockRuntimeUnavailableError as exc:
+        typer.secho(str(exc), err=True, fg="red")
+        raise typer.Exit(EXIT_USAGE) from exc
+    except OfflinePreviewError as exc:
+        typer.secho(str(exc), err=True, fg="red")
+        raise typer.Exit(EXIT_USAGE) from exc
+    return {"draft": False, **result}
+
+
+def _preview_against_version(
+    ctx: typer.Context,
+    *,
+    project: str,
+    version: str,
+    request: dict[str, object],
+    file: Path | None,
+) -> dict[str, object]:
+    """Render a preview against a hosted version, optionally with a local configuration document.
+
+    Args:
+        ctx: The Typer context (tenant scope, credentials, --json).
+        project: Project UUID or slug.
+        version: Version UUID, slug, or label.
+        request: The synthetic request document.
+        file: A configuration document to render against instead of the stored settings.
+
+    Returns:
+        The preview result.
+    """
+    settings = None
+    if file is not None:
+        settings = document_sections(_read_config_file(file))
+
+    client, tenant_slug, project_id, version_id = resolve_version_scope(
+        ctx,
+        project=project,
+        version=version,
+    )
+    result, errors = request_hosted_preview(
+        client,
+        tenant_slug,
+        project_id,
+        version_id,
+        request=request,
+        settings=settings,
+    )
+    if result is None:
+        emit_config_errors(errors, source=str(file) if file is not None else "The preview request")
+        raise typer.Exit(EXIT_USAGE)
+    return result

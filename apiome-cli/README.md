@@ -1296,6 +1296,88 @@ digest of the bundle actually being served. Full reference, including the
 runtime's flags, structured log events, and exit codes:
 [docs/guide/portable-mock-runtime.md](../docs/guide/portable-mock-runtime.md).
 
+### Mock configuration as a file (`mock config`)
+
+Requires an API key (Tier 2) and tenant scope. The settings that decide what a mock *returns* —
+response correlation, scenarios, chaos, fixture packs — become one document you can commit, review
+in a pull request, check for drift in CI, and promote from a staging version to a production one.
+
+```bash
+# Write the version's whole mock configuration as one canonical document
+apiome mock config pull payments-api 1.0.0 --out mock-config.json
+
+# What would pushing it change? Exit 0 = in sync, 1 = drift, 2 = the check could not run
+apiome mock config diff payments-api 1.0.0 --file mock-config.json
+
+# Validate against the server's own validators and report, without writing
+apiome mock config push payments-api 1.0.0 --file mock-config.json --dry-run
+
+# Apply it
+apiome mock config push payments-api 1.0.0 --file mock-config.json
+
+# Machine-readable everywhere
+apiome --json mock config diff payments-api 1.0.0 --file mock-config.json
+```
+
+The document is **whole**: a push replaces every section, and a section the document omits is
+cleared rather than left alone — so the committed file is the whole truth about what the mock
+returns. It declares `"configFormat": "apiome.mock.config/v1"`, which is what keeps an arbitrary
+JSON file from being pushed into a version by accident, and it carries no tenant, project or
+version, so the same file works against any of them. Pull output is byte-stable, so pulling a
+committed file again produces no diff.
+
+Validation is the server's, never a second copy of it here: a push checks the document through the
+very routes that would store it before any of them writes, so a rejected document leaves the
+version untouched and every problem is reported at once, each against the path in *your file* that
+caused it:
+
+```
+mock-config.json was rejected (2 problems):
+  scenarios["outage"].operations["GET /pets"]
+      status 503 is not defined for GET /pets (set offSpec to allow a deliberately off-spec response).
+  correlation.operations["GET /nope"]
+      no operation GET /nope exists in this version's spec.
+```
+
+Callbacks and the hosted-only knobs (private-mock access mode, the proxy-capture grant) are
+deliberately outside the document. Full reference:
+[apiome-mock/README.md](../apiome-mock/README.md#mock-configuration-as-a-file-msc-14).
+
+### Preview a mock response (`mock preview`)
+
+Renders one request against a mock and prints what it would return **and why** — the status,
+headers, media type and body, plus the decision trace naming which layer produced the body.
+Nothing is sent and nothing is written.
+
+```bash
+# Against the hosted version (Tier 2 + tenant scope)
+apiome mock preview payments-api 1.0.0 --path /pets/42
+
+# A full request: method, headers, repeated query parameters, a body, a scenario, a pinned seed
+apiome mock preview payments-api 1.0.0 \
+  -X POST --path /pets \
+  -H 'Accept: application/json' \
+  -q tag=cat -q tag=dog \
+  --body '{"name": "Milo"}' \
+  --scenario outage --seed 7
+
+# Against a local configuration document instead of the stored settings — iterate before pushing
+apiome mock preview payments-api 1.0.0 --path /pets/42 --file mock-config.json
+
+# Fully offline against a bundle: no API key, no tenant scope, no control plane
+apiome mock preview --bundle petstore-1.0.0-mock-bundle.json --path /pets/42
+apiome --json mock preview --bundle petstore-1.0.0-mock-bundle.json --path /pets/42
+```
+
+`--body` takes a literal value, `@FILE`, or `@-` for stdin, and is sent as structured JSON when it
+is valid JSON. Both paths render through the portable runtime — the hosted one through the MSC-1.2
+dry-run endpoint, `--bundle` by launching `apiome-mock` (or the official image, `--runtime docker`)
+the way `mock run` does — so the two give the same answer in the same shape.
+
+Chaos is *reported*, not applied: a preview that slept for a configured latency, or that randomly
+answered 500, would be answering a different question. The exit code reports whether the preview
+ran, not what the mock would answer — a previewed 404 exits 0.
+
 ### Export reconstructed specs (CI artifacts)
 
 Requires tenant scope (`APIOME_TENANT_ID` or `--tenant`). Sends `X-API-Key` when configured so protected published versions are visible. Document bytes go to `--output`; diagnostics and metadata go to stderr. With global `--json`, metadata is JSON on stdout when `--output` is a file, and on stderr when `--output -` so stdout stays byte-safe for pipelines.
