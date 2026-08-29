@@ -30,7 +30,7 @@
  * "Off-spec" flag for deliberately broken responses.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlaskConical, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -40,8 +40,18 @@ import {
 import { Button } from '../../ui/Button';
 import { Input } from '../../ui/Input';
 import { Textarea } from '../../ui/Textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../ui/Select';
 import { VersionDialogHead } from '../versions/VersionDialogChrome';
 import { VERSION_DIALOG_COPY } from '../version-dialogs/versionDialogsModel';
+import { MockPreviewPanel, type MockPreviewSettings } from './mock/MockPreviewPanel';
+import { MockTokenPicker } from './mock/MockTokenPicker';
+import { buildTokenGroups, insertToken, type MockAuthoringOperation } from './mock/mockAuthoringModel';
 
 /** One canned response as stored by REST (camelCase wire shape). */
 export interface MockScenarioResponsePayload {
@@ -601,15 +611,24 @@ export function MockScenarioEditor({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  const [operations, setOperations] = useState<MockAuthoringOperation[]>([]);
+  const [fixtures, setFixtures] = useState<string[]>([]);
+  const [previewKey, setPreviewKey] = useState('');
+  /** Textareas the token picker inserts into, keyed by `scenario:operation:response:field`. */
+  const templateFields = useRef(new Map<string, HTMLTextAreaElement | null>());
 
   /** Load persisted definitions every time the dialog opens. */
   const load = useCallback(async () => {
     setLoading(true);
     setErrors([]);
     try {
-      const response = await fetch(
-        `/api/versions/${versionRecordId}/mock/scenarios?projectId=${encodeURIComponent(projectId)}`
-      );
+      const query = `projectId=${encodeURIComponent(projectId)}`;
+      const [response, catalogue] = await Promise.all([
+        fetch(`/api/versions/${versionRecordId}/mock/scenarios?${query}`),
+        // Swallowed on purpose: the catalogue is an enhancement, and a network failure fetching it
+        // must not take the scenario editor down with it.
+        fetch(`/api/versions/${versionRecordId}/mock/operations?${query}`).catch(() => null),
+      ]);
       const payload = await response.json().catch(() => null);
       if (!response.ok || !payload?.success) {
         toast.error(payload?.error || `Failed to load scenarios for v${versionLabel}.`);
@@ -617,6 +636,19 @@ export function MockScenarioEditor({
       }
       setDrafts(draftsFromPayload((payload.scenarios ?? {}) as MockScenariosPayload));
       setChaos(chaosDraftFromPayload((payload.chaos ?? undefined) as MockChaosPayload | undefined));
+
+      // The catalogue only powers the token picker and the preview's operation list, so a failure
+      // here degrades those rather than blocking the editor the way a failed scenario load does.
+      const catalogued = await catalogue?.json().catch(() => null);
+      if (catalogue?.ok && catalogued?.success) {
+        const listed = (catalogued.operations ?? []) as MockAuthoringOperation[];
+        setOperations(listed);
+        setFixtures((catalogued.fixtures ?? []) as string[]);
+        setPreviewKey(listed[0]?.key ?? '');
+      } else {
+        setOperations([]);
+        setFixtures([]);
+      }
     } catch (error) {
       console.error('Failed to load mock scenarios:', error);
       toast.error(`Failed to load scenarios for v${versionLabel}.`);
@@ -670,6 +702,59 @@ export function MockScenarioEditor({
     } finally {
       setSaving(false);
     }
+  };
+
+  const operationsByKey = useMemo(
+    () => new Map(operations.map((operation) => [operation.key, operation])),
+    [operations]
+  );
+  const previewOperation = operationsByKey.get(previewKey) ?? null;
+
+  /**
+   * Resolve the on-screen drafts into the settings overlay the preview renders against.
+   *
+   * A draft that cannot be serialized is reported rather than partially sent: previewing a
+   * scenario set with the broken operation quietly dropped would answer a question nobody asked.
+   */
+  const buildPreviewSettings = useCallback((): MockPreviewSettings => {
+    const clientErrors: string[] = [];
+    const { payload, errors: draftErrors } = payloadFromDrafts(drafts);
+    clientErrors.push(...draftErrors);
+    const chaosPayload = chaosDraftIsEmpty(chaos)
+      ? undefined
+      : chaosPayloadFromDraft(chaos, 'Latency & chaos', clientErrors);
+    if (clientErrors.length > 0) return { settings: null, errors: clientErrors };
+    return {
+      settings: { scenarios: payload, ...(chaosPayload !== undefined ? { chaos: chaosPayload } : {}) },
+    };
+  }, [chaos, drafts]);
+
+  /**
+   * Insert a template token at the caret of one templated textarea.
+   *
+   * @param fieldKey - The registry key the textarea was registered under.
+   * @param current - The field's current text.
+   * @param token - The expression to insert.
+   * @param apply - Writes the new text back into the draft.
+   */
+  const insertIntoField = (
+    fieldKey: string,
+    current: string,
+    token: string,
+    apply: (next: string) => void
+  ) => {
+    const field = templateFields.current.get(fieldKey) ?? null;
+    const { value, caret } = insertToken(
+      current,
+      token,
+      field?.selectionStart ?? null,
+      field?.selectionEnd ?? null
+    );
+    apply(value);
+    window.requestAnimationFrame(() => {
+      field?.focus();
+      field?.setSelectionRange(caret, caret);
+    });
   };
 
   const updateScenario = (index: number, patch: Partial<ScenarioDraft>) => {
@@ -882,6 +967,12 @@ export function MockScenarioEditor({
                           className="vdlg-textarea vdlg-textarea--mono"
                         />
                         <Textarea
+                          ref={(element) => {
+                            templateFields.current.set(
+                              `${scenarioIndex}:${operationIndex}:${responseIndex}:body`,
+                              element
+                            );
+                          }}
                           value={response.bodyText}
                           onChange={(e) =>
                             updateResponse(scenarioIndex, operationIndex, responseIndex, {
@@ -893,6 +984,25 @@ export function MockScenarioEditor({
                           }
                           aria-label={`Scenario ${scenarioIndex + 1} operation ${operationIndex + 1} response ${responseIndex + 1} body`}
                           className="vdlg-textarea vdlg-textarea--mono"
+                        />
+                        <MockTokenPicker
+                          groups={buildTokenGroups(
+                            operationsByKey.get(operation.key.trim()) ?? null,
+                            fixtures
+                          )}
+                          onInsert={(token) =>
+                            insertIntoField(
+                              `${scenarioIndex}:${operationIndex}:${responseIndex}:body`,
+                              response.bodyText,
+                              token,
+                              (next) =>
+                                updateResponse(scenarioIndex, operationIndex, responseIndex, {
+                                  bodyText: next,
+                                })
+                            )
+                          }
+                          fieldLabel={`scenario ${scenarioIndex + 1} response ${responseIndex + 1} body`}
+                          testId={`mock-scenario-${scenarioIndex}-${operationIndex}-${responseIndex}-body-tokens`}
                         />
                       </div>
                     ))}
@@ -917,6 +1027,12 @@ export function MockScenarioEditor({
                         wins, responses above are the fallback
                       </span>
                       <Textarea
+                        ref={(element) => {
+                          templateFields.current.set(
+                            `${scenarioIndex}:${operationIndex}:rules`,
+                            element
+                          );
+                        }}
                         value={operation.rulesText}
                         onChange={(e) =>
                           updateOperation(scenarioIndex, operationIndex, { rulesText: e.target.value })
@@ -926,6 +1042,23 @@ export function MockScenarioEditor({
                         }
                         aria-label={`Scenario ${scenarioIndex + 1} operation ${operationIndex + 1} match rules`}
                         className="vdlg-textarea vdlg-textarea--mono"
+                      />
+                      <MockTokenPicker
+                        groups={buildTokenGroups(
+                          operationsByKey.get(operation.key.trim()) ?? null,
+                          fixtures
+                        )}
+                        onInsert={(token) =>
+                          insertIntoField(
+                            `${scenarioIndex}:${operationIndex}:rules`,
+                            operation.rulesText,
+                            token,
+                            (next) =>
+                              updateOperation(scenarioIndex, operationIndex, { rulesText: next })
+                          )
+                        }
+                        fieldLabel={`scenario ${scenarioIndex + 1} operation ${operationIndex + 1} match rules`}
+                        testId={`mock-scenario-${scenarioIndex}-${operationIndex}-rules-tokens`}
                       />
                     </div>
                   </div>
@@ -1022,6 +1155,39 @@ export function MockScenarioEditor({
                 </p>
               </div>
               <ChaosBlockFields draft={chaos} onChange={setChaos} ariaPrefix="Chaos" />
+            </fieldset>
+
+            <fieldset className="vdlg-mock__scenario" data-testid="mock-scenario-preview">
+              <div>
+                <p className="vdlg-section-title">Try it</p>
+                <p className="vdlg-quiet">
+                  Renders a request against the scenarios and knobs on screen — no save, no mock to
+                  enable, nothing sent anywhere. The trace says which layer answered, and which
+                  match rule fired. Chaos is reported rather than applied.
+                </p>
+              </div>
+              {operations.length > 0 && (
+                <Select value={previewKey} onValueChange={setPreviewKey}>
+                  <SelectTrigger aria-label="Preview operation" className="mock-corr__op">
+                    <SelectValue placeholder="Choose an operation…" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {operations.map((entry) => (
+                      <SelectItem key={entry.key} value={entry.key}>
+                        {entry.key}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <MockPreviewPanel
+                versionRecordId={versionRecordId}
+                projectId={projectId}
+                operations={operations}
+                operation={previewOperation}
+                buildSettings={buildPreviewSettings}
+                testId="mock-scenario-preview-panel"
+              />
             </fieldset>
 
             {errors.length > 0 && (

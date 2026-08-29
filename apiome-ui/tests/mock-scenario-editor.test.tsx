@@ -9,10 +9,13 @@
  * - Server-side validation failures (REST 422) are listed inline.
  * - Chaos knobs (delay/jitter/error rate, per version default, per route, and
  *   per scenario) load, validate, and serialize into the same PUT payload.
+ * - The MSC-1.3 (#5529) additions — the `{{ ... }}` token picker beside the templated fields and
+ *   the live preview of the unsaved draft — offer this version's own parameters and fixtures, and
+ *   leave the editor's existing behaviour untouched when the catalogue cannot be loaded.
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MockScenarioEditor } from '../src/app/components/ade/dashboard/MockScenarioEditor';
 import { toast } from 'sonner';
@@ -448,5 +451,163 @@ describe('MockScenarioEditor — match rules and templates (#4744, PMR-2.1)', ()
     expect(screen.getByTestId('mock-scenario-errors').textContent).toContain(
       'unknown expression root'
     );
+  });
+});
+
+// ==================================================================================================
+// MSC-1.3 (#5529): the token picker and the live preview
+// ==================================================================================================
+
+const CATALOGUE = {
+  success: true,
+  operations: [
+    {
+      key: 'GET /pets',
+      method: 'GET',
+      path: '/pets',
+      summary: 'List pets',
+      parameters: [
+        {
+          name: 'limit',
+          location: 'query',
+          required: false,
+          type: 'integer',
+          token: '{{request.query.limit}}',
+        },
+      ],
+      requestFields: [],
+      responsePointers: [],
+      successStatus: 200,
+      bindings: [],
+    },
+  ],
+  fixtures: ['pets'],
+};
+
+const SCENARIO_PREVIEW = {
+  operation: 'GET /pets',
+  status: 429,
+  headers: {},
+  mediaType: 'application/json',
+  body: { error: 'quota' },
+  bodyEncoding: 'json',
+  trace: { layer: 'scenario', detail: 'Scenario quota-exceeded answered.', scenario: 'quota-exceeded', ruleIndex: 0 },
+  chaos: { suppressed: false, delayMs: 0, jitterMs: 0, errorRate: 0 },
+  draft: true,
+};
+
+/** Route the scenario load, the authoring catalogue and the preview render. */
+const mockAuthoringFetch = (
+  overrides: { catalogue?: { ok: boolean; json: unknown }; preview?: { ok: boolean; json: unknown } } = {}
+) => {
+  (global.fetch as jest.Mock).mockImplementation(async (url: string, init?: RequestInit) => {
+    if (init?.method === 'POST') {
+      return {
+        ok: overrides.preview?.ok ?? true,
+        json: async () => overrides.preview?.json ?? { success: true, preview: SCENARIO_PREVIEW },
+      };
+    }
+    if (String(url).includes('/mock/operations')) {
+      return {
+        ok: overrides.catalogue?.ok ?? true,
+        json: async () => overrides.catalogue?.json ?? CATALOGUE,
+      };
+    }
+    return { ok: true, json: async () => ({ success: true, scenarios: STORED_SCENARIOS, chaos: null }) };
+  });
+};
+
+describe('MockScenarioEditor — token picker (MSC-1.3)', () => {
+  it('inserts a token this version actually has into the response body', async () => {
+    mockAuthoringFetch();
+    renderEditor();
+
+    await screen.findByLabelText('Scenario 1 operation 1 key');
+    const picker = screen.getByTestId('mock-scenario-0-0-0-body-tokens');
+    fireEvent.click(within(picker).getByRole('button', { name: /Insert a token/ }));
+    fireEvent.click(within(picker).getByTitle(/^\{\{request\.query\.limit\}\}/));
+
+    // Inserted at the caret — position 0 for a field the test never focused.
+    expect(screen.getByLabelText('Scenario 1 operation 1 response 1 body')).toHaveValue(
+      '{{request.query.limit}}{\n  "error": "quota"\n}'
+    );
+  });
+
+  it('offers the version’s fixture names', async () => {
+    mockAuthoringFetch();
+    renderEditor();
+
+    await screen.findByLabelText('Scenario 1 operation 1 key');
+    const picker = screen.getByTestId('mock-scenario-0-0-0-body-tokens');
+    fireEvent.click(within(picker).getByRole('button', { name: /Insert a token/ }));
+
+    expect(within(picker).getByTitle(/^\{\{fixture\.pets\}\}/)).toBeInTheDocument();
+  });
+
+  it('opens even when the catalogue request never lands', async () => {
+    // The catalogue is an enhancement; a network failure fetching it must not take the scenario
+    // editor down with it, which a bare `Promise.all` would.
+    (global.fetch as jest.Mock).mockImplementation(async (url: string) => {
+      if (String(url).includes('/mock/operations')) throw new Error('offline');
+      return { ok: true, json: async () => ({ success: true, scenarios: STORED_SCENARIOS, chaos: null }) };
+    });
+    renderEditor();
+
+    expect(await screen.findByLabelText('Scenario 1 operation 1 key')).toHaveValue('GET /pets');
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it('leaves the editor usable when the catalogue cannot be loaded', async () => {
+    mockAuthoringFetch({ catalogue: { ok: false, json: { success: false, error: 'nope' } } });
+    renderEditor();
+
+    await screen.findByLabelText('Scenario 1 operation 1 key');
+    // The seeded-value group is always offerable, so the picker never vanishes entirely.
+    const picker = screen.getByTestId('mock-scenario-0-0-0-body-tokens');
+    fireEvent.click(within(picker).getByRole('button', { name: /Insert a token/ }));
+    expect(within(picker).getByTitle(/^\{\{random\.uuid\(\)\}\}/)).toBeInTheDocument();
+    expect(screen.queryByLabelText('Preview operation')).not.toBeInTheDocument();
+  });
+});
+
+describe('MockScenarioEditor — live preview (MSC-1.3)', () => {
+  it('renders the unsaved scenarios and names the rule that fired', async () => {
+    mockAuthoringFetch();
+    renderEditor();
+
+    await screen.findByLabelText('Scenario 1 operation 1 key');
+    fireEvent.click(screen.getByTestId('mock-scenario-preview-panel-render'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('mock-scenario-preview-panel-result')).toBeInTheDocument()
+    );
+
+    const sent = (global.fetch as jest.Mock).mock.calls.find(([, init]) => init?.method === 'POST');
+    expect(JSON.parse(sent![1].body as string).settings.scenarios).toEqual(STORED_SCENARIOS);
+    // Nothing was saved to get an answer.
+    expect(
+      (global.fetch as jest.Mock).mock.calls.some(([, init]) => init?.method === 'PUT')
+    ).toBe(false);
+
+    const trace = screen.getByTestId('mock-scenario-preview-panel-trace');
+    expect(within(trace).getByText('Scenario')).toBeInTheDocument();
+    expect(within(trace).getByText('rule 1')).toBeInTheDocument();
+  });
+
+  it('reports an unserializable draft instead of previewing a partial one', async () => {
+    mockAuthoringFetch();
+    renderEditor();
+
+    await screen.findByLabelText('Scenario 1 operation 1 key');
+    fireEvent.change(screen.getByLabelText('Scenario 1 operation 1 response 1 body'), {
+      target: { value: '{ not json' },
+    });
+    fireEvent.click(screen.getByTestId('mock-scenario-preview-panel-render'));
+
+    const errors = await screen.findByTestId('mock-scenario-preview-panel-errors');
+    expect(within(errors).getByText(/body must be valid JSON/)).toBeInTheDocument();
+    expect(
+      (global.fetch as jest.Mock).mock.calls.some(([, init]) => init?.method === 'POST')
+    ).toBe(false);
   });
 });

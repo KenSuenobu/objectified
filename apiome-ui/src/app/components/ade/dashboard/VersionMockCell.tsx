@@ -10,6 +10,8 @@
  * - 30-day usage sparkline fed by the SIM-1.5 (#4420) rollups; says *No requests yet* when
  *   no usage was recorded.
  * - "Scenarios" opens the SIM-4.2 (#4454) scenario override editor.
+ * - "Correlation" opens the MSC-1.3 (#5529) response correlation editor — the per-version
+ *   setting that makes the default response path answer with values from the request.
  *
  * Re-skinned in place by HIVE-6.2 (#5313) to `docs/mockups/build/versions.html`'s `.mock-cell`:
  * the switch, the label and the PRIVATE pill on one row, the mono URL with its copy button
@@ -21,7 +23,7 @@
  */
 
 import { useState } from 'react';
-import { Copy, FlaskConical } from 'lucide-react';
+import { Copy, FlaskConical, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '../../ui/Badge';
 import { Button } from '../../ui/Button';
@@ -29,6 +31,7 @@ import { Switch } from '../../ui/Switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/Tooltip';
 import { Sparkline } from '../../ui/metrics';
 import { versionMockLabel } from '../versions/versionsModel';
+import { MockCorrelationEditor } from './MockCorrelationEditor';
 import { MockScenarioEditor } from './MockScenarioEditor';
 
 export interface VersionMockChange {
@@ -83,6 +86,7 @@ export function VersionMockCell({
 }: VersionMockCellProps) {
   const [saving, setSaving] = useState(false);
   const [scenarioEditorOpen, setScenarioEditorOpen] = useState(false);
+  const [correlationEditorOpen, setCorrelationEditorOpen] = useState(false);
 
   /** Round-trip the toggle through the proxy route and report the persisted state. */
   const handleToggle = async (enabled: boolean) => {
@@ -203,6 +207,23 @@ export function VersionMockCell({
               versionLabel={versionLabel}
               open={scenarioEditorOpen}
               onOpenChange={setScenarioEditorOpen}
+            />
+            <button
+              type="button"
+              onClick={() => setCorrelationEditorOpen(true)}
+              className="ver-mock__scenarios"
+              aria-label={`Edit response correlation for version ${versionLabel}`}
+              data-testid={`version-mock-correlation-button-${versionRecordId}`}
+            >
+              <Link2 aria-hidden />
+              Correlation
+            </button>
+            <MockCorrelationEditor
+              versionRecordId={versionRecordId}
+              projectId={projectId}
+              versionLabel={versionLabel}
+              open={correlationEditorOpen}
+              onOpenChange={setCorrelationEditorOpen}
             />
             {usageSeries !== undefined ? (
               usageSeries.length === 0 ? (

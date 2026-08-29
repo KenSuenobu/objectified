@@ -209,3 +209,32 @@ describe('VersionMockCell — usage sparkline', () => {
     expect(screen.queryByRole('img', { name: /last 30 days/ })).not.toBeInTheDocument();
   });
 });
+
+describe('VersionMockCell — editors (MSC-1.3, #5529)', () => {
+  it('offers both mock editors beside an enabled mock', () => {
+    renderCell({ mockEnabled: true, mockBaseUrl: MOCK_URL });
+
+    expect(screen.getByTestId('version-mock-scenarios-button-rev-1')).toBeInTheDocument();
+    expect(screen.getByTestId('version-mock-correlation-button-rev-1')).toBeInTheDocument();
+  });
+
+  it('opens the correlation editor on its own, leaving the scenario editor closed', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, correlation: null, operations: [], fixtures: [] }),
+    });
+    renderCell({ mockEnabled: true, mockBaseUrl: MOCK_URL });
+
+    fireEvent.click(screen.getByTestId('version-mock-correlation-button-rev-1'));
+
+    expect(await screen.findByTestId('mock-correlation-editor-rev-1')).toBeInTheDocument();
+    expect(screen.queryByTestId('mock-scenario-editor-rev-1')).not.toBeInTheDocument();
+  });
+
+  it('offers neither editor while the mock is disabled', () => {
+    renderCell({ mockEnabled: false });
+
+    expect(screen.queryByTestId('version-mock-correlation-button-rev-1')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('version-mock-scenarios-button-rev-1')).not.toBeInTheDocument();
+  });
+});
