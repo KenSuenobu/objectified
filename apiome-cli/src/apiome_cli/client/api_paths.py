@@ -572,6 +572,46 @@ def version_mock(
     return f"{version_record(tenant_slug, project_id, version_record_id)}/mock"
 
 
+def version_mock_scenarios(
+    tenant_slug: str,
+    project_id: UUID,
+    version_record_id: UUID,
+) -> str:
+    """Scenario definitions and version-level chaos (``GET|PUT …/mock/scenarios``, SIM-4.2/4.3)."""
+    return f"{version_record(tenant_slug, project_id, version_record_id)}/mock/scenarios"
+
+
+def version_mock_correlation(
+    tenant_slug: str,
+    project_id: UUID,
+    version_record_id: UUID,
+) -> str:
+    """Response-correlation settings (``GET|PUT …/mock/correlation``, MSC-1.1/#5527)."""
+    return f"{version_record(tenant_slug, project_id, version_record_id)}/mock/correlation"
+
+
+def version_mock_fixture_packs(
+    tenant_slug: str,
+    project_id: UUID,
+    version_record_id: UUID,
+) -> str:
+    """Fixture packs and their content digests (``GET|PUT …/mock/fixture-packs``, PMR-2.2/#4745)."""
+    return f"{version_record(tenant_slug, project_id, version_record_id)}/mock/fixture-packs"
+
+
+def version_mock_preview(
+    tenant_slug: str,
+    project_id: UUID,
+    version_record_id: UUID,
+) -> str:
+    """Dry-run mock render (``POST …/mock/preview``, MSC-1.2/#5528).
+
+    Renders one synthetic request against the version's mock — optionally against an unsaved
+    settings override — and returns the status, headers, body and decision trace.
+    """
+    return f"{version_record(tenant_slug, project_id, version_record_id)}/mock/preview"
+
+
 def mock_usage(tenant_slug: str) -> str:
     """Tenant mock usage counters and daily rollups (``GET /v1/mocks/{tenant}/usage``, SIM-1.5)."""
     return f"{V1}/mocks/{tenant_slug}/usage"

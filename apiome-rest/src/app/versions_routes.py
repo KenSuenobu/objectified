@@ -2383,6 +2383,45 @@ def _parse_stored_chaos(mock_settings: Any, version_record_id: str) -> Optional[
         return None
 
 
+#: ``?dryRun=true`` on a mock-settings PUT: validate the proposed block and report what it would
+#: become, writing nothing (#5530, MSC-1.4). It exists so ``apiome mock config push --dry-run`` can
+#: check a committed configuration document in CI against the *authoritative* validators rather
+#: than a second copy of them. It reports validation, not ownership: the creator/administrator gate
+#: lives in the write itself and cannot be exercised without writing.
+_MOCK_DRY_RUN_QUERY = Query(
+    False,
+    alias="dryRun",
+    description="Validate and report what would be stored, without writing anything.",
+)
+
+
+def _scenarios_response(mock_settings: Any, version_record_id: str) -> VersionMockScenariosResponse:
+    """Build the scenarios response from a raw ``mock_settings`` value (#4454 SIM-4.2).
+
+    A malformed stored entry never breaks the editor: it is omitted and logged, exactly as the
+    runtime skips it. Shared by the read route, the write route and the ``dryRun`` branch, so all
+    three describe a configuration the same way.
+
+    Args:
+        mock_settings: The raw ``versions.mock_settings`` value (stored, or a proposal).
+        version_record_id: The version record id, for log context only.
+
+    Returns:
+        The scenarios and version-level chaos the value describes.
+    """
+    stored, _ = scenarios_from_storage(mock_settings)
+    scenarios: Dict[str, MockScenarioSpec] = {}
+    for name, raw in stored.items():
+        try:
+            scenarios[name] = MockScenarioSpec.model_validate(raw)
+        except ValueError:
+            logger.warning("Skipping malformed mock scenario %r on version %s", name, version_record_id)
+    return VersionMockScenariosResponse(
+        scenarios=scenarios,
+        chaos=_parse_stored_chaos(mock_settings, version_record_id),
+    )
+
+
 @router.get("/{tenant_slug}/{project_id}/{version_record_id}/mock/scenarios")
 async def get_version_mock_scenarios(
     tenant_slug: str,
@@ -2393,20 +2432,7 @@ async def get_version_mock_scenarios(
     """Return the version's mock scenario definitions (#4454 SIM-4.2)."""
     enforce_permission(db, auth_data, Resource.VERSIONS, Action.VIEW)
     existing = _get_version_for_mock_scenarios(project_id, version_record_id, auth_data["tenant_id"])
-
-    stored, _ = scenarios_from_storage(existing.get("mock_settings"))
-    scenarios: Dict[str, MockScenarioSpec] = {}
-    for name, raw in stored.items():
-        try:
-            scenarios[name] = MockScenarioSpec.model_validate(raw)
-        except ValueError:
-            # A malformed stored entry never breaks the editor; it is simply omitted
-            # (the runtime skips it the same way).
-            logger.warning("Skipping malformed mock scenario %r on version %s", name, version_record_id)
-    return VersionMockScenariosResponse(
-        scenarios=scenarios,
-        chaos=_parse_stored_chaos(existing.get("mock_settings"), version_record_id),
-    )
+    return _scenarios_response(existing.get("mock_settings"), version_record_id)
 
 
 @router.put("/{tenant_slug}/{project_id}/{version_record_id}/mock/scenarios")
@@ -2415,6 +2441,7 @@ async def set_version_mock_scenarios(
     project_id: str,
     version_record_id: str,
     request: VersionMockScenariosRequest,
+    dry_run: bool = _MOCK_DRY_RUN_QUERY,
     auth_data: Dict[str, Any] = Depends(validate_authentication),
 ) -> VersionMockScenariosResponse:
     """Replace the version's mock scenario definitions (#4454 SIM-4.2).
@@ -2428,6 +2455,9 @@ async def set_version_mock_scenarios(
     The request also carries the version-level latency/chaos knobs (#4455
     SIM-4.3): ``chaos`` replaces the stored block, and omitting it (or
     sending ``null``) clears the stored block.
+
+    With ``?dryRun=true`` nothing is written: the same validation runs and the response describes
+    what *would* be stored (#5530, MSC-1.4).
     """
     enforce_permission(db, auth_data, Resource.VERSIONS, Action.EDIT)
     existing = _get_version_for_mock_scenarios(project_id, version_record_id, auth_data["tenant_id"])
@@ -2450,6 +2480,10 @@ async def set_version_mock_scenarios(
 
     storage = scenarios_to_storage(request.scenarios)
     chaos_storage = chaos_to_storage(request.chaos) if request.chaos is not None else None
+    if dry_run:
+        # Read the proposal back through the very readers the write path reports with, so a
+        # dry run cannot describe a different outcome than the write would produce.
+        return _scenarios_response({"scenarios": storage, "chaos": chaos_storage}, version_record_id)
     updated = db.set_version_mock_scenarios(
         version_record_id,
         auth_data["tenant_id"],
@@ -2462,12 +2496,7 @@ async def set_version_mock_scenarios(
             status_code=403,
             detail="Only the version creator or a tenant administrator can change mock settings",
         )
-
-    stored, _ = scenarios_from_storage(updated.get("mock_settings"))
-    return VersionMockScenariosResponse(
-        scenarios={name: MockScenarioSpec.model_validate(raw) for name, raw in stored.items()},
-        chaos=_parse_stored_chaos(updated.get("mock_settings"), version_record_id),
-    )
+    return _scenarios_response(updated.get("mock_settings"), version_record_id)
 
 
 def _stored_correlation_response(mock_settings: Any, version_record_id: str) -> VersionMockCorrelationResponse:
@@ -2505,6 +2534,7 @@ async def set_version_mock_correlation(
     project_id: str,
     version_record_id: str,
     request: VersionMockCorrelationRequest,
+    dry_run: bool = _MOCK_DRY_RUN_QUERY,
     auth_data: Dict[str, Any] = Depends(validate_authentication),
 ) -> VersionMockCorrelationResponse:
     """Replace the version's mock response-correlation settings (#5527, MSC-1.1).
@@ -2518,6 +2548,9 @@ async def set_version_mock_correlation(
 
     Omitting ``correlation`` (or sending ``null``, or a block with ``mode: "off"``) clears the
     stored block and reverts the version to today's static behaviour.
+
+    With ``?dryRun=true`` nothing is written: the same validation runs and the response describes
+    what *would* be stored (#5530, MSC-1.4).
     """
     enforce_permission(db, auth_data, Resource.VERSIONS, Action.EDIT)
     existing = _get_version_for_mock_scenarios(project_id, version_record_id, auth_data["tenant_id"])
@@ -2540,6 +2573,8 @@ async def set_version_mock_correlation(
     storage: Optional[Dict[str, Any]] = None
     if request.correlation is not None and request.correlation.mode != "off":
         storage = correlation_to_storage(request.correlation)
+    if dry_run:
+        return _stored_correlation_response({"responseCorrelation": storage}, version_record_id)
     updated = db.set_version_mock_correlation(
         version_record_id,
         auth_data["tenant_id"],
@@ -2847,6 +2882,7 @@ async def set_version_mock_fixture_packs(
     project_id: str,
     version_record_id: str,
     request: VersionMockFixturePacksRequest,
+    dry_run: bool = _MOCK_DRY_RUN_QUERY,
     auth_data: Dict[str, Any] = Depends(validate_authentication),
 ) -> VersionMockFixturePacksResponse:
     """Replace the version's mock fixture packs (#4745, PMR-2.2).
@@ -2856,6 +2892,9 @@ async def set_version_mock_fixture_packs(
     ``versions.mock_settings`` under ``fixturePacks``, alongside the other mock knobs. The
     response echoes each pack's content digest — the identity a test asserts when it resets a
     session to the pack. An empty ``packs`` map clears them.
+
+    With ``?dryRun=true`` nothing is written: the same validation runs and the response describes
+    what *would* be stored (#5530, MSC-1.4).
     """
     enforce_permission(db, auth_data, Resource.VERSIONS, Action.EDIT)
     existing = _get_version_for_mock_scenarios(project_id, version_record_id, auth_data["tenant_id"])
@@ -2880,6 +2919,8 @@ async def set_version_mock_fixture_packs(
         )
 
     storage = fixture_packs_to_storage(proposed)
+    if dry_run:
+        return _stored_fixture_packs_response({"fixturePacks": storage}, version_record_id)
     updated = db.set_version_mock_fixture_packs(
         version_record_id,
         auth_data["tenant_id"],

@@ -9,6 +9,9 @@ Two runtimes live behind one command:
     network, and no credentials — the command ``apiome mock run`` and the official image both
     execute.
 
+``preview`` (#5530, MSC-1.4) renders one synthetic request against a bundle and prints what the
+mock would serve, with the decision trace — the offline half of ``apiome mock preview``.
+
 ``verify``, ``conformance``, ``parity``, ``serverless``, and ``attest`` support the portable path:
 the first proves a bundle is loadable before a job depends on it, the second proves a *running*
 runtime answers the shared conformance corpus correctly (how the CLI and the image are held to
@@ -35,8 +38,8 @@ def _build_parser() -> argparse.ArgumentParser:
     """Construct the full argument parser.
 
     Returns:
-        The parser, with the ``serve``, ``run``, ``verify``, ``conformance``, ``parity``,
-        ``selftest``, ``serverless``, and ``attest`` subcommands.
+        The parser, with the ``serve``, ``run``, ``verify``, ``preview``, ``conformance``,
+        ``parity``, ``selftest``, ``serverless``, and ``attest`` subcommands.
     """
     parser = argparse.ArgumentParser(
         prog="apiome-mock",
@@ -91,6 +94,28 @@ def _build_parser() -> argparse.ArgumentParser:
         "--json",
         action="store_true",
         help="Emit the verification result as JSON.",
+    )
+
+    preview_parser = subparsers.add_parser(
+        "preview",
+        help="Render one synthetic request against a bundle and print what the mock would serve.",
+        description=(
+            "Render one synthetic request against a mock bundle, offline. The request document is "
+            "read from a file or standard input so nothing about it — headers included — ever "
+            "appears on a command line."
+        ),
+    )
+    add_runtime_arguments(preview_parser)
+    preview_parser.add_argument(
+        "--request-file",
+        default="-",
+        metavar="PATH",
+        help="Synthetic request JSON document, or '-' for standard input (default: '-').",
+    )
+    preview_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit the preview result as JSON.",
     )
 
     conformance_parser = subparsers.add_parser(
@@ -366,6 +391,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command in {
         "run",
         "verify",
+        "preview",
         "conformance",
         "parity",
         "selftest",
@@ -377,6 +403,7 @@ def main(argv: list[str] | None = None) -> int:
         handlers = {
             "run": cli_run.run_command,
             "verify": cli_run.verify_command,
+            "preview": cli_run.preview_command,
             "conformance": cli_run.conformance_command,
             "parity": cli_run.parity_command,
             "selftest": cli_run.selftest_command,

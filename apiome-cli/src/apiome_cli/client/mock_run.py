@@ -32,6 +32,7 @@ __all__ = [
     "MockRuntimeUnavailableError",
     "build_run_plan",
     "read_bundle_mount",
+    "select_runtime",
 ]
 
 #: Image used when ``--runtime docker`` is selected without an explicit ``--image``.
@@ -116,7 +117,7 @@ def read_bundle_mount(bundle: Path) -> str:
     return f"/{tenant}/{project}/{version}"
 
 
-def _select_runtime(
+def select_runtime(
     requested: RuntimeChoice,
     *,
     which: Callable[[str], str | None],
@@ -210,7 +211,7 @@ def build_run_plan(
     Raises:
         MockRuntimeUnavailableError: No usable runtime is installed.
     """
-    selected = _select_runtime(runtime, which=which or shutil.which)
+    selected = select_runtime(runtime, which=which or shutil.which)
     absolute = bundle.expanduser().resolve()
     flags = _runtime_flags(
         base_path=base_path,

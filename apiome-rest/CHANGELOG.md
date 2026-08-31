@@ -5,6 +5,28 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.306.0] - 2026-08-29
+
+### Added
+- **`?dryRun=true` on the version mock-settings write routes (#5530, MSC-1.4)** — `PUT
+  .../mock/scenarios`, `PUT .../mock/correlation` and `PUT .../mock/fixture-packs` accept
+  `?dryRun=true`: the same validation runs, the response describes what *would* be stored, and
+  nothing is written.
+
+  It exists so that a mock configuration held as a file — `apiome mock config push --dry-run` —
+  can be checked in CI against the *authoritative* validators rather than a second copy of them,
+  and so that a real push can validate every section before any of them is stored. Without it a
+  document whose scenarios are valid and whose correlation block is not would leave a version
+  half-configured, and would report only the first problem rather than all of them.
+
+  The dry-run response is built by the very readers the write path reports with, so it cannot
+  describe an outcome the write would not produce — operation keys normalize the same way, fixture
+  packs gain the same format defaults, and a cleared correlation block reports as `null`. It
+  reports validation, not ownership: the creator/administrator gate lives in the write itself and
+  cannot be exercised without writing.
+
+  The parameter defaults to off, so every existing caller is unaffected.
+
 ## [1.305.0] - 2026-08-28
 
 ### Added

@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.170.0
+  version: 1.171.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -14531,7 +14531,13 @@ paths:
 
         SIM-4.3): ``chaos`` replaces the stored block, and omitting it (or
 
-        sending ``null``) clears the stored block.'
+        sending ``null``) clears the stored block.
+
+
+        With ``?dryRun=true`` nothing is written: the same validation runs and the
+        response describes
+
+        what *would* be stored (#5530, MSC-1.4).'
       operationId: set_version_mock_scenarios_v1_versions__tenant_slug___project_id___version_record_id__mock_scenarios_put
       parameters:
       - name: tenant_slug
@@ -14558,6 +14564,15 @@ paths:
           title: Version Record Id
           description: Version Record Id schema.
         description: Version row identifier (``versions.id`` UUID).
+      - name: dryRun
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Validate and report what would be stored, without writing anything.
+          default: false
+          title: Dryrun
+        description: Validate and report what would be stored, without writing anything.
       - name: authorization
         in: header
         required: false
@@ -14707,7 +14722,13 @@ paths:
         Omitting ``correlation`` (or sending ``null``, or a block with ``mode: "off"``)
         clears the
 
-        stored block and reverts the version to today''s static behaviour.'
+        stored block and reverts the version to today''s static behaviour.
+
+
+        With ``?dryRun=true`` nothing is written: the same validation runs and the
+        response describes
+
+        what *would* be stored (#5530, MSC-1.4).'
       operationId: set_version_mock_correlation_v1_versions__tenant_slug___project_id___version_record_id__mock_correlation_put
       parameters:
       - name: tenant_slug
@@ -14734,6 +14755,15 @@ paths:
           title: Version Record Id
           description: Version Record Id schema.
         description: Version row identifier (``versions.id`` UUID).
+      - name: dryRun
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Validate and report what would be stored, without writing anything.
+          default: false
+          title: Dryrun
+        description: Validate and report what would be stored, without writing anything.
       - name: authorization
         in: header
         required: false
@@ -15078,7 +15108,13 @@ paths:
         response echoes each pack''s content digest — the identity a test asserts
         when it resets a
 
-        session to the pack. An empty ``packs`` map clears them.'
+        session to the pack. An empty ``packs`` map clears them.
+
+
+        With ``?dryRun=true`` nothing is written: the same validation runs and the
+        response describes
+
+        what *would* be stored (#5530, MSC-1.4).'
       operationId: set_version_mock_fixture_packs_v1_versions__tenant_slug___project_id___version_record_id__mock_fixture_packs_put
       parameters:
       - name: tenant_slug
@@ -15105,6 +15141,15 @@ paths:
           title: Version Record Id
           description: Version Record Id schema.
         description: Version row identifier (``versions.id`` UUID).
+      - name: dryRun
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Validate and report what would be stored, without writing anything.
+          default: false
+          title: Dryrun
+        description: Validate and report what would be stored, without writing anything.
       - name: authorization
         in: header
         required: false
@@ -59578,7 +59623,7 @@ components:
           type: string
           title: Operation Uuid
           description: The apiome.path_operation UUID.
-          example: d542d0c7-aa6c-4e2d-9000-02115297eac0
+          example: 340acdec-c35f-4d1e-9d8b-1a1c7282c72d
         method:
           type: string
           title: Method
@@ -61570,7 +61615,7 @@ components:
           type: string
           title: Generated At
           description: Statement timestamp (ISO-8601, UTC).
-          example: '2026-08-28T22:14:39Z'
+          example: '2026-08-29T15:13:03Z'
         envelope:
           additionalProperties: true
           type: object
@@ -91594,7 +91639,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-28T22:14:39Z'
+          example: '2026-08-29T15:13:03Z'
       additionalProperties: false
       type: object
       required:
@@ -103341,13 +103386,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-28T22:14:39Z'
+          example: '2026-08-29T15:13:03Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-28T22:14:39Z'
+          example: '2026-08-29T15:13:03Z'
         outcome:
           anyOf:
           - type: string

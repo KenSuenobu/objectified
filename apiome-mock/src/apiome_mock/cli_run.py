@@ -1,7 +1,7 @@
 """``apiome-mock run``/``verify``/``conformance``/``parity``/``serverless``/``attest``.
 
 The portable-runtime command implementations (#4742, PMR-1.2; ``parity`` #4748, PMR-3.1;
-``serverless`` #4743, PMR-1.3; ``attest`` #4749, PMR-3.2).
+``serverless`` #4743, PMR-1.3; ``attest`` #4749, PMR-3.2; ``preview`` #5530, MSC-1.4).
 
 These are the portable-runtime commands: they never touch Postgres, and everything they need comes
 from a mock bundle plus the knobs declared in :mod:`apiome_mock.portable_config`. ``parity``
@@ -26,6 +26,7 @@ Code  Meaning
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import sys
 import threading
@@ -35,6 +36,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterator
 
 import structlog
+from fastapi import HTTPException
 from pydantic import ValidationError
 
 from apiome_mock import __version__
@@ -57,6 +59,8 @@ from apiome_mock.conformance import (
 from apiome_mock.logging_config import configure_portable_logging, uvicorn_log_config
 from apiome_mock.parity import ParityReport, run_parity
 from apiome_mock.portable_config import PortableSettings, settings_from_args
+from apiome_mock.preview import ENCODING_EMPTY, ENCODING_JSON, PreviewResult, render_preview
+from apiome_mock.preview_routes import PreviewRequestModel
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle avoidance; the module is imported lazily
     from apiome_mock.serverless_preflight import PreflightReport
@@ -72,6 +76,7 @@ __all__ = [
     "attest_command",
     "conformance_command",
     "parity_command",
+    "preview_command",
     "run_command",
     "selftest_command",
     "serverless_command",
@@ -238,6 +243,104 @@ def verify_command(args: argparse.Namespace) -> int:
     print(f"  operations {len(report['operations'])}")
     print(f"  scenarios  {', '.join(report['scenarios']) or '(none)'}")
     print(f"  fixtures   {', '.join(report['fixtures']) or '(none)'}")
+    return EXIT_OK
+
+
+def _read_preview_request(source: str) -> Any:
+    """Read and parse the synthetic-request document for ``preview``.
+
+    The request never travels on a command line, so a header carrying a bearer token cannot leak
+    into ``ps`` output or shell history. ``-`` reads standard input, which is how ``apiome mock
+    preview --bundle`` feeds this command without writing a temporary file.
+
+    Args:
+        source: Path to a JSON document, or ``"-"`` for standard input.
+
+    Returns:
+        The parsed request document.
+
+    Raises:
+        SystemExit: Exit code 2 when the document cannot be read or is not JSON.
+    """
+    try:
+        text = sys.stdin.read() if source == "-" else Path(source).read_text(encoding="utf-8")
+    except OSError as exc:
+        print(f"Cannot read the request document: {exc}", file=sys.stderr)
+        raise SystemExit(EXIT_CONFIG_ERROR) from exc
+    if not text.strip():
+        # An empty document is the documented way to say "GET /", not an error.
+        return {}
+    try:
+        return json.loads(text)
+    except ValueError as exc:
+        print(f"The request document is not valid JSON: {exc}", file=sys.stderr)
+        raise SystemExit(EXIT_CONFIG_ERROR) from exc
+
+
+def _print_preview(result: PreviewResult) -> None:
+    """Print a preview result as a short human summary."""
+    print(f"{result.status} {result.media_type}  ({result.operation or 'no operation matched'})")
+    print(f"  layer      {result.trace.layer}")
+    if result.trace.detail:
+        print(f"  detail     {result.trace.detail}")
+    if result.chaos.suppressed:
+        print(
+            f"  chaos      suppressed (delay {result.chaos.delay_ms}ms "
+            f"±{result.chaos.jitter_ms}ms, errors {result.chaos.error_rate}%)"
+        )
+    if result.body_encoding != ENCODING_EMPTY:
+        print("  body")
+        rendered = (
+            json.dumps(result.body, indent=2, sort_keys=True)
+            if result.body_encoding == ENCODING_JSON
+            else str(result.body)
+        )
+        for line in rendered.splitlines():
+            print(f"    {line}")
+
+
+def preview_command(args: argparse.Namespace) -> int:
+    """Render one synthetic request against a bundle and report what the mock would serve.
+
+    The offline half of ``apiome mock preview`` (#5530, MSC-1.4). It renders through
+    :func:`apiome_mock.preview.render_preview` — the same function the hosted control plane reaches
+    over its internal hop — so a bundle previewed here and the same bundle previewed through the
+    service answer identically. Nothing is served, nothing is written, and no control plane is
+    contacted.
+
+    Args:
+        args: Parsed ``preview`` namespace (bundle flags plus ``--request-file`` and ``--json``).
+
+    Returns:
+        0 when the request was rendered. The status the *mock* would return is data, not an
+        outcome: a previewed 404 is a successful preview.
+
+    Raises:
+        SystemExit: On configuration, request-document, or bundle failures (see the module
+            docstring).
+    """
+    settings = _resolve_settings(args)
+    configure_portable_logging(settings.log_level)
+    document = _read_preview_request(args.request_file)
+
+    try:
+        # The same model the internal preview endpoint validates with, so the offline path cannot
+        # accept a request shape the hosted path rejects (or the other way round).
+        request = PreviewRequestModel.model_validate(document).to_preview_request()
+    except ValidationError as exc:
+        print(f"The request document is not a valid preview request:\n{exc}", file=sys.stderr)
+        raise SystemExit(EXIT_CONFIG_ERROR) from exc
+    except HTTPException as exc:
+        print(f"The request document exceeds a preview limit: {exc.detail}", file=sys.stderr)
+        raise SystemExit(EXIT_CONFIG_ERROR) from exc
+
+    bundle = _load(settings)
+    result = asyncio.run(render_preview(bundle.to_compiled_spec(), request))
+
+    if args.json:
+        print(json.dumps(result.as_dict(), indent=2, sort_keys=True))
+    else:
+        _print_preview(result)
     return EXIT_OK
 
 

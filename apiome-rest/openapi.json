@@ -3,7 +3,7 @@
   "info": {
     "title": "Apiome REST API",
     "description": "REST API for managing tenants, projects, versions, primitives, classes, paths, operations, catalog items, imports, exports, governance, and MCP catalog surfaces.",
-    "version": "1.170.0",
+    "version": "1.171.0",
     "contact": {
       "name": "Apiome",
       "url": "https://apiome.dev"
@@ -19742,7 +19742,7 @@
           "versions"
         ],
         "summary": "Set Version Mock Scenarios",
-        "description": "Replace the version's mock scenario definitions (#4454 SIM-4.2).\n\nCanned responses are validated against the version's generated OpenAPI\ndocument (operation exists, status defined, media type declared, body\nmatches the response schema); a response may opt out with ``offSpec``.\nDefinitions persist in ``versions.mock_settings`` alongside other mock\nknobs and survive publish/republish and mock toggles.\n\nThe request also carries the version-level latency/chaos knobs (#4455\nSIM-4.3): ``chaos`` replaces the stored block, and omitting it (or\nsending ``null``) clears the stored block.",
+        "description": "Replace the version's mock scenario definitions (#4454 SIM-4.2).\n\nCanned responses are validated against the version's generated OpenAPI\ndocument (operation exists, status defined, media type declared, body\nmatches the response schema); a response may opt out with ``offSpec``.\nDefinitions persist in ``versions.mock_settings`` alongside other mock\nknobs and survive publish/republish and mock toggles.\n\nThe request also carries the version-level latency/chaos knobs (#4455\nSIM-4.3): ``chaos`` replaces the stored block, and omitting it (or\nsending ``null``) clears the stored block.\n\nWith ``?dryRun=true`` nothing is written: the same validation runs and the response describes\nwhat *would* be stored (#5530, MSC-1.4).",
         "operationId": "set_version_mock_scenarios_v1_versions__tenant_slug___project_id___version_record_id__mock_scenarios_put",
         "parameters": [
           {
@@ -19777,6 +19777,18 @@
               "description": "Version Record Id schema."
             },
             "description": "Version row identifier (``versions.id`` UUID)."
+          },
+          {
+            "name": "dryRun",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Validate and report what would be stored, without writing anything.",
+              "default": false,
+              "title": "Dryrun"
+            },
+            "description": "Validate and report what would be stored, without writing anything."
           },
           {
             "name": "authorization",
@@ -19970,7 +19982,7 @@
           "versions"
         ],
         "summary": "Set Version Mock Correlation",
-        "description": "Replace the version's mock response-correlation settings (#5527, MSC-1.1).\n\nCorrelation is what makes the default response path answer ``GET /pets/42`` with an id of\n``42`` \u2014 with no request header, so a generated SDK or a browser app gets it too. The block is\nvalidated against this version's generated OpenAPI document (every operation key must name a\nreal operation) and against the bounded template language (every explicit expression must\nparse), then stored canonically in ``versions.mock_settings`` under ``responseCorrelation``,\nalongside the other mock knobs, and travels inside portable mock bundles.\n\nOmitting ``correlation`` (or sending ``null``, or a block with ``mode: \"off\"``) clears the\nstored block and reverts the version to today's static behaviour.",
+        "description": "Replace the version's mock response-correlation settings (#5527, MSC-1.1).\n\nCorrelation is what makes the default response path answer ``GET /pets/42`` with an id of\n``42`` \u2014 with no request header, so a generated SDK or a browser app gets it too. The block is\nvalidated against this version's generated OpenAPI document (every operation key must name a\nreal operation) and against the bounded template language (every explicit expression must\nparse), then stored canonically in ``versions.mock_settings`` under ``responseCorrelation``,\nalongside the other mock knobs, and travels inside portable mock bundles.\n\nOmitting ``correlation`` (or sending ``null``, or a block with ``mode: \"off\"``) clears the\nstored block and reverts the version to today's static behaviour.\n\nWith ``?dryRun=true`` nothing is written: the same validation runs and the response describes\nwhat *would* be stored (#5530, MSC-1.4).",
         "operationId": "set_version_mock_correlation_v1_versions__tenant_slug___project_id___version_record_id__mock_correlation_put",
         "parameters": [
           {
@@ -20005,6 +20017,18 @@
               "description": "Version Record Id schema."
             },
             "description": "Version row identifier (``versions.id`` UUID)."
+          },
+          {
+            "name": "dryRun",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Validate and report what would be stored, without writing anything.",
+              "default": false,
+              "title": "Dryrun"
+            },
+            "description": "Validate and report what would be stored, without writing anything."
           },
           {
             "name": "authorization",
@@ -20428,7 +20452,7 @@
           "versions"
         ],
         "summary": "Set Version Mock Fixture Packs",
-        "description": "Replace the version's mock fixture packs (#4745, PMR-2.2).\n\nPacks are validated against the versioned fixture pack schema (format id and version, name\nshapes, collection path/resource rules, size caps) and stored canonically in\n``versions.mock_settings`` under ``fixturePacks``, alongside the other mock knobs. The\nresponse echoes each pack's content digest \u2014 the identity a test asserts when it resets a\nsession to the pack. An empty ``packs`` map clears them.",
+        "description": "Replace the version's mock fixture packs (#4745, PMR-2.2).\n\nPacks are validated against the versioned fixture pack schema (format id and version, name\nshapes, collection path/resource rules, size caps) and stored canonically in\n``versions.mock_settings`` under ``fixturePacks``, alongside the other mock knobs. The\nresponse echoes each pack's content digest \u2014 the identity a test asserts when it resets a\nsession to the pack. An empty ``packs`` map clears them.\n\nWith ``?dryRun=true`` nothing is written: the same validation runs and the response describes\nwhat *would* be stored (#5530, MSC-1.4).",
         "operationId": "set_version_mock_fixture_packs_v1_versions__tenant_slug___project_id___version_record_id__mock_fixture_packs_put",
         "parameters": [
           {
@@ -20463,6 +20487,18 @@
               "description": "Version Record Id schema."
             },
             "description": "Version row identifier (``versions.id`` UUID)."
+          },
+          {
+            "name": "dryRun",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Validate and report what would be stored, without writing anything.",
+              "default": false,
+              "title": "Dryrun"
+            },
+            "description": "Validate and report what would be stored, without writing anything."
           },
           {
             "name": "authorization",
@@ -80471,7 +80507,7 @@
             "type": "string",
             "title": "Operation Uuid",
             "description": "The apiome.path_operation UUID.",
-            "example": "d542d0c7-aa6c-4e2d-9000-02115297eac0"
+            "example": "340acdec-c35f-4d1e-9d8b-1a1c7282c72d"
           },
           "method": {
             "type": "string",
@@ -82835,7 +82871,7 @@
             "type": "string",
             "title": "Generated At",
             "description": "Statement timestamp (ISO-8601, UTC).",
-            "example": "2026-08-28T22:14:39Z"
+            "example": "2026-08-29T15:13:03Z"
           },
           "envelope": {
             "additionalProperties": true,
@@ -120737,7 +120773,7 @@
             "format": "date-time",
             "title": "Resolved At",
             "description": "When the target was resolved.",
-            "example": "2026-08-28T22:14:39Z"
+            "example": "2026-08-29T15:13:03Z"
           }
         },
         "additionalProperties": false,
@@ -135791,14 +135827,14 @@
             "format": "date-time",
             "title": "Started At",
             "description": "When the run began.",
-            "example": "2026-08-28T22:14:39Z"
+            "example": "2026-08-29T15:13:03Z"
           },
           "finished_at": {
             "type": "string",
             "format": "date-time",
             "title": "Finished At",
             "description": "When the run ended.",
-            "example": "2026-08-28T22:14:39Z"
+            "example": "2026-08-29T15:13:03Z"
           },
           "outcome": {
             "anyOf": [

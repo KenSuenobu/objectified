@@ -195,14 +195,34 @@ class RestClient:
         httpx.Response
             The successful response; raises ``SystemExit`` on HTTP or transport error.
         """
+        response = self.put_raw(path, json=json)
+        exit_on_api_error(response)
+        return response
+
+    def put_raw(self, path: str, *, json: object = None) -> httpx.Response:
+        """Issue PUT ``path`` and return the response without exiting on HTTP errors.
+
+        For callers that render a rejection themselves rather than take the shared mapping — a
+        422 whose error list belongs against a local file's own paths, for instance.
+
+        Parameters
+        ----------
+        path:
+            URL path starting with ``/``.
+        json:
+            Optional JSON-serialisable payload; sets ``Content-Type: application/json``.
+
+        Returns
+        -------
+        httpx.Response
+            The HTTP response; transport errors still exit the CLI.
+        """
         url = f"{self._base_url}{path}"
         try:
             with httpx.Client(timeout=self._timeout, verify=self._verify) as client:
-                response = client.put(url, json=json, headers=self._headers)
+                return client.put(url, json=json, headers=self._headers)
         except httpx.RequestError as exc:
             exit_on_connection_error(exc)
-        exit_on_api_error(response)
-        return response
 
     def delete(self, path: str) -> httpx.Response:
         """Issue DELETE ``path`` relative to ``base_url`` and exit on HTTP error.

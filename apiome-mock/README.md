@@ -310,6 +310,80 @@ and never applies chaos — configured latency and error injection are *reported
 so a preview does not sleep or randomly answer 500. Full guide:
 [docs/guide/mock-response-preview.md](../docs/guide/mock-response-preview.md).
 
+## Mock configuration as a file (MSC-1.4)
+
+The settings that decide what a mock *returns* also travel as one reviewable document, so they can
+be committed, diffed in a pull request, checked for drift in CI, and promoted from one version to
+another. The CLI reads and writes it against the control plane; the shape is documented here
+because it is the same four settings a bundle carries.
+
+```json
+{
+  "configFormat": "apiome.mock.config/v1",
+  "configFormatVersion": 1,
+  "chaos": { "default": { "delayMs": 100, "jitterMs": 20, "errorRate": 0.5 }, "operations": {} },
+  "correlation": {
+    "mode": "inferred",
+    "operations": { "GET /pets/{petId}": { "/id": "{{request.path.petId}}" } }
+  },
+  "fixturePacks": { "smoke": { "packFormat": "apiome.mock.fixture-pack/v1", "collections": {} } },
+  "scenarios": { "outage": { "description": "Upstream is down", "operations": {} } }
+}
+```
+
+| Key | What it configures |
+| --- | --- |
+| `correlation` | Response correlation (MSC-1.1) — how a default-path response is derived from the request. `null` when off. |
+| `scenarios` | Named scenario definitions (SIM-4.2), keyed by scenario name. |
+| `chaos` | Version-level latency and error injection (SIM-4.3). `null` when unset. |
+| `fixturePacks` | Fixture packs (PMR-2.2), keyed by pack name. |
+
+Four properties are contracts rather than conveniences:
+
+* **The document is whole.** A push replaces every section; a section the document omits is
+  *cleared*, not left alone. `configFormat` is required precisely so no arbitrary JSON file can be
+  pushed into a version by accident.
+* **The document is the server's canonical form, verbatim** — not even the explicit `null`s the API
+  reports for unset optional fields are pruned, because a canned response body is free-form JSON in
+  which `null` is a value. Keys are sorted at every depth, so a pull is byte-stable and committing
+  it produces no diff on the next pull.
+* **The document carries no identity.** No tenant, project or version travels in it, so the same
+  file can be pushed to a staging version and then to a production one.
+* **Validation is the server's.** `push` checks the document through the very routes that would
+  store it (`?dryRun=true`), all of them, before any of them writes — so a rejected document leaves
+  the version untouched and reports every problem at once.
+
+Callbacks (PMR-2.3) and the hosted-only knobs — the private-mock access mode, the proxy-capture
+grant — are deliberately outside the document: the first carries delivery destinations, and the
+others are access control rather than behaviour.
+
+```bash
+apiome mock config pull payments-api 1.0.0 --out mock-config.json
+apiome mock config diff payments-api 1.0.0 --file mock-config.json   # exit 1 = drift
+apiome mock config push payments-api 1.0.0 --file mock-config.json --dry-run
+apiome mock config push payments-api 1.0.0 --file mock-config.json
+```
+
+### Offline preview (`apiome-mock preview`)
+
+`preview` renders one synthetic request against a bundle and prints what the mock would serve, with
+the decision trace — the offline half of `apiome mock preview`. It renders through
+`apiome_mock.preview.render_preview`, the same function `/__preview__` calls, so an offline preview
+and a hosted one answer identically for the same bundle and request.
+
+```bash
+echo '{"method": "GET", "path": "/pets/42"}' \
+  | apiome-mock preview --bundle mock-bundle.json --json
+# -> { operation, pathParams, status, headers, mediaType, body, bodyEncoding, trace, chaos }
+```
+
+The request document is read from `--request-file` (default `-`, standard input) and never from a
+command line, so a header carrying a bearer token cannot leak into `ps` output or shell history. It
+is validated by the same model `/__preview__` validates with, so the two paths cannot accept
+different request shapes. Exit codes match the other portable commands: `2` configuration or
+request-document error, `3` bundle verification failed, `4` bundle incompatible. The status the
+*mock* would return is data, not an outcome — a previewed `404` exits `0`.
+
 ## Container image
 
 One image, two runtimes — `serve` (hosted, the default) and `run` (portable):
