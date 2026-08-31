@@ -280,6 +280,28 @@ data came from: `__mock__/fixture-packs` reports each pack's `origin` and `redac
 `X-Mock-Fixture-Redaction` headers. Full guide:
 [docs/guide/mock-proxy-capture.md](../docs/guide/mock-proxy-capture.md).
 
+## Stored active scenario (MSC-2.1)
+
+A version can nominate the scenario its mock serves by default, so switching a mock to
+`server-error` changes what the hosted URL returns instead of only what a caller who knows to send
+a header can ask for. It is the `activeScenario` key of `versions.mock_settings`, it travels inside
+a portable bundle, and the precedence is:
+
+1. the request's `X-Mock-Scenario` header — still an outright override;
+2. the version's stored `activeScenario`;
+3. no scenario, which is exactly today's behaviour.
+
+Every response served while a scenario is in effect carries `X-Mock-Scenario` naming it, including
+one for an operation the scenario does not override — a caller who sent no header can otherwise
+not tell which scenario is answering them.
+
+A stored `activeScenario` naming a scenario that no longer exists is **ignored with a warning**
+(`mock_active_scenario_unknown`) and the request falls through to the default flow. A default that
+cannot resolve must never take a serving mock down; the strict check lives at save time, where
+apiome-rest rejects an `activeScenario` that is not one of the scenarios saved with it. A *header*
+naming an unknown scenario stays a problem response — that one is the caller asking for something
+specific.
+
 ## Dry-run response preview (MSC-1.2)
 
 **Hosted only, internal.** `POST /__preview__` answers "given this request, what does this mock
@@ -295,9 +317,9 @@ curl -X POST $MOCK/__preview__ \
 # -> { operation, pathParams, status, headers, mediaType, body, bodyEncoding, trace, chaos }
 ```
 
-The `trace` names which layer produced the body — `scenario` (with the matched rule index),
-`stateful`, `correlation` (with the mode and the pointers it bound), `example` or `synthesis` —
-which is most of the value of a preview.
+The `trace` names which layer produced the body — `scenario` (with where it came from and the
+matched rule index), `stateful`, `correlation` (with the mode and the pointers it bound), `example`
+or `synthesis` — which is most of the value of a preview.
 
 The endpoint exists because the engine lives here while the control plane (version records, RBAC,
 the editor, the CLI) lives in apiome-rest, which cannot import this package. apiome-rest
@@ -315,12 +337,13 @@ so a preview does not sleep or randomly answer 500. Full guide:
 The settings that decide what a mock *returns* also travel as one reviewable document, so they can
 be committed, diffed in a pull request, checked for drift in CI, and promoted from one version to
 another. The CLI reads and writes it against the control plane; the shape is documented here
-because it is the same four settings a bundle carries.
+because it is the same settings a bundle carries.
 
 ```json
 {
   "configFormat": "apiome.mock.config/v1",
   "configFormatVersion": 1,
+  "activeScenario": "outage",
   "chaos": { "default": { "delayMs": 100, "jitterMs": 20, "errorRate": 0.5 }, "operations": {} },
   "correlation": {
     "mode": "inferred",
@@ -335,6 +358,7 @@ because it is the same four settings a bundle carries.
 | --- | --- |
 | `correlation` | Response correlation (MSC-1.1) — how a default-path response is derived from the request. `null` when off. |
 | `scenarios` | Named scenario definitions (SIM-4.2), keyed by scenario name. |
+| `activeScenario` | The scenario served when a request sends no `X-Mock-Scenario` header (MSC-2.1). Must name one of `scenarios`. `null` when the version has none. |
 | `chaos` | Version-level latency and error injection (SIM-4.3). `null` when unset. |
 | `fixturePacks` | Fixture packs (PMR-2.2), keyed by pack name. |
 

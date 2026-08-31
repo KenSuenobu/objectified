@@ -117,6 +117,28 @@ def test_pull_prints_a_canonical_document(httpx_mock: object) -> None:
     assert document["fixturePacks"] == _STORED_PACKS["packs"]
 
 
+def test_pull_carries_the_active_scenario(httpx_mock: object) -> None:
+    """What the mock defaults to travels with the document (#5531, MSC-2.1)."""
+    _scope(httpx_mock)
+    httpx_mock.add_response(
+        url=_SCENARIOS_URL, method="GET", json={**_STORED_SCENARIOS, "activeScenario": "outage"}
+    )
+    httpx_mock.add_response(url=_CORRELATION_URL, method="GET", json=_STORED_CORRELATION)
+    httpx_mock.add_response(url=_PACKS_URL, method="GET", json=_STORED_PACKS)
+
+    result = runner.invoke(app, ["mock", "config", "pull", "payments-api", "1.0.0"])
+    assert result.exit_code == EXIT_SUCCESS, result.stdout
+    assert json.loads(result.stdout)["activeScenario"] == "outage"
+
+
+def test_pull_reports_no_active_scenario_as_null(httpx_mock: object) -> None:
+    _scope(httpx_mock)
+    _stored_config(httpx_mock)
+
+    result = runner.invoke(app, ["mock", "config", "pull", "payments-api", "1.0.0"])
+    assert json.loads(result.stdout)["activeScenario"] is None
+
+
 def test_pull_omits_the_derived_pack_digests(httpx_mock: object) -> None:
     """Digests describe the packs; they are not settings, so they never come back on a push."""
     _scope(httpx_mock)
@@ -429,6 +451,9 @@ def test_push_sends_the_document_sections_to_the_routes_that_own_them(
     assert bodies["scenarios"] == {
         "scenarios": _STORED_SCENARIOS["scenarios"],
         "chaos": _STORED_SCENARIOS["chaos"],
+        # Always sent, even as null: a whole-document push clears what the file leaves out
+        # (#5531, MSC-2.1).
+        "activeScenario": _STORED_SCENARIOS.get("activeScenario"),
     }
     assert bodies["correlation"] == {"correlation": _STORED_CORRELATION["correlation"]}
     assert bodies["fixture-packs"] == {"packs": _STORED_PACKS["packs"]}
@@ -454,7 +479,7 @@ def test_a_write_that_fails_after_validation_names_what_was_already_applied(
         app, ["mock", "config", "push", "payments-api", "1.0.0", "--file", str(path)]
     )
     assert result.exit_code == EXIT_USAGE
-    assert "Already applied before the failure: scenarios, chaos" in result.stderr
+    assert "Already applied before the failure: scenarios, activeScenario, chaos" in result.stderr
 
 
 def test_push_forwards_a_non_validation_failure_to_the_shared_error_mapping(

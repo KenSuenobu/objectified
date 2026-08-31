@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.171.0
+  version: 1.172.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -14532,6 +14532,23 @@ paths:
         SIM-4.3): ``chaos`` replaces the stored block, and omitting it (or
 
         sending ``null``) clears the stored block.
+
+
+        ``activeScenario`` (#5531, MSC-2.1) names the scenario the hosted mock serves
+        when a request
+
+        sends no ``X-Mock-Scenario`` header; it must name one of the scenarios in
+        this same request.
+
+        Unlike the other two keys it is *preserved* when the field is omitted and
+        cleared only when it
+
+        is sent as ``null`` — an editor written before the field existed keeps sending
+
+        ``{scenarios, chaos}``, and a save from it must not silently switch a version''s
+        mock back to
+
+        its default flow.
 
 
         With ``?dryRun=true`` nothing is written: the same validation runs and the
@@ -59623,7 +59640,7 @@ components:
           type: string
           title: Operation Uuid
           description: The apiome.path_operation UUID.
-          example: 340acdec-c35f-4d1e-9d8b-1a1c7282c72d
+          example: aeb11096-32d5-453f-8d14-c3b1e8114ae6
         method:
           type: string
           title: Method
@@ -61615,7 +61632,7 @@ components:
           type: string
           title: Generated At
           description: Statement timestamp (ISO-8601, UTC).
-          example: '2026-08-29T15:13:03Z'
+          example: '2026-08-31T16:49:02Z'
         envelope:
           additionalProperties: true
           type: object
@@ -82857,6 +82874,18 @@ components:
           - type: 'null'
             description: Mock Preview Settings Spec schema.
           description: Draft response-correlation block; replaces the stored one.
+        activeScenario:
+          anyOf:
+          - type: string
+            description: Mock Preview Settings Spec schema.
+          - type: 'null'
+            description: Mock Preview Settings Spec schema.
+          title: Activescenario
+          description: 'Draft default scenario applied when the previewed request
+            sends no X-Mock-Scenario header (#5531 MSC-2.1); replaces the stored one.
+            Rendered exactly as the runtime would: a name that resolves to no scenario
+            is ignored, because a draft may legitimately name one that lives in the
+            version''s stored scenarios.'
       additionalProperties: false
       type: object
       title: MockPreviewSettingsSpec
@@ -82913,6 +82942,15 @@ components:
             description: Mock Preview Trace schema.
           title: Scenario
           description: The scenario that applied, if any.
+        scenarioSource:
+          anyOf:
+          - type: string
+            description: Mock Preview Trace schema.
+          - type: 'null'
+            description: Mock Preview Trace schema.
+          title: Scenariosource
+          description: 'Where that scenario came from: "header" (X-Mock-Scenario)
+            or "config" (the version''s stored activeScenario, #5531 MSC-2.1).'
         ruleIndex:
           anyOf:
           - type: integer
@@ -91639,7 +91677,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-29T15:13:03Z'
+          example: '2026-08-31T16:49:02Z'
       additionalProperties: false
       type: object
       required:
@@ -103386,13 +103424,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-29T15:13:03Z'
+          example: '2026-08-31T16:49:02Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-29T15:13:03Z'
+          example: '2026-08-31T16:49:02Z'
         outcome:
           anyOf:
           - type: string
@@ -105932,6 +105970,18 @@ components:
             description: Request body for version mock scenarios.
           description: Version-level latency/chaos knobs; omit or send null to clear
             them (#4455 SIM-4.3).
+        activeScenario:
+          anyOf:
+          - type: string
+            description: Request body for version mock scenarios.
+          - type: 'null'
+            description: Request body for version mock scenarios.
+          title: Activescenario
+          description: The scenario the mock serves when a request sends no X-Mock-Scenario
+            header (#5531 MSC-2.1). It must name one of the scenarios in this same
+            request. Sending null clears it; omitting the field entirely keeps whatever
+            is stored, so an editor that does not know about it cannot silently drop
+            a version's active scenario.
       type: object
       title: VersionMockScenariosRequest
       description: Replace the version's mock scenario definitions (#4454 SIM-4.2).
@@ -105949,6 +105999,15 @@ components:
           - type: 'null'
             description: Response payload for version mock scenarios.
           description: Version-level latency/chaos knobs (#4455 SIM-4.3).
+        activeScenario:
+          anyOf:
+          - type: string
+            description: Response payload for version mock scenarios.
+          - type: 'null'
+            description: Response payload for version mock scenarios.
+          title: Activescenario
+          description: The scenario served when a request sends no X-Mock-Scenario
+            header; null when the version has none (#5531 MSC-2.1).
       type: object
       title: VersionMockScenariosResponse
       description: The version's persisted mock scenario definitions (#4454 SIM-4.2).

@@ -64,7 +64,7 @@ project slug and version label.
     "sig": "…"
   },
   "spec": { "openapi": "3.1.0", "…": "…" },              // the version's generated document
-  "settings": { "scenarios": {…}, "chaos": {…}, "fixturePacks": {…}, "callbacks": {…}, "responseCorrelation": {…} },  // portable settings subset
+  "settings": { "scenarios": {…}, "activeScenario": "…", "chaos": {…}, "fixturePacks": {…}, "callbacks": {…}, "responseCorrelation": {…} },  // portable settings subset
   "fixtures": { "pets.json": "<base64>" }                // embedded, so nothing else is needed
 }
 ```
@@ -116,7 +116,8 @@ first), each with a stable code:
 Three independent layers keep secrets out of a bundle:
 
 1. **Allowlist.** Only `scenarios`, `chaos`, `fixturePacks` (#4745, PMR-2.2), `callbacks`
-   (#4746, PMR-2.3), and `responseCorrelation` (#5527, MSC-1.1) travel from
+   (#4746, PMR-2.3), `responseCorrelation` (#5527, MSC-1.1), and `activeScenario`
+   (#5531, MSC-2.1) travel from
    `versions.mock_settings`. Hosted-plane access control (the private-mock `mode`) is meaningless
    offline and never leaves the server.
 2. **Redaction.** Credential-shaped fields inside that subset — `Authorization`, `*token*`,

@@ -23,7 +23,7 @@ from apiome_mock.correlation import (
     parse_response_correlation,
 )
 from apiome_mock.fixture_packs import FixturePack, merged_template_data, parse_fixture_packs
-from apiome_mock.scenarios import Scenario, parse_scenarios
+from apiome_mock.scenarios import Scenario, parse_active_scenario, parse_scenarios
 
 MockAccessStatus = Literal["ok", "disabled", "missing"]
 
@@ -108,6 +108,10 @@ class CompiledSpec:
     operations: tuple[MockOperation, ...]
     scenarios: Mapping[str, Scenario] = field(default_factory=dict)
     """Scenario overrides parsed from ``versions.mock_settings`` (#4454, SIM-4.2)."""
+    active_scenario: str | None = None
+    """The version's stored default scenario, applied when a request sends no
+    ``X-Mock-Scenario`` header (#5531, MSC-2.1). A name that no longer resolves is ignored with a
+    warning at serve time, never an error."""
     chaos: ChaosConfig = EMPTY_CHAOS
     """Version-level chaos knobs parsed from ``versions.mock_settings`` (#4455, SIM-4.3)."""
     fixtures: Mapping[str, Any] = field(default_factory=dict)
@@ -212,6 +216,7 @@ async def _compile_from_row(
         spec=spec,
         operations=operations,
         scenarios=parse_scenarios(mock_settings),
+        active_scenario=parse_active_scenario(mock_settings),
         chaos=parse_chaos(mock_settings),
         # Fixture packs are the one hosted source of template data (#4745, PMR-2.2).
         fixtures=merged_template_data(fixture_packs),

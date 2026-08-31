@@ -86,7 +86,7 @@ Without it you can see *that* a value appeared but not *why*.
 
 | `layer` | What produced the body |
 |---|---|
-| `scenario` | A scenario override. `scenario` names it; `ruleIndex` is the matched rule's **zero-based** index in the stored `rules` array (the response header `X-Mock-Scenario-Rule` stays one-based). |
+| `scenario` | A scenario override. `scenario` names it, `scenarioSource` says whether it came from the `header` or from the version's stored `activeScenario` (`config`, #5531 MSC-2.1), and `ruleIndex` is the matched rule's **zero-based** index in the stored `rules` array (the response header `X-Mock-Scenario-Rule` stays one-based). |
 | `stateful` | Session-scoped CRUD, because the request carried `X-Mock-Session`. |
 | `correlation` | Correlation rewrote the default body. `correlationMode`, `correlationApplied` (the passes that bound) and `correlationPointers` (the explicit pointers written) say how. |
 | `example` | An author-provided example, schema `example`, `default`, or first `enum` member. `bodySource` distinguishes them; `exampleName` names a `Prefer: example=` selection. |
@@ -125,11 +125,15 @@ settings **per key**, so previewing a reworked correlation block keeps the versi
 
 * A key the draft declares replaces the stored one; a key it omits keeps the stored value; an
   explicit `null` clears it.
-* Draft keys are exactly the ones that travel in a bundle: `scenarios`, `chaos`, `fixturePacks`,
+* Draft keys are exactly the ones that travel in a bundle: `scenarios`, `activeScenario`, `chaos`, `fixturePacks`,
   `callbacks`, `correlation`. Access control (the private-mock `mode`) and the proxy-capture grant
   are hosted concerns with no meaning in a render.
 * The draft is **canonicalized and validated with the same rules its save route applies**, so a
   block that could never be saved is a `422` here rather than a block that silently does nothing.
+  `activeScenario` is the one exception: the save route checks it against the scenarios saved with
+  it, while a draft may name a scenario that lives in the *stored* settings. A preview therefore
+  renders it exactly as the runtime would — an unresolvable name is ignored and the trace reports
+  no scenario, which is the answer an author drafting one wants to see.
 * Nothing is persisted. A follow-up `GET …/mock/correlation` shows the stored settings unchanged.
 * `draft: true` in the response says an override was rendered.
 

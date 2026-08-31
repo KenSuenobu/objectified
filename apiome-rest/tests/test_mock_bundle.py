@@ -246,6 +246,16 @@ def test_response_correlation_travels_in_the_bundle() -> None:
     assert redactions == ()
 
 
+def test_active_scenario_travels_in_the_bundle() -> None:
+    """A bundle must default to the same scenario the version it was exported from does (#5531)."""
+    settings, redactions = redact_mock_settings(
+        {"mode": "private", "activeScenario": "outage", "scenarios": {}}
+    )
+
+    assert settings == {"activeScenario": "outage", "scenarios": {}}
+    assert redactions == ()
+
+
 def test_credential_keys_are_dropped_and_recorded() -> None:
     settings, redactions = redact_mock_settings(
         {

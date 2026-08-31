@@ -212,6 +212,7 @@ def test_a_config_file_is_sent_as_the_draft_settings(httpx_mock: object, tmp_pat
     assert posted["settings"] == {
         "correlation": {"mode": "path-params", "operations": {}},
         "scenarios": {},
+        "activeScenario": None,
         "chaos": None,
         "fixturePacks": {},
     }

@@ -247,12 +247,19 @@ def emit_mock_toggle_result(record: dict[str, Any], *, json_mode: bool) -> None:
 
 #: The three write routes a configuration document is applied through, in the order ``push``
 #: applies them, each paired with the sections it carries and the request body it takes. The
-#: scenarios route owns two sections because the server stores and validates them together.
+#: scenarios route owns three sections because the server stores and validates them together — an
+#: ``activeScenario`` is only meaningful against the scenarios saved with it (#5531, MSC-2.1).
 _PUSH_ROUTES: tuple[tuple[tuple[str, ...], Callable[..., str], Callable[[Mapping[str, Any]], dict[str, Any]]], ...] = (
     (
-        ("scenarios", "chaos"),
+        ("scenarios", "activeScenario", "chaos"),
         api_paths.version_mock_scenarios,
-        lambda document: {"scenarios": document.get("scenarios") or {}, "chaos": document.get("chaos")},
+        lambda document: {
+            "scenarios": document.get("scenarios") or {},
+            "chaos": document.get("chaos"),
+            # Always sent, never omitted: the route keeps the stored value for a caller that omits
+            # the field, and a whole-document push must clear what the file leaves out.
+            "activeScenario": document.get("activeScenario"),
+        },
     ),
     (
         ("correlation",),
@@ -387,6 +394,7 @@ def fetch_mock_config(
         # ``digests`` are derived from the packs and are reported alongside them; they are not
         # settings, so they never enter a document that gets pushed back.
         fixture_packs=packs.get("packs") or {},
+        active_scenario=scenarios.get("activeScenario"),
     )
 
 

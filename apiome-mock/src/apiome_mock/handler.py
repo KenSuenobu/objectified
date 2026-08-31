@@ -67,6 +67,10 @@ from apiome_mock.response_resolver import (
 )
 from apiome_mock.routing import match_request
 from apiome_mock.scenarios import (
+    MOCK_SCENARIO_HEADER,
+    SCENARIO_SOURCE_CONFIG,
+    SCENARIO_SOURCE_HEADER,
+    Scenario,
     build_match_context,
     parse_mock_scenario_name,
     select_scenario_responses,
@@ -156,6 +160,9 @@ class ServeTrace:
         layer: Which layer produced the response — one of the ``LAYER_*`` constants.
         detail: One human-readable sentence naming what happened, safe to show an author.
         scenario: The active scenario's name, when one applied.
+        scenario_source: Where that scenario came from — ``"header"`` (``X-Mock-Scenario``) or
+            ``"config"`` (the version's stored ``activeScenario``); ``None`` when no scenario
+            applied (#5531, MSC-2.1).
         rule_index: Zero-based index of the matched declarative rule within the operation's
             ``rules`` array (``None`` for the plain fallback response list). Zero-based because it
             addresses the stored array the editor edits; the ``X-Mock-Scenario-Rule`` response
@@ -178,6 +185,7 @@ class ServeTrace:
     layer: str = LAYER_UNRESOLVED
     detail: str = ""
     scenario: str | None = None
+    scenario_source: str | None = None
     rule_index: int | None = None
     seed: int | None = None
     seed_source: str = "default"
@@ -197,6 +205,48 @@ class ServeTrace:
         """
         self.layer = layer
         self.detail = detail
+
+
+def _stored_active_scenario(
+    compiled: CompiledSpec,
+    *,
+    tenant: str,
+    project: str,
+    version: str,
+) -> Scenario | None:
+    """Resolve the version's stored active scenario, if it still names one (#5531, MSC-2.1).
+
+    The stored ``activeScenario`` is the default for callers that send no ``X-Mock-Scenario``
+    header. A stored name that no longer resolves — the scenario was renamed or deleted after it
+    was nominated — is **ignored with a warning**, never an error: an unresolvable default must
+    not be able to take a serving mock down, and the request falls through to the default flow
+    exactly as it would with no stored value at all. (A header naming an unknown scenario stays a
+    problem response: that one is the caller asking for something specific.)
+
+    Args:
+        compiled: The compiled spec being served.
+        tenant: Tenant slug, for log context.
+        project: Project slug, for log context.
+        version: Version label, for log context.
+
+    Returns:
+        The stored scenario, or ``None`` when none is stored or the stored name is unknown.
+    """
+    stored = compiled.active_scenario
+    if not stored:
+        return None
+    scenario = compiled.scenarios.get(stored)
+    if scenario is None:
+        _log.warning(
+            "mock_active_scenario_unknown",
+            tenant=tenant,
+            project=project,
+            version=version,
+            active_scenario=stored,
+            available=sorted(compiled.scenarios),
+        )
+        return None
+    return scenario
 
 
 def _instance_path(tenant: str, project: str, version: str, path: str) -> str:
@@ -516,7 +566,9 @@ async def serve_compiled_request(
 
     Returns:
         The mock response (a spec-derived response, a canned scenario response, or a problem+json
-        document describing why no response could be served).
+        document describing why no response could be served). Whenever a scenario was in effect —
+        named by ``X-Mock-Scenario`` or by the version's stored ``activeScenario`` — the response
+        carries an ``X-Mock-Scenario`` header naming it (#5531, MSC-2.1).
     """
     trace = trace if trace is not None else ServeTrace()
     response = await _serve_matched_request(
@@ -530,6 +582,11 @@ async def serve_compiled_request(
         callback_dispatcher=callback_dispatcher,
         trace=trace,
     )
+    if trace.scenario is not None and MOCK_SCENARIO_HEADER not in response.headers:
+        # Name the scenario that was in effect even when it did not override this operation
+        # (#5531, MSC-2.1). A stored active scenario is invisible to a caller who sent no header,
+        # and "which scenario am I talking to" must be answerable from the response itself.
+        response.headers[MOCK_SCENARIO_HEADER] = trace.scenario
     if callback_dispatcher is not None and trace.operation is not None and compiled.callbacks:
         await _fire_callbacks(
             request,
@@ -720,7 +777,7 @@ async def _serve_matched_request(
     # curated situation authored in the Control Panel. Overridden operations
     # return their canned response(s) verbatim (highest precedence); operations
     # the scenario does not override fall through to the default flow below.
-    scenario = None
+    # Without a header the version's stored active scenario applies (#5531, MSC-2.1).
     scenario_name = parse_mock_scenario_name(request)
     if scenario_name is not None:
         scenario = compiled.scenarios.get(scenario_name)
@@ -734,6 +791,10 @@ async def _serve_matched_request(
                 instance=instance,
                 available=sorted(compiled.scenarios),
             )
+        scenario_source = SCENARIO_SOURCE_HEADER
+    else:
+        scenario = _stored_active_scenario(compiled, tenant=tenant, project=project, version=version)
+        scenario_source = SCENARIO_SOURCE_CONFIG if scenario is not None else None
 
     # Chaos injection (#4455, SIM-4.3): a scenario-scoped chaos block replaces
     # the version-level one when that scenario is active. The configured delay
@@ -742,6 +803,7 @@ async def _serve_matched_request(
     # normal resolved response.
     if scenario is not None:
         trace.scenario = scenario.name
+        trace.scenario_source = scenario_source
 
     chaos_config = scenario.chaos if scenario is not None and scenario.chaos is not None else compiled.chaos
     chaos_knobs = effective_knobs(chaos_config, operation.key)

@@ -51,7 +51,7 @@ from apiome_mock.correlation import (
 )
 from apiome_mock.fixture_data import decode_bundle_fixtures
 from apiome_mock.fixture_packs import FixturePack, merged_template_data, parse_fixture_packs
-from apiome_mock.scenarios import Scenario, parse_scenarios
+from apiome_mock.scenarios import Scenario, parse_active_scenario, parse_scenarios
 from apiome_mock.spec_loader import CompiledSpec
 
 __all__ = [
@@ -113,6 +113,9 @@ class LoadedBundle:
         spec: The embedded OpenAPI document.
         operations: The compiled routing table.
         scenarios: Scenario overrides parsed from the bundled settings.
+        active_scenario: The bundled default scenario, applied when a request sends no
+            ``X-Mock-Scenario`` header, so a portable bundle defaults exactly as the hosted
+            version it was exported from (#5531, MSC-2.1).
         chaos: Version-level chaos knobs parsed from the bundled settings.
         fixtures: Fixture entries declared by the manifest (name, media type, digest, size).
         fixture_data: Decoded fixture values by name, readable by response templates
@@ -135,6 +138,7 @@ class LoadedBundle:
     operations: tuple[MockOperation, ...]
     scenarios: Mapping[str, Scenario]
     chaos: ChaosConfig
+    active_scenario: str | None = None
     fixtures: tuple[Mapping[str, Any], ...] = ()
     fixture_data: Mapping[str, Any] = field(default_factory=dict)
     fixture_packs: Mapping[str, FixturePack] = field(default_factory=dict)
@@ -185,6 +189,7 @@ class LoadedBundle:
             spec=self.spec,
             operations=self.operations,
             scenarios=self.scenarios,
+            active_scenario=self.active_scenario,
             chaos=self.chaos,
             # Pack data overlays the embedded fixture payloads, mirroring the hosted
             # fixtures-then-packs precedence (#4745, PMR-2.2).
@@ -266,6 +271,7 @@ def load_bundle_document(
         spec=spec,
         operations=tuple(extract_operations(spec)),
         scenarios=parse_scenarios(settings),
+        active_scenario=parse_active_scenario(settings),
         chaos=parse_chaos(settings),
         fixtures=fixture_entries,
         fixture_data=decode_bundle_fixtures(fixture_entries, document.get("fixtures")),

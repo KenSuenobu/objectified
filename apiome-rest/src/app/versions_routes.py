@@ -68,10 +68,12 @@ from .mock_fixture_packs import (
     validate_fixture_packs,
 )
 from .mock_scenario_settings import (
+    active_scenario_from_storage,
     chaos_from_storage,
     chaos_to_storage,
     scenarios_from_storage,
     scenarios_to_storage,
+    validate_active_scenario,
     validate_mock_chaos,
     validate_mock_scenarios,
 )
@@ -2407,7 +2409,7 @@ def _scenarios_response(mock_settings: Any, version_record_id: str) -> VersionMo
         version_record_id: The version record id, for log context only.
 
     Returns:
-        The scenarios and version-level chaos the value describes.
+        The scenarios, the active scenario, and the version-level chaos the value describes.
     """
     stored, _ = scenarios_from_storage(mock_settings)
     scenarios: Dict[str, MockScenarioSpec] = {}
@@ -2419,6 +2421,7 @@ def _scenarios_response(mock_settings: Any, version_record_id: str) -> VersionMo
     return VersionMockScenariosResponse(
         scenarios=scenarios,
         chaos=_parse_stored_chaos(mock_settings, version_record_id),
+        active_scenario=active_scenario_from_storage(mock_settings),
     )
 
 
@@ -2456,6 +2459,13 @@ async def set_version_mock_scenarios(
     SIM-4.3): ``chaos`` replaces the stored block, and omitting it (or
     sending ``null``) clears the stored block.
 
+    ``activeScenario`` (#5531, MSC-2.1) names the scenario the hosted mock serves when a request
+    sends no ``X-Mock-Scenario`` header; it must name one of the scenarios in this same request.
+    Unlike the other two keys it is *preserved* when the field is omitted and cleared only when it
+    is sent as ``null`` — an editor written before the field existed keeps sending
+    ``{scenarios, chaos}``, and a save from it must not silently switch a version's mock back to
+    its default flow.
+
     With ``?dryRun=true`` nothing is written: the same validation runs and the response describes
     what *would* be stored (#5530, MSC-1.4).
     """
@@ -2469,27 +2479,42 @@ async def set_version_mock_scenarios(
             detail="Mock settings require user authentication (JWT token or API key with attribution)",
         )
 
+    active_scenario = (
+        request.active_scenario
+        if "active_scenario" in request.model_fields_set
+        else active_scenario_from_storage(existing.get("mock_settings"))
+    )
+
     spec = _generated_spec_for_version(existing, tenant_slug)
     errors = validate_mock_scenarios(request.scenarios, spec)
     errors.extend(validate_mock_chaos(request.chaos, spec))
+    errors.extend(validate_active_scenario(active_scenario, request.scenarios))
     if errors:
         raise HTTPException(
             status_code=422,
             detail={"message": "Scenario definitions failed validation.", "errors": errors},
         )
 
+    # Validation has established that the value is either absent or a real scenario name, so the
+    # canonical form is simply the trimmed one — stored exactly as the runtime reads it.
+    active_scenario = active_scenario.strip() if active_scenario else None
+
     storage = scenarios_to_storage(request.scenarios)
     chaos_storage = chaos_to_storage(request.chaos) if request.chaos is not None else None
     if dry_run:
         # Read the proposal back through the very readers the write path reports with, so a
         # dry run cannot describe a different outcome than the write would produce.
-        return _scenarios_response({"scenarios": storage, "chaos": chaos_storage}, version_record_id)
+        return _scenarios_response(
+            {"scenarios": storage, "chaos": chaos_storage, "activeScenario": active_scenario},
+            version_record_id,
+        )
     updated = db.set_version_mock_scenarios(
         version_record_id,
         auth_data["tenant_id"],
         user_id,
         scenarios=storage,
         chaos=chaos_storage,
+        active_scenario=active_scenario,
     )
     if not updated:
         raise HTTPException(

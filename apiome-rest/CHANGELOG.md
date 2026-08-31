@@ -5,6 +5,43 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.307.0] - 2026-08-31
+
+### Added
+- **The version's active scenario is now a mock setting the hosted runtime honours (#5531,
+  MSC-2.1)** — `GET`/`PUT .../mock/scenarios` carry `activeScenario`, the scenario the mock serves
+  when a request sends no `X-Mock-Scenario` header. It is stored in `versions.mock_settings`
+  alongside the scenarios it names, travels inside a portable mock bundle, and is a section of the
+  MSC-1.4 configuration document.
+
+  Until now the control plane could store and switch an active scenario that nothing in the hosted
+  data plane read: `grep -rn "active_scenario" apiome-mock/src` returned nothing, and the runtime
+  selected a scenario from the request header alone. Switching a mock to `server-error` and then
+  calling the hosted URL returned happy-path responses, with nothing to indicate why. A shipped
+  control that changes nothing is a correctness problem, not a nicety.
+
+  The precedence is explicit: **request header → stored `activeScenario` → no scenario**. The
+  header stays an outright override, and a version with no stored value behaves byte-identically
+  to before. Every response served while a scenario is in effect now names it in the
+  `X-Mock-Scenario` response header — including responses for operations the scenario does not
+  override, because a caller who sent no header cannot otherwise tell what answered them.
+
+  `activeScenario` must name one of the scenarios saved with it, so a version can never store a
+  default that means nothing; the runtime, by contrast, is lenient with a stored name that stops
+  resolving (a renamed or deleted scenario) — it logs `mock_active_scenario_unknown` and serves the
+  default flow, because an unresolvable default must never take a serving mock down.
+
+  Unlike `scenarios` and `chaos`, the field is *preserved* when a `PUT` omits it and cleared only
+  when it is sent as `null`, so an editor written before the field existed cannot silently switch a
+  version's mock back to its default flow.
+
+### Changed
+- **Mock bundles carry `activeScenario` (#5531)** — a bundle exported from a version defaults to
+  the same scenario the hosted mock does, asserted response-by-response by the PMR-3.1 parity
+  harness.
+- **The MSC-1.2 preview trace reports `scenarioSource`** — `"header"` or `"config"` — so a preview
+  says *why* a scenario applied, not merely that one did.
+
 ## [1.306.0] - 2026-08-29
 
 ### Added

@@ -140,6 +140,8 @@ def _trace_lines(trace: Mapping[str, Any]) -> list[tuple[str, str]]:
         rows.append(("detail", str(trace["detail"])))
     if trace.get("scenario"):
         scenario = str(trace["scenario"])
+        if trace.get("scenarioSource"):
+            scenario = f"{scenario} (from {trace['scenarioSource']})"
         if trace.get("ruleIndex") is not None:
             scenario = f"{scenario} (rule {trace['ruleIndex']})"
         rows.append(("scenario", scenario))

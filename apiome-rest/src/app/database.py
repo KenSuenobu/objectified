@@ -8274,14 +8274,20 @@ class Database:
         *,
         scenarios: Dict[str, Any],
         chaos: Optional[Dict[str, Any]] = None,
+        active_scenario: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
-        """Replace the ``scenarios`` and ``chaos`` keys of ``versions.mock_settings``.
+        """Replace the ``scenarios``, ``chaos`` and ``activeScenario`` keys of ``versions.mock_settings``.
 
-        Only those two keys (#4454 SIM-4.2 scenarios, #4455 SIM-4.3 chaos) are
-        rewritten; every other mock knob (e.g. the private-draft ``mode``) is
-        preserved. An empty scenarios mapping / ``None`` chaos removes the key.
+        Only those three keys (#4454 SIM-4.2 scenarios, #4455 SIM-4.3 chaos,
+        #5531 MSC-2.1 active scenario) are rewritten; every other mock knob
+        (e.g. the private-draft ``mode``) is preserved. An empty scenarios
+        mapping / ``None`` chaos / ``None`` active scenario removes the key.
         The update bumps ``updated_at`` so the mock spec-cache NOTIFY trigger
         fires and running mocks pick up the new definitions.
+
+        The caller decides what ``active_scenario`` should end up as: the route
+        preserves the stored value when the request omits the field, so this
+        method always writes the value it is given rather than merging.
 
         Args:
             version_record_id: The ``versions.id`` UUID.
@@ -8289,6 +8295,8 @@ class Database:
             user_id: Acting user; must be the version creator or a tenant admin.
             scenarios: Canonical scenario definitions keyed by name.
             chaos: Canonical version-level chaos knobs, or ``None`` to clear.
+            active_scenario: The scenario served when a request sends no
+                ``X-Mock-Scenario`` header, or ``None`` to clear it.
 
         Returns:
             The updated version row, or ``None`` when the caller lacks ownership.
@@ -8298,10 +8306,14 @@ class Database:
             replacement["scenarios"] = scenarios
         if chaos is not None:
             replacement["chaos"] = chaos
+        if active_scenario:
+            replacement["activeScenario"] = active_scenario
         fragment = json.dumps(replacement) if replacement else "{}"
         query = """
             UPDATE apiome.versions v
-            SET mock_settings = (COALESCE(v.mock_settings, '{}'::jsonb) - 'scenarios' - 'chaos') || %s::jsonb,
+            SET mock_settings = (
+                  COALESCE(v.mock_settings, '{}'::jsonb) - 'scenarios' - 'chaos' - 'activeScenario'
+                ) || %s::jsonb,
                 updated_at = CURRENT_TIMESTAMP
             FROM apiome.projects p
             WHERE v.id = %s

@@ -89,10 +89,55 @@ def test_pull_then_parse_round_trips_unchanged() -> None:
     assert parse_document(serialize_document(document), source="x") == document
 
 
-def test_document_sections_are_the_four_settings_keys() -> None:
+def test_document_sections_are_the_settings_keys() -> None:
     sections = document_sections(_document())
     assert sorted(sections) == sorted(SECTION_KEYS)
     assert sections["correlation"] == _CORRELATION
+
+
+# --------------------------------------------------------------------------- active scenario
+
+
+def test_the_active_scenario_is_a_section_of_its_own() -> None:
+    """What a mock *defaults to* has to travel with a promoted configuration (#5531, MSC-2.1)."""
+    document = _document(active_scenario="outage")
+    assert document["activeScenario"] == "outage"
+    assert document_sections(document)["activeScenario"] == "outage"
+
+
+def test_the_active_scenario_round_trips_through_the_file() -> None:
+    document = _document(active_scenario="outage")
+    assert parse_document(serialize_document(document), source="x") == document
+
+
+def test_a_document_without_an_active_scenario_carries_it_as_null() -> None:
+    """"Absent" and "cleared" must be the same thing for a document that replaces wholesale."""
+    document = _document()
+    assert document["activeScenario"] is None
+    assert '"activeScenario": null' in serialize_document(document)
+
+
+def test_parsing_rejects_a_non_string_active_scenario() -> None:
+    with pytest.raises(MockConfigError, match="'activeScenario' must be a scenario name"):
+        parse_document(
+            json.dumps({"configFormat": CONFIG_FORMAT, "activeScenario": {"name": "outage"}}),
+            source="mock.json",
+        )
+
+
+def test_changing_the_active_scenario_is_a_whole_section_change() -> None:
+    result = diff_documents(_document(active_scenario="outage"), _document(active_scenario="calm"))
+    assert [(c.section, c.name, c.change) for c in result.changes] == [
+        ("activeScenario", None, "modified")
+    ]
+    assert result.changes[0].path == "activeScenario"
+
+
+def test_setting_and_clearing_the_active_scenario_read_as_added_and_removed() -> None:
+    added = diff_documents(_document(), _document(active_scenario="outage"))
+    removed = diff_documents(_document(active_scenario="outage"), _document())
+    assert [c.change for c in added.changes] == ["added"]
+    assert [c.change for c in removed.changes] == ["removed"]
 
 
 # --------------------------------------------------------------------------- parsing
@@ -150,6 +195,7 @@ def test_an_omitted_section_reads_as_empty() -> None:
     assert document["fixturePacks"] == {}
     assert document["correlation"] is None
     assert document["chaos"] is None
+    assert document["activeScenario"] is None
 
 
 def test_read_document_reports_a_missing_file(tmp_path: Path) -> None:
@@ -291,6 +337,11 @@ def test_diff_json_shape_is_stable() -> None:
             "At most 50 scenarios are allowed per version.",
             "scenarios",
             "At most 50 scenarios are allowed per version.",
+        ),
+        (
+            "activeScenario 'gone' is not one of this version's scenarios ('outage').",
+            "activeScenario",
+            "activeScenario 'gone' is not one of this version's scenarios ('outage').",
         ),
         (
             "At most 20 fixture packs are allowed per version.",
