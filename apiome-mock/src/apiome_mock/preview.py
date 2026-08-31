@@ -190,6 +190,7 @@ def trace_as_dict(trace: ServeTrace) -> dict[str, Any]:
         "layer": trace.layer,
         "detail": trace.detail,
         "scenario": trace.scenario,
+        "scenarioSource": trace.scenario_source,
         "ruleIndex": trace.rule_index,
         "seed": trace.seed,
         "seedSource": trace.seed_source,

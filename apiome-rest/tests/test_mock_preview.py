@@ -119,8 +119,25 @@ def test_every_draft_key_is_one_that_travels_in_a_bundle() -> None:
         fixturePacks={},
         callbacks={},
         correlation={"mode": "off"},
+        activeScenario="quiet",
     )
     assert set(draft_to_storage(fully_declared)) == set(BUNDLED_SETTINGS_KEYS)
+
+
+def test_a_drafted_active_scenario_overlays_the_stored_one() -> None:
+    """Previewing "what would this default to?" is the point of drafting it (#5531, MSC-2.1)."""
+    merged = effective_mock_settings({**STORED, "activeScenario": "loud"}, _draft(activeScenario="quiet"))
+    assert merged["activeScenario"] == "quiet"
+
+
+def test_a_drafted_null_active_scenario_clears_the_stored_one() -> None:
+    merged = effective_mock_settings({**STORED, "activeScenario": "loud"}, _draft(activeScenario=None))
+    assert "activeScenario" not in merged
+
+
+def test_an_omitted_active_scenario_keeps_the_stored_one() -> None:
+    merged = effective_mock_settings({**STORED, "activeScenario": "loud"}, _draft(correlation=None))
+    assert merged["activeScenario"] == "loud"
 
 
 # ==================================================================================================

@@ -1299,8 +1299,9 @@ runtime's flags, structured log events, and exit codes:
 ### Mock configuration as a file (`mock config`)
 
 Requires an API key (Tier 2) and tenant scope. The settings that decide what a mock *returns* —
-response correlation, scenarios, chaos, fixture packs — become one document you can commit, review
-in a pull request, check for drift in CI, and promote from a staging version to a production one.
+response correlation, scenarios, the active scenario, chaos, fixture packs — become one document
+you can commit, review in a pull request, check for drift in CI, and promote from a staging version
+to a production one.
 
 ```bash
 # Write the version's whole mock configuration as one canonical document

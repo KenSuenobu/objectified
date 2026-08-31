@@ -1,6 +1,6 @@
 [project]
 name = "apiome-mock"
-version = "0.14.0"
+version = "0.15.0"
 description = "Objectified mock server runtime for Apiome (FastAPI)."
 readme = "README.md"
 requires-python = ">=3.11"

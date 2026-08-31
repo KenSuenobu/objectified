@@ -14,15 +14,18 @@ prove nothing, so the differing-response cases below are as important as the mat
 
 from __future__ import annotations
 
+import json
 from typing import Any, Iterator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
-from apiome_mock.bundle import load_bundle_file
+from apiome_mock.bundle import load_bundle_document, load_bundle_file
 from apiome_mock.conformance import (
     DEFAULT_BUNDLE_PATH,
+    ConformanceCase,
+    ConformanceCorpus,
     ConformanceRequest,
     ConformanceResponse,
     load_corpus,
@@ -326,3 +329,153 @@ def test_matching_deployments_report_both_statuses(tmp_path: Any) -> None:
     assert report.cases[0].hosted_status == 200
     assert report.cases[0].portable_status == 200
     assert report.summary() == "1/1 cases match between hosted and portable"
+
+
+# ---------------------------------------------------------------------------
+# The stored active scenario defaults identically on both shapes (#5531, MSC-2.1)
+# ---------------------------------------------------------------------------
+
+#: Cases the active-scenario parity run drives. They are deliberately the *same* requests the
+#: shared corpus already asserts on — the whole claim is that a stored default changes what both
+#: deployments answer, and changes it the same way, without a request header being involved.
+ACTIVE_SCENARIO_CASES: tuple[ConformanceCase, ...] = (
+    ConformanceCase(
+        name="stored-active-scenario-serves-the-canned-response",
+        why="With activeScenario stored and no request header, both deployments serve the scenario.",
+        setup=(),
+        request=ConformanceRequest(method="GET", path="/pets"),
+        expect={"status": 429},
+    ),
+    ConformanceCase(
+        name="stored-active-scenario-is-named-on-an-uncovered-operation",
+        why="An operation the active scenario does not override still names the scenario in effect.",
+        setup=(),
+        request=ConformanceRequest(method="GET", path="/pets/1"),
+        expect={"status": 200},
+    ),
+    ConformanceCase(
+        name="a-request-header-still-overrides-the-stored-default",
+        why="The header stays an outright override on both deployments.",
+        setup=(),
+        request=ConformanceRequest(method="GET", path="/pets", headers={"X-Mock-Scenario": "flaky-list"}),
+        expect={"status": 503},
+    ),
+)
+
+
+@pytest.fixture
+def active_scenario_bundle() -> Any:
+    """The conformance bundle re-exported with an ``activeScenario``, through the real exporter.
+
+    Built with ``app.mock_bundle.build_bundle`` rather than by editing the shipped document, so the
+    test proves the *export* path carries the key (digests and all) and not merely that the runtime
+    would read it if it were there.
+    """
+    from app.mock_bundle import BundleIdentity, build_bundle
+
+    source = load_bundle_file(DEFAULT_BUNDLE_PATH)
+    settings = {**_bundle_settings(), "activeScenario": "quota-exceeded"}
+    document = build_bundle(
+        identity=BundleIdentity(
+            tenant=source.tenant_slug,
+            project=source.project_slug,
+            version=source.version_label,
+            revision_id=str(source.api.get("revisionId")),
+            published=True,
+            protocol="openapi",
+        ),
+        spec=source.spec,
+        mock_settings=settings,
+    )
+    return load_bundle_document(document)
+
+
+def _bundle_settings() -> dict[str, Any]:
+    """Read the shipped conformance bundle's raw settings block."""
+    with DEFAULT_BUNDLE_PATH.open(encoding="utf-8") as handle:
+        return dict(json.load(handle).get("settings") or {})
+
+
+@pytest.fixture
+def active_portable_client(active_scenario_bundle: Any) -> Iterator[TestClient]:
+    """The portable runtime serving the re-exported bundle."""
+    settings = PortableSettings(bundle=str(DEFAULT_BUNDLE_PATH))
+    with TestClient(create_portable_app(active_scenario_bundle, settings)) as client:
+        assert version_prefix(active_scenario_bundle) == MOUNT
+        yield client
+
+
+@pytest.fixture
+def active_hosted_client(
+    monkeypatch: pytest.MonkeyPatch, mock_pool: Any, active_scenario_bundle: Any
+) -> Iterator[TestClient]:
+    """The hosted runtime serving the same re-exported bundle's compiled spec."""
+    compiled = active_scenario_bundle.to_compiled_spec()
+    monkeypatch.setenv("APIOME_MOCK_DATABASE_URL", "postgresql://localhost/db")
+    monkeypatch.setenv("APIOME_MOCK_RATE_LIMIT_ENABLED", "false")
+    from apiome_mock.settings import get_settings
+
+    get_settings.cache_clear()
+    from apiome_mock.server import create_app
+
+    with (
+        patch("apiome_mock.server.create_async_pool", return_value=mock_pool),
+        patch("apiome_mock.server.resolve_limits_for_tenant", new=AsyncMock(return_value=None)),
+        patch("apiome_mock.server.record_mock_request"),
+        patch("apiome_mock.handler.get_mock_access_status", new=AsyncMock(return_value="ok")),
+        patch("apiome_mock.handler.load_compiled_spec", new=AsyncMock(return_value=compiled)),
+    ):
+        app = create_app()
+        with TestClient(app, raise_server_exceptions=False) as client:
+            app.state.db_pool = mock_pool
+            app.state.spec_cache = SpecCache(max_entries=8, ttl_seconds=300.0)
+            app.state.session_store = _session_store()
+            yield client
+    get_settings.cache_clear()
+
+
+def test_exported_bundle_carries_the_active_scenario(active_scenario_bundle: Any) -> None:
+    """The bundle export path carries the key, so the portable runtime can default the same way."""
+    assert active_scenario_bundle.active_scenario == "quota-exceeded"
+    assert active_scenario_bundle.to_compiled_spec().active_scenario == "quota-exceeded"
+
+
+def test_active_scenario_defaults_identically_on_both_deployments(
+    active_hosted_client: TestClient, active_portable_client: TestClient
+) -> None:
+    """A bundle exported from a version with an active scenario defaults exactly as the version."""
+    report = run_parity(
+        _client_sender(active_hosted_client, MOUNT),
+        _client_sender(active_portable_client, MOUNT),
+        corpus=ConformanceCorpus(
+            format="apiome.mock.conformance/v1",
+            description="Stored active scenario parity (#5531, MSC-2.1).",
+            bundle="bundle.json",
+            cases=ACTIVE_SCENARIO_CASES,
+        ),
+    )
+
+    assert {case.name: case.differences for case in report.mismatched} == {}
+    assert report.ok
+    assert len(report.compared) == len(ACTIVE_SCENARIO_CASES)
+
+
+def test_both_deployments_apply_and_name_the_stored_scenario(
+    active_hosted_client: TestClient, active_portable_client: TestClient
+) -> None:
+    """Parity would also hold if *neither* side honoured the setting; assert the behaviour itself."""
+    for client in (active_hosted_client, active_portable_client):
+        listed = client.get(f"{MOUNT}/pets")
+        assert listed.status_code == 429
+        assert listed.headers["x-mock-scenario"] == "quota-exceeded"
+        assert listed.headers["retry-after"] == "60"
+
+        # An operation the scenario does not override: default flow, still named.
+        item = client.get(f"{MOUNT}/pets/1")
+        assert item.status_code == 200
+        assert item.headers["x-mock-scenario"] == "quota-exceeded"
+
+        # The header still overrides the stored default.
+        overridden = client.get(f"{MOUNT}/pets", headers={"X-Mock-Scenario": "flaky-list"})
+        assert overridden.status_code == 503
+        assert overridden.headers["x-mock-scenario"] == "flaky-list"

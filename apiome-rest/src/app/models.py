@@ -4139,6 +4139,15 @@ class VersionMockScenariosRequest(BaseModel):
         default=None,
         description="Version-level latency/chaos knobs; omit or send null to clear them (#4455 SIM-4.3).",
     )
+    active_scenario: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("activeScenario", "active_scenario"),
+        serialization_alias="activeScenario",
+        description="The scenario the mock serves when a request sends no X-Mock-Scenario header "
+        "(#5531 MSC-2.1). It must name one of the scenarios in this same request. Sending null "
+        "clears it; omitting the field entirely keeps whatever is stored, so an editor that does "
+        "not know about it cannot silently drop a version's active scenario.",
+    )
 
 
 class VersionMockScenariosResponse(BaseModel):
@@ -4153,6 +4162,13 @@ class VersionMockScenariosResponse(BaseModel):
     chaos: Optional[MockChaosSpec] = Field(
         default=None,
         description="Version-level latency/chaos knobs (#4455 SIM-4.3).",
+    )
+    active_scenario: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("activeScenario", "active_scenario"),
+        serialization_alias="activeScenario",
+        description="The scenario served when a request sends no X-Mock-Scenario header; "
+        "null when the version has none (#5531 MSC-2.1).",
     )
 
 
@@ -4553,6 +4569,15 @@ class MockPreviewSettingsSpec(BaseModel):
         serialization_alias="correlation",
         description="Draft response-correlation block; replaces the stored one.",
     )
+    active_scenario: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("activeScenario", "active_scenario"),
+        serialization_alias="activeScenario",
+        description="Draft default scenario applied when the previewed request sends no "
+        "X-Mock-Scenario header (#5531 MSC-2.1); replaces the stored one. Rendered exactly as "
+        "the runtime would: a name that resolves to no scenario is ignored, because a draft may "
+        "legitimately name one that lives in the version's stored scenarios.",
+    )
 
 
 class MockPreviewRequestSpec(BaseModel):
@@ -4612,6 +4637,13 @@ class MockPreviewTrace(BaseModel):
     )
     detail: str = Field(default="", description="One sentence naming what happened.")
     scenario: Optional[str] = Field(default=None, description="The scenario that applied, if any.")
+    scenario_source: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("scenarioSource", "scenario_source"),
+        serialization_alias="scenarioSource",
+        description='Where that scenario came from: "header" (X-Mock-Scenario) or "config" '
+        "(the version's stored activeScenario, #5531 MSC-2.1).",
+    )
     rule_index: Optional[int] = Field(
         default=None,
         validation_alias=AliasChoices("ruleIndex", "rule_index"),

@@ -10,6 +10,12 @@ Two planes share this module:
 
 The "stable base URL" returned at provision time is ``/v1/mock/{mock_id}`` — it never changes for the
 life of the instance because the spec is frozen at provision time (published versions are immutable).
+
+The instance config's ``active_scenario`` and the version setting ``mock_settings.activeScenario``
+(#5531, MSC-2.1) are the **same concept** under two spellings: the scenario the mock serves when a
+request sends no ``X-Mock-Scenario`` header. This module's spelling belongs to the in-REST engine
+serving ``/v1/mock/...``; the hosted data plane in apiome-mock reads the other. #5532 (MSC-2.2)
+folds this plane away and migrates ``active_scenario`` onto ``activeScenario``.
 """
 
 from __future__ import annotations

@@ -5,6 +5,10 @@ packs — used to be editable only through the ADE. That makes them impossible t
 to review in a pull request, and impossible to promote from one version or environment to another
 except by hand. For teams that treat contracts as code, that is the missing half of the mock.
 
+The version's active scenario (#5531, MSC-2.1) — the scenario the mock serves when a request
+sends no ``X-Mock-Scenario`` header — is a section of its own, so promoting a configuration
+promotes what the mock actually defaults to and not merely what it *could* be asked for.
+
 This module owns the *document*: how it is built from what the control plane reports, how it is
 serialized so that committing it and re-pulling produces no diff, how two of them are compared,
 and how a server-side validation error is rendered against the file's own paths instead of as an
@@ -57,11 +61,16 @@ __all__ = [
 CONFIG_FORMAT = "apiome.mock.config/v1"
 
 #: Revision of :data:`CONFIG_FORMAT`. Bumped only for a change a v1 reader could not survive.
+#: Adding a section (``activeScenario``, #5531) is not one: :func:`parse_document` compares the
+#: declared version for *equality*, so a bump would make every already-committed document
+#: unreadable, while an older CLI meeting a newer document already fails with a precise "unknown
+#: keys" message naming the section it does not know. A clear error for the stale reader beats
+#: breaking every current one.
 CONFIG_FORMAT_VERSION = 1
 
-#: The configuration sections, in the order they are reported. Every document carries all four,
+#: The configuration sections, in the order they are reported. Every document carries all five,
 #: because "absent" and "empty" must be the same thing for a document that replaces wholesale.
-SECTION_KEYS: tuple[str, ...] = ("correlation", "scenarios", "chaos", "fixturePacks")
+SECTION_KEYS: tuple[str, ...] = ("correlation", "scenarios", "activeScenario", "chaos", "fixturePacks")
 
 #: Sections that are a map of named entries, so a diff can name what changed inside them.
 _NAMED_SECTIONS: frozenset[str] = frozenset({"scenarios", "fixturePacks"})
@@ -81,14 +90,16 @@ def build_document(
     scenarios: Mapping[str, Any],
     chaos: Any,
     fixture_packs: Mapping[str, Any],
+    active_scenario: Any = None,
 ) -> dict[str, Any]:
-    """Assemble a configuration document from the control plane's four answers.
+    """Assemble a configuration document from the control plane's answers.
 
     Args:
         correlation: The stored ``responseCorrelation`` block, or ``None``.
         scenarios: The stored scenario definitions keyed by name.
         chaos: The stored version-level chaos block, or ``None``.
         fixture_packs: The stored fixture packs keyed by pack name.
+        active_scenario: The stored active scenario name, or ``None`` (#5531, MSC-2.1).
 
     Returns:
         The document, ready for :func:`serialize_document`.
@@ -98,6 +109,7 @@ def build_document(
         "configFormatVersion": CONFIG_FORMAT_VERSION,
         "correlation": correlation,
         "scenarios": dict(scenarios),
+        "activeScenario": active_scenario,
         "chaos": chaos,
         "fixturePacks": dict(fixture_packs),
     }
@@ -180,12 +192,16 @@ def parse_document(text: str, *, source: str) -> dict[str, Any]:
         value = parsed.get(key)
         if value is not None and not isinstance(value, dict):
             raise MockConfigError(f"{source}: '{key}' must be an object, or null.")
+    active_scenario = parsed.get("activeScenario")
+    if active_scenario is not None and not isinstance(active_scenario, str):
+        raise MockConfigError(f"{source}: 'activeScenario' must be a scenario name, or null.")
 
     return build_document(
         correlation=parsed.get("correlation"),
         scenarios=parsed.get("scenarios") or {},
         chaos=parsed.get("chaos"),
         fixture_packs=parsed.get("fixturePacks") or {},
+        active_scenario=active_scenario,
     )
 
 
@@ -209,13 +225,13 @@ def read_document(path: Path) -> dict[str, Any]:
 
 
 def document_sections(document: Mapping[str, Any]) -> dict[str, Any]:
-    """Return the four section values a push applies, keyed by section name.
+    """Return the section values a push applies, keyed by section name.
 
     Args:
         document: A parsed document.
 
     Returns:
-        ``{"correlation": …, "scenarios": …, "chaos": …, "fixturePacks": …}``.
+        ``{"correlation": …, "scenarios": …, "activeScenario": …, "chaos": …, "fixturePacks": …}``.
     """
     return {key: document.get(key) for key in SECTION_KEYS}
 
@@ -415,6 +431,7 @@ _ERROR_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
         "chaos.operations[{op}]",
     ),
     (re.compile(r"^Chaos: (?P<msg>.*)$", re.S), "chaos"),
+    (re.compile(r"^(?P<msg>activeScenario .*)$", re.S), "activeScenario"),
     (re.compile(r"^(?P<msg>At most \d+ scenarios .*)$", re.S), "scenarios"),
     (re.compile(r"^(?P<msg>Scenario definitions are too large.*)$", re.S), "scenarios"),
     (re.compile(r"^(?P<msg>At most \d+ fixture packs .*)$", re.S), "fixturePacks"),

@@ -11,6 +11,11 @@ the author-time contract:
   with the explicit ``offSpec`` flag (deliberately broken responses);
 * canonicalization into the storage shape read by ``apiome_mock.scenarios``.
 
+The version's *active scenario* (#5531, MSC-2.1) — the sibling ``"activeScenario"``
+key, which the runtime applies to every request that sends no ``X-Mock-Scenario``
+header — is owned here too: it is validated against the scenarios in the same
+write, so a version can never store a default that names nothing.
+
 Chaos knobs (#4455, SIM-4.3) — per-route/version-default latency and error
 injection — live under the sibling ``"chaos"`` key (and optionally inside a
 scenario), validated and canonicalized here with the same rules; value
@@ -445,6 +450,63 @@ def scenarios_from_storage(mock_settings: Any) -> Tuple[Dict[str, Any], bool]:
     if not isinstance(scenarios, dict):
         return {}, False
     return scenarios, True
+
+
+def validate_active_scenario(
+    active_scenario: Optional[str],
+    scenarios: Mapping[str, MockScenarioSpec],
+) -> List[str]:
+    """Validate the version's active scenario against the scenarios being saved (#5531, MSC-2.1).
+
+    The runtime is lenient with a stored name it cannot resolve — it warns and serves the default
+    flow rather than failing the request — which is exactly why the *author-time* check has to be
+    strict: a silently inert default is the failure mode this ticket exists to remove, so the one
+    moment it can be caught and reported is the save.
+
+    Args:
+        active_scenario: The proposed active scenario name, or ``None`` for "no default".
+        scenarios: The scenario definitions being saved in the same request.
+
+    Returns:
+        A list of human-readable error strings; empty when the value is valid.
+    """
+    if active_scenario is None:
+        return []
+    name = active_scenario.strip()
+    if not name:
+        return ["activeScenario must name a scenario, or be null to clear it."]
+    if name not in scenarios:
+        available = ", ".join(f"'{key}'" for key in sorted(scenarios)) or "none are defined"
+        return [f"activeScenario '{name}' is not one of this version's scenarios ({available})."]
+    return []
+
+
+def active_scenario_from_storage(mock_settings: Any) -> Optional[str]:
+    """Extract the stored ``activeScenario`` from a raw ``mock_settings`` value (#5531, MSC-2.1).
+
+    Mirrors ``apiome_mock.scenarios.parse_active_scenario`` so the editor reports exactly what the
+    runtime would apply — including reporting "none" for a stored value the runtime would ignore.
+
+    Args:
+        mock_settings: The raw ``versions.mock_settings`` value (dict, JSON text, or ``None``).
+
+    Returns:
+        The trimmed scenario name, or ``None`` when none is stored or the stored value is not a
+        non-empty string.
+    """
+    settings: Any = mock_settings
+    if isinstance(settings, str):
+        try:
+            settings = json.loads(settings)
+        except json.JSONDecodeError:
+            return None
+    if not isinstance(settings, dict):
+        return None
+    raw = settings.get("activeScenario")
+    if not isinstance(raw, str):
+        return None
+    name = raw.strip()
+    return name or None
 
 
 def chaos_from_storage(mock_settings: Any) -> Tuple[Optional[Dict[str, Any]], bool]:

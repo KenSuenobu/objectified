@@ -20,6 +20,17 @@ the ``"scenarios"`` key::
     }
 
 Consumers select a scenario per request with the ``X-Mock-Scenario`` header.
+A version may also nominate a **stored active scenario** — the sibling
+``"activeScenario"`` key — which applies to every request that sends no header
+(#5531, MSC-2.1)::
+
+    {"activeScenario": "quota-exceeded", "scenarios": {...}}
+
+The precedence is request header -> stored active scenario -> no scenario, so
+the header remains an override and a version with no stored value behaves
+exactly as it did before. (The hosted instance config spells the same concept
+``active_scenario``; #5532, MSC-2.2 folds that spelling into this one.)
+
 An operation entry with one response is a fixed canned response; two or more
 responses form a *sequence* (first call -> first response, second call ->
 second response, ...; calls past the end stick on the last response). The
@@ -64,7 +75,20 @@ from apiome_mock.chaos import ChaosConfig, parse_chaos_block
 from apiome_mock.session_store import SessionKey, SessionStore, SessionStoreError
 
 MOCK_SCENARIO_HEADER = "X-Mock-Scenario"
-"""Request header naming the scenario to apply; absent -> default behavior."""
+"""Request header naming the scenario to apply; absent -> the stored active scenario, else none.
+
+Doubles as the response header naming the scenario that actually applied (#5531, MSC-2.1), so a
+consumer can tell which scenario served them without reading the version's configuration.
+"""
+
+ACTIVE_SCENARIO_KEY = "activeScenario"
+"""``versions.mock_settings`` key holding the version's stored active scenario (#5531, MSC-2.1)."""
+
+SCENARIO_SOURCE_HEADER = "header"
+"""The applied scenario was named by the request's ``X-Mock-Scenario`` header."""
+
+SCENARIO_SOURCE_CONFIG = "config"
+"""The applied scenario came from the version's stored ``activeScenario``."""
 
 SCENARIO_CALL_HEADER = "X-Mock-Scenario-Call"
 """Response header echoing the 1-based sequence call number (sequences only)."""
@@ -271,11 +295,15 @@ def _parse_scenario(name: str, raw: Any) -> Scenario | None:
     )
 
 
-def parse_scenarios(mock_settings: Any) -> dict[str, Scenario]:
-    """Parse ``versions.mock_settings`` into scenario definitions by name.
+def _settings_dict(mock_settings: Any) -> dict[str, Any]:
+    """Normalize a raw ``versions.mock_settings`` value to a dict.
 
-    Accepts the raw JSONB value (dict, JSON text, or ``None``) and never
-    raises: unusable scenarios / operations / responses are silently skipped.
+    Args:
+        mock_settings: The raw JSONB value (dict, JSON text, or ``None``).
+
+    Returns:
+        The settings mapping, or an empty dict when the value is missing or unusable. Never
+        raises — a malformed stored blob must not be able to take a serving mock down.
     """
     settings: Any = mock_settings
     if isinstance(settings, str):
@@ -283,9 +311,38 @@ def parse_scenarios(mock_settings: Any) -> dict[str, Scenario]:
             settings = json.loads(settings)
         except json.JSONDecodeError:
             return {}
-    if not isinstance(settings, dict):
-        return {}
-    scenarios_raw = settings.get("scenarios")
+    return settings if isinstance(settings, dict) else {}
+
+
+def parse_active_scenario(mock_settings: Any) -> str | None:
+    """Parse the version's stored active scenario name (#5531, MSC-2.1).
+
+    The stored value is the default scenario for callers that send no ``X-Mock-Scenario``
+    header. It is *not* checked against the defined scenarios here: a name that no longer
+    resolves is the runtime's problem to survive at serve time (it warns and serves the default
+    flow), not the parser's to reject.
+
+    Args:
+        mock_settings: The raw ``versions.mock_settings`` value (dict, JSON text, or ``None``).
+
+    Returns:
+        The trimmed scenario name, or ``None`` when none is stored (or the stored value is not
+        a non-empty string).
+    """
+    raw = _settings_dict(mock_settings).get(ACTIVE_SCENARIO_KEY)
+    if not isinstance(raw, str):
+        return None
+    name = raw.strip()
+    return name or None
+
+
+def parse_scenarios(mock_settings: Any) -> dict[str, Scenario]:
+    """Parse ``versions.mock_settings`` into scenario definitions by name.
+
+    Accepts the raw JSONB value (dict, JSON text, or ``None``) and never
+    raises: unusable scenarios / operations / responses are silently skipped.
+    """
+    scenarios_raw = _settings_dict(mock_settings).get("scenarios")
     if not isinstance(scenarios_raw, dict):
         return {}
 

@@ -160,6 +160,10 @@ def draft_to_storage(draft: MockPreviewSettingsSpec) -> Dict[str, Any]:
         projection["responseCorrelation"] = (
             None if draft.correlation is None else correlation_to_storage(draft.correlation)
         )
+    if "active_scenario" in declared:
+        # A plain string needs no canonicalizer; the runtime trims it and ignores a name it
+        # cannot resolve, which is exactly what a preview of an unsaved draft should show.
+        projection["activeScenario"] = draft.active_scenario
     return projection
 
 
