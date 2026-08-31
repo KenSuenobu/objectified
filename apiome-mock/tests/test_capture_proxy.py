@@ -15,7 +15,7 @@ from uuid import uuid4
 
 import pytest
 from app.mock_capture import authorization_block, capture_policy_to_storage
-from app.mock_engine import extract_operations
+from app.mock_routing import extract_operations
 from fastapi.testclient import TestClient
 
 from apiome_mock.api_key import ValidatedApiKey

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.mock_engine import extract_operations
+from app.mock_routing import extract_operations
 
 from apiome_mock.crud_resources import (
     CrudAction,

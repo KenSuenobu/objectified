@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
-from app.mock_engine import extract_operations
+from app.mock_routing import extract_operations
 from fastapi.testclient import TestClient
 
 from apiome_mock.memory_session_store import InMemorySessionStore
@@ -219,7 +219,15 @@ def test_unknown_scenario_returns_problem(mock_client: TestClient) -> None:
     assert response.status_code == 400
     body = response.json()
     assert body["type"].endswith("/unknown-scenario")
-    assert body["availableScenarios"] == ["flaky-then-ok", "quota-exceeded"]
+    # Every mock resolves the built-ins as well as whatever the version stores (#5532, MSC-2.2).
+    assert body["availableScenarios"] == [
+        "flaky-then-ok",
+        "happy-path",
+        "not-found",
+        "quota-exceeded",
+        "server-error",
+        "slow",
+    ]
 
 
 def test_operation_without_override_falls_through(mock_client: TestClient) -> None:

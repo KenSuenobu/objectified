@@ -6,7 +6,7 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
-from app.mock_engine import MockOperation
+from app.mock_routing import MockOperation
 from fastapi import Request
 
 from apiome_mock.response_resolver import match_request_content_type

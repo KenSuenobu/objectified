@@ -4032,6 +4032,11 @@ class MockScenarioOperationSpec(BaseModel):
     Rules (#4744 PMR-2.1) are evaluated in order against each request; the first match serves its
     responses. Plain ``responses`` are the fallback when no rule matches, and with neither a
     matching rule nor a fallback the request falls through to the default spec-driven mock flow.
+
+    ``status`` (#5532 MSC-2.2) is the third and weakest layer: it pins the status but leaves the
+    *body* to the spec, resolved the same way a request sending ``?__status=`` resolves it. It is
+    what "make this fail, with a body that still matches the contract" needs — a canned response
+    with no body would serve an empty one.
     """
 
     model_config = ConfigDict(populate_by_name=True, extra="forbid")
@@ -4046,11 +4051,17 @@ class MockScenarioOperationSpec(BaseModel):
         max_length=20,
         description="Ordered declarative rules evaluated before the fallback responses (#4744 PMR-2.1).",
     )
+    status: Optional[int] = Field(
+        default=None,
+        ge=100,
+        le=599,
+        description="Pin the response status, resolving the body from the spec (#5532 MSC-2.2).",
+    )
 
     @model_validator(mode="after")
     def _require_rules_or_responses(self) -> "MockScenarioOperationSpec":
-        if not self.responses and not self.rules:
-            raise ValueError("an operation override needs at least one response or rule")
+        if not self.responses and not self.rules and self.status is None:
+            raise ValueError("an operation override needs at least one response, rule, or status pin")
         return self
 
 
@@ -11176,6 +11187,14 @@ class MockInstanceResponse(BaseModel):
     created_at: Optional[str] = Field(default=None, serialization_alias="createdAt")
     expires_at: Optional[str] = Field(default=None, serialization_alias="expiresAt")
     last_activity_at: Optional[str] = Field(default=None, serialization_alias="lastActivityAt")
+    migration_notes: List[str] = Field(
+        default_factory=list,
+        serialization_alias="migrationNotes",
+        description=(
+            "Rules from the pre-#5532 configuration that could not be translated onto the single "
+            "mock engine, reported rather than silently dropped. Empty when the fold was lossless."
+        ),
+    )
 
 
 class MockUsageDailyRollup(BaseModel):

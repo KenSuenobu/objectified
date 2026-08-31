@@ -41,6 +41,7 @@ project in ~10 minutes") and the [Golden Path](../GOLDEN_PATH.md) (the executabl
 | **Spectral ruleset import** (`.spectral.yaml` → built-ins + custom rules — `POST /v1/lint/custom-rules/import`) | [spectral-import.md](spectral-import.md) |
 | **Schematron import** (`.sch` rule set → a governance style guide — `POST /v1/lint/schematron/import`) | [schematron-import.md](schematron-import.md) |
 | **Style-guide revisions & audit** (immutable guide history, lint results pinned to a revision — `GET /v1/style-guides/{tenant}/{guide}/revisions`) | [style-guide-revisions.md](style-guide-revisions.md) |
+| **One mock engine** (the two mock implementations folded into one — what moved, what the built-in scenarios still do, how a stored instance config migrates) | [one-mock-engine.md](one-mock-engine.md) |
 | **Portable mock bundles** (offline, signed, version-pinned mock runtime — `GET …/mock/bundle`) | [mock-bundle-format.md](mock-bundle-format.md) |
 | **Portable mock runtime** (`apiome mock run`, official image, readiness, structured logs, conformance) | [portable-mock-runtime.md](portable-mock-runtime.md) |
 | **Mock fixture packs** (versioned seed data, digests, `__mock__/session/reset` lifecycle) | [mock-fixture-packs.md](mock-fixture-packs.md) |

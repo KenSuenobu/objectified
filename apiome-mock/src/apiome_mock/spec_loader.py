@@ -8,7 +8,7 @@ from typing import Any, Literal, Mapping
 from uuid import UUID
 
 from apiome_mcp.spec_openapi_loaders import fetch_openapi_generation_inputs_async
-from app.mock_engine import MockOperation, extract_operations
+from app.mock_routing import MockOperation, extract_operations
 from app.openapi_generator import generate_openapi_spec
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool

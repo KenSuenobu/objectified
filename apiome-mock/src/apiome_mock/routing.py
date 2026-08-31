@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.mock_engine import MockOperation, match_operation
+from app.mock_routing import MockOperation, match_operation
 
 
 def operations_for_path(operations: tuple[MockOperation, ...], path: str) -> list[MockOperation]:

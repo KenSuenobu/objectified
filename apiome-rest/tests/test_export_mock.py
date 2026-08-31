@@ -10,7 +10,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 import pytest
-
 from app.config import settings
 from app.emitter import EmitResult, EmittedFile
 from app.export_mock import (
@@ -26,7 +25,7 @@ from app.export_mock import (
     mock_servable_targets,
     operation_summaries,
 )
-from app.mock_engine import extract_operations
+from app.mock_routing import extract_operations
 
 SPEC = {
     "openapi": "3.1.0",

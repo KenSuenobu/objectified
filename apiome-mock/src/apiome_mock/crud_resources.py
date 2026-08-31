@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Literal
 
-from app.mock_engine import MockOperation
+from app.mock_routing import MockOperation
 
 _PARAM_RE = re.compile(r"^\{(.+?)\}$")
 

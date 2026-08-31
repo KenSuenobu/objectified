@@ -59,7 +59,7 @@ from app.mock_capture import (
     residual_credential_pointers,
     resolve_capture_upstream,
 )
-from app.mock_engine import MockOperation
+from app.mock_routing import MockOperation
 from app.ssrf_guard import SSRFError, build_guarded_async_client
 from fastapi import Request
 from fastapi.responses import Response

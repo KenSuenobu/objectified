@@ -38,7 +38,7 @@ from .mock_correlation_rules import (
     normalize_property_name,
     path_parameter_aliases,
 )
-from .mock_engine import MockOperation, extract_operations
+from .mock_routing import MockOperation, extract_operations
 
 __all__ = [
     "MAX_BINDING_DEPTH",

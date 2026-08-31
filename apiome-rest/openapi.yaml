@@ -4,7 +4,7 @@ info:
   description: REST API for managing tenants, projects, versions, primitives, classes,
     paths, operations, catalog items, imports, exports, governance, and MCP catalog
     surfaces.
-  version: 1.172.0
+  version: 1.173.0
   contact:
     name: Apiome
     url: https://apiome.dev
@@ -43245,7 +43245,19 @@ paths:
         instance so the mock is stable for its lifetime. Free-tier expiry and the
         per-instance rate limit
 
-        are applied from configuration (overridable within bounds).'
+        are applied from configuration (overridable within bounds).
+
+
+        Caller-supplied scenarios keep the RC1-2.2 request shape — a list of rules
+        — and are folded into
+
+        the engine''s settings shape at provision time (#5532, MSC-2.2), with the
+        same translator that
+
+        migrates instances provisioned before the fold. Rules that cannot be translated
+        are reported on
+
+        the instance rather than dropped.'
       operationId: provision_mock_v1_mocks__tenant_slug__post
       parameters:
       - name: tenant_slug
@@ -43586,8 +43598,17 @@ paths:
       tags:
       - mock-server
       summary: Switch Active Scenario
-      description: Switch the instance's default scenario (takes effect immediately,
+      description: 'Switch the instance''s default scenario (takes effect immediately,
         no restart).
+
+
+        The switch writes ``activeScenario`` into the instance''s settings — the same
+        key, read the same
+
+        way, as a version''s stored active scenario (#5531, MSC-2.1). The two spellings
+        that used to
+
+        describe this one concept are now one.'
       operationId: switch_active_scenario_v1_mocks__tenant_slug___mock_id__active_scenario_put
       parameters:
       - name: tenant_slug
@@ -59640,7 +59661,7 @@ components:
           type: string
           title: Operation Uuid
           description: The apiome.path_operation UUID.
-          example: aeb11096-32d5-453f-8d14-c3b1e8114ae6
+          example: 94ab9e30-d052-4f2f-bd68-391a19da5b61
         method:
           type: string
           title: Method
@@ -61632,7 +61653,7 @@ components:
           type: string
           title: Generated At
           description: Statement timestamp (ISO-8601, UTC).
-          example: '2026-08-31T16:49:02Z'
+          example: '2026-08-31T17:50:37Z'
         envelope:
           additionalProperties: true
           type: object
@@ -82638,6 +82659,15 @@ components:
             description: Response payload for mock instance.
           title: Lastactivityat
           description: Last Activity At.
+        migrationNotes:
+          items:
+            type: string
+          type: array
+          title: Migrationnotes
+          description: Rules from the pre-#5532 configuration that could not be translated
+            onto the single mock engine, reported rather than silently dropped. Empty
+            when the fold was lossless.
+          maxItems: 1000
       type: object
       required:
       - id
@@ -91677,7 +91707,7 @@ components:
           format: date-time
           title: Resolved At
           description: When the target was resolved.
-          example: '2026-08-31T16:49:02Z'
+          example: '2026-08-31T17:50:37Z'
       additionalProperties: false
       type: object
       required:
@@ -103424,13 +103454,13 @@ components:
           format: date-time
           title: Started At
           description: When the run began.
-          example: '2026-08-31T16:49:02Z'
+          example: '2026-08-31T17:50:37Z'
         finished_at:
           type: string
           format: date-time
           title: Finished At
           description: When the run ended.
-          example: '2026-08-31T16:49:02Z'
+          example: '2026-08-31T17:50:37Z'
         outcome:
           anyOf:
           - type: string
@@ -108554,6 +108584,17 @@ components:
           title: Rules
           description: Ordered declarative rules evaluated before the fallback responses
             (#4744 PMR-2.1).
+        status:
+          anyOf:
+          - type: integer
+            maximum: 599.0
+            minimum: 100.0
+            description: Mock Scenario Operation Spec Input schema.
+          - type: 'null'
+            description: Mock Scenario Operation Spec Input schema.
+          title: Status
+          description: Pin the response status, resolving the body from the spec (#5532
+            MSC-2.2).
       additionalProperties: false
       type: object
       title: MockScenarioOperationSpec
@@ -108568,7 +108609,19 @@ components:
         with neither a
 
         matching rule nor a fallback the request falls through to the default spec-driven
-        mock flow.'
+        mock flow.
+
+
+        ``status`` (#5532 MSC-2.2) is the third and weakest layer: it pins the status
+        but leaves the
+
+        *body* to the spec, resolved the same way a request sending ``?__status=``
+        resolves it. It is
+
+        what "make this fail, with a body that still matches the contract" needs —
+        a canned response
+
+        with no body would serve an empty one.'
     MockScenarioOperationSpecOutput:
       properties:
         responses:
@@ -108587,6 +108640,17 @@ components:
           title: Rules
           description: Ordered declarative rules evaluated before the fallback responses
             (#4744 PMR-2.1).
+        status:
+          anyOf:
+          - type: integer
+            maximum: 599.0
+            minimum: 100.0
+            description: Mock Scenario Operation Spec Output schema.
+          - type: 'null'
+            description: Mock Scenario Operation Spec Output schema.
+          title: Status
+          description: Pin the response status, resolving the body from the spec (#5532
+            MSC-2.2).
       additionalProperties: false
       type: object
       title: MockScenarioOperationSpec
@@ -108601,7 +108665,19 @@ components:
         with neither a
 
         matching rule nor a fallback the request falls through to the default spec-driven
-        mock flow.'
+        mock flow.
+
+
+        ``status`` (#5532 MSC-2.2) is the third and weakest layer: it pins the status
+        but leaves the
+
+        *body* to the spec, resolved the same way a request sending ``?__status=``
+        resolves it. It is
+
+        what "make this fail, with a body that still matches the contract" needs —
+        a canned response
+
+        with no body would serve an empty one.'
     MockScenarioRuleSpecInput:
       properties:
         when:

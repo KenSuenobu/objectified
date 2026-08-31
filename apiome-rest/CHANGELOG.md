@@ -5,6 +5,80 @@ All notable changes to the Apiome REST API will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.308.0] - 2026-08-31
+
+### Changed
+- **There is now one mock engine (#5532, MSC-2.2)** — the mock implementation that lived inside
+  apiome-rest is deleted, and every mock request is resolved by apiome-mock.
+
+  There were two. This one served `/v1/mock/{id}/…` — the short-lived sandbox instances the hosted
+  Mock Server (#3615) and the Export Studio's test drive (MFX-44.5) provision — from
+  `mock_instances.config`, a *list* of scenarios with `rules`. apiome-mock served
+  `/{tenant}/{project}/{version}/…` and portable bundles from `versions.mock_settings`, a *dict
+  keyed by scenario name*. They shared three routing symbols and reimplemented everything
+  downstream, so a feature built in one was invisible in the other: sandboxes had no templates, no
+  match predicates, no stateful CRUD, no fixture packs and no chaos, and every future mock feature
+  would have had to be written twice.
+
+  A sandbox request now takes one internal hop. apiome-rest keeps what a *sandbox* is — does the
+  instance exist, has it expired, is the caller inside its rate limit, what goes in the request
+  log — builds the instance's portable mock bundle, and asks apiome-mock's new `/__sandbox__`
+  endpoint to serve it through `serve_compiled_request`, the same function the hosted data plane
+  and the portable runtime call. Sandboxes gain every feature they lacked as a side effect.
+
+  There is deliberately **no local fallback**: a deployment that has not configured
+  `APIOME_MOCK_INTERNAL_BASE_URL` / `APIOME_MOCK_INTERNAL_TOKEN` answers `503` on the data plane
+  and says which switch is missing, rather than inventing an answer from a second engine.
+
+- **The built-in scenarios still resolve, everywhere (#5532)** — `happy-path`, `server-error`,
+  `not-found` and `slow` are written into client code by name, so all four are now defined on
+  *every* version, supplied by the runtime and merged into whatever the version stores. A stored
+  scenario of the same name wins outright, exactly as the retired engine's `normalize_scenarios`
+  resolved the same collision.
+
+### Added
+- **Two additions to the scenario schema (#5532)** — both needed to express the built-ins and the
+  migrated rules, and both available to any authored scenario:
+  - the operation key `"*"`, which applies to every operation a scenario does not name explicitly
+    (an exact key always wins). Its canned bodies are not checked against the spec at save time,
+    because a wildcard covers operations with different response schemas; status, media type,
+    headers and template syntax still are;
+  - an override's `status`, which pins the response status but leaves the **body to the spec**,
+    resolved as a request sending `?__status=` resolves it. A canned response with no body would
+    serve an empty one, and freezing a synthesized body into settings would stop it tracking the
+    spec.
+
+- **`migrationNotes` on a mock instance (#5532)** — every rule in a pre-fold `config` that could
+  not be translated is reported on the instance and stored in `mock_instances.migration_notes`:
+  one that matched no operation in the frozen spec, one an earlier rule had already made
+  unreachable, one that set nothing, or one whose latency was clamped to the 30 s ceiling. The
+  acceptance criterion is that untranslatable rules are reported, never silently dropped.
+
+### Migration
+- **`V250__mock_instance_engine_fold_5532.sql`** adds `mock_instances.settings` (the
+  apiome-mock-shaped configuration an instance is served from) and `migration_notes`. `settings` is
+  NULL until an instance is folded; either plane folds a row the first time it reads one, so no
+  maintenance window is required. `apiome-rest/scripts/fold_mock_instance_configs.py` folds the
+  whole estate at once and prints the report (`--dry-run` translates without writing).
+
+  The translation (`app.mock_instance_config`) is spec-aware, because three legacy behaviours
+  cannot be reproduced from the stored shapes alone: a body-only rule served the operation's *own*
+  default success status; precedence was first-matching-rule-wins per operation, which inverts in
+  the keyed shape where an exact key beats the wildcard; and a rule matching nothing in the frozen
+  spec did nothing. `active_scenario` lands on `activeScenario`, the key #5531 introduced — the two
+  spellings of one concept are now one. The legacy `config` column is kept, unread, as the pre-fold
+  record a migrated instance is diffed against.
+
+### Removed
+- **`app.mock_engine` and `app.mock_data_generator` (#5532)** — the retired engine's resolver
+  (`resolve_response`, `normalize_scenarios`, `resolve_active_scenario_name`, `BUILTIN_SCENARIOS`)
+  and its data generator, superseded by `apiome_mock`'s resolver and its format-aware
+  `schema_synthesizer`. What both packages genuinely shared — `MockOperation`,
+  `extract_operations`, `match_operation` and the path-template compiler — moved to
+  `app.mock_routing`, whose name says that it is routing and not an engine. The one piece of
+  `mock_data_generator` with no runtime counterpart, `validate_value`, moved to
+  `app.mock_schema_validation`.
+
 ## [1.307.0] - 2026-08-31
 
 ### Added

@@ -2,8 +2,8 @@
 
 The Export Studio's strongest "test the format" affordance: turn the artifact under review into a
 **live** API for a few minutes and send it real requests. The endpoints here are deliberately thin —
-they are the *binding* between the export pipeline and the Mock Server engine (#3615, RC1-2.2), not
-a second mock engine:
+they are the *binding* between the export pipeline and the mock engine, not a second mock engine —
+which since #5532 (MSC-2.2) is a statement about the whole tree, not just this module:
 
 * ``GET    /v1/export/{tenant_slug}/mock/capability``          → can this server mock, and within what bounds
 * ``POST   /v1/export/{tenant_slug}/mock``                     → 201, provision a mock from an emitted artifact
@@ -16,8 +16,9 @@ What a provision actually does: load the source revision the same way ``/verify`
 do, re-run the emitter for the requested (target, options), and freeze the resulting document into
 an ``apiome.mock_instances`` row with a **minutes-scale** TTL and the
 :data:`~app.export_mock.EXPORT_MOCK_ORIGIN` marker. From there the existing public data plane
-(``/v1/mock/{mock_id}/…``) serves it unchanged — same matcher, same scenarios, same schema-shaped
-synthesis, same rate limit, same ``410 Gone`` at expiry.
+(``/v1/mock/{mock_id}/…``) serves it unchanged — same rate limit, same ``410 Gone`` at expiry, and
+since #5532 the same *engine* as every other mock, so a test drive now gets templates, predicates,
+stateful CRUD, fixtures and chaos it never had.
 
 The emit is re-run **server-side** rather than accepting a document from the browser: the mock then
 provably serves what the source revision emits, and a caller cannot mint a mock of arbitrary bytes.
@@ -59,8 +60,13 @@ from .export_mock import (
 )
 from .export_service import ExportError, emit_canonical, resolve_emit_format
 from .export_source import ExportSourceError, load_export_source
-from .mock_engine import extract_operations, normalize_scenarios
-from .mock_routes import mock_instance_is_expired
+from .mock_routes import (
+    instance_active_scenario,
+    instance_scenario_names,
+    instance_settings,
+    mock_instance_is_expired,
+)
+from .mock_routing import extract_operations
 
 _logger = logging.getLogger(__name__)
 
@@ -178,6 +184,7 @@ def _instance_response(instance: Dict[str, Any], request: Request) -> ExportMock
     """
     spec = instance.get("spec") or {}
     config = instance.get("config") or {}
+    settings_map = instance_settings(instance)
     operations = extract_operations(spec)
     base = str(request.base_url).rstrip("/")
     expired = mock_instance_is_expired(instance)
@@ -193,8 +200,8 @@ def _instance_response(instance: Dict[str, Any], request: Request) -> ExportMock
         version=config.get("version_label"),
         operation_count=len(operations),
         operations=[ExportMockOperation(**summary) for summary in operation_summaries(operations)],
-        scenarios=[s["name"] for s in normalize_scenarios(config.get("scenarios"))],
-        active_scenario=str(config.get("active_scenario") or "happy-path"),
+        scenarios=instance_scenario_names(settings_map),
+        active_scenario=instance_active_scenario(settings_map),
         rate_limit_per_minute=int(instance["rate_limit_per_minute"]),
         request_count=int(instance.get("request_count") or 0),
         created_at=_iso(instance.get("created_at")),
@@ -427,7 +434,9 @@ async def provision_export_mock(
         "version_label": version_label,
         "version_record_id": source.version_record_id,
         "ttl_minutes": ttl_minutes,
-        "scenarios": normalize_scenarios(None),
+        # A test drive starts on the built-in scenarios alone, which the engine supplies to every
+        # mock (#5532, MSC-2.2); there is nothing instance-specific to store.
+        "scenarios": [],
         "active_scenario": "happy-path",
         "seed": int(payload.seed or 0),
     }
@@ -446,6 +455,8 @@ async def provision_export_mock(
         rate_limit_per_minute=max(1, settings.mock_rate_limit_per_minute),
         created_by=get_authenticated_user_id(auth_data),
         expires_at=expiry_from_now(ttl_minutes),
+        settings={},
+        migration_notes=[],
     )
     return _instance_response(instance, request)
 

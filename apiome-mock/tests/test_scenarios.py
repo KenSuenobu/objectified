@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from apiome_mock.builtin_scenarios import BUILTIN_SCENARIO_NAMES
 from apiome_mock.scenarios import (
     ScenarioResponse,
     _build_response,
@@ -44,7 +45,8 @@ def test_parse_scenarios_reads_valid_definitions() -> None:
         },
     }
     scenarios = parse_scenarios(settings)
-    assert set(scenarios) == {"quota-exceeded"}
+    # The built-ins are always defined alongside whatever the version stores (#5532, MSC-2.2).
+    assert set(scenarios) == BUILTIN_SCENARIO_NAMES | {"quota-exceeded"}
     scenario = scenarios["quota-exceeded"]
     assert scenario.description == "Throttle list calls."
     override = scenario.operations["GET /pets"]
@@ -60,12 +62,10 @@ def test_parse_scenarios_reads_valid_definitions() -> None:
 
 def test_parse_scenarios_accepts_json_text_and_empty_settings() -> None:
     text = '{"scenarios": {"s": {"operations": {"GET /x": {"responses": [{"status": 204}]}}}}}'
-    assert set(parse_scenarios(text)) == {"s"}
-    assert parse_scenarios(None) == {}
-    assert parse_scenarios({}) == {}
-    assert parse_scenarios({"mode": "private"}) == {}
-    assert parse_scenarios("not json") == {}
-    assert parse_scenarios(["nope"]) == {}
+    assert set(parse_scenarios(text)) == BUILTIN_SCENARIO_NAMES | {"s"}
+    # A version that stores nothing still resolves the built-ins and nothing else.
+    for empty in (None, {}, {"mode": "private"}, "not json", ["nope"]):
+        assert set(parse_scenarios(empty)) == BUILTIN_SCENARIO_NAMES
 
 
 def test_parse_scenarios_skips_malformed_entries() -> None:
@@ -81,7 +81,12 @@ def test_parse_scenarios_skips_malformed_entries() -> None:
     }
     scenarios = parse_scenarios(settings)
     # Scenarios with no usable responses still resolve (they just override nothing).
-    assert set(scenarios) == {"bad-status", "bad-op-key", "bad-responses", "ok"}
+    assert set(scenarios) == BUILTIN_SCENARIO_NAMES | {
+        "bad-status",
+        "bad-op-key",
+        "bad-responses",
+        "ok",
+    }
     assert scenarios["bad-status"].operations == {}
     assert scenarios["bad-op-key"].operations == {}
     assert scenarios["bad-responses"].operations == {}
@@ -252,3 +257,43 @@ def test_parse_scenarios_flags_body_needs() -> None:
     scenarios = parse_scenarios(settings)
     assert scenarios["predicate"].operations["POST /pets"].needs_body is True
     assert scenarios["template"].operations["POST /pets"].needs_body is True
+
+
+def test_normalize_operation_key_accepts_the_wildcard() -> None:
+    assert normalize_operation_key("*") == "*"
+    assert normalize_operation_key("  *  ") == "*"
+
+
+def test_a_status_pin_alone_is_a_servable_override() -> None:
+    """ "Return 500, body from the spec" is the shape a migrated status-only rule folds to."""
+    scenarios = parse_scenarios({"scenarios": {"s": {"operations": {"GET /pets": {"status": 503}}}}})
+    override = scenarios["s"].operations["GET /pets"]
+
+    assert override.status == 503
+    assert override.responses == ()
+    assert override.rules == ()
+
+
+def test_an_out_of_range_or_non_integer_status_pin_is_ignored() -> None:
+    """A pin that could never be an HTTP status must leave the override declaring nothing."""
+    settings = {
+        "scenarios": {
+            "s": {
+                "operations": {
+                    "GET /pets": {"status": 999},
+                    "POST /pets": {"status": True},
+                    "GET /pets/{petId}": {"status": "500"},
+                }
+            }
+        }
+    }
+    assert parse_scenarios(settings)["s"].operations == {}
+
+
+def test_a_status_pin_coexists_with_canned_responses() -> None:
+    """The pin is the weakest layer: it applies only when no rule and no response did."""
+    settings = {"scenarios": {"s": {"operations": {"GET /pets": {"status": 503, "responses": [{"status": 429}]}}}}}
+    override = parse_scenarios(settings)["s"].operations["GET /pets"]
+
+    assert override.status == 503
+    assert override.responses[0].status == 429

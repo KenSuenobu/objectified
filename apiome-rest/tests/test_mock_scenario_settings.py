@@ -93,6 +93,51 @@ def test_unknown_operation_is_rejected() -> None:
     assert "no operation DELETE /pets exists" in errors[0]
 
 
+def test_the_wildcard_operation_key_is_accepted() -> None:
+    """"Every operation returns 500" needs one key, not one per route (#5532, MSC-2.2)."""
+    scenarios = _scenarios(
+        {"outage": {"operations": {"*": {"responses": [{"status": 500, "body": {"e": 1}}]}}}}
+    )
+    assert validate_mock_scenarios(scenarios, SPEC) == []
+
+
+def test_a_wildcard_response_body_is_not_checked_against_any_one_schema() -> None:
+    """A wildcard covers operations with different response schemas, so there is none to check."""
+    scenarios = _scenarios(
+        {"outage": {"operations": {"*": {"responses": [{"status": 200, "body": {"not": "a pet"}}]}}}}
+    )
+    assert validate_mock_scenarios(scenarios, SPEC) == []
+
+
+def test_a_wildcard_response_is_still_checked_for_everything_spec_independent() -> None:
+    """Skipping the schema check must not become skipping validation."""
+    scenarios = _scenarios(
+        {
+            "outage": {
+                "operations": {
+                    "*": {"responses": [{"status": 200, "headers": {"Bad Header": "x"}}]}
+                }
+            }
+        }
+    )
+    errors = validate_mock_scenarios(scenarios, SPEC)
+    assert errors and "Bad Header" in errors[0]
+
+
+def test_the_wildcard_is_not_an_operation_key_for_chaos() -> None:
+    """Chaos already spells "every operation" as its `default`; a second spelling would confuse."""
+    scenarios = _scenarios(
+        {
+            "outage": {
+                "operations": {"GET /pets": {"responses": [{"status": 200}]}},
+                "chaos": {"operations": {"*": {"delayMs": 100}}},
+            }
+        }
+    )
+    errors = validate_mock_scenarios(scenarios, SPEC)
+    assert errors and "operation keys must look like" in errors[0]
+
+
 def test_malformed_operation_key_is_rejected() -> None:
     scenarios = _scenarios({"s": {"operations": {"pets": {"responses": [{"status": 200}]}}}})
     errors = validate_mock_scenarios(scenarios, SPEC)
@@ -451,10 +496,16 @@ def test_rules_only_override_omits_empty_responses() -> None:
     assert len(override["rules"]) == 1
 
 
-def test_operation_without_rules_or_responses_is_rejected() -> None:
+def test_operation_without_rules_responses_or_a_status_pin_is_rejected() -> None:
     try:
         MockScenarioSpec.model_validate({"operations": {"GET /pets": {}}})
     except ValueError as exc:
-        assert "at least one response or rule" in str(exc)
+        assert "at least one response, rule, or status pin" in str(exc)
     else:  # pragma: no cover - the validation must fail
         raise AssertionError("expected a validation error")
+
+
+def test_an_operation_declaring_only_a_status_pin_is_accepted() -> None:
+    """The pin is a complete override on its own: it pins the status and the spec supplies the body."""
+    spec = MockScenarioSpec.model_validate({"operations": {"GET /pets": {"status": 503}}})
+    assert spec.operations["GET /pets"].status == 503

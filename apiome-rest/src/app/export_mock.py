@@ -1,10 +1,13 @@
-"""Export test-drive mocks — the binding between an emitted artifact and the Mock Server engine.
+"""Export test-drive mocks — the binding between an emitted artifact and the mock engine.
 
 MFX-44.5 (#4371). "Test the format" at its strongest is *hit a live mock of the exported API*.
-The Mock Server epic (#3615, RC1-2.2) already owns the engine: it freezes an OpenAPI document into
-``apiome.mock_instances.spec`` and replays schema-shaped responses from it on the public data plane
+The Mock Server epic (#3615) already owns the provisioning shape: it freezes an OpenAPI document
+into ``apiome.mock_instances.spec`` and serves it on the public data plane
 (``/v1/mock/{mock_id}/…``). What it could not do is start from an **emitted** artifact — its only
 provisioning path requires a *published version*, and an export under review has neither.
+
+Since #5532 (MSC-2.2) the engine behind that data plane is apiome-mock, the only one left, so a
+test drive gets the templates, predicates, stateful CRUD, fixtures and chaos it never had.
 
 This module is that binding, and deliberately **not a second mock engine**:
 
@@ -151,7 +154,7 @@ def export_mock_availability() -> ExportMockAvailability:
     """Describe this server's test-drive mock capability.
 
     Two switches gate it, and the reason names which one is down so an operator reading the UI can
-    act on it: the Mock Server engine itself (``mock_server_enabled`` — no engine, nothing to bind
+    act on it: the Mock Server feature itself (``mock_server_enabled`` — no mocks, nothing to bind
     to) and the export test-drive binding (``export_mock_enabled``).
 
     Returns:
@@ -272,8 +275,8 @@ def operation_summaries(operations: List[Any]) -> List[Dict[str, Optional[str]]]
     """Project the engine's extracted operations into the shape the try-it panel offers.
 
     Args:
-        operations: :class:`~app.mock_engine.MockOperation` values from
-            :func:`app.mock_engine.extract_operations`.
+        operations: :class:`~app.mock_routing.MockOperation` values from
+            :func:`app.mock_routing.extract_operations`.
 
     Returns:
         One ``{"method", "path", "operationId"}`` entry per operation, ordered by path then method
