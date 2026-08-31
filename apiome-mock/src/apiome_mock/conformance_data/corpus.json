@@ -162,8 +162,46 @@
         "contentType": "application/problem+json",
         "jsonContains": {
           "title": "Unknown Scenario",
-          "availableScenarios": ["flaky-list", "outage", "quota-exceeded", "slow", "templated-lookup"]
+          "availableScenarios": [
+            "flaky-list",
+            "happy-path",
+            "not-found",
+            "outage",
+            "quota-exceeded",
+            "server-error",
+            "slow",
+            "templated-lookup"
+          ]
         }
+      }
+    },
+    {
+      "name": "builtin-server-error-fails-every-operation",
+      "why": "The retired in-REST engine's built-in names still resolve and still mean the same thing (#5532).",
+      "request": { "method": "GET", "path": "/pets", "headers": { "X-Mock-Scenario": "server-error" } },
+      "expect": {
+        "status": 500,
+        "headers": { "X-Mock-Scenario": "server-error" },
+        "jsonEquals": { "error": { "code": "internal_error", "message": "Simulated server error." } }
+      }
+    },
+    {
+      "name": "builtin-not-found-applies-to-an-operation-nobody-named",
+      "why": "A wildcard built-in covers routes no scenario enumerates, item routes included.",
+      "request": { "method": "GET", "path": "/pets/1", "headers": { "X-Mock-Scenario": "not-found" } },
+      "expect": {
+        "status": 404,
+        "jsonEquals": { "error": { "code": "not_found", "message": "Simulated not-found." } }
+      }
+    },
+    {
+      "name": "builtin-happy-path-serves-the-default-flow",
+      "why": "happy-path is the absence of overrides, so it answers exactly as no scenario would.",
+      "request": { "method": "GET", "path": "/pets", "headers": { "X-Mock-Scenario": "happy-path" } },
+      "expect": {
+        "status": 200,
+        "headers": { "X-Mock-Scenario": "happy-path" },
+        "jsonEquals": [{ "id": 1, "name": "Rex" }]
       }
     },
     {

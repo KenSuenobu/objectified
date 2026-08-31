@@ -23,8 +23,6 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 import pytest
-from fastapi.testclient import TestClient
-
 from app.auth import validate_authentication
 from app.canonical_model import (
     ApiIdentity,
@@ -42,6 +40,7 @@ from app.config import settings
 from app.export_mock import EXPORT_MOCK_ORIGIN, mock_request_log
 from app.export_source import ExportSource, ExportSourceError
 from app.main import app
+from fastapi.testclient import TestClient
 
 client = TestClient(app)
 
@@ -615,12 +614,42 @@ _SERVED_SPEC = {
 }
 
 
+def _sandbox_serving(result):
+    """Patch the data plane onto a stubbed, configured mock engine (#5532, MSC-2.2)."""
+
+    async def _serve(**_kwargs):
+        return result
+
+    return (
+        patch("app.mock_routes.sandbox_is_configured", return_value=True),
+        patch("app.mock_routes.request_sandbox_serve", _serve),
+        patch("app.mock_routes.db.touch_mock_instance"),
+    )
+
+
 def test_a_request_to_the_mock_round_trips_with_a_schema_shaped_body_and_is_logged():
-    """The ticket's second acceptance: real requests, schema-shaped responses, visible in the log."""
+    """The ticket's second acceptance: real requests, schema-shaped responses, visible in the log.
+
+    Since #5532 the response comes from the one mock engine rather than a second resolver living
+    in this service, so the hop is stubbed here; what the engine decides is tested in apiome-mock.
+    """
     row = _row(spec=_SERVED_SPEC)
+    served_payload = {
+        "status": 200,
+        "headers": {"content-type": "application/json", "X-Mock-Schema-Valid": "true"},
+        "mediaType": "application/json",
+        "body": {"id": 1, "name": "Widget"},
+        "bodyEncoding": "json",
+        "operation": "GET /widgets",
+        "scenario": None,
+        "schemaValid": True,
+    }
+    guards = _sandbox_serving(served_payload)
     with (
         patch("app.mock_routes.db.get_mock_instance", return_value=row),
-        patch("app.mock_routes.db.touch_mock_instance"),
+        guards[0],
+        guards[1],
+        guards[2],
     ):
         served = client.get(f"/v1/mock/{MOCK_ID}/widgets")
 
@@ -643,9 +672,22 @@ def test_a_request_to_the_mock_round_trips_with_a_schema_shaped_body_and_is_logg
 def test_an_unmatched_request_is_logged_as_unmatched():
     """A 404 from the mock is traffic the panel must show, not silence."""
     row = _row(spec=_SERVED_SPEC)
+    served_payload = {
+        "status": 404,
+        "headers": {"content-type": "application/problem+json"},
+        "mediaType": "application/problem+json",
+        "body": {"title": "Not Found", "status": 404},
+        "bodyEncoding": "json",
+        "operation": None,
+        "scenario": None,
+        "schemaValid": None,
+    }
+    guards = _sandbox_serving(served_payload)
     with (
         patch("app.mock_routes.db.get_mock_instance", return_value=row),
-        patch("app.mock_routes.db.touch_mock_instance"),
+        guards[0],
+        guards[1],
+        guards[2],
     ):
         assert client.get(f"/v1/mock/{MOCK_ID}/nope").status_code == 404
 

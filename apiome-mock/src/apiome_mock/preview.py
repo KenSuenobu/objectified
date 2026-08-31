@@ -30,20 +30,23 @@ the data plane runs, and :attr:`PreviewResult.chaos` reports what would have app
 
 from __future__ import annotations
 
-import base64
-import json
-from dataclasses import dataclass, field, replace
-from typing import Any, Mapping, Sequence
-from urllib.parse import urlencode
-
-from fastapi import Request
+from dataclasses import dataclass, replace
+from typing import Any, Mapping
 
 from apiome_mock.chaos import EMPTY_CHAOS, ChaosKnobs, effective_knobs
-from apiome_mock.handler import SEED_QUERY_PARAM, ServeTrace, serve_compiled_request
+from apiome_mock.handler import ServeTrace, serve_compiled_request
 from apiome_mock.memory_session_store import InMemorySessionStore
-from apiome_mock.scenarios import MOCK_SCENARIO_HEADER
 from apiome_mock.session_store import SessionCaps
 from apiome_mock.spec_loader import CompiledSpec
+from apiome_mock.synthetic import (
+    ENCODING_BASE64,
+    ENCODING_EMPTY,
+    ENCODING_JSON,
+    ENCODING_TEXT,
+    SyntheticRequest,
+    build_synthetic_request,
+    decode_response_body,
+)
 
 __all__ = [
     "ENCODING_BASE64",
@@ -68,41 +71,10 @@ PREVIEW_SESSION_CAPS = SessionCaps(
     max_sessions=8,
 )
 
-#: Media types whose body is returned as parsed JSON rather than text.
-_JSON_SUFFIXES = ("json",)
-
-#: Body encodings reported alongside :attr:`PreviewResult.body`.
-ENCODING_JSON = "json"
-ENCODING_TEXT = "text"
-ENCODING_BASE64 = "base64"
-ENCODING_EMPTY = "empty"
-
-
-@dataclass(frozen=True)
-class PreviewRequest:
-    """The synthetic request to render.
-
-    Attributes:
-        method: HTTP method; case-insensitive, upper-cased before routing.
-        path: Path *relative to* the version root (``/pets/42``, not
-            ``/acme/petstore/1.0.0/pets/42``). A ``?query`` suffix is accepted and merged into
-            ``query``, so a pasted URL works.
-        headers: Request headers. ``scenario`` and ``seed`` below are sugar over the header and
-            query parameter the data plane reads, and never overwrite an explicit value.
-        query: Query parameters; a bare string value is treated as a single-valued parameter.
-        body: Request body. A mapping or sequence is JSON-encoded (and defaults the content type
-            to ``application/json``); a string is sent as-is; ``None`` sends no body.
-        scenario: Convenience for the ``X-Mock-Scenario`` header.
-        seed: Convenience for the ``?__seed=`` query parameter that pins synthesis.
-    """
-
-    method: str = "GET"
-    path: str = "/"
-    headers: Mapping[str, str] = field(default_factory=dict)
-    query: Mapping[str, str | Sequence[str]] = field(default_factory=dict)
-    body: Any = None
-    scenario: str | None = None
-    seed: int | None = None
+#: The synthetic request a preview renders. Identical in every respect to the request the hosted
+#: sandbox describes, so the two internal surfaces share one shape — see
+#: :class:`apiome_mock.synthetic.SyntheticRequest` for the field semantics.
+PreviewRequest = SyntheticRequest
 
 
 @dataclass(frozen=True)
@@ -203,119 +175,6 @@ def trace_as_dict(trace: ServeTrace) -> dict[str, Any]:
     }
 
 
-def _normalized_query(spec: PreviewRequest, inline: str) -> list[tuple[str, str]]:
-    """Flatten the declared query parameters, the inline ``?`` suffix, and the seed sugar.
-
-    Args:
-        spec: The preview request.
-        inline: The query string found after ``?`` in :attr:`PreviewRequest.path`, if any.
-
-    Returns:
-        Ordered ``(name, value)`` pairs ready to URL-encode. A declared ``__seed`` always wins over
-        the :attr:`PreviewRequest.seed` shorthand.
-    """
-    pairs: list[tuple[str, str]] = []
-    for chunk in inline.split("&"):
-        if not chunk:
-            continue
-        inline_name, _, inline_value = chunk.partition("=")
-        pairs.append((inline_name, inline_value))
-    for name, value in spec.query.items():
-        if isinstance(value, (list, tuple)):
-            pairs.extend((name, str(item)) for item in value)
-        else:
-            pairs.append((name, str(value)))
-    if spec.seed is not None and not any(name == SEED_QUERY_PARAM for name, _ in pairs):
-        pairs.append((SEED_QUERY_PARAM, str(spec.seed)))
-    return pairs
-
-
-def _encoded_body(body: Any, headers: dict[str, str]) -> bytes:
-    """Encode the declared request body, defaulting the content type for JSON values.
-
-    Args:
-        body: The declared body (mapping/sequence, string, bytes, or ``None``).
-        headers: The header map, mutated to add ``content-type`` when a JSON value needs one.
-
-    Returns:
-        The request body bytes (empty when no body was declared).
-    """
-    if body is None:
-        return b""
-    if isinstance(body, bytes):
-        return body
-    if isinstance(body, str):
-        return body.encode("utf-8")
-    headers.setdefault("content-type", "application/json")
-    return json.dumps(body).encode("utf-8")
-
-
-def _build_request(
-    spec: PreviewRequest,
-    *,
-    tenant: str,
-    project: str,
-    version: str,
-    relative_path: str,
-    inline_query: str,
-) -> Request:
-    """Build the Starlette request the serving pass will read.
-
-    The scope mirrors what uvicorn would produce for the equivalent live call, so nothing in the
-    serving path can tell the difference: the full hosted URL path, the encoded query string, the
-    caller's headers, and a receive channel that yields the body exactly once.
-
-    Args:
-        spec: The preview request.
-        tenant: Tenant slug, for the URL path.
-        project: Project slug, for the URL path.
-        version: Version label, for the URL path.
-        relative_path: The spec-relative path, leading-slash normalized.
-        inline_query: The query string carried in :attr:`PreviewRequest.path`, if any.
-
-    Returns:
-        The request, ready to hand to the serving pass.
-    """
-    headers = {name.lower(): value for name, value in spec.headers.items()}
-    if spec.scenario and MOCK_SCENARIO_HEADER.lower() not in headers:
-        headers[MOCK_SCENARIO_HEADER.lower()] = spec.scenario
-    payload = _encoded_body(spec.body, headers)
-    query_string = urlencode(_normalized_query(spec, inline_query))
-
-    suffix = relative_path.lstrip("/")
-    full_path = f"/{tenant}/{project}/{version}" + (f"/{suffix}" if suffix else "")
-    raw_headers = [(name.encode("latin-1"), value.encode("latin-1")) for name, value in headers.items()]
-    if not any(name == b"host" for name, _ in raw_headers):
-        raw_headers.append((b"host", b"preview.invalid"))
-
-    scope: dict[str, Any] = {
-        "type": "http",
-        "asgi": {"version": "3.0", "spec_version": "2.3"},
-        "http_version": "1.1",
-        "method": spec.method.upper(),
-        "scheme": "https",
-        "path": full_path,
-        "raw_path": full_path.encode("utf-8"),
-        "root_path": "",
-        "query_string": query_string.encode("latin-1"),
-        "headers": raw_headers,
-        "client": ("127.0.0.1", 0),
-        "server": ("preview.invalid", 443),
-    }
-
-    delivered = False
-
-    async def receive() -> dict[str, Any]:
-        """Yield the body once, then hold the connection open the way a real one would."""
-        nonlocal delivered
-        if delivered:
-            return {"type": "http.disconnect"}
-        delivered = True
-        return {"type": "http.request", "body": payload, "more_body": False}
-
-    return Request(scope, receive)
-
-
 def _without_chaos(compiled: CompiledSpec) -> CompiledSpec:
     """Return the same compiled spec with every chaos knob removed.
 
@@ -366,30 +225,6 @@ def _chaos_report(
     )
 
 
-def _decode_body(payload: bytes, media_type: str) -> tuple[Any, str]:
-    """Decode a served response body into the shape a JSON client can read.
-
-    Args:
-        payload: The response body bytes exactly as the data plane would put them on the wire.
-        media_type: The response media type.
-
-    Returns:
-        ``(body, encoding)`` — parsed JSON, decoded text, base64 for binary, or ``(None, "empty")``.
-    """
-    if not payload:
-        return None, ENCODING_EMPTY
-    base = media_type.split(";", 1)[0].strip().lower()
-    if base.endswith(_JSON_SUFFIXES):
-        try:
-            return json.loads(payload), ENCODING_JSON
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            pass
-    try:
-        return payload.decode("utf-8"), ENCODING_TEXT
-    except UnicodeDecodeError:
-        return base64.b64encode(payload).decode("ascii"), ENCODING_BASE64
-
-
 async def render_preview(compiled: CompiledSpec, spec: PreviewRequest) -> PreviewResult:
     """Render one synthetic request against a compiled spec and report how it was answered.
 
@@ -406,16 +241,13 @@ async def render_preview(compiled: CompiledSpec, spec: PreviewRequest) -> Previe
     Returns:
         The rendered response and its decision trace.
     """
-    path, _, inline_query = spec.path.partition("?")
-    relative_path = "/" + path.strip("/") if path.strip("/") else "/"
-
-    request = _build_request(
+    relative_path = spec.relative_path
+    request = build_synthetic_request(
         spec,
         tenant=compiled.tenant_slug,
         project=compiled.project_slug,
         version=compiled.version_label,
-        relative_path=relative_path,
-        inline_query=inline_query,
+        host="preview.invalid",
     )
 
     trace = ServeTrace()
@@ -435,7 +267,7 @@ async def render_preview(compiled: CompiledSpec, spec: PreviewRequest) -> Previe
     )
 
     media_type = response.headers.get("content-type", "application/json")
-    body, encoding = _decode_body(bytes(response.body or b""), media_type)
+    body, encoding = decode_response_body(bytes(response.body or b""), media_type)
     operation_key = trace.operation.key if trace.operation is not None else None
 
     return PreviewResult(

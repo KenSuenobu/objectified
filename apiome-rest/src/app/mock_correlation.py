@@ -24,7 +24,7 @@ import json
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 from .mock_correlation_rules import CORRELATION_MODES
-from .mock_engine import MockOperation, extract_operations
+from .mock_routing import MockOperation, extract_operations
 from .mock_scenario_settings import normalize_operation_key
 from .mock_template import validate_template_value
 from .models import MockResponseCorrelationSpec

@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from unittest.mock import AsyncMock
 
-from app.mock_engine import MockOperation, extract_operations
+from app.mock_routing import MockOperation, extract_operations
 from fastapi import Request
 
 from apiome_mock.request_validator import validate_operation_request

@@ -38,9 +38,9 @@ import json
 import re
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
-from .mock_data_generator import validate_value
-from .mock_engine import MockOperation, extract_operations
 from .mock_match import validate_when
+from .mock_routing import MockOperation, extract_operations
+from .mock_schema_validation import validate_value
 from .mock_template import validate_template_text, validate_template_value, value_contains_template
 from .models import (
     MockChaosKnobsSpec,
@@ -69,13 +69,25 @@ _HEADER_NAME_PATTERN = re.compile(r"^[!#$%&'*+.^_`|~0-9A-Za-z-]+$")
 _RESERVED_HEADERS = frozenset({"content-length", "transfer-encoding", "connection"})
 
 
+WILDCARD_OPERATION_KEY = "*"
+"""Scenario operation key standing for every operation the scenario does not name.
+
+Mirrors ``apiome_mock.scenarios.WILDCARD_OPERATION_KEY`` (#5532, MSC-2.2). A wildcard override is
+how "the whole API fails" is expressed — the shape the retired in-REST engine spelled
+``operation: "*"``, and the shape its built-in ``server-error`` / ``not-found`` scenarios use.
+"""
+
+
 def normalize_operation_key(raw: str) -> Optional[str]:
     """Normalize an operation key to canonical ``"METHOD /template"`` form.
 
     Mirrors ``apiome_mock.scenarios.normalize_operation_key`` so author-time
-    validation and the runtime agree on the key shape. Returns ``None`` when
-    ``raw`` is not a ``"method path"`` string.
+    validation and the runtime agree on the key shape. The wildcard
+    :data:`WILDCARD_OPERATION_KEY` passes through unchanged. Returns ``None`` when
+    ``raw`` is neither the wildcard nor a ``"method path"`` string.
     """
+    if raw.strip() == WILDCARD_OPERATION_KEY:
+        return WILDCARD_OPERATION_KEY
     parts = raw.strip().split(None, 1)
     if len(parts) != 2:
         return None
@@ -186,7 +198,7 @@ def _validate_response_against_spec(
 def _validate_response_entry(
     response: MockScenarioResponseSpec,
     *,
-    operation: MockOperation,
+    operation: Optional[MockOperation],
     spec: Mapping[str, Any],
     context: str,
     errors: List[str],
@@ -195,14 +207,15 @@ def _validate_response_entry(
 
     Headers are checked for shape and CR/LF safety, header values and the body
     for template validity (#4744, PMR-2.1), and — unless the response opts out
-    with ``offSpec`` — the response is checked against the operation's spec.
+    with ``offSpec``, or the override is the wildcard and so names no single
+    operation — the response is checked against the operation's spec.
     """
     _validate_headers(response.headers, context=context, errors=errors)
     for name, value in response.headers.items():
         errors.extend(validate_template_text(value, context=f"{context}, header '{name}'"))
     if "body" in response.model_fields_set:
         errors.extend(validate_template_value(response.body, context=f"{context}, body"))
-    if not response.off_spec:
+    if operation is not None and not response.off_spec:
         _validate_response_against_spec(
             response,
             operation=operation,
@@ -215,12 +228,16 @@ def _validate_response_entry(
 def _validate_operation_override(
     override: MockScenarioOperationSpec,
     *,
-    operation: MockOperation,
+    operation: Optional[MockOperation],
     spec: Mapping[str, Any],
     context: str,
     errors: List[str],
 ) -> None:
-    """Validate one operation override: its rules (#4744, PMR-2.1) and fallback responses."""
+    """Validate one operation override: its rules (#4744, PMR-2.1) and fallback responses.
+
+    ``operation`` is ``None`` for a wildcard override (#5532, MSC-2.2), which applies to many
+    operations at once and therefore has no single response schema to conform to.
+    """
     for rule_index, rule in enumerate(override.rules):
         rule_context = f"{context}, rule {rule_index + 1}"
         errors.extend(validate_when(rule.when.to_storage(), context=f"{rule_context} when"))
@@ -273,7 +290,9 @@ def validate_mock_chaos(
 
     for op_key_raw in chaos.operations:
         op_key = normalize_operation_key(op_key_raw)
-        if op_key is None:
+        if op_key is None or op_key == WILDCARD_OPERATION_KEY:
+            # Chaos already spells "every operation" as the block's `default`, so the wildcard
+            # would be a second way to say the same thing.
             errors.append(f"{context}, operation '{op_key_raw}': operation keys must look like 'GET /pets/{{petId}}'.")
             continue
         if op_key not in operations_by_key:
@@ -316,7 +335,22 @@ def validate_mock_scenarios(
             context = f"Scenario '{name}', operation '{op_key_raw}'"
             op_key = normalize_operation_key(op_key_raw)
             if op_key is None:
-                errors.append(f"{context}: operation keys must look like 'GET /pets/{{petId}}'.")
+                errors.append(
+                    f"{context}: operation keys must look like 'GET /pets/{{petId}}', or '*' for every operation."
+                )
+                continue
+            if op_key == WILDCARD_OPERATION_KEY:
+                # A wildcard override applies to operations with different response schemas, so
+                # there is no single schema its bodies could be checked against. Everything that
+                # does not depend on one operation — status, media type, headers, template
+                # syntax — is still enforced.
+                _validate_operation_override(
+                    override,
+                    operation=None,
+                    spec=spec,
+                    context=context,
+                    errors=errors,
+                )
                 continue
             operation = operations_by_key.get(op_key)
             if operation is None:
@@ -363,7 +397,7 @@ def _response_to_storage(response: MockScenarioResponseSpec) -> Dict[str, Any]:
 
 
 def _override_to_storage(override: MockScenarioOperationSpec) -> Dict[str, Any]:
-    """Canonicalize one operation override (rules first, then fallback responses)."""
+    """Canonicalize one operation override (rules first, then fallback responses, then the pin)."""
     out: Dict[str, Any] = {}
     if override.rules:
         out["rules"] = [
@@ -373,8 +407,10 @@ def _override_to_storage(override: MockScenarioOperationSpec) -> Dict[str, Any]:
             }
             for rule in override.rules
         ]
-    if override.responses or not override.rules:
+    if override.responses or not (override.rules or override.status is not None):
         out["responses"] = [_response_to_storage(response) for response in override.responses]
+    if override.status is not None:
+        out["status"] = override.status
     return out
 
 

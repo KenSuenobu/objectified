@@ -16,8 +16,8 @@ from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
-from app.mock_engine import extract_operations
 from app.mock_match import MatchContext
+from app.mock_routing import extract_operations
 from app.mock_template import RenderBudget, RenderEnv, TemplateLimitError, make_rng
 from fastapi.testclient import TestClient
 

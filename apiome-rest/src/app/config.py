@@ -768,6 +768,33 @@ class Settings(BaseSettings):
         description="Largest synthetic request body a preview will render (256 KiB).",
     )
 
+    # Hosted sandbox serving (#5532, MSC-2.2). The mock *engine* lives in apiome-mock, so the
+    # ``/v1/mock/{id}/...`` data plane no longer resolves anything itself: it builds the sandbox's
+    # portable bundle and asks apiome-mock's internal ``/__sandbox__`` endpoint to serve the
+    # request. It reuses ``mock_internal_base_url`` / ``mock_internal_token`` above, because it is
+    # the same service over the same internal hop as the preview endpoint. Without them configured
+    # the data plane answers 503 rather than falling back to a second engine — having no second
+    # engine is the point of MSC-2.2.
+    mock_sandbox_timeout_seconds: float = Field(
+        default=35.0,
+        validation_alias=AliasChoices(
+            "APIOME_MOCK_SANDBOX_TIMEOUT_SECONDS",
+            "mock_sandbox_timeout_seconds",
+        ),
+        description=(
+            "Ceiling on one sandbox serve round trip to apiome-mock. Above the 30s injected-latency "
+            "cap, so a chaos-delayed response is not cut off by the transport."
+        ),
+    )
+    mock_sandbox_max_body_bytes: int = Field(
+        default=1_048_576,
+        validation_alias=AliasChoices(
+            "APIOME_MOCK_SANDBOX_MAX_BODY_BYTES",
+            "mock_sandbox_max_body_bytes",
+        ),
+        description="Largest request body the data plane will carry to apiome-mock (1 MiB).",
+    )
+
     # Export test-drive mocks (MFX-44.5, #4371). The Export Studio provisions a *short-lived*
     # mock from an emitted artifact rather than a published version, so it gets its own TTL band
     # (minutes, not hours), its own per-tenant concurrency cap, and its own document-size ceiling.

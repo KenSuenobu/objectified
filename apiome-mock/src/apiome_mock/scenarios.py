@@ -47,6 +47,12 @@ spec-driven flow. Response bodies and header values may embed the bounded
 fields, seeded randomness, and fixture data — deterministic for a given
 ``__seed``, with CPU and output limits enforced per render.
 
+An operation key may be the wildcard ``"*"``, which applies to every operation
+the scenario does not name explicitly (#5532, MSC-2.2). That is how the four
+built-in scenarios — ``happy-path``, ``server-error``, ``not-found`` and
+``slow``, always defined on every version by
+:mod:`apiome_mock.builtin_scenarios` — express "the whole API fails".
+
 Parsing here is deliberately lenient: invalid entries are skipped so a
 malformed stored settings blob can never break the runtime. Author-time
 validation (including spec response-schema checks) happens in apiome-rest
@@ -71,6 +77,7 @@ from app.mock_template import (
 from fastapi import Request
 from fastapi.responses import JSONResponse, Response
 
+from apiome_mock.builtin_scenarios import merge_builtin_scenarios
 from apiome_mock.chaos import ChaosConfig, parse_chaos_block
 from apiome_mock.session_store import SessionKey, SessionStore, SessionStoreError
 
@@ -80,6 +87,9 @@ MOCK_SCENARIO_HEADER = "X-Mock-Scenario"
 Doubles as the response header naming the scenario that actually applied (#5531, MSC-2.1), so a
 consumer can tell which scenario served them without reading the version's configuration.
 """
+
+WILDCARD_OPERATION_KEY = "*"
+"""Operation key standing for every operation a scenario does not name (#5532, MSC-2.2)."""
 
 ACTIVE_SCENARIO_KEY = "activeScenario"
 """``versions.mock_settings`` key holding the version's stored active scenario (#5531, MSC-2.1)."""
@@ -134,11 +144,18 @@ class OperationOverride:
         rules: Ordered declarative rules; the first whose ``when`` holds serves its responses.
         responses: Fallback responses served when no rule matches (may be empty).
         needs_body: Whether serving needs the parsed request body (predicates or templates).
+        status: Status to pin when neither a rule nor a fallback response applies. The body is
+            then resolved from the *spec's* response object for that status, exactly as a request
+            pinning ``?__status=`` would (#5532, MSC-2.2). This is what "return 500 for everything,
+            with a schema-valid body" needs: a canned response with no body would serve an empty
+            one, and freezing a synthesized body into the configuration would stop tracking the
+            spec.
     """
 
     rules: tuple[ScenarioRule, ...] = ()
     responses: tuple[ScenarioResponse, ...] = ()
     needs_body: bool = False
+    status: int | None = None
 
 
 @dataclass(frozen=True)
@@ -151,15 +168,40 @@ class Scenario:
     chaos: ChaosConfig | None = None
     """Scenario-scoped chaos knobs (#4455, SIM-4.3); ``None`` -> version-level chaos applies."""
 
+    def override_for(self, operation_key: str) -> OperationOverride | None:
+        """Return the override that applies to one operation, honouring the wildcard key.
+
+        An entry keyed :data:`WILDCARD_OPERATION_KEY` applies to every operation the scenario does
+        not name explicitly. It exists because "make the whole API fail" is a first-class thing to
+        want from a scenario — the retired in-REST engine spelled it ``operation: "*"`` and its
+        built-in ``server-error`` / ``not-found`` templates are written that way (#5532, MSC-2.2).
+
+        Args:
+            operation_key: The canonical ``"METHOD /template"`` key of the matched operation.
+
+        Returns:
+            The exact override if the scenario declares one, else the wildcard override, else
+            ``None`` — the request then falls through to the default spec-driven flow.
+        """
+        exact = self.operations.get(operation_key)
+        if exact is not None:
+            return exact
+        return self.operations.get(WILDCARD_OPERATION_KEY)
+
 
 def normalize_operation_key(raw: Any) -> str | None:
     """Normalize an operation key to canonical ``"METHOD /template"`` form.
 
-    Returns ``None`` when ``raw`` is not a ``"method path"`` string (method
+    The sole non-operation key accepted is :data:`WILDCARD_OPERATION_KEY`, which stands for
+    "every operation this scenario does not name" (#5532, MSC-2.2).
+
+    Returns ``None`` when ``raw`` is neither the wildcard nor a ``"method path"`` string (method
     alphabetic, path starting with ``/``).
     """
     if not isinstance(raw, str):
         return None
+    if raw.strip() == WILDCARD_OPERATION_KEY:
+        return WILDCARD_OPERATION_KEY
     parts = raw.strip().split(None, 1)
     if len(parts) != 2:
         return None
@@ -254,6 +296,13 @@ def _response_uses_body(response: ScenarioResponse) -> bool:
     return any(value_references_request_body(value) for _, value in response.headers)
 
 
+def _parse_status_pin(raw: Any) -> int | None:
+    """Parse an override's ``status`` pin; ``None`` when absent or out of range."""
+    if isinstance(raw, bool) or not isinstance(raw, int):
+        return None
+    return raw if _MIN_STATUS <= raw <= _MAX_STATUS else None
+
+
 def _parse_override(raw: Any) -> OperationOverride | None:
     """Build one :class:`OperationOverride`; ``None`` when it declares nothing servable."""
     if not isinstance(raw, dict):
@@ -263,13 +312,14 @@ def _parse_override(raw: Any) -> OperationOverride | None:
     if isinstance(rules_raw, list):
         rules = tuple(parsed for entry in rules_raw if (parsed := _parse_rule(entry)) is not None)
     responses = _parse_responses(raw.get("responses"))
-    if not rules and not responses:
+    status = _parse_status_pin(raw.get("status"))
+    if not rules and not responses and status is None:
         return None
     needs_body = any(rule.when.needs_body for rule in rules) or any(
         _response_uses_body(response)
         for response in (*(entry for rule in rules for entry in rule.responses), *responses)
     )
-    return OperationOverride(rules=rules, responses=responses, needs_body=needs_body)
+    return OperationOverride(rules=rules, responses=responses, needs_body=needs_body, status=status)
 
 
 def _parse_scenario(name: str, raw: Any) -> Scenario | None:
@@ -339,12 +389,16 @@ def parse_active_scenario(mock_settings: Any) -> str | None:
 def parse_scenarios(mock_settings: Any) -> dict[str, Scenario]:
     """Parse ``versions.mock_settings`` into scenario definitions by name.
 
+    The four built-in scenarios (:mod:`apiome_mock.builtin_scenarios`) are always present; a
+    stored scenario of the same name replaces the built-in (#5532, MSC-2.2). Every version
+    therefore resolves ``happy-path``, ``server-error``, ``not-found`` and ``slow``, which is what
+    lets the retired in-REST engine's scenario names keep working.
+
     Accepts the raw JSONB value (dict, JSON text, or ``None``) and never
     raises: unusable scenarios / operations / responses are silently skipped.
     """
-    scenarios_raw = _settings_dict(mock_settings).get("scenarios")
-    if not isinstance(scenarios_raw, dict):
-        return {}
+    stored = _settings_dict(mock_settings).get("scenarios")
+    scenarios_raw = merge_builtin_scenarios(stored if isinstance(stored, dict) else {})
 
     scenarios: dict[str, Scenario] = {}
     for name, raw in scenarios_raw.items():

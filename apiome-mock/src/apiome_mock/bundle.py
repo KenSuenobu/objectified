@@ -39,7 +39,7 @@ from app.mock_bundle import (
     BundleVerification,
     verify_bundle,
 )
-from app.mock_engine import MockOperation, extract_operations
+from app.mock_routing import MockOperation, extract_operations
 
 from apiome_mock import __version__
 from apiome_mock.callbacks import CallbackDefinition, parse_callbacks

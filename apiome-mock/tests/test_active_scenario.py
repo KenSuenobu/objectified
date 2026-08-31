@@ -20,7 +20,7 @@ from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
-from app.mock_engine import extract_operations
+from app.mock_routing import extract_operations
 from fastapi.testclient import TestClient
 
 from apiome_mock.chaos import parse_chaos
@@ -246,7 +246,15 @@ def test_unknown_stored_scenario_logs_a_warning(client_for: Callable[..., TestCl
     event, kwargs = warning.call_args[0][0], warning.call_args[1]
     assert event == "mock_active_scenario_unknown"
     assert kwargs["active_scenario"] == "deleted-last-week"
-    assert kwargs["available"] == ["quota-exceeded", "server-error", "slow"]
+    # The built-ins are always defined too (#5532, MSC-2.2); this fixture's own `server-error`
+    # and `slow` shadow theirs.
+    assert kwargs["available"] == [
+        "happy-path",
+        "not-found",
+        "quota-exceeded",
+        "server-error",
+        "slow",
+    ]
 
 
 def test_unknown_header_scenario_is_still_refused(client_for: Callable[..., TestClient]) -> None:
@@ -331,4 +339,10 @@ def test_parse_active_scenario(settings: Any, expected: str | None) -> None:
 def test_active_scenario_does_not_disturb_scenario_parsing() -> None:
     """The sibling key is not mistaken for a scenario definition."""
     settings = settings_with("quota-exceeded")
-    assert sorted(parse_scenarios(settings)) == ["quota-exceeded", "server-error", "slow"]
+    assert sorted(parse_scenarios(settings)) == [
+        "happy-path",
+        "not-found",
+        "quota-exceeded",
+        "server-error",
+        "slow",
+    ]

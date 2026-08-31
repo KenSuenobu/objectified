@@ -6,7 +6,7 @@ import time
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from app.mock_engine import extract_operations
+from app.mock_routing import extract_operations
 
 from apiome_mock.spec_cache import SpecCache
 from apiome_mock.spec_loader import CompiledSpec

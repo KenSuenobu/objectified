@@ -58,7 +58,7 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 from urllib.parse import urlsplit
 
 from .mock_bundle import canonical_json, content_digest
-from .mock_engine import extract_operations
+from .mock_routing import extract_operations
 from .mock_settings_util import parse_mock_settings
 from .mock_template import validate_template_text, validate_template_value
 from .ssrf_guard import SSRFError, validate_url_policy

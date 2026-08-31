@@ -17,7 +17,7 @@ from uuid import uuid4
 
 import pytest
 from app.mock_bundle import BundleIdentity, build_bundle
-from app.mock_engine import extract_operations
+from app.mock_routing import extract_operations
 from app.mock_template import DEFAULT_MAX_RENDER_OPS
 from fastapi.testclient import TestClient
 

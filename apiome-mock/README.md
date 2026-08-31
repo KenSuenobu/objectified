@@ -302,6 +302,55 @@ apiome-rest rejects an `activeScenario` that is not one of the scenarios saved w
 naming an unknown scenario stays a problem response — that one is the caller asking for something
 specific.
 
+## One mock engine (MSC-2.2)
+
+Until #5532 there were **two** mock engines. This one served the hosted data plane and portable
+bundles; a second, weaker one inside apiome-rest served the short-lived *sandbox* instances the
+Mock Server and the Export Studio's test drive provision at `/v1/mock/{id}/…`. The two read
+different scenario schemas and shared only three routing symbols, so every feature built here —
+templates, match predicates, stateful CRUD, fixture packs, chaos, the non-HTTP transports — was
+invisible on the other surface.
+
+The second engine is deleted. A sandbox request now arrives here over one internal hop and is
+answered by `serve_compiled_request`, exactly as every other mock request is:
+
+```bash
+curl -X POST $MOCK/__sandbox__ \
+  -H 'X-Internal-Service-Token: <APIOME_MOCK_INTERNAL_TOKEN>' \
+  -H 'Content-Type: application/json' \
+  -d '{"sandbox": "<instance-id>", "bundle": {…}, "request": {"method": "GET", "path": "/pets/42"}}'
+# -> { status, headers, mediaType, body, bodyEncoding, operation, scenario, schemaValid }
+```
+
+It is the same shape and the same fail-closed token gate as `/__preview__`, and differs in exactly
+the three ways a real request differs from a dry run: **chaos applies** rather than being reported,
+**session state persists** for the sandbox's life (in a store of its own, keyed by the `sandbox`
+id, so two sandboxes frozen from the same version never see each other's stateful CRUD), and
+outbound callbacks are still not dispatched — a sandbox serves anonymous callers from a frozen
+artifact, and firing webhooks on their behalf has no owner.
+
+apiome-rest keeps what a *sandbox* is (does the instance exist, has it expired, is the caller
+inside its rate limit) and hands over what a *mock* is.
+
+### Built-in scenarios
+
+The retired engine shipped four scenario templates on every instance, and tenants wrote them into
+client code by name, so all four are defined on **every** version here — merged into whatever the
+version stores, which always wins on a name collision:
+
+| Name | Behaviour |
+| --- | --- |
+| `happy-path` | No overrides: every operation answers as it would with no scenario. |
+| `server-error` | Every operation returns `500` with `{"error": {"code": "internal_error", …}}`. |
+| `not-found` | Every operation returns `404` with `{"error": {"code": "not_found", …}}`. |
+| `slow` | Normal responses with 1500 ms of injected latency. |
+
+Two vocabulary additions carry them, both usable in any authored scenario:
+
+* the operation key `"*"`, which applies to every operation the scenario does not name explicitly;
+* an override's `status`, which pins the status but leaves the **body to the spec**, resolved the
+  same way `?__status=` resolves it. A canned response with no body would serve an empty one.
+
 ## Dry-run response preview (MSC-1.2)
 
 **Hosted only, internal.** `POST /__preview__` answers "given this request, what does this mock

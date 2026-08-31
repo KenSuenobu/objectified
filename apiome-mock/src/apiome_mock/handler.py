@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping
 
 import structlog
-from app.mock_engine import MockOperation
+from app.mock_routing import MockOperation
 from app.mock_template import RenderBudget, RenderEnv, TemplateLimitError, make_rng
 from fastapi import Request
 from fastapi.responses import JSONResponse, Response
@@ -820,8 +820,11 @@ async def _serve_matched_request(
     if request.query_params.get(SEED_QUERY_PARAM) is not None:
         trace.seed_source = "request"
 
+    prefer_header = request.headers.get("prefer")
+    accept = request.headers.get("accept")
+
     if scenario is not None:
-        override = scenario.operations.get(operation.key)
+        override = scenario.override_for(operation.key)
         if override is not None:
             # Declarative rules (#4744, PMR-2.1): the first rule whose request
             # predicates hold serves its responses; the plain responses list is
@@ -877,9 +880,26 @@ async def _serve_matched_request(
                             instance=instance,
                         )
                     )
+            if override.status is not None:
+                # A status pin with no canned body: serve the spec's response object for that
+                # status, exactly as a request pinning ``?__status=`` would (#5532, MSC-2.2). The
+                # body therefore keeps tracking the spec instead of being frozen into settings.
+                trace.record(
+                    LAYER_SCENARIO,
+                    f"Scenario '{scenario.name}' pins status {override.status} for {operation.key}.",
+                )
+                return _with_chaos_delay(
+                    _resolve_operation_response(
+                        status=override.status,
+                        operation=operation,
+                        spec=compiled.spec,
+                        accept=accept,
+                        prefer_header=prefer_header,
+                        seed=seed,
+                        instance=instance,
+                    )
+                )
 
-    prefer_header = request.headers.get("prefer")
-    accept = request.headers.get("accept")
     forced_status = parse_forced_status(prefer_header, request.query_params)
     if forced_status is not None:
         # The pin wins outright, so it is the whole explanation: whether the operation actually

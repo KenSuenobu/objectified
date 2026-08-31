@@ -23,6 +23,7 @@ from app.mock_bundle import (
     manifest_digest,
 )
 
+from apiome_mock.builtin_scenarios import BUILTIN_SCENARIO_NAMES
 from apiome_mock.bundle import (
     BUNDLE_EPOCH,
     RUNTIME_VERSION,
@@ -133,7 +134,9 @@ def test_loaded_bundle_compiles_the_routing_table() -> None:
 def test_loaded_bundle_carries_scenarios_and_chaos() -> None:
     loaded = load_bundle_document(_document(), secret=SECRET)
 
-    assert set(loaded.scenarios) == {"quota-exceeded"}
+    # A bundle resolves the built-in scenarios too, so a portable runtime answers
+    # `X-Mock-Scenario: server-error` exactly as the hosted one does (#5532, MSC-2.2).
+    assert set(loaded.scenarios) == BUILTIN_SCENARIO_NAMES | {"quota-exceeded"}
     responses = loaded.scenarios["quota-exceeded"].operations["GET /pets"].responses
     assert [response.status for response in responses] == [429]
     assert responses[0].headers == (("Retry-After", "60"),)
@@ -187,7 +190,7 @@ def test_to_compiled_spec_matches_the_hosted_serving_unit() -> None:
     assert compiled.spec == SPEC
     assert compiled.updated_at == BUNDLE_EPOCH
     assert len(compiled.operations) == 2
-    assert set(compiled.scenarios) == {"quota-exceeded"}
+    assert set(compiled.scenarios) == BUILTIN_SCENARIO_NAMES | {"quota-exceeded"}
     assert effective_knobs(compiled.chaos, "GET /pets").error_rate == 25
 
 
@@ -201,7 +204,7 @@ def test_non_uuid_revision_ids_load_with_a_derived_stable_uuid() -> None:
 
 def test_bundle_without_settings_or_fixtures_still_loads() -> None:
     loaded = load_bundle_document(_document(mock_settings=None, fixtures=(), secret=None))
-    assert loaded.scenarios == {}
+    assert set(loaded.scenarios) == BUILTIN_SCENARIO_NAMES
     assert loaded.fixtures == ()
     assert loaded.signed is False
     assert effective_knobs(loaded.chaos, "GET /pets").delay_ms == 0

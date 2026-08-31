@@ -129,10 +129,15 @@ def test_the_committed_bundle_verifies_offline() -> None:
 
     assert loaded.tenant_slug == "conformance"
     assert loaded.signed is False  # unsigned on purpose: the corpus must run with no secret
+    # The built-ins are defined on every mock (#5532, MSC-2.2); this corpus's own `slow` shadows
+    # the built-in of that name.
     assert sorted(loaded.scenarios) == [
         "flaky-list",
+        "happy-path",
+        "not-found",
         "outage",
         "quota-exceeded",
+        "server-error",
         "slow",
         "templated-lookup",
     ]

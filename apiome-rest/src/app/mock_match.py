@@ -7,7 +7,7 @@ whose predicates all hold serves its responses; when no rule matches, the overri
 default spec-driven flow.
 
 This module owns the ``when`` contract end to end, and lives here (like :mod:`app.mock_bundle` and
-:mod:`app.mock_engine`) so the author-time validator in apiome-rest and the runtime evaluator in
+:mod:`app.mock_routing`) so the author-time validator in apiome-rest and the runtime evaluator in
 apiome-mock can never drift:
 
 * :func:`validate_when` — strict, save-time: returns human-readable errors for the editor.

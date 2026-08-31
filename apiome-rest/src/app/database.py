@@ -25712,8 +25712,8 @@ class Database:
     # planes always see the same shape.
     _MOCK_INSTANCE_COLUMNS = (
         "id, tenant_id, version_id, tenant_slug, project_slug, version_slug, name, "
-        "spec, config, rate_limit_per_minute, status, created_by, request_count, "
-        "created_at, expires_at, last_activity_at"
+        "spec, config, settings, migration_notes, rate_limit_per_minute, status, created_by, "
+        "request_count, created_at, expires_at, last_activity_at"
     )
 
     def create_mock_instance(
@@ -25729,6 +25729,8 @@ class Database:
         rate_limit_per_minute: int,
         created_by: Optional[str],
         expires_at: Optional[datetime],
+        settings: Optional[Dict[str, Any]] = None,
+        migration_notes: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """Provision a mock instance from a published version's frozen spec.
 
@@ -25737,11 +25739,13 @@ class Database:
             version_id: ``apiome.versions.id`` the mock was generated from (nullable).
             tenant_slug/project_slug/version_slug: Human coordinates for display.
             name: Display name.
-            spec: Frozen OpenAPI document the data plane replays from.
-            config: Scenario / generation configuration (stored as JSONB).
+            spec: Frozen OpenAPI document the mock is served from.
+            config: Legacy RC1-2.2 configuration, retained as the pre-fold record (#5532).
             rate_limit_per_minute: Per-instance free-tier request budget.
             created_by: User id for attribution (nullable).
             expires_at: Auto-expiry timestamp, or ``None`` for no expiry.
+            settings: apiome-mock-shaped settings the sandbox serves from (#5532, MSC-2.2).
+            migration_notes: Reports for anything in ``config`` that could not be translated.
 
         Returns:
             The newly created mock-instance row.
@@ -25749,8 +25753,9 @@ class Database:
         query = f"""
             INSERT INTO apiome.mock_instances
                 (tenant_id, version_id, tenant_slug, project_slug, version_slug, name,
-                 spec, config, rate_limit_per_minute, created_by, expires_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                 spec, config, settings, migration_notes, rate_limit_per_minute, created_by,
+                 expires_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING {self._MOCK_INSTANCE_COLUMNS}
         """
         rows = self.execute_query(
@@ -25764,6 +25769,8 @@ class Database:
                 name,
                 Json(spec),
                 Json(config),
+                Json(settings if settings is not None else {}),
+                Json(list(migration_notes or [])),
                 rate_limit_per_minute,
                 created_by,
                 expires_at,
@@ -25803,18 +25810,70 @@ class Database:
         rows = self.execute_query(query, (mock_id,))
         return rows[0] if rows else None
 
-    def update_mock_instance_config(
-        self, mock_id: str, tenant_id: str, config: Dict[str, Any]
+    def update_mock_instance_settings(
+        self, mock_id: str, tenant_id: str, settings: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
-        """Replace a mock instance's config JSONB (e.g. switch the active scenario)."""
+        """Replace a mock instance's serving settings (e.g. switch the active scenario).
+
+        Args:
+            mock_id: The instance id.
+            tenant_id: Owning tenant; a mismatch updates nothing.
+            settings: The apiome-mock-shaped settings to store (#5532, MSC-2.2).
+
+        Returns:
+            The updated row, or ``None`` when the instance does not exist for that tenant.
+        """
         query = f"""
             UPDATE apiome.mock_instances
-            SET config = %s
+            SET settings = %s
             WHERE id = %s AND tenant_id = %s
             RETURNING {self._MOCK_INSTANCE_COLUMNS}
         """
-        rows = self.execute_query(query, (Json(config), mock_id, tenant_id))
+        rows = self.execute_query(query, (Json(settings), mock_id, tenant_id))
         return rows[0] if rows else None
+
+    def fold_mock_instance_config(
+        self, mock_id: str, settings: Dict[str, Any], migration_notes: List[str]
+    ) -> None:
+        """Record the result of folding one instance's legacy config (#5532, MSC-2.2).
+
+        Written once per instance, the first time a plane reads a row whose ``settings`` is still
+        NULL. Best effort: a failure means the next read folds it again, which is cheap and
+        deterministic, so it must never break the request that triggered it.
+
+        Args:
+            mock_id: The instance id.
+            settings: The folded, apiome-mock-shaped settings.
+            migration_notes: Reports for rules that could not be translated.
+        """
+        query = """
+            UPDATE apiome.mock_instances
+            SET settings = %s, migration_notes = %s
+            WHERE id = %s AND settings IS NULL
+            RETURNING id
+        """
+        try:
+            self.execute_query(query, (Json(settings), Json(list(migration_notes)), mock_id))
+        except Exception as exc:  # pragma: no cover - backfill must never raise
+            _logger.warning("Failed to record the mock config fold for %s: %s", mock_id, exc)
+
+    def list_unfolded_mock_instances(self, limit: int = 500) -> List[Dict[str, Any]]:
+        """List instances whose legacy config has not been folded yet (#5532, MSC-2.2).
+
+        Args:
+            limit: Maximum rows to return, oldest first.
+
+        Returns:
+            The unfolded rows, for the operator backfill script.
+        """
+        query = f"""
+            SELECT {self._MOCK_INSTANCE_COLUMNS}
+            FROM apiome.mock_instances
+            WHERE settings IS NULL
+            ORDER BY created_at
+            LIMIT %s
+        """
+        return self.execute_query(query, (limit,))
 
     def delete_mock_instance(self, mock_id: str, tenant_id: str) -> bool:
         """Destroy a mock instance; returns ``True`` if a row was removed."""
